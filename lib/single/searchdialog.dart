@@ -49,7 +49,7 @@ class SearchDialogState extends State<SearchDialog> {
   @override
   void initState() {
     super.initState();
-    _filtrarLista('',start: true);
+    _filtrarLista(null,start: true);
   }
 
   double altura = 0;
