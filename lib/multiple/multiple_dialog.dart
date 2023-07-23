@@ -10,8 +10,8 @@ class MultipleDialog extends StatefulWidget {
 
 class _MultipleDialogState extends State<MultipleDialog> {
 
-  double altura = 0;
-  bool aberto = false;
+  late double altura = 0;
+  late bool aberto = false;
   final List<String> selectedItems = [];
 
   void definir(){
@@ -23,6 +23,16 @@ class _MultipleDialogState extends State<MultipleDialog> {
       }
     });
     aberto = !aberto;
+  }
+
+  void onItemSelected(String val){
+    setState(() {
+      if (selectedItems.contains(val)) {
+        selectedItems.remove(val);
+      } else {
+        selectedItems.add(val);
+      }
+    });
   }
 
   @override
@@ -38,20 +48,43 @@ class _MultipleDialogState extends State<MultipleDialog> {
               constraints: const BoxConstraints(maxHeight: 50,maxWidth: 300,minHeight: 50,minWidth: 300),
               decoration: const BoxDecoration(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
-                color: Colors.red
+                color: Colors.grey
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: ListView.separated(
+                        scrollDirection: Axis.horizontal,
+                        separatorBuilder: (context, index) => const SizedBox(width: 5),
+                        itemCount: selectedItems.length,
+                        itemBuilder: (context, index) {
+                          return Card(
+                            elevation: 10,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 20,vertical: 5),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(selectedItems[index]),
+                                  InkWell(onTap: () => onItemSelected(selectedItems[index]),child: const Icon(Icons.close),)
+                                ],
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    Icon(aberto ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down)
+                  ],
+                ),
               ),
             ),
           ),
           ContentMultiple(
-            onItemSelected: (value) {
-              setState(() {
-                if (selectedItems.contains(value)) {
-                  selectedItems.remove(value);
-                } else {
-                  selectedItems.add(value);
-                }
-              });
-            },
+            onItemSelected: (value) => onItemSelected(value),
             listItens: const ['A','B','C','D',],
             altura: altura,
             selectedItens: selectedItems,

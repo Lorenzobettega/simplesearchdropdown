@@ -94,7 +94,7 @@ class SearchDialogState extends State<SearchDialog> {
         children: [
           SearchBar(
             trailing: widget.actions ?? [
-              aberto ? const Icon(Icons.keyboard_arrow_up) : const Icon(Icons.keyboard_arrow_down)
+              Icon(aberto ? Icons.keyboard_arrow_up : Icons.keyboard_arrow_down)
             ],
             controller: widget.controllerBar,
             backgroundColor: MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),

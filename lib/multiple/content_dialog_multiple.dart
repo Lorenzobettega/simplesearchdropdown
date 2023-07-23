@@ -67,7 +67,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   constraints: const BoxConstraints(maxHeight: 50,maxWidth: 300),
                   surfaceTintColor: const MaterialStatePropertyAll(Colors.white),
                   shape: MaterialStateProperty.all<OutlinedBorder>(const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10.0)))),
-                  hintText: 'Pesquisar',
+                  hintText: 'Search',
                   side: MaterialStateProperty.all<BorderSide>(const BorderSide(style: BorderStyle.none,),),
                   onChanged: (a){
                     filtrarLista(a);
