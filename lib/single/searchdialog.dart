@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:searchdialog/listview.dart';
+import 'package:searchdialog/single/listview.dart';
 
 class SearchDialog extends StatefulWidget {
   const SearchDialog({super.key,

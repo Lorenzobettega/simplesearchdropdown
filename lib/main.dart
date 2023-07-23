@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:searchdialog/searchdialog.dart';
+import 'package:searchdialog/multiple/mutiple_searchdialog.dart';
 
 void main() {
   runApp(const MyApp());
@@ -41,17 +41,14 @@ class MyHomePage extends StatelessWidget {
       'Bonora4',
       'Bettega4',
     ];
-    return Scaffold(
+    return const Scaffold(
       body: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Center(
-            child: SearchDialog(
-              controllerBar: controllerBar, 
-              listItens: lista,
+            child: MultipleSearchDialog(
             )
           ),
-          const SizedBox(height: 25,),
-          TextButton(onPressed: (){print(controllerBar.text);}, child: const Text('valor'))
         ],
       ),
     );

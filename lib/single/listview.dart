@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:searchdialog/searchdialog.dart';
+import 'package:searchdialog/single/searchdialog.dart';
 
 class NovoListView extends StatelessWidget {
   final List<String> listaFiltrada;
