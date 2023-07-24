@@ -46,7 +46,6 @@ class SearchDialog extends StatefulWidget {
 }
 
 class SearchDialogState extends State<SearchDialog> {
-
   @override
   void initState() {
     super.initState();
@@ -142,7 +141,7 @@ class SearchDialogState extends State<SearchDialog> {
     overlayEntry = null;
     setState(() {
       aberto = !aberto;
-      if(val!= null) widget.controllerBar.text = val;
+      if (val != null) widget.controllerBar.text = val;
     });
   }
 
@@ -150,10 +149,29 @@ class SearchDialogState extends State<SearchDialog> {
   Widget build(BuildContext context) {
     return SizedBox(
       width: widget.width,
-      height: 63,
+      height: 50,
       child: SearchBar(
         key: overlayKey,
-        trailing: widget.actions ?? [aberto ? const Icon(Icons.arrow_drop_up) : const Icon(Icons.arrow_drop_down)],
+        trailing: widget.actions ??
+            [
+              aberto
+                  ? const Icon(Icons.arrow_drop_up)
+                  : const Icon(Icons.arrow_drop_down),
+              Visibility(
+                visible: widget.controllerBar.text != '',
+                child: Row(
+                  children: [
+                    const SizedBox(
+                      width: 5,
+                    ),
+                    IconButton(
+                      onPressed: () => widget.controllerBar.clear(), 
+                      icon: const Icon(Icons.clear)
+                    ),
+                  ],
+                ),
+              ),
+            ],
         controller: widget.controllerBar,
         backgroundColor:
             MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),

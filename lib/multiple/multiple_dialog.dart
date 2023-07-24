@@ -3,7 +3,9 @@ import 'package:searchdialog/extensions.dart';
 import 'package:searchdialog/multiple/content_dialog_multiple.dart';
 
 class MultipleDialog extends StatefulWidget {
-  const MultipleDialog({super.key});
+  const MultipleDialog({super.key,required this.listItems});
+
+  final List<String> listItems;
 
   @override
   State<MultipleDialog> createState() => _MultipleDialogState();
@@ -37,12 +39,17 @@ class _MultipleDialogState extends State<MultipleDialog> {
     });
   }
 
-   void showOverlay(BuildContext context,) {
-    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
-    final RenderBox widgetPosition = overlayKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset offset = widgetPosition.localToGlobal(Offset.zero, ancestor: overlay);
+  void showOverlay(
+    BuildContext context,
+  ) {
+    final RenderBox overlay =
+        Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox widgetPosition =
+        overlayKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset =
+        widgetPosition.localToGlobal(Offset.zero, ancestor: overlay);
 
-     overlayEntry = OverlayEntry(
+    overlayEntry = OverlayEntry(
       builder: (context) => Stack(
         children: [
           Positioned.fill(
@@ -60,12 +67,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
               color: Colors.transparent,
               child: ContentMultiple(
                 onItemSelected: (value) => onItemSelected(value),
-                listItens: const [
-                  'A',
-                  'B',
-                  'C',
-                  'D',
-                ],
+                listItens: widget.listItems,
                 selectedItens: selectedItems,
               ),
             ),
@@ -89,7 +91,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
       width: 300,
       child: InkWell(
         key: overlayKey,
-        onTap:  () {
+        onTap: () {
           if (overlayEntry == null) {
             showOverlay(context);
           } else {
@@ -113,36 +115,42 @@ class _MultipleDialogState extends State<MultipleDialog> {
           ),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: ScrollConfiguration(
-              behavior: MyCustomScrollBehavior(),
-              child: ListView.separated(
-                scrollDirection: Axis.horizontal,
-                separatorBuilder: (context, index) =>
-                    const SizedBox(width: 5),
-                itemCount: selectedItems.length,
-                itemBuilder: (context, index) {
-                  return Card(
-                    color: Colors.grey.shade300,
-                    elevation: 10,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 20, vertical: 5),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(selectedItems[index]),
-                          InkWell(
-                            onTap: () =>
-                                onItemSelected(selectedItems[index]),
-                            child: const Icon(Icons.close),
-                          )
-                        ],
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
+            child: selectedItems.isNotEmpty 
+              ? ScrollConfiguration(
+                  behavior: MyCustomScrollBehavior(),
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    separatorBuilder: (context, index) => const SizedBox(width: 5),
+                    itemCount: selectedItems.length,
+                    itemBuilder: (context, index) {
+                      return Card(
+                        color: Colors.grey.shade300,
+                        elevation: 10,
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 5),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: [
+                              Text(selectedItems[index]),
+                              InkWell(
+                                onTap: () => onItemSelected(selectedItems[index]),
+                                child: const Icon(Icons.close),
+                              )
+                            ],
+                          ),
+                        ),
+                      );
+                    },
+                  ),
+                )
+                : const Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Selecione',textAlign: TextAlign.start,),
+                  ],
+                )
           ),
         ),
       ),
