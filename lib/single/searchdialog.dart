@@ -73,10 +73,6 @@ class SearchDialogState extends State<SearchDialog> {
     }
   }
 
-  void definir(String val) {
-    widget.controllerBar.text = val;
-  }
-
   void showOverlay(
     BuildContext context,
   ) {
@@ -92,7 +88,7 @@ class SearchDialogState extends State<SearchDialog> {
         children: [
           Positioned.fill(
             child: GestureDetector(
-              onTap: hideOverlay,
+              onTap: () => hideOverlay(null),
               child: Container(
                 color: Colors.transparent,
               ),
@@ -126,6 +122,7 @@ class SearchDialogState extends State<SearchDialog> {
                         widget.selectedInsideBoxTextStyle,
                     unselectedInsideBoxTextStyle:
                         widget.unselectedInsideBoxTextStyle,
+                    onPressed: (val) => hideOverlay(val),
                   ),
                 ),
               ),
@@ -140,11 +137,12 @@ class SearchDialogState extends State<SearchDialog> {
     Overlay.of(context).insert(overlayEntry!);
   }
 
-  void hideOverlay() {
+  void hideOverlay(String? val) {
     overlayEntry?.remove();
     overlayEntry = null;
     setState(() {
       aberto = !aberto;
+      if(val!= null) widget.controllerBar.text = val;
     });
   }
 
@@ -178,7 +176,7 @@ class SearchDialogState extends State<SearchDialog> {
           if (overlayEntry == null) {
             showOverlay(context);
           } else {
-            hideOverlay();
+            hideOverlay(null);
           }
         },
         onChanged: (a) {
