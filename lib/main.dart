@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:searchdialog/multiple/multiple_dialog.dart';
+import 'package:searchdialog/single/searchdialog.dart';
 
 void main() {
   runApp(const MyApp());
@@ -26,13 +26,15 @@ class MyHomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    final TextEditingController controllerbar = TextEditingController();
+    return Scaffold(
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Center(
-            child: MultipleDialog()
-          ),
+              child: SearchDialog(
+                  controllerBar: controllerbar,
+                  listItens: const ['A', 'B', 'C', 'D', 'E'])),
         ],
       ),
     );
