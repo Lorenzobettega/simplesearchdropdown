@@ -81,6 +81,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
                     itemCount: selectedItems.length,
                     itemBuilder: (context, index) {
                       return Card(
+                        color: Colors.grey.shade300,
                         elevation: 10,
                         child: Padding(
                           padding: const EdgeInsets.symmetric(

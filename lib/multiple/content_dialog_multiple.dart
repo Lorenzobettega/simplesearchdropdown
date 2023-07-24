@@ -80,13 +80,25 @@ class _ContentMultipleState extends State<ContentMultiple> {
                     itemCount: listafiltrada.length,
                     itemBuilder: (context, index) {
                       return TextButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                            (Set<MaterialState> states) {
+                              if (widget.selectedItens.contains(listafiltrada[index])) {
+                                return Colors.black38;
+                              }
+                              return Colors.transparent;
+                            },
+                          ),
+                          shape: MaterialStateProperty.all<OutlinedBorder>(const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
+                          overlayColor: const MaterialStatePropertyAll(Colors.black45),
+                        ),
                         onPressed: () => addItem(listafiltrada[index]),
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
                             listafiltrada[index],
                             style: (widget.selectedItens.contains(listafiltrada[index])
-                              ? const TextStyle(color: Colors.red)
+                              ? TextStyle(color: Colors.grey.shade100)
                               : const TextStyle(color: Colors.black45)),
                           ),
                         ),
