@@ -43,23 +43,35 @@ class _MultipleDialogState extends State<MultipleDialog> {
     final Offset offset = widgetPosition.localToGlobal(Offset.zero, ancestor: overlay);
 
      overlayEntry = OverlayEntry(
-      builder: (context) => Positioned(
-        top: offset.dy + widgetPosition.size.height,
-        left: offset.dx,
-        child: Material(
-          color: Colors.transparent,
-          child: GestureDetector(
-            onTap: hideOverlay,
-            child: Container(
-              width: 150,
-              height: 200,
-              color: Colors.white,
-              child: const Center(
-                child: Text('Your Content Here'),
+      builder: (context) => Stack(
+        children: [
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: hideOverlay,
+              child: Container(
+                color: Colors.transparent,
               ),
             ),
           ),
-        ),
+          Positioned(
+            top: offset.dy + widgetPosition.size.height,
+            left: offset.dx,
+            child: Material(
+              color: Colors.transparent,
+              child: GestureDetector(
+                onTap: () {},
+                child: Container(
+                  width: 150,
+                  height: 200,
+                  color: Colors.white,
+                  child: const Center(
+                    child: Text('Your Content Here'),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
 
