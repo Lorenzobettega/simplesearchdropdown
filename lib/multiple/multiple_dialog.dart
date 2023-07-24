@@ -13,6 +13,8 @@ class _MultipleDialogState extends State<MultipleDialog> {
   late double altura = 0;
   late bool aberto = false;
   final List<String> selectedItems = [];
+  OverlayEntry? overlayEntry;
+  final GlobalKey overlayKey = GlobalKey();
 
   void definir() {
     setState(() {
@@ -35,6 +37,40 @@ class _MultipleDialogState extends State<MultipleDialog> {
     });
   }
 
+   void showOverlay(BuildContext context,) {
+    final RenderBox overlay = Overlay.of(context).context.findRenderObject() as RenderBox;
+    final RenderBox widgetPosition = overlayKey.currentContext!.findRenderObject() as RenderBox;
+    final Offset offset = widgetPosition.localToGlobal(Offset.zero, ancestor: overlay);
+
+     overlayEntry = OverlayEntry(
+      builder: (context) => Positioned(
+        top: offset.dy + widgetPosition.size.height,
+        left: offset.dx,
+        child: Material(
+          color: Colors.transparent,
+          child: GestureDetector(
+            onTap: hideOverlay,
+            child: Container(
+              width: 150,
+              height: 200,
+              color: Colors.white,
+              child: const Center(
+                child: Text('Your Content Here'),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    Overlay.of(context).insert(overlayEntry!);
+  }
+
+  void hideOverlay() {
+    overlayEntry?.remove();
+    overlayEntry = null;
+  }
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -54,7 +90,14 @@ class _MultipleDialogState extends State<MultipleDialog> {
             selectedItens: selectedItems,
           ),
           InkWell(
-            onTap: () => definir(),
+            key: overlayKey,
+            onTap:  () {
+              if (overlayEntry == null) {
+                showOverlay(context);
+              } else {
+                hideOverlay();
+              }
+            },//() => definir(),
             child: Container(
               constraints: const BoxConstraints(
                   maxHeight: 50, maxWidth: 300, minHeight: 50, minWidth: 300),
