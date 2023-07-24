@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 
 class ContentMultiple extends StatefulWidget {
   const ContentMultiple({super.key,
-    required this.altura, 
     required this.selectedItens,
     required this.listItens,
     required this.onItemSelected,
@@ -10,7 +9,6 @@ class ContentMultiple extends StatefulWidget {
 
   final List<String> selectedItens;
   final List<String> listItens;
-  final double altura;
    final Function(String value) onItemSelected;
 
   @override
@@ -49,14 +47,13 @@ class _ContentMultipleState extends State<ContentMultiple> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        const SizedBox(height: 48,),
         Card(
           surfaceTintColor: Colors.white,
           color: Colors.white,
           elevation: 10,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 100), 
-            height: widget.altura,
+            height: 300,
             width: 300,
             child: Column(
               children: [
