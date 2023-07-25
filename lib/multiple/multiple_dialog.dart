@@ -124,7 +124,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 selectedDialogBoxColor: widget.selectedDialogBoxColor, 
                 selectedDialogColor: widget.selectedDialogColor, 
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
-                selectedItens: widget.listItems, 
+                selectedItens: selectedItems, 
                 unselectedInsideBoxTextStyle: widget.unselectedInsideBoxTextStyle, 
                 width: widget.width
               ),

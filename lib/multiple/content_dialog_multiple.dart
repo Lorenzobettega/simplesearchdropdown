@@ -132,7 +132,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                       const RoundedRectangleBorder(
                                           borderRadius: BorderRadius.zero)),
                                   overlayColor:
-                                      MaterialStatePropertyAll(widget.hoverColor ?? Colors.grey.shade100),
+                                      MaterialStatePropertyAll(widget.hoverColor ?? Colors.black45),
                                 ),
                                 onPressed: () => addItem(listafiltrada[index]),
                                 child: widget.dialogListviewWidgetBuilder ??
