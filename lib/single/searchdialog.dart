@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:searchdialog/single/listview.dart';
+import 'package:stringr/stringr.dart';
 
 class SearchDialog extends StatefulWidget {
   const SearchDialog({
@@ -64,7 +65,7 @@ class SearchDialogState extends State<SearchDialog> {
       if (text != null && text != '') {
         listafiltrada = widget.listItens
             .where(
-                (element) => element.toLowerCase().contains(text.toLowerCase()))
+                (element) => element.toLowerCase().latinize().contains(text.toLowerCase()))
             .toList();
       } else {
         listafiltrada = widget.listItens;

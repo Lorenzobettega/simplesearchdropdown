@@ -1,15 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:stringr/stringr.dart';
 
 class ContentMultiple extends StatefulWidget {
   const ContentMultiple({super.key,
     required this.selectedItens,
     required this.listItens,
     required this.onItemSelected,
+    required this.hoverColor,
+    required this.dialogListviewWidgetBuilder,
+    required this.unselectedInsideBoxTextStyle,
+    required this.selectedInsideBoxTextStyle,
+    required this.selectedDialogBoxColor,
+    required this.dialogBackgroundColor,
+    required this.backgroundColor,
+    required this.elevation,
+    required this.width,
+    required this.dialogHeight,
+    required this.animationDuration,
+    required this.hint,
+    required this.border,
+    required this.dialogSearchBarElevation,
+    required this.hintStyle,
+    required this.dialogSearchBarColor,
+    required this.selectedDialogColor,
+    required this.dialogSearchBarBorder,
   });
 
   final List<String> selectedItens;
   final List<String> listItens;
-   final Function(String value) onItemSelected;
+  final Function(String value) onItemSelected;
+  final Widget? dialogListviewWidgetBuilder;
+  final TextStyle? unselectedInsideBoxTextStyle;
+  final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedDialogBoxColor;
+  final Color? hoverColor;
+  final double elevation;
+  final Color? dialogBackgroundColor;
+  final Color? backgroundColor;
+  final double dialogHeight;
+  final double width;
+  final Duration? animationDuration;
+  final String? hint;
+  final OutlinedBorder? border;
+  final double dialogSearchBarElevation;
+  final TextStyle? hintStyle;
+  final Color? dialogSearchBarColor;
+  final Color? selectedDialogColor;
+  final OutlinedBorder? dialogSearchBarBorder;
 
   @override
   State<ContentMultiple> createState() => _ContentMultipleState();
@@ -29,7 +66,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
  void filtrarLista(String? text,) {
     if(text != null && text != ''){
       setState(() {
-        listafiltrada = widget.listItens.where((element) => element.toLowerCase().contains(text.toLowerCase())).toList();
+        listafiltrada = widget.listItens.where((element) => element.toLowerCase().latinize().contains(text.toLowerCase())).toList();
       });
     } else {
       setState(() {
@@ -48,28 +85,29 @@ class _ContentMultipleState extends State<ContentMultiple> {
     return Column(
       children: [
         Card(
-          surfaceTintColor: Colors.white,
-          color: Colors.white,
-          elevation: 2,
+          surfaceTintColor: widget.dialogBackgroundColor ?? widget.backgroundColor ?? Colors.white,
+          color: widget.dialogBackgroundColor ?? widget.backgroundColor ?? Colors.white,
+          elevation: widget.elevation,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 100), 
-            height: 300,
-            width: 300,
+            duration: widget.animationDuration ?? const Duration(milliseconds: 100), 
+            height: widget.dialogHeight,
+            width: widget.width,
             child: Column(
               children: [
                 SearchBar(
                   controller: controllerBar,
-                  backgroundColor: const MaterialStatePropertyAll(Colors.white),
-                  overlayColor: MaterialStatePropertyAll(Colors.grey.shade100),
-                  constraints: const BoxConstraints(maxHeight: 50,maxWidth: 300),
-                  surfaceTintColor: const MaterialStatePropertyAll(Colors.white),
-                  shape: MaterialStateProperty.all<OutlinedBorder>(const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10.0)))),
-                  hintText: 'Search',
+                  backgroundColor: MaterialStatePropertyAll(widget.dialogSearchBarColor ?? Colors.white),
+                  overlayColor: MaterialStatePropertyAll(widget.hoverColor ?? Colors.grey.shade100),
+                  constraints: BoxConstraints(maxHeight: 50,maxWidth: widget.width),
+                  surfaceTintColor: MaterialStatePropertyAll(widget.dialogSearchBarColor ?? Colors.white),
+                  shape: MaterialStateProperty.all<OutlinedBorder>(widget.dialogSearchBarBorder ?? const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10.0)))),
+                  hintText: widget.hint ?? 'Selecione',
+                  hintStyle: MaterialStateProperty.all<TextStyle>(widget.hintStyle ?? const TextStyle(fontSize: 14)),
                   side: MaterialStateProperty.all<BorderSide>(const BorderSide(style: BorderStyle.none,),),
                   onChanged: (a){
                     filtrarLista(a);
                   },
-                  elevation: MaterialStateProperty.all<double>(2),
+                  elevation: MaterialStateProperty.all<double>(widget.dialogSearchBarElevation),
                 ),
                 const SizedBox(height: 5,),
                 Expanded( 
@@ -77,29 +115,43 @@ class _ContentMultipleState extends State<ContentMultiple> {
                     scrollDirection: Axis.vertical,
                     itemCount: listafiltrada.length,
                     itemBuilder: (context, index) {
-                      return TextButton(
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                            (Set<MaterialState> states) {
-                              if (widget.selectedItens.contains(listafiltrada[index])) {
-                                return Colors.black38;
-                              }
-                              return Colors.transparent;
-                            },
+                      return Row(
+                        children: [
+                          Expanded(
+                            child: TextButton(
+                                style: ButtonStyle(
+                                  backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                                    (Set<MaterialState> states) {
+                                      if (widget.selectedItens.contains(listafiltrada[index])) {
+                                        return widget.selectedDialogBoxColor ?? Colors.black38;
+                                      }
+                                      return Colors.transparent;
+                                    },
+                                  ),
+                                  shape: MaterialStateProperty.all<OutlinedBorder>(
+                                      const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.zero)),
+                                  overlayColor:
+                                      MaterialStatePropertyAll(widget.hoverColor ?? Colors.grey.shade100),
+                                ),
+                                onPressed: () => addItem(listafiltrada[index]),
+                                child: widget.dialogListviewWidgetBuilder ??
+                                    Align(
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(
+                                          listafiltrada[index],
+                                          style: (controllerBar.text == listafiltrada[index]
+                                              ? widget.selectedInsideBoxTextStyle ??
+                                                  const TextStyle(color: Colors.black)
+                                              : widget.unselectedInsideBoxTextStyle ??
+                                                  const TextStyle(color: Colors.black45)),
+                                        ))),
                           ),
-                          shape: MaterialStateProperty.all<OutlinedBorder>(const RoundedRectangleBorder(borderRadius: BorderRadius.zero)),
-                          overlayColor: const MaterialStatePropertyAll(Colors.black45),
-                        ),
-                        onPressed: () => addItem(listafiltrada[index]),
-                        child: Align(
-                          alignment: Alignment.centerLeft,
-                          child: Text(
-                            listafiltrada[index],
-                            style: (widget.selectedItens.contains(listafiltrada[index])
-                              ? TextStyle(color: Colors.grey.shade100)
-                              : const TextStyle(color: Colors.black45)),
-                          ),
-                        ),
+                          IconButton(
+                            onPressed: (){}, 
+                            icon: Icon(Icons.delete,color: Colors.red.shade900,)
+                          )
+                        ],
                       );
                     },
                   ),
