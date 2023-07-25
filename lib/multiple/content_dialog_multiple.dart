@@ -14,7 +14,7 @@ class ContentMultiple extends StatefulWidget {
     required this.dialogSearchBarElevation,
     required this.elevation,
     required this.hoverColor,
-    required this.hint,
+    required this.hintSearchBar,
     required this.hintStyle,
     required this.listItens,
     required this.onItemSelected,
@@ -39,7 +39,7 @@ class ContentMultiple extends StatefulWidget {
   final Function(String value) onItemSelected;
   final Widget? dialogListviewWidgetBuilder;
   final TextStyle? hintStyle;
-  final String? hint;
+  final String? hintSearchBar;
   final List<String> listItens;
   final List<String> selectedItens;
   final Color? selectedDialogBoxColor;
@@ -101,7 +101,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   constraints: BoxConstraints(maxHeight: 50,maxWidth: widget.width),
                   surfaceTintColor: MaterialStatePropertyAll(widget.dialogSearchBarColor ?? Colors.white),
                   shape: MaterialStateProperty.all<OutlinedBorder>(widget.dialogSearchBarBorder ?? const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10.0)))),
-                  hintText: widget.hint ?? 'Selecione',
+                  hintText: widget.hintSearchBar ?? 'Pesquisar',
                   hintStyle: MaterialStateProperty.all<TextStyle>(widget.hintStyle ?? const TextStyle(fontSize: 14)),
                   side: MaterialStateProperty.all<BorderSide>(const BorderSide(style: BorderStyle.none,),),
                   onChanged: (a){

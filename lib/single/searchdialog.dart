@@ -155,7 +155,11 @@ class SearchDialogState extends State<SearchDialog> {
                       width: 5,
                     ),
                     IconButton(
-                      onPressed: () => widget.controllerBar.clear(), 
+                      onPressed: () {
+                        setState(() {
+                          widget.controllerBar.clear();
+                        });
+                      },  
                       icon: const Icon(Icons.clear)
                     ),
                   ],

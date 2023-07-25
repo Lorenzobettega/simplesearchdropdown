@@ -35,13 +35,13 @@ class MyHomePage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SearchDialog(
-                controllerBar: controllerbar,
-                listItens: listitems
+              controllerBar: controllerbar,
+              listItens: listitems,
             ),
             const SizedBox(height: 20,),
             MultipleDialog(
               listItems: listitems,
-            )
+            ),
           ],
         ),
       ),

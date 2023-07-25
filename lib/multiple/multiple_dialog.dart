@@ -18,6 +18,7 @@ class MultipleDialog extends StatefulWidget {
     this.dialogSearchBarElevation = 2,
     this.elevation = 1,
     this.hint,
+    this.hintSearchBar,
     this.hintStyle,
     this.hoverColor,
     this.insideIconSize = 18,
@@ -43,8 +44,9 @@ class MultipleDialog extends StatefulWidget {
   final Color? dialogSearchBarColor;
   final double dialogSearchBarElevation;
   final double elevation;
-  final TextStyle? hintStyle;
   final String? hint;
+  final String? hintSearchBar;
+  final TextStyle? hintStyle;
   final Color? hoverColor;
   final double insideIconSize;
   final double outsideIconSize;
@@ -117,7 +119,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 dialogSearchBarElevation: widget.dialogSearchBarElevation, 
                 elevation: widget.elevation, 
                 hoverColor: widget.hoverColor, 
-                hint: widget.hint, 
+                hintSearchBar: widget.hintSearchBar, 
                 hintStyle: widget.hintStyle, 
                 listItens: widget.listItems, 
                 onItemSelected: (val) => onItemSelected(val), 

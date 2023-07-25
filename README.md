@@ -1,16 +1,12 @@
-# searchdialog
+# Search Dialog
 
-A new Flutter project.
+Search Dialog is a new dropdown that oferr a searchbar
 
 ## Getting Started
 
-This project is a starting point for a Flutter application.
+This project is a sample Widget to find items in a list, without losing beaty and useful:
 
-A few resources to get you started if this is your first Flutter project:
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
-
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- [Different styles: Search Dialog can be customized with different styles, including Colors, TextStyles, Icons and others.]
+- [Multiple and single option: Search Dialog can be used to select multiple or single items]
+- [Compact and Simple: Search Dialog is very compact and takes up very little space on the screen.] 
