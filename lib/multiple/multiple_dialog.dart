@@ -3,49 +3,60 @@ import 'package:searchdialog/extensions.dart';
 import 'package:searchdialog/multiple/content_dialog_multiple.dart';
 
 class MultipleDialog extends StatefulWidget {
-  const MultipleDialog({super.key,
+  const MultipleDialog({
+    Key? key,
     required this.listItems,
-    this.dialogHeight = 300,
+    this.action,
     this.animationDuration,
-    this.hint,
-    this.border,
-    this.width = 300,
-    this.widgetBuilder,
-    this.elevation = 1,
     this.backgroundColor,
-    this.insideIconSize = 18,
-    this.outsideIconSize = 20,
-    this.selectedItemsBoxTextStyle,
-    this.seletedItemsBoxColor,
+    this.border,
     this.dialogBackgroundColor,
+    this.dialogHeight = 300,
+    this.dialogListviewWidgetBuilder,
+    this.dialogSearchBarBorder,
+    this.dialogSearchBarColor,
+    this.dialogSearchBarElevation = 2,
+    this.elevation = 1,
+    this.hint,
     this.hintStyle,
     this.hoverColor,
+    this.insideIconSize = 18,
+    this.outsideIconSize = 20,
     this.selectedDialogColor,
+    this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
+    this.selectedItemsBoxTextStyle,
+    this.seletedItemsBoxColor,
     this.unselectedInsideBoxTextStyle,
-    this.action,
-  });
+    this.widgetBuilder,
+    this.width = 300,
+  }) : super(key: key);
 
-  final List<String> listItems;
-  final double dialogHeight;
+  final Widget? action;
   final Duration? animationDuration;
-  final String? hint;
+  final Color? backgroundColor;
   final OutlinedBorder? border;
-  final double width;
-  final Widget? widgetBuilder;
+  final Color? dialogBackgroundColor;
+  final double dialogHeight;
+  final Widget? dialogListviewWidgetBuilder;
+  final OutlinedBorder? dialogSearchBarBorder;
+  final Color? dialogSearchBarColor;
+  final double dialogSearchBarElevation;
   final double elevation;
+  final TextStyle? hintStyle;
+  final String? hint;
+  final Color? hoverColor;
   final double insideIconSize;
   final double outsideIconSize;
-  final TextStyle? selectedItemsBoxTextStyle;
-  final Color? seletedItemsBoxColor;
-  final Color? backgroundColor;
-  final Color? dialogBackgroundColor;
-  final Color? hoverColor;
-  final TextStyle? hintStyle;
+  final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final TextStyle? selectedItemsBoxTextStyle;
+  final Color? seletedItemsBoxColor;
   final TextStyle? unselectedInsideBoxTextStyle;
-  final Widget? action;
+  final List<String> listItems;
+  final Widget? widgetBuilder;
+  final double width;
 
   @override
   State<MultipleDialog> createState() => _MultipleDialogState();
@@ -95,9 +106,27 @@ class _MultipleDialogState extends State<MultipleDialog> {
             child: Material(
               color: Colors.transparent,
               child: ContentMultiple(
-                onItemSelected: (value) => onItemSelected(value),
-                listItens: widget.listItems,
-                selectedItens: selectedItems,
+                animationDuration: widget.animationDuration, 
+                backgroundColor: widget.backgroundColor, 
+                border: widget.border, 
+                dialogBackgroundColor: widget.dialogBackgroundColor, 
+                dialogHeight: widget.dialogHeight, 
+                dialogListviewWidgetBuilder: widget.dialogListviewWidgetBuilder, 
+                dialogSearchBarBorder: widget.dialogSearchBarBorder, 
+                dialogSearchBarColor: widget.dialogSearchBarColor, 
+                dialogSearchBarElevation: widget.dialogSearchBarElevation, 
+                elevation: widget.elevation, 
+                hoverColor: widget.hoverColor, 
+                hint: widget.hint, 
+                hintStyle: widget.hintStyle, 
+                listItens: widget.listItems, 
+                onItemSelected: (val) => onItemSelected(val), 
+                selectedDialogBoxColor: widget.selectedDialogBoxColor, 
+                selectedDialogColor: widget.selectedDialogColor, 
+                selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
+                selectedItens: widget.listItems, 
+                unselectedInsideBoxTextStyle: widget.unselectedInsideBoxTextStyle, 
+                width: widget.width
               ),
             ),
           ),

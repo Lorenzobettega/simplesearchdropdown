@@ -3,51 +3,51 @@ import 'package:stringr/stringr.dart';
 
 class ContentMultiple extends StatefulWidget {
   const ContentMultiple({super.key,
-    required this.selectedItens,
+    required this.animationDuration,
+    required this.backgroundColor,
+    required this.border,
+    required this.dialogBackgroundColor,
+    required this.dialogHeight,
+    required this.dialogListviewWidgetBuilder,
+    required this.dialogSearchBarBorder,
+    required this.dialogSearchBarColor,
+    required this.dialogSearchBarElevation,
+    required this.elevation,
+    required this.hoverColor,
+    required this.hint,
+    required this.hintStyle,
     required this.listItens,
     required this.onItemSelected,
-    required this.hoverColor,
-    required this.dialogListviewWidgetBuilder,
-    required this.unselectedInsideBoxTextStyle,
-    required this.selectedInsideBoxTextStyle,
     required this.selectedDialogBoxColor,
-    required this.dialogBackgroundColor,
-    required this.backgroundColor,
-    required this.elevation,
-    required this.width,
-    required this.dialogHeight,
-    required this.animationDuration,
-    required this.hint,
-    required this.border,
-    required this.dialogSearchBarElevation,
-    required this.hintStyle,
-    required this.dialogSearchBarColor,
     required this.selectedDialogColor,
-    required this.dialogSearchBarBorder,
+    required this.selectedInsideBoxTextStyle,
+    required this.selectedItens,
+    required this.unselectedInsideBoxTextStyle,
+    required this.width,
   });
 
-  final List<String> selectedItens;
-  final List<String> listItens;
+  final Duration? animationDuration;
+  final Color? backgroundColor;
+  final OutlinedBorder? border;
+  final Color? dialogBackgroundColor;
+  final double dialogHeight;
+  final OutlinedBorder? dialogSearchBarBorder;
+  final Color? dialogSearchBarColor;
+  final double dialogSearchBarElevation;
+  final double elevation;
+  final Color? hoverColor;
   final Function(String value) onItemSelected;
   final Widget? dialogListviewWidgetBuilder;
-  final TextStyle? unselectedInsideBoxTextStyle;
-  final TextStyle? selectedInsideBoxTextStyle;
-  final Color? selectedDialogBoxColor;
-  final Color? hoverColor;
-  final double elevation;
-  final Color? dialogBackgroundColor;
-  final Color? backgroundColor;
-  final double dialogHeight;
-  final double width;
-  final Duration? animationDuration;
-  final String? hint;
-  final OutlinedBorder? border;
-  final double dialogSearchBarElevation;
   final TextStyle? hintStyle;
-  final Color? dialogSearchBarColor;
+  final String? hint;
+  final List<String> listItens;
+  final List<String> selectedItens;
+  final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
-  final OutlinedBorder? dialogSearchBarBorder;
-
+  final TextStyle? selectedInsideBoxTextStyle;
+  final TextStyle? unselectedInsideBoxTextStyle;
+  final double width;
+  
   @override
   State<ContentMultiple> createState() => _ContentMultipleState();
 }

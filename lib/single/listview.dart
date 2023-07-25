@@ -1,25 +1,26 @@
 import 'package:flutter/material.dart';
 
 class NovoListView extends StatelessWidget {
-  final List<String> listaFiltrada;
   final TextEditingController controllerBar;
-  final Function(String) onPressed;
-  final Widget? widgetBuilder;
-  final TextStyle? unselectedInsideBoxTextStyle;
-  final TextStyle? selectedInsideBoxTextStyle;
-  final Color? selectedDialogColor;
   final Color? hoverColor;
+  final List<String> listaFiltrada;
+  final Function(String) onPressed;
+  final Color? selectedDialogColor;
+  final TextStyle? selectedInsideBoxTextStyle;
+  final TextStyle? unselectedInsideBoxTextStyle;
+  final Widget? widgetBuilder;
 
-  const NovoListView(
-      {required this.listaFiltrada,
+  const NovoListView({
       required this.controllerBar,
+      required this.hoverColor,
+      required this.listaFiltrada,
       required this.onPressed,
-      this.widgetBuilder,
-      this.unselectedInsideBoxTextStyle,
-      this.selectedInsideBoxTextStyle,
       this.selectedDialogColor,
-      this.hoverColor,
-      Key? key})
+      this.selectedInsideBoxTextStyle,
+      this.unselectedInsideBoxTextStyle,
+      this.widgetBuilder,
+      Key? key,
+    })
       : super(key: key);
 
   @override

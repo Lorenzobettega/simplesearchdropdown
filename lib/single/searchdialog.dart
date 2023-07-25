@@ -5,42 +5,42 @@ import 'package:stringr/stringr.dart';
 class SearchDialog extends StatefulWidget {
   const SearchDialog({
     super.key,
-    required this.controllerBar,
-    required this.listItens,
-    this.dialogHeight = 300,
+    this.actions,
     this.animationDuration,
-    this.hint,
-    this.border,
-    this.width = 300,
-    this.widgetBuilder,
-    this.elevation = 2,
     this.backgroundColor,
+    this.border,
+    required this.controllerBar,
     this.dialogBackgroundColor,
+    this.dialogHeight = 300,
+    this.elevation = 2,
+    this.hint,
     this.hintStyle,
     this.hoverColor,
+    required this.listItens,
     this.selectedDialogColor,
     this.selectedInsideBoxTextStyle,
     this.unselectedInsideBoxTextStyle,
-    this.actions,
+    this.widgetBuilder,
+    this.width = 300,
   });
 
-  final TextEditingController controllerBar;
-  final List<String> listItens;
-  final double dialogHeight;
+  final List<Widget>? actions;
   final Duration? animationDuration;
-  final String? hint;
-  final OutlinedBorder? border;
-  final double width;
-  final Widget? widgetBuilder;
-  final double elevation;
   final Color? backgroundColor;
+  final OutlinedBorder? border;
+  final TextEditingController controllerBar;
   final Color? dialogBackgroundColor;
-  final Color? hoverColor;
+  final double dialogHeight;
+  final double elevation;
+  final String? hint;
   final TextStyle? hintStyle;
+  final Color? hoverColor;
+  final List<String> listItens;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final TextStyle? unselectedInsideBoxTextStyle;
-  final List<Widget>? actions;
+  final Widget? widgetBuilder;
+  final double width;
 
   @override
   State<SearchDialog> createState() => SearchDialogState();
