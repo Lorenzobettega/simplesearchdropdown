@@ -12,7 +12,7 @@ class SearchDialog extends StatefulWidget {
     this.border,
     this.width = 300,
     this.widgetBuilder,
-    this.elevation = 10,
+    this.elevation = 2,
     this.backgroundColor,
     this.dialogBackgroundColor,
     this.hintStyle,

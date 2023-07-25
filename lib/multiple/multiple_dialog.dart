@@ -108,10 +108,10 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 color: Colors.white,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.2),
-                    spreadRadius: 5,
-                    blurRadius: 10,
-                    offset: const Offset(0, 1),
+                    color: Colors.grey.withOpacity(0.5),
+                    spreadRadius: 0.5,
+                    blurRadius: 1,
+                    offset: const Offset(0, 0.5),
                   ),
                 ],
               ),
@@ -128,21 +128,25 @@ class _MultipleDialogState extends State<MultipleDialog> {
                           separatorBuilder: (context, index) => const SizedBox(width: 5),
                           itemCount: selectedItems.length,
                           itemBuilder: (context, index) {
-                            return Card(
-                              color: Colors.grey.shade300,
-                              elevation: 10,
-                              child: Padding(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 20, vertical: 5),
-                                child: Row(
-                                  children: [
-                                    Text(selectedItems[index]),
-                                    InkWell(
-                                      onTap: () =>
-                                          onItemSelected(selectedItems[index]),
-                                      child: const Icon(Icons.close),
-                                    ),
-                                  ],
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 5),
+                              child: Card(
+                                color: Colors.grey.shade300,
+                                elevation: 2,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    crossAxisAlignment: CrossAxisAlignment.center,
+                                    children: [
+                                      Text(selectedItems[index]),
+                                      InkWell(
+                                        onTap: () =>
+                                            onItemSelected(selectedItems[index]),
+                                        child: const Icon(Icons.close,size: 18,),
+                                      ),
+                                    ],
+                                  ),
                                 ),
                               ),
                             );
@@ -171,7 +175,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
                               ? Icons.clear 
                               : aberto  
                                 ? Icons.arrow_drop_up
-                                : Icons.arrow_drop_down),
+                                : Icons.arrow_drop_down,size: 20,),
                         ),
                       ],
                     ),

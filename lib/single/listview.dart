@@ -27,34 +27,44 @@ class NovoListView extends StatelessWidget {
     return ListView.builder(
       itemCount: listaFiltrada.length,
       itemBuilder: (context, index) {
-        return TextButton(
-            style: ButtonStyle(
-              backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                (Set<MaterialState> states) {
-                  if (controllerBar.text == listaFiltrada[index]) {
-                    return selectedDialogColor ?? Colors.black38;
-                  }
-                  return Colors.transparent;
-                },
-              ),
-              shape: MaterialStateProperty.all<OutlinedBorder>(
-                  const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.zero)),
-              overlayColor:
-                  MaterialStatePropertyAll(hoverColor ?? Colors.grey.shade100),
+        return Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                      (Set<MaterialState> states) {
+                        if (controllerBar.text == listaFiltrada[index]) {
+                          return selectedDialogColor ?? Colors.black38;
+                        }
+                        return Colors.transparent;
+                      },
+                    ),
+                    shape: MaterialStateProperty.all<OutlinedBorder>(
+                        const RoundedRectangleBorder(
+                            borderRadius: BorderRadius.zero)),
+                    overlayColor:
+                        MaterialStatePropertyAll(hoverColor ?? Colors.grey.shade100),
+                  ),
+                  onPressed: () => onPressed(listaFiltrada[index]),
+                  child: widgetBuilder ??
+                      Align(
+                          alignment: Alignment.centerLeft,
+                          child: Text(
+                            listaFiltrada[index],
+                            style: (controllerBar.text == listaFiltrada[index]
+                                ? selectedInsideBoxTextStyle ??
+                                    const TextStyle(color: Colors.black)
+                                : unselectedInsideBoxTextStyle ??
+                                    const TextStyle(color: Colors.black45)),
+                          ))),
             ),
-            onPressed: () => onPressed(listaFiltrada[index]),
-            child: widgetBuilder ??
-                Align(
-                    alignment: Alignment.centerLeft,
-                    child: Text(
-                      listaFiltrada[index],
-                      style: (controllerBar.text == listaFiltrada[index]
-                          ? selectedInsideBoxTextStyle ??
-                              const TextStyle(color: Colors.black)
-                          : unselectedInsideBoxTextStyle ??
-                              const TextStyle(color: Colors.black45)),
-                    )));
+            IconButton(
+              onPressed: (){}, 
+              icon: Icon(Icons.delete,color: Colors.red.shade900,)
+            )
+          ],
+        );
       },
     );
   }

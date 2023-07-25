@@ -50,7 +50,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
         Card(
           surfaceTintColor: Colors.white,
           color: Colors.white,
-          elevation: 10,
+          elevation: 2,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 100), 
             height: 300,
@@ -69,6 +69,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   onChanged: (a){
                     filtrarLista(a);
                   },
+                  elevation: MaterialStateProperty.all<double>(2),
                 ),
                 const SizedBox(height: 5,),
                 Expanded( 
