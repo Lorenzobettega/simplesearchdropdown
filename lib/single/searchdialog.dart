@@ -95,7 +95,7 @@ class SearchDialogState extends State<SearchDialog> {
           ),
           Positioned(
             top: offset.dy + widgetPosition.size.height,
-            left: offset.dx,
+            left: offset.dx - 4,
             child: Material(
               color: Colors.transparent,
               child: Card(
@@ -199,6 +199,8 @@ class SearchDialogState extends State<SearchDialog> {
         },
         onChanged: (a) {
           _filtrarLista(a);
+          hideOverlay(null);
+          showOverlay(context);
         },
         elevation: MaterialStateProperty.all<double>(
           widget.elevation,

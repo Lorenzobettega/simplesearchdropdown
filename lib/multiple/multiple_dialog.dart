@@ -18,17 +18,6 @@ class _MultipleDialogState extends State<MultipleDialog> {
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
 
-  void definir() {
-    setState(() {
-      if (aberto) {
-        altura = 0;
-      } else {
-        altura = 300;
-      }
-    });
-    aberto = !aberto;
-  }
-
   void onItemSelected(String val) {
     setState(() {
       if (selectedItems.contains(val)) {
@@ -62,7 +51,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
           ),
           Positioned(
             top: offset.dy + widgetPosition.size.height,
-            left: offset.dx,
+            left: offset.dx - 4,
             child: Material(
               color: Colors.transparent,
               child: ContentMultiple(
@@ -77,11 +66,18 @@ class _MultipleDialogState extends State<MultipleDialog> {
     );
 
     Overlay.of(context).insert(overlayEntry!);
+    setState(() {
+      aberto = !aberto;
+    });
+
   }
 
   void hideOverlay() {
     overlayEntry?.remove();
     overlayEntry = null;
+    setState(() {
+      aberto = !aberto;
+    });
   }
 
   @override
@@ -98,60 +94,92 @@ class _MultipleDialogState extends State<MultipleDialog> {
             hideOverlay();
           }
         },
-        child: Container(
-          constraints: const BoxConstraints(
-              maxHeight: 50, maxWidth: 300, minHeight: 50, minWidth: 300),
-          decoration: BoxDecoration(
-            borderRadius: const BorderRadius.all(Radius.circular(10)),
-            color: Colors.white,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.grey.withOpacity(0.2),
-                spreadRadius: 5,
-                blurRadius: 10,
-                offset: const Offset(0, 1),
+        child: Stack(
+          children: [
+            Container(
+              constraints: const BoxConstraints(
+                maxHeight: 50,
+                maxWidth: 300,
+                minHeight: 50,
+                minWidth: 300,
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 10),
-            child: selectedItems.isNotEmpty 
-              ? ScrollConfiguration(
-                  behavior: MyCustomScrollBehavior(),
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    separatorBuilder: (context, index) => const SizedBox(width: 5),
-                    itemCount: selectedItems.length,
-                    itemBuilder: (context, index) {
-                      return Card(
-                        color: Colors.grey.shade300,
-                        elevation: 10,
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 50, vertical: 5),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(selectedItems[index]),
-                              InkWell(
-                                onTap: () => onItemSelected(selectedItems[index]),
-                                child: const Icon(Icons.close),
-                              )
-                            ],
-                          ),
-                        ),
-                      );
-                    },
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.all(Radius.circular(10)),
+                color: Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.grey.withOpacity(0.2),
+                    spreadRadius: 5,
+                    blurRadius: 10,
+                    offset: const Offset(0, 1),
                   ),
-                )
-                : const Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 10),
+                child: Row(
                   children: [
-                    Text('Selecione',textAlign: TextAlign.start,),
+                    Expanded(
+                      child: selectedItems.isNotEmpty 
+                      ?ScrollConfiguration(
+                        behavior: MyCustomScrollBehavior(),
+                        child: ListView.separated(
+                          scrollDirection: Axis.horizontal,
+                          separatorBuilder: (context, index) => const SizedBox(width: 5),
+                          itemCount: selectedItems.length,
+                          itemBuilder: (context, index) {
+                            return Card(
+                              color: Colors.grey.shade300,
+                              elevation: 10,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 20, vertical: 5),
+                                child: Row(
+                                  children: [
+                                    Text(selectedItems[index]),
+                                    InkWell(
+                                      onTap: () =>
+                                          onItemSelected(selectedItems[index]),
+                                      child: const Icon(Icons.close),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            );
+                          },
+                        ),
+                      ): const Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Selecione',textAlign: TextAlign.start,),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(width: 5),
+                        InkWell(
+                          onTap:  () {
+                            setState(() {
+                              selectedItems.clear();
+                            });
+                          }, 
+                          child: Icon(
+                            selectedItems.isNotEmpty 
+                              ? Icons.clear 
+                              : aberto  
+                                ? Icons.arrow_drop_up
+                                : Icons.arrow_drop_down),
+                        ),
+                      ],
+                    ),
                   ],
-                )
-          ),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
