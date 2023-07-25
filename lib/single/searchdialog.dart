@@ -99,32 +99,21 @@ class SearchDialogState extends State<SearchDialog> {
             left: offset.dx - 4,
             child: Material(
               color: Colors.transparent,
-              child: Card(
-                surfaceTintColor: widget.dialogBackgroundColor ??
-                    widget.backgroundColor ??
-                    Colors.white,
-                color: widget.dialogBackgroundColor ??
-                    widget.backgroundColor ??
-                    Colors.white,
-                elevation: widget.elevation,
-                child: AnimatedContainer(
-                  duration: widget.animationDuration ??
-                      const Duration(milliseconds: 100),
-                  height: widget.dialogHeight,
-                  width: widget.width,
-                  child: NovoListView(
-                    listaFiltrada: listafiltrada,
-                    controllerBar: widget.controllerBar,
-                    widgetBuilder: widget.widgetBuilder,
-                    hoverColor: widget.hoverColor,
-                    selectedDialogColor: widget.selectedDialogColor,
-                    selectedInsideBoxTextStyle:
-                        widget.selectedInsideBoxTextStyle,
-                    unselectedInsideBoxTextStyle:
-                        widget.unselectedInsideBoxTextStyle,
-                    onPressed: (val) => hideOverlay(val),
-                  ),
-                ),
+              child: NovoListView(
+                animationDuration: widget.animationDuration, 
+                backgroundColor: widget.backgroundColor, 
+                controllerBar: widget.controllerBar, 
+                dialogBackgroundColor: widget.dialogBackgroundColor, 
+                dialogHeight: widget.dialogHeight, 
+                elevation: widget.elevation, 
+                hoverColor: widget.hoverColor, 
+                listaFiltrada: listafiltrada, 
+                onPressed: (val) => hideOverlay(val), 
+                selectedDialogColor: widget.selectedDialogColor, 
+                selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
+                unselectedInsideBoxTextStyle: widget.unselectedInsideBoxTextStyle, 
+                widgetBuilder: widget.widgetBuilder, 
+                width: widget.width
               ),
             ),
           ),
