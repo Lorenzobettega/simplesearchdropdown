@@ -68,6 +68,7 @@ class NovoListView extends StatelessWidget {
                       TextButton(
                         onPressed: (){
                           onAddItem(controllerBar.text); 
+                          listaFiltrada.add(controllerBar.text);
                         }, 
                         child: const Text('Criar'),
                       ),

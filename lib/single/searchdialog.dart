@@ -177,6 +177,7 @@ class SearchDialogState extends State<SearchDialog> {
                       onPressed: () {
                         setState(() {
                           widget.controllerBar.clear();
+                          _filtrarLista(null);
                         });
                       },  
                       icon: const Icon(Icons.clear)
