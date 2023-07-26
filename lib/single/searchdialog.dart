@@ -10,7 +10,6 @@ class SearchDialog extends StatefulWidget {
     this.animationDuration,
     this.backgroundColor,
     this.border,
-    required this.controllerBar,
     required this.deleteMode,
     this.dialogActionIcon,
     this.dialogActionWidget,
@@ -27,6 +26,7 @@ class SearchDialog extends StatefulWidget {
     this.selectedInsideBoxTextStyle,
     this.sortSelecteds = true,
     this.unselectedInsideBoxTextStyle,
+    required this.updateSelectedItem,
     this.widgetBuilder,
     this.width = 300,
   });
@@ -36,7 +36,6 @@ class SearchDialog extends StatefulWidget {
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
-  final TextEditingController controllerBar;
   final bool deleteMode;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
@@ -53,6 +52,7 @@ class SearchDialog extends StatefulWidget {
   final TextStyle? selectedInsideBoxTextStyle;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
+  final Function(String) updateSelectedItem;
   final Widget? widgetBuilder;
   final double width;
 
@@ -71,6 +71,7 @@ class SearchDialogState extends State<SearchDialog> {
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
   bool aberto = false;
+  final TextEditingController controllerBar = TextEditingController();
 
   void _filtrarLista(String? text, {bool start = false}) {
     if (start) {
@@ -117,7 +118,7 @@ class SearchDialogState extends State<SearchDialog> {
                 addMode: widget.addMode,
                 animationDuration: widget.animationDuration, 
                 backgroundColor: widget.backgroundColor, 
-                controllerBar: widget.controllerBar, 
+                controllerBar: controllerBar, 
                 deleteMode: widget.deleteMode,
                 dialogActionIcon: widget.dialogActionIcon,
                 dialogActionWidget: widget.dialogActionWidget,
@@ -169,7 +170,10 @@ class SearchDialogState extends State<SearchDialog> {
     overlayEntry = null;
     setState(() {
       aberto = !aberto;
-      if (val != null) widget.controllerBar.text = val;
+      if (val != null) {
+        widget.updateSelectedItem(val);
+        controllerBar.text = val;
+      }
     });
   }
 
@@ -186,7 +190,7 @@ class SearchDialogState extends State<SearchDialog> {
                   ? const Icon(Icons.arrow_drop_up)
                   : const Icon(Icons.arrow_drop_down),
               Visibility(
-                visible: widget.controllerBar.text != '',
+                visible: controllerBar.text != '',
                 child: Row(
                   children: [
                     const SizedBox(
@@ -195,7 +199,7 @@ class SearchDialogState extends State<SearchDialog> {
                     IconButton(
                       onPressed: () {
                         setState(() {
-                          widget.controllerBar.clear();
+                          controllerBar.clear();
                           _filtrarLista(null);
                         });
                       },  
@@ -205,7 +209,7 @@ class SearchDialogState extends State<SearchDialog> {
                 ),
               ),
             ],
-        controller: widget.controllerBar,
+        controller: controllerBar,
         backgroundColor:
             MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
         hintStyle: MaterialStatePropertyAll(widget.hintStyle),

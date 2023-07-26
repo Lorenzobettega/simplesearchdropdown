@@ -31,6 +31,7 @@ class ContentMultiple extends StatefulWidget {
     required this.selectedItens,
     required this.sortSelecteds,
     required this.unselectedInsideBoxTextStyle,
+    required this.updateSelectedItems,
     required this.width,
   });
 
@@ -62,6 +63,7 @@ class ContentMultiple extends StatefulWidget {
   final TextStyle? selectedInsideBoxTextStyle;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
+  final Function(List<String>) updateSelectedItems;
   final double width;
   
   @override

@@ -30,8 +30,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-   final List<String> listitems = ['Lorenzo', 'Bettega', 'É', 'Muito', 'Bonito'];
-  final TextEditingController controllerbar = TextEditingController();
+  final List<String> listitems = ['Lorenzo', 'Bettega', 'É', 'Muito', 'Bonito'];
+  List<String> selectedMultipleItems = [];
+  String? selectedSingleItem;
 
   void removeItem(String item) {
     setState(() {
@@ -45,6 +46,18 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void updateSelectedItems(List<String> newSelectedItems) {
+    setState(() {
+      selectedMultipleItems = newSelectedItems;
+    });
+  }
+
+  void updateSelectedItem(String newSelectedItem) {
+    setState(() {
+      selectedSingleItem = newSelectedItem;
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -54,12 +67,12 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SearchDialog(
-              controllerBar: controllerbar,
               listItens: listitems,
               onDeleteItem: removeItem, 
               onAddItem: addItem,
               addMode: true,
               deleteMode: true,
+              updateSelectedItem: updateSelectedItem,
             ),
             const SizedBox(height: 20,),
             MultipleDialog(
@@ -68,6 +81,23 @@ class _MyHomePageState extends State<MyHomePage> {
               onAddItem: addItem,
               addMode: true,
               deleteMode: true,
+              selectedItems: selectedMultipleItems,
+              updateSelectedItems: updateSelectedItems,
+            ),
+            const SizedBox(height: 20,),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: (){print(selectedSingleItem);}, 
+                  child: const Text('Print Single Result')
+                ),
+                const SizedBox(width: 10,),
+                TextButton(
+                  onPressed: (){print(selectedMultipleItems);}, 
+                  child: const Text('Print Multiple Result')
+                ),
+              ],
             ),
           ],
         ),

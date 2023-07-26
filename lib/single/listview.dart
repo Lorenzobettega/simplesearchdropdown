@@ -56,7 +56,6 @@ class NovoListView extends StatelessWidget {
       listaFiltrada.removeWhere((item) => item == controllerBar.text);
       listaFiltrada.insert(0,selecionado[0]);
     }
-    
   }
 
   @override

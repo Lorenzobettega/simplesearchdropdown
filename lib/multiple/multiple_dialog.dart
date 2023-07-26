@@ -33,10 +33,12 @@ class MultipleDialog extends StatefulWidget {
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
+    required this.selectedItems,
     this.selectedItemsBoxTextStyle,
     this.seletedItemsBoxColor,
     this.sortSelecteds = true,
     this.unselectedInsideBoxTextStyle,
+    required this.updateSelectedItems,
     this.widgetBuilder,
     this.width = 300,
   }) : super(key: key);
@@ -68,10 +70,12 @@ class MultipleDialog extends StatefulWidget {
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final List<String> selectedItems;
   final TextStyle? selectedItemsBoxTextStyle;
   final Color? seletedItemsBoxColor;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
+  final Function(List<String>) updateSelectedItems;
   final List<String> listItems;
   final Widget? widgetBuilder;
   final double width;
@@ -83,16 +87,16 @@ class MultipleDialog extends StatefulWidget {
 class _MultipleDialogState extends State<MultipleDialog> {
   late double altura = 0;
   late bool aberto = false;
-  final List<String> selectedItems = [];
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
 
   void onItemSelected(String val) {
     setState(() {
-      if (selectedItems.contains(val)) {
-        selectedItems.remove(val);
+      if (widget.selectedItems.contains(val)) {
+        widget.selectedItems.remove(val);
       } else {
-        selectedItems.add(val);
+        widget.selectedItems.add(val);
+        widget.updateSelectedItems(widget.selectedItems);
       }
     });
   }
@@ -165,9 +169,10 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 selectedDialogBoxColor: widget.selectedDialogBoxColor, 
                 selectedDialogColor: widget.selectedDialogColor, 
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
-                selectedItens: selectedItems, 
+                selectedItens: widget.selectedItems, 
                 sortSelecteds: widget.sortSelecteds,
                 unselectedInsideBoxTextStyle: widget.unselectedInsideBoxTextStyle, 
+                updateSelectedItems: (val) => widget.updateSelectedItems(val),
                 width: widget.width
               ),
             ),
@@ -231,13 +236,13 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: selectedItems.isNotEmpty 
+                      child: widget.selectedItems.isNotEmpty 
                       ?ScrollConfiguration(
                         behavior: MyCustomScrollBehavior(),
                         child: ListView.separated(
                           scrollDirection: Axis.horizontal,
                           separatorBuilder: (context, index) => const SizedBox(width: 5),
-                          itemCount: selectedItems.length,
+                          itemCount: widget.selectedItems.length,
                           itemBuilder: (context, index) {
                             return Padding(
                               padding: const EdgeInsets.symmetric(vertical: 5),
@@ -250,10 +255,10 @@ class _MultipleDialogState extends State<MultipleDialog> {
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     crossAxisAlignment: CrossAxisAlignment.center,
                                     children: [
-                                      Text(selectedItems[index],style:widget.selectedInsideBoxTextStyle),
+                                      Text(widget.selectedItems[index],style:widget.selectedInsideBoxTextStyle),
                                       InkWell(
                                         onTap: () =>
-                                            onItemSelected(selectedItems[index]),
+                                            onItemSelected(widget.selectedItems[index]),
                                         child: Icon(Icons.close,size: widget.insideIconSize,),
                                       ),
                                     ],
@@ -278,11 +283,11 @@ class _MultipleDialogState extends State<MultipleDialog> {
                         widget.action ?? InkWell(
                           onTap:  () {
                             setState(() {
-                              selectedItems.clear();
+                              widget.selectedItems.clear();
                             });
                           }, 
                           child: Icon(
-                            selectedItems.isNotEmpty 
+                            widget.selectedItems.isNotEmpty 
                               ? Icons.clear 
                               : aberto  
                                 ? Icons.arrow_drop_up
