@@ -17,7 +17,8 @@ class ContentMultiple extends StatefulWidget {
     required this.hintSearchBar,
     required this.hintStyle,
     required this.listItens,
-    required this.onClear,
+    required this.onAddItem,
+    required this.onDeleteItem,
     required this.onItemSelected,
     required this.selectedDialogBoxColor,
     required this.selectedDialogColor,
@@ -37,7 +38,8 @@ class ContentMultiple extends StatefulWidget {
   final double dialogSearchBarElevation;
   final double elevation;
   final Color? hoverColor;
-  final Function(String) onClear;
+  final Function(String) onAddItem;
+  final Function(String) onDeleteItem;
   final Function(String value) onItemSelected;
   final Widget? dialogListviewWidgetBuilder;
   final TextStyle? hintStyle;
@@ -115,48 +117,76 @@ class _ContentMultipleState extends State<ContentMultiple> {
                 Expanded( 
                   child: ListView.builder( 
                     scrollDirection: Axis.vertical,
-                    itemCount: listafiltrada.length,
+                    itemCount: listafiltrada.length + 1,
                     itemBuilder: (context, index) {
-                      return Row(
-                        children: [
-                          Expanded(
-                            child: TextButton(
-                                style: ButtonStyle(
-                                  backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                                    (Set<MaterialState> states) {
-                                      if (widget.selectedItens.contains(listafiltrada[index])) {
-                                        return widget.selectedDialogBoxColor ?? Colors.black38;
-                                      }
-                                      return Colors.transparent;
-                                    },
-                                  ),
-                                  shape: MaterialStateProperty.all<OutlinedBorder>(
-                                      const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.zero)),
-                                  overlayColor:
-                                      MaterialStatePropertyAll(widget.hoverColor ?? Colors.black45),
+                      if (index == listafiltrada.length) {
+                        if(controllerBar.text != ''){
+                          final list = listafiltrada.where((element) =>
+                            element.toLowerCase().latinize().contains(controllerBar.text.toLowerCase().latinize())).toList();
+                          if (list.isEmpty) {
+                            return Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12),
+                                  child: Text(controllerBar.text),
                                 ),
-                                onPressed: () => addItem(listafiltrada[index]),
-                                child: widget.dialogListviewWidgetBuilder ??
-                                    Align(
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          listafiltrada[index],
-                                          style: (controllerBar.text == listafiltrada[index]
-                                              ? widget.selectedInsideBoxTextStyle ??
-                                                  const TextStyle(color: Colors.black)
-                                              : widget.unselectedInsideBoxTextStyle ??
-                                                  const TextStyle(color: Colors.black45)),
-                                        ))),
-                          ),
-                          IconButton(
-                            onPressed: (){
-                              widget.onClear(listafiltrada[index]);
-                            }, 
-                            icon: Icon(Icons.delete,color: Colors.red.shade900,)
-                          )
-                        ],
-                      );
+                                TextButton(
+                                  onPressed: (){
+                                    setState(() {
+                                      widget.onAddItem(controllerBar.text); 
+                                      listafiltrada.add(controllerBar.text);
+                                    });
+                                  }, 
+                                  child: const Text('Criar'),
+                                ),
+                              ],
+                            );
+                          }
+                        } 
+                        return const SizedBox.shrink();
+                      }else{
+                        return Row(
+                          children: [
+                            Expanded(
+                              child: TextButton(
+                                  style: ButtonStyle(
+                                    backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                                      (Set<MaterialState> states) {
+                                        if (widget.selectedItens.contains(listafiltrada[index])) {
+                                          return widget.selectedDialogBoxColor ?? Colors.black38;
+                                        }
+                                        return Colors.transparent;
+                                      },
+                                    ),
+                                    shape: MaterialStateProperty.all<OutlinedBorder>(
+                                        const RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.zero)),
+                                    overlayColor:
+                                        MaterialStatePropertyAll(widget.hoverColor ?? Colors.black45),
+                                  ),
+                                  onPressed: () => addItem(listafiltrada[index]),
+                                  child: widget.dialogListviewWidgetBuilder ??
+                                      Align(
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(
+                                            listafiltrada[index],
+                                            style: (controllerBar.text == listafiltrada[index]
+                                                ? widget.selectedInsideBoxTextStyle ??
+                                                    const TextStyle(color: Colors.black)
+                                                : widget.unselectedInsideBoxTextStyle ??
+                                                    const TextStyle(color: Colors.black45)),
+                                          ))),
+                            ),
+                            IconButton(
+                              onPressed: (){
+                                widget.onDeleteItem(listafiltrada[index]);
+                              }, 
+                              icon: Icon(Icons.delete,color: Colors.red.shade900,)
+                            )
+                          ],
+                        );
+                      }
                     },
                   ),
                 ),

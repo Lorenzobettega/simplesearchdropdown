@@ -63,6 +63,7 @@ class _MyHomePageState extends State<MyHomePage> {
             MultipleDialog(
               listItems: listitems,
               onDeleteItem: removeItem, 
+              onAddItem: addItem,
             ),
           ],
         ),
