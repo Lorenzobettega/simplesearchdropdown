@@ -3,9 +3,11 @@ import 'package:stringr/stringr.dart';
 
 class ContentMultiple extends StatefulWidget {
   const ContentMultiple({super.key,
+    required this.addMode,
     required this.animationDuration,
     required this.backgroundColor,
     required this.border,
+    required this.deleteMode,
     required this.dialogBackgroundColor,
     required this.dialogHeight,
     required this.dialogListviewWidgetBuilder,
@@ -28,9 +30,11 @@ class ContentMultiple extends StatefulWidget {
     required this.width,
   });
 
+  final bool addMode;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
+  final bool deleteMode;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final OutlinedBorder? dialogSearchBarBorder;
@@ -117,9 +121,9 @@ class _ContentMultipleState extends State<ContentMultiple> {
                 Expanded( 
                   child: ListView.builder( 
                     scrollDirection: Axis.vertical,
-                    itemCount: listafiltrada.length + 1,
+                    itemCount: listafiltrada.length + (widget.addMode ? 1 : 0),
                     itemBuilder: (context, index) {
-                      if (index == listafiltrada.length) {
+                      if (index == listafiltrada.length && widget.addMode) {
                         if(controllerBar.text != ''){
                           final list = listafiltrada.where((element) =>
                             element.toLowerCase().latinize().contains(controllerBar.text.toLowerCase().latinize())).toList();
@@ -178,12 +182,13 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                                     const TextStyle(color: Colors.black45)),
                                           ))),
                             ),
-                            IconButton(
+                            widget.deleteMode 
+                            ? IconButton(
                               onPressed: (){
                                 widget.onDeleteItem(listafiltrada[index]);
                               }, 
                               icon: Icon(Icons.delete,color: Colors.red.shade900,)
-                            )
+                            ) : const SizedBox.shrink()
                           ],
                         );
                       }

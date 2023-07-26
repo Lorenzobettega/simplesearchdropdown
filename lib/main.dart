@@ -66,6 +66,8 @@ class _MyHomePageState extends State<MyHomePage> {
               listItems: listitems,
               onDeleteItem: removeItem, 
               onAddItem: addItem,
+              addMode: true,
+              deleteMode: true,
             ),
           ],
         ),

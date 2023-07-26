@@ -6,10 +6,12 @@ class MultipleDialog extends StatefulWidget {
   const MultipleDialog({
     Key? key,
     required this.listItems,
+    required this.addMode,
     this.action,
     this.animationDuration,
     this.backgroundColor,
     this.border,
+    required this.deleteMode,
     this.dialogBackgroundColor,
     this.dialogHeight = 300,
     this.dialogListviewWidgetBuilder,
@@ -22,8 +24,8 @@ class MultipleDialog extends StatefulWidget {
     this.hintStyle,
     this.hoverColor,
     this.insideIconSize = 18,
-    required this.onAddItem,
-    required this.onDeleteItem,
+    this.onAddItem,
+    this.onDeleteItem,
     this.outsideIconSize = 20,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
@@ -36,9 +38,11 @@ class MultipleDialog extends StatefulWidget {
   }) : super(key: key);
 
   final Widget? action;
+  final bool addMode;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
+  final bool deleteMode;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final Widget? dialogListviewWidgetBuilder;
@@ -51,8 +55,8 @@ class MultipleDialog extends StatefulWidget {
   final TextStyle? hintStyle;
   final Color? hoverColor;
   final double insideIconSize;
-  final Function(String) onAddItem;
-  final Function(String) onDeleteItem;
+  final Function(String)? onAddItem;
+  final Function(String)? onDeleteItem;
   final double outsideIconSize;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
@@ -86,15 +90,19 @@ class _MultipleDialogState extends State<MultipleDialog> {
   }
 
   void handleAddItem(String item, BuildContext context){
-    widget.onAddItem(item);
-    onItemSelected(item);
-    setState(() {});
+    if(widget.addMode){
+      widget.onAddItem!(item);
+      onItemSelected(item);
+      setState(() {});
+    }
   }
 
   void handleDeleteItem(String item, BuildContext context) {
-    widget.onDeleteItem(item); 
-    hideOverlay();
-    showOverlay(context);
+    if(widget.deleteMode){
+      widget.onDeleteItem!(item); 
+      hideOverlay();
+      showOverlay(context);
+    }
   }
 
   void showOverlay(
@@ -124,9 +132,11 @@ class _MultipleDialogState extends State<MultipleDialog> {
             child: Material(
               color: Colors.transparent,
               child: ContentMultiple(
+                addMode: widget.addMode,
                 animationDuration: widget.animationDuration, 
                 backgroundColor: widget.backgroundColor, 
                 border: widget.border, 
+                deleteMode: widget.deleteMode,
                 dialogBackgroundColor: widget.dialogBackgroundColor, 
                 dialogHeight: widget.dialogHeight, 
                 dialogListviewWidgetBuilder: widget.dialogListviewWidgetBuilder, 
