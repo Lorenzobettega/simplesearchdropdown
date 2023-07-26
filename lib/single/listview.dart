@@ -9,6 +9,7 @@ class NovoListView extends StatelessWidget {
   final double elevation;
   final Color? hoverColor;
   final List<String> listaFiltrada;
+  final Function(String) onClear;
   final Function(String) onPressed;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -25,6 +26,7 @@ class NovoListView extends StatelessWidget {
       required this.elevation,
       required this.hoverColor,
       required this.listaFiltrada,
+      required this.onClear,
       required this.onPressed,
       required this.selectedDialogColor,
       required this.selectedInsideBoxTextStyle,
@@ -81,7 +83,9 @@ class NovoListView extends StatelessWidget {
                               ))),
                 ),
                 IconButton(
-                  onPressed: (){}, 
+                  onPressed: (){
+                    onClear(listaFiltrada[index]);
+                  }, 
                   icon: Icon(Icons.delete,color: Colors.red.shade900,)
                 )
               ],

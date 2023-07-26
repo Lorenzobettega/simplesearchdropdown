@@ -22,13 +22,26 @@ class MyApp extends StatelessWidget {
   }
 }
 
-class MyHomePage extends StatelessWidget {
+class MyHomePage extends StatefulWidget {
   const MyHomePage({super.key});
 
   @override
+  State<MyHomePage> createState() => _MyHomePageState();
+}
+
+class _MyHomePageState extends State<MyHomePage> {
+   final List<String> listitems = ['A', 'B', 'C', 'D', 'E'];
+  final TextEditingController controllerbar = TextEditingController();
+
+  void removeItem(String item) {
+    setState(() {
+      listitems.remove(item);
+    });
+  }
+
+
+  @override
   Widget build(BuildContext context) {
-    final listitems = ['A', 'B', 'C', 'D', 'E'];
-    final TextEditingController controllerbar = TextEditingController();
     return Scaffold(
       body: Center(
         child: Column(
@@ -37,6 +50,7 @@ class MyHomePage extends StatelessWidget {
             SearchDialog(
               controllerBar: controllerbar,
               listItens: listitems,
+              onDeleteItem: removeItem, 
             ),
             const SizedBox(height: 20,),
             MultipleDialog(

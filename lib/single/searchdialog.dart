@@ -17,6 +17,7 @@ class SearchDialog extends StatefulWidget {
     this.hintStyle,
     this.hoverColor,
     required this.listItens,
+    required this.onDeleteItem,
     this.selectedDialogColor,
     this.selectedInsideBoxTextStyle,
     this.unselectedInsideBoxTextStyle,
@@ -36,6 +37,7 @@ class SearchDialog extends StatefulWidget {
   final TextStyle? hintStyle;
   final Color? hoverColor;
   final List<String> listItens;
+  final Function(String) onDeleteItem;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final TextStyle? unselectedInsideBoxTextStyle;
@@ -57,6 +59,14 @@ class SearchDialogState extends State<SearchDialog> {
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
   bool aberto = false;
+
+   void clearSelectedItem() {
+    if (widget.listItens.contains(widget.controllerBar.text)) {
+      widget.listItens.remove(widget.controllerBar.text);
+      widget.controllerBar.clear();
+      setState(() {});
+    }
+  }
 
   void _filtrarLista(String? text, {bool start = false}) {
     if (start) {
@@ -108,6 +118,7 @@ class SearchDialogState extends State<SearchDialog> {
                 elevation: widget.elevation, 
                 hoverColor: widget.hoverColor, 
                 listaFiltrada: listafiltrada, 
+                onClear: (val) => handleDeleteItem(val, context),
                 onPressed: (val) => hideOverlay(val), 
                 selectedDialogColor: widget.selectedDialogColor, 
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
@@ -124,6 +135,12 @@ class SearchDialogState extends State<SearchDialog> {
       aberto = !aberto;
     });
     Overlay.of(context).insert(overlayEntry!);
+  }
+
+  void handleDeleteItem(String item, BuildContext context) {
+    widget.onDeleteItem(item); 
+    hideOverlay(null);
+    showOverlay(context);
   }
 
   void hideOverlay(String? val) {
