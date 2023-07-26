@@ -12,6 +12,8 @@ class SearchDialog extends StatefulWidget {
     this.border,
     required this.controllerBar,
     required this.deleteMode,
+    this.dialogActionIcon,
+    this.dialogActionWidget,
     this.dialogBackgroundColor,
     this.dialogHeight = 300,
     this.elevation = 2,
@@ -35,6 +37,8 @@ class SearchDialog extends StatefulWidget {
   final OutlinedBorder? border;
   final TextEditingController controllerBar;
   final bool deleteMode;
+  final Icon? dialogActionIcon;
+  final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final double elevation;
@@ -113,6 +117,8 @@ class SearchDialogState extends State<SearchDialog> {
                 backgroundColor: widget.backgroundColor, 
                 controllerBar: widget.controllerBar, 
                 deleteMode: widget.deleteMode,
+                dialogActionIcon: widget.dialogActionIcon,
+                dialogActionWidget: widget.dialogActionWidget,
                 dialogBackgroundColor: widget.dialogBackgroundColor, 
                 dialogHeight: widget.dialogHeight, 
                 elevation: widget.elevation, 

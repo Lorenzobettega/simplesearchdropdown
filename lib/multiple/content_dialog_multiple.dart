@@ -4,10 +4,14 @@ import 'package:stringr/stringr.dart';
 class ContentMultiple extends StatefulWidget {
   const ContentMultiple({super.key,
     required this.addMode,
+    required this.activeHoverColor,
     required this.animationDuration,
     required this.backgroundColor,
     required this.border,
     required this.deleteMode,
+    required this.deactivateHoverColor,
+    required this.dialogActionIcon,
+    required this.dialogActionWidget,
     required this.dialogBackgroundColor,
     required this.dialogHeight,
     required this.dialogListviewWidgetBuilder,
@@ -15,7 +19,6 @@ class ContentMultiple extends StatefulWidget {
     required this.dialogSearchBarColor,
     required this.dialogSearchBarElevation,
     required this.elevation,
-    required this.hoverColor,
     required this.hintSearchBar,
     required this.hintStyle,
     required this.listItens,
@@ -31,17 +34,20 @@ class ContentMultiple extends StatefulWidget {
   });
 
   final bool addMode;
+  final Color? activeHoverColor;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
   final bool deleteMode;
+  final Color? deactivateHoverColor;
+  final Icon? dialogActionIcon;
+  final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final OutlinedBorder? dialogSearchBarBorder;
   final Color? dialogSearchBarColor;
   final double dialogSearchBarElevation;
   final double elevation;
-  final Color? hoverColor;
   final Function(String) onAddItem;
   final Function(String) onDeleteItem;
   final Function(String value) onItemSelected;
@@ -105,7 +111,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                 SearchBar(
                   controller: controllerBar,
                   backgroundColor: MaterialStatePropertyAll(widget.dialogSearchBarColor ?? Colors.white),
-                  overlayColor: MaterialStatePropertyAll(widget.hoverColor ?? Colors.grey.shade100),
+                  overlayColor: MaterialStatePropertyAll(widget.deactivateHoverColor ?? Colors.grey.shade100),
                   constraints: BoxConstraints(maxHeight: 50,maxWidth: widget.width),
                   surfaceTintColor: MaterialStatePropertyAll(widget.dialogSearchBarColor ?? Colors.white),
                   shape: MaterialStateProperty.all<OutlinedBorder>(widget.dialogSearchBarBorder ?? const RoundedRectangleBorder(borderRadius: BorderRadius.all(Radius.circular(10.0)))),
@@ -166,8 +172,15 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                     shape: MaterialStateProperty.all<OutlinedBorder>(
                                         const RoundedRectangleBorder(
                                             borderRadius: BorderRadius.zero)),
-                                    overlayColor:
-                                        MaterialStatePropertyAll(widget.hoverColor ?? Colors.black45),
+                                    overlayColor: MaterialStateProperty.resolveWith<Color>(
+                                          (Set<MaterialState> states) {
+                                        if (widget.selectedItens.contains(listafiltrada[index])) {
+                                          return widget.activeHoverColor ?? Colors.grey.shade400;
+                                        }
+                                        return widget.deactivateHoverColor ?? Colors.grey.shade100;
+                                      },
+                                          
+                                    ),
                                   ),
                                   onPressed: () => addItem(listafiltrada[index]),
                                   child: widget.dialogListviewWidgetBuilder ??
@@ -183,11 +196,11 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                           ))),
                             ),
                             widget.deleteMode 
-                            ? IconButton(
+                            ? widget.dialogActionWidget ?? IconButton(
                               onPressed: (){
                                 widget.onDeleteItem(listafiltrada[index]);
                               }, 
-                              icon: Icon(Icons.delete,color: Colors.red.shade900,)
+                              icon: widget.dialogActionIcon ?? Icon(Icons.delete,color: Colors.red.shade900,size: 20,)
                             ) : const SizedBox.shrink()
                           ],
                         );

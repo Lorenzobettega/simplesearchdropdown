@@ -7,6 +7,8 @@ class NovoListView extends StatelessWidget {
   final Color? backgroundColor;
   final TextEditingController controllerBar;
   final bool deleteMode;
+  final Icon? dialogActionIcon;
+  final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final double elevation;
@@ -27,6 +29,8 @@ class NovoListView extends StatelessWidget {
       required this.backgroundColor,
       required this.controllerBar,
       required this.deleteMode,
+      required this.dialogActionIcon,
+      required this.dialogActionWidget,
       required this.dialogBackgroundColor,
       required this.dialogHeight,
       required this.elevation,
@@ -114,11 +118,11 @@ class NovoListView extends StatelessWidget {
                                           const TextStyle(color: Colors.black45)),
                                 ))),
                   ),
-                  deleteMode ? IconButton(
+                  deleteMode ? dialogActionWidget ?? IconButton(
                     onPressed: (){
                       onClear(listaFiltrada[index]);
                     }, 
-                    icon: Icon(Icons.delete,color: Colors.red.shade900,)
+                    icon: dialogActionIcon ?? Icon(Icons.delete,color: Colors.red.shade900,size: 20,)
                   ) : const SizedBox.shrink()
                 ],
               );

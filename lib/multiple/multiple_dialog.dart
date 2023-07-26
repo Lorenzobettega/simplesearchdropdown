@@ -8,10 +8,14 @@ class MultipleDialog extends StatefulWidget {
     required this.listItems,
     required this.addMode,
     this.action,
+    this.activeHoverColor,
     this.animationDuration,
     this.backgroundColor,
     this.border,
     required this.deleteMode,
+    this.deactivateHoverColor,
+    this.dialogActionIcon,
+    this.dialogActionWidget,
     this.dialogBackgroundColor,
     this.dialogHeight = 300,
     this.dialogListviewWidgetBuilder,
@@ -22,7 +26,6 @@ class MultipleDialog extends StatefulWidget {
     this.hint,
     this.hintSearchBar,
     this.hintStyle,
-    this.hoverColor,
     this.insideIconSize = 18,
     this.onAddItem,
     this.onDeleteItem,
@@ -39,10 +42,14 @@ class MultipleDialog extends StatefulWidget {
 
   final Widget? action;
   final bool addMode;
+  final Color? activeHoverColor;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
   final bool deleteMode;
+  final Color? deactivateHoverColor;
+  final Icon? dialogActionIcon;
+  final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final Widget? dialogListviewWidgetBuilder;
@@ -53,7 +60,6 @@ class MultipleDialog extends StatefulWidget {
   final String? hint;
   final String? hintSearchBar;
   final TextStyle? hintStyle;
-  final Color? hoverColor;
   final double insideIconSize;
   final Function(String)? onAddItem;
   final Function(String)? onDeleteItem;
@@ -133,10 +139,14 @@ class _MultipleDialogState extends State<MultipleDialog> {
               color: Colors.transparent,
               child: ContentMultiple(
                 addMode: widget.addMode,
+                activeHoverColor: widget.activeHoverColor, 
                 animationDuration: widget.animationDuration, 
                 backgroundColor: widget.backgroundColor, 
                 border: widget.border, 
                 deleteMode: widget.deleteMode,
+                deactivateHoverColor: widget.deactivateHoverColor, 
+                dialogActionIcon: widget.dialogActionIcon,
+                dialogActionWidget: widget.dialogActionWidget,
                 dialogBackgroundColor: widget.dialogBackgroundColor, 
                 dialogHeight: widget.dialogHeight, 
                 dialogListviewWidgetBuilder: widget.dialogListviewWidgetBuilder, 
@@ -144,7 +154,6 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 dialogSearchBarColor: widget.dialogSearchBarColor, 
                 dialogSearchBarElevation: widget.dialogSearchBarElevation, 
                 elevation: widget.elevation, 
-                hoverColor: widget.hoverColor, 
                 hintSearchBar: widget.hintSearchBar, 
                 hintStyle: widget.hintStyle, 
                 listItens: widget.listItems, 
