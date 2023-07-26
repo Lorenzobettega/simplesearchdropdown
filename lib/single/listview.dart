@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:stringr/stringr.dart';
 
 class NovoListView extends StatelessWidget {
+  final bool addMode;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final TextEditingController controllerBar;
+  final bool deleteMode;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final double elevation;
@@ -20,9 +22,11 @@ class NovoListView extends StatelessWidget {
   final double width;
 
   const NovoListView({
+      required this.addMode,
       required this.animationDuration,
       required this.backgroundColor,
       required this.controllerBar,
+      required this.deleteMode,
       required this.dialogBackgroundColor,
       required this.dialogHeight,
       required this.elevation,
@@ -51,9 +55,9 @@ class NovoListView extends StatelessWidget {
         height: dialogHeight,
         width: width,
         child: ListView.builder(
-          itemCount: listaFiltrada.length + 1,
+          itemCount: listaFiltrada.length + (addMode ? 1 : 0),
           itemBuilder: (context, index) {
-            if (index == listaFiltrada.length) {
+            if (index == listaFiltrada.length && addMode) {
               if(controllerBar.text != ''){
                 final list = listaFiltrada.where((element) =>
                   element.toLowerCase().latinize().contains(controllerBar.text.toLowerCase().latinize())).toList();
@@ -110,12 +114,12 @@ class NovoListView extends StatelessWidget {
                                           const TextStyle(color: Colors.black45)),
                                 ))),
                   ),
-                  IconButton(
+                  deleteMode ? IconButton(
                     onPressed: (){
                       onClear(listaFiltrada[index]);
                     }, 
                     icon: Icon(Icons.delete,color: Colors.red.shade900,)
-                  )
+                  ) : const SizedBox.shrink()
                 ],
               );
             }

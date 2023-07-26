@@ -6,10 +6,12 @@ class SearchDialog extends StatefulWidget {
   const SearchDialog({
     super.key,
     this.actions,
+    required this.addMode,
     this.animationDuration,
     this.backgroundColor,
     this.border,
     required this.controllerBar,
+    required this.deleteMode,
     this.dialogBackgroundColor,
     this.dialogHeight = 300,
     this.elevation = 2,
@@ -17,8 +19,8 @@ class SearchDialog extends StatefulWidget {
     this.hintStyle,
     this.hoverColor,
     required this.listItens,
-    required this.onAddItem,
-    required this.onDeleteItem,
+    this.onAddItem,
+    this.onDeleteItem,
     this.selectedDialogColor,
     this.selectedInsideBoxTextStyle,
     this.unselectedInsideBoxTextStyle,
@@ -27,10 +29,12 @@ class SearchDialog extends StatefulWidget {
   });
 
   final List<Widget>? actions;
+  final bool addMode;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
   final TextEditingController controllerBar;
+  final bool deleteMode;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final double elevation;
@@ -38,8 +42,8 @@ class SearchDialog extends StatefulWidget {
   final TextStyle? hintStyle;
   final Color? hoverColor;
   final List<String> listItens;
-  final Function(String) onAddItem;
-  final Function(String) onDeleteItem;
+  final Function(String)? onAddItem;
+  final Function(String)? onDeleteItem;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final TextStyle? unselectedInsideBoxTextStyle;
@@ -104,9 +108,11 @@ class SearchDialogState extends State<SearchDialog> {
             child: Material(
               color: Colors.transparent,
               child: NovoListView(
+                addMode: widget.addMode,
                 animationDuration: widget.animationDuration, 
                 backgroundColor: widget.backgroundColor, 
                 controllerBar: widget.controllerBar, 
+                deleteMode: widget.deleteMode,
                 dialogBackgroundColor: widget.dialogBackgroundColor, 
                 dialogHeight: widget.dialogHeight, 
                 elevation: widget.elevation, 
@@ -133,16 +139,20 @@ class SearchDialogState extends State<SearchDialog> {
   }
 
   void handleAddItem(String item, BuildContext context){
-    widget.onAddItem(item);
-    hideOverlay(item);
-    setState(() {});
+    if(widget.addMode){
+      widget.onAddItem!(item);
+      hideOverlay(item);
+      setState(() {});
+    }
   }
 
   void handleDeleteItem(String item, BuildContext context) {
-    widget.onDeleteItem(item);
-    hideOverlay(null);
-    setState(() {});
-    showOverlay(context);
+    if(widget.deleteMode){
+      widget.onDeleteItem!(item);
+      hideOverlay(null);
+      setState(() {});
+      showOverlay(context);
+    }
   }
 
   void hideOverlay(String? val) {

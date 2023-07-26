@@ -30,7 +30,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-   final List<String> listitems = ['A', 'B', 'C', 'D', 'E'];
+   final List<String> listitems = ['Lorenzo', 'Bettega', 'É', 'Muito', 'Bonito'];
   final TextEditingController controllerbar = TextEditingController();
 
   void removeItem(String item) {
@@ -58,6 +58,8 @@ class _MyHomePageState extends State<MyHomePage> {
               listItens: listitems,
               onDeleteItem: removeItem, 
               onAddItem: addItem,
+              addMode: true,
+              deleteMode: true,
             ),
             const SizedBox(height: 20,),
             MultipleDialog(
