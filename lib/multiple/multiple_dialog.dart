@@ -22,6 +22,7 @@ class MultipleDialog extends StatefulWidget {
     this.hintStyle,
     this.hoverColor,
     this.insideIconSize = 18,
+    required this.onDeleteItem,
     this.outsideIconSize = 20,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
@@ -49,6 +50,7 @@ class MultipleDialog extends StatefulWidget {
   final TextStyle? hintStyle;
   final Color? hoverColor;
   final double insideIconSize;
+  final Function(String) onDeleteItem;
   final double outsideIconSize;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
@@ -79,6 +81,12 @@ class _MultipleDialogState extends State<MultipleDialog> {
         selectedItems.add(val);
       }
     });
+  }
+
+  void handleDeleteItem(String item, BuildContext context) {
+    widget.onDeleteItem(item); 
+    hideOverlay();
+    showOverlay(context);
   }
 
   void showOverlay(
@@ -122,6 +130,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 hintSearchBar: widget.hintSearchBar, 
                 hintStyle: widget.hintStyle, 
                 listItens: widget.listItems, 
+                onClear: (val) => handleDeleteItem(val,context),
                 onItemSelected: (val) => onItemSelected(val), 
                 selectedDialogBoxColor: widget.selectedDialogBoxColor, 
                 selectedDialogColor: widget.selectedDialogColor, 

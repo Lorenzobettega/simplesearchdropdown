@@ -17,6 +17,7 @@ class ContentMultiple extends StatefulWidget {
     required this.hintSearchBar,
     required this.hintStyle,
     required this.listItens,
+    required this.onClear,
     required this.onItemSelected,
     required this.selectedDialogBoxColor,
     required this.selectedDialogColor,
@@ -36,6 +37,7 @@ class ContentMultiple extends StatefulWidget {
   final double dialogSearchBarElevation;
   final double elevation;
   final Color? hoverColor;
+  final Function(String) onClear;
   final Function(String value) onItemSelected;
   final Widget? dialogListviewWidgetBuilder;
   final TextStyle? hintStyle;
@@ -148,7 +150,9 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                         ))),
                           ),
                           IconButton(
-                            onPressed: (){}, 
+                            onPressed: (){
+                              widget.onClear(listafiltrada[index]);
+                            }, 
                             icon: Icon(Icons.delete,color: Colors.red.shade900,)
                           )
                         ],

@@ -55,6 +55,7 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(height: 20,),
             MultipleDialog(
               listItems: listitems,
+              onDeleteItem: removeItem, 
             ),
           ],
         ),
