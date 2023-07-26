@@ -39,6 +39,12 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
+  void addItem(String item) {
+    setState(() {
+      listitems.add(item);
+    });
+  }
+
 
   @override
   Widget build(BuildContext context) {
@@ -51,6 +57,7 @@ class _MyHomePageState extends State<MyHomePage> {
               controllerBar: controllerbar,
               listItens: listitems,
               onDeleteItem: removeItem, 
+              onAddItem: addItem,
             ),
             const SizedBox(height: 20,),
             MultipleDialog(

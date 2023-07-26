@@ -17,6 +17,7 @@ class SearchDialog extends StatefulWidget {
     this.hintStyle,
     this.hoverColor,
     required this.listItens,
+    required this.onAddItem,
     required this.onDeleteItem,
     this.selectedDialogColor,
     this.selectedInsideBoxTextStyle,
@@ -37,6 +38,7 @@ class SearchDialog extends StatefulWidget {
   final TextStyle? hintStyle;
   final Color? hoverColor;
   final List<String> listItens;
+  final Function(String) onAddItem;
   final Function(String) onDeleteItem;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -59,14 +61,6 @@ class SearchDialogState extends State<SearchDialog> {
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
   bool aberto = false;
-
-   void clearSelectedItem() {
-    if (widget.listItens.contains(widget.controllerBar.text)) {
-      widget.listItens.remove(widget.controllerBar.text);
-      widget.controllerBar.clear();
-      setState(() {});
-    }
-  }
 
   void _filtrarLista(String? text, {bool start = false}) {
     if (start) {
@@ -118,7 +112,8 @@ class SearchDialogState extends State<SearchDialog> {
                 elevation: widget.elevation, 
                 hoverColor: widget.hoverColor, 
                 listaFiltrada: listafiltrada, 
-                onClear: (val) => handleDeleteItem(val, context),
+                onAddItem: (val) => handleAddItem(val, context,),
+                onClear: (val) => handleDeleteItem(val, context,),
                 onPressed: (val) => hideOverlay(val), 
                 selectedDialogColor: widget.selectedDialogColor, 
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
@@ -137,9 +132,16 @@ class SearchDialogState extends State<SearchDialog> {
     Overlay.of(context).insert(overlayEntry!);
   }
 
+  void handleAddItem(String item, BuildContext context){
+    widget.onAddItem(item);
+    hideOverlay(item);
+    setState(() {});
+  }
+
   void handleDeleteItem(String item, BuildContext context) {
-    widget.onDeleteItem(item); 
+    widget.onDeleteItem(item);
     hideOverlay(null);
+    setState(() {});
     showOverlay(context);
   }
 

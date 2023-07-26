@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stringr/stringr.dart';
 
 class NovoListView extends StatelessWidget {
   final Duration? animationDuration;
@@ -9,6 +10,7 @@ class NovoListView extends StatelessWidget {
   final double elevation;
   final Color? hoverColor;
   final List<String> listaFiltrada;
+  final Function(String) onAddItem;
   final Function(String) onClear;
   final Function(String) onPressed;
   final Color? selectedDialogColor;
@@ -26,6 +28,7 @@ class NovoListView extends StatelessWidget {
       required this.elevation,
       required this.hoverColor,
       required this.listaFiltrada,
+      required this.onAddItem,
       required this.onClear,
       required this.onPressed,
       required this.selectedDialogColor,
@@ -48,48 +51,73 @@ class NovoListView extends StatelessWidget {
         height: dialogHeight,
         width: width,
         child: ListView.builder(
-          itemCount: listaFiltrada.length,
+          itemCount: listaFiltrada.length + 1,
           itemBuilder: (context, index) {
-            return Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                      style: ButtonStyle(
-                        backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                          (Set<MaterialState> states) {
-                            if (controllerBar.text == listaFiltrada[index]) {
-                              return selectedDialogColor ?? Colors.black38;
-                            }
-                            return Colors.transparent;
-                          },
-                        ),
-                        shape: MaterialStateProperty.all<OutlinedBorder>(
-                            const RoundedRectangleBorder(
-                                borderRadius: BorderRadius.zero)),
-                        overlayColor:
-                            MaterialStatePropertyAll(hoverColor ?? Colors.grey.shade100),
+            if (index == listaFiltrada.length) {
+              if(controllerBar.text != ''){
+                final list = listaFiltrada.where((element) =>
+                  element.toLowerCase().latinize().contains(controllerBar.text.toLowerCase().latinize())).toList();
+                if (list.isEmpty) {
+                  return Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        child: Text(controllerBar.text),
                       ),
-                      onPressed: () => onPressed(listaFiltrada[index]),
-                      child: widgetBuilder ??
-                          Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                listaFiltrada[index],
-                                style: (controllerBar.text == listaFiltrada[index]
-                                    ? selectedInsideBoxTextStyle ??
-                                        const TextStyle(color: Colors.black)
-                                    : unselectedInsideBoxTextStyle ??
-                                        const TextStyle(color: Colors.black45)),
-                              ))),
-                ),
-                IconButton(
-                  onPressed: (){
-                    onClear(listaFiltrada[index]);
-                  }, 
-                  icon: Icon(Icons.delete,color: Colors.red.shade900,)
-                )
-              ],
-            );
+                      TextButton(
+                        onPressed: (){
+                          onAddItem(controllerBar.text); 
+                        }, 
+                        child: const Text('Criar'),
+                      ),
+                    ],
+                  );
+                }
+              } 
+              return const SizedBox.shrink();
+            }else{
+              return Row(
+                children: [
+                  Expanded(
+                    child: TextButton(
+                        style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                            (Set<MaterialState> states) {
+                              if (controllerBar.text == listaFiltrada[index]) {
+                                return selectedDialogColor ?? Colors.black38;
+                              }
+                              return Colors.transparent;
+                            },
+                          ),
+                          shape: MaterialStateProperty.all<OutlinedBorder>(
+                              const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.zero)),
+                          overlayColor:
+                              MaterialStatePropertyAll(hoverColor ?? Colors.grey.shade100),
+                        ),
+                        onPressed: () => onPressed(listaFiltrada[index]),
+                        child: widgetBuilder ??
+                            Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  listaFiltrada[index],
+                                  style: (controllerBar.text == listaFiltrada[index]
+                                      ? selectedInsideBoxTextStyle ??
+                                          const TextStyle(color: Colors.black)
+                                      : unselectedInsideBoxTextStyle ??
+                                          const TextStyle(color: Colors.black45)),
+                                ))),
+                  ),
+                  IconButton(
+                    onPressed: (){
+                      onClear(listaFiltrada[index]);
+                    }, 
+                    icon: Icon(Icons.delete,color: Colors.red.shade900,)
+                  )
+                ],
+              );
+            }
           },
         ),
       ),
