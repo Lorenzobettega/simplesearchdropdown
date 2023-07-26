@@ -25,6 +25,7 @@ class SearchDialog extends StatefulWidget {
     this.onDeleteItem,
     this.selectedDialogColor,
     this.selectedInsideBoxTextStyle,
+    this.sortSelecteds = true,
     this.unselectedInsideBoxTextStyle,
     this.widgetBuilder,
     this.width = 300,
@@ -50,6 +51,7 @@ class SearchDialog extends StatefulWidget {
   final Function(String)? onDeleteItem;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Widget? widgetBuilder;
   final double width;
@@ -129,6 +131,7 @@ class SearchDialogState extends State<SearchDialog> {
                 onPressed: (val) => hideOverlay(val), 
                 selectedDialogColor: widget.selectedDialogColor, 
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
+                sortSelecteds: widget.sortSelecteds,
                 unselectedInsideBoxTextStyle: widget.unselectedInsideBoxTextStyle, 
                 widgetBuilder: widget.widgetBuilder, 
                 width: widget.width

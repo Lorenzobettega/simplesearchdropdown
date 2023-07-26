@@ -19,6 +19,7 @@ class NovoListView extends StatelessWidget {
   final Function(String) onPressed;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Widget? widgetBuilder;
   final double width;
@@ -41,6 +42,7 @@ class NovoListView extends StatelessWidget {
       required this.onPressed,
       required this.selectedDialogColor,
       required this.selectedInsideBoxTextStyle,
+      required this.sortSelecteds,
       required this.unselectedInsideBoxTextStyle,
       required this.widgetBuilder,
       required this.width,
@@ -52,7 +54,6 @@ class NovoListView extends StatelessWidget {
     List<String>? selecionado = listaFiltrada.where((item) => item == controllerBar.text).toList();
     if(selecionado.isNotEmpty){
       listaFiltrada.removeWhere((item) => item == controllerBar.text);
-
       listaFiltrada.insert(0,selecionado[0]);
     }
     
@@ -72,7 +73,7 @@ class NovoListView extends StatelessWidget {
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
           separatorBuilder: (context, index) => const SizedBox(height: 1,),
           itemBuilder: (context, index) {
-            organizarLista();
+            sortSelecteds ? organizarLista() : null;
             if (index == listaFiltrada.length && addMode) {
               if(controllerBar.text != ''){
                 final list = listaFiltrada.where((element) =>

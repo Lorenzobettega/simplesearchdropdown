@@ -35,6 +35,7 @@ class MultipleDialog extends StatefulWidget {
     this.selectedInsideBoxTextStyle,
     this.selectedItemsBoxTextStyle,
     this.seletedItemsBoxColor,
+    this.sortSelecteds = true,
     this.unselectedInsideBoxTextStyle,
     this.widgetBuilder,
     this.width = 300,
@@ -69,6 +70,7 @@ class MultipleDialog extends StatefulWidget {
   final TextStyle? selectedInsideBoxTextStyle;
   final TextStyle? selectedItemsBoxTextStyle;
   final Color? seletedItemsBoxColor;
+  final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final List<String> listItems;
   final Widget? widgetBuilder;
@@ -164,6 +166,7 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 selectedDialogColor: widget.selectedDialogColor, 
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
                 selectedItens: selectedItems, 
+                sortSelecteds: widget.sortSelecteds,
                 unselectedInsideBoxTextStyle: widget.unselectedInsideBoxTextStyle, 
                 width: widget.width
               ),

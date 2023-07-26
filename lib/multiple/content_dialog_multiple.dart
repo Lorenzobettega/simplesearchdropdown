@@ -29,6 +29,7 @@ class ContentMultiple extends StatefulWidget {
     required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
     required this.selectedItens,
+    required this.sortSelecteds,
     required this.unselectedInsideBoxTextStyle,
     required this.width,
   });
@@ -59,6 +60,7 @@ class ContentMultiple extends StatefulWidget {
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final double width;
   
@@ -91,16 +93,12 @@ class _ContentMultipleState extends State<ContentMultiple> {
     } else {
       listafiltrada = widget.listItens;
     }
-    setState(() {
-      organizarLista();
-    });
+    widget.sortSelecteds ? setState(() {organizarLista();}) : null;
   }
 
   void addItem(String value){
     widget.onItemSelected.call(value);
-    setState(() {
-      organizarLista();
-    });
+    widget.sortSelecteds ? setState(() {organizarLista();}) : null;
   }
 
   @override
