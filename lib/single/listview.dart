@@ -48,6 +48,16 @@ class NovoListView extends StatelessWidget {
     })
       : super(key: key);
 
+  void organizarLista(){
+    List<String>? selecionado = listaFiltrada.where((item) => item == controllerBar.text).toList();
+    if(selecionado.isNotEmpty){
+      listaFiltrada.removeWhere((item) => item == controllerBar.text);
+
+      listaFiltrada.insert(0,selecionado[0]);
+    }
+    
+  }
+
   @override
   Widget build(BuildContext context) {
     return Card(
@@ -62,6 +72,7 @@ class NovoListView extends StatelessWidget {
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
           separatorBuilder: (context, index) => const SizedBox(height: 1,),
           itemBuilder: (context, index) {
+            organizarLista();
             if (index == listaFiltrada.length && addMode) {
               if(controllerBar.text != ''){
                 final list = listaFiltrada.where((element) =>

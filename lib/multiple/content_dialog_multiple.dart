@@ -77,21 +77,30 @@ class _ContentMultipleState extends State<ContentMultiple> {
     filtrarLista(null);
   }
 
+  void organizarLista(){
+    List<String>? selecionado = listafiltrada.where((item) => widget.selectedItens.contains(item)).toList();
+    if(selecionado.isNotEmpty){
+      listafiltrada.removeWhere((item) => widget.selectedItens.contains(item));
+      listafiltrada.insertAll(0,selecionado);
+    }
+  }
+
  void filtrarLista(String? text,) {
     if(text != null && text != ''){
-      setState(() {
-        listafiltrada = widget.listItens.where((element) => element.toLowerCase().latinize().contains(text.toLowerCase())).toList();
-      });
+      listafiltrada = widget.listItens.where((element) => element.toLowerCase().latinize().contains(text.toLowerCase())).toList();
     } else {
-      setState(() {
-        listafiltrada = widget.listItens;
-      });
+      listafiltrada = widget.listItens;
     }
-    
+    setState(() {
+      organizarLista();
+    });
   }
 
   void addItem(String value){
     widget.onItemSelected.call(value);
+    setState(() {
+      organizarLista();
+    });
   }
 
   @override
