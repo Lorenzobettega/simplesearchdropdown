@@ -10,6 +10,8 @@ class SearchDialog extends StatefulWidget {
     this.animationDuration,
     this.backgroundColor,
     this.border,
+    this.createHint,
+    this.createHintStyle,
     required this.deleteMode,
     this.dialogActionIcon,
     this.dialogActionWidget,
@@ -36,6 +38,8 @@ class SearchDialog extends StatefulWidget {
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
+  final String? createHint;
+  final TextStyle? createHintStyle;
   final bool deleteMode;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
@@ -119,6 +123,8 @@ class SearchDialogState extends State<SearchDialog> {
                 animationDuration: widget.animationDuration, 
                 backgroundColor: widget.backgroundColor, 
                 controllerBar: controllerBar, 
+                createHint: widget.createHint,
+                createHintStyle: widget.createHintStyle,
                 deleteMode: widget.deleteMode,
                 dialogActionIcon: widget.dialogActionIcon,
                 dialogActionWidget: widget.dialogActionWidget,

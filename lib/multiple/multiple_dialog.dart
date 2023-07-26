@@ -12,6 +12,8 @@ class MultipleDialog extends StatefulWidget {
     this.animationDuration,
     this.backgroundColor,
     this.border,
+    this.createHint,
+    this.createHintStyle,
     required this.deleteMode,
     this.deactivateHoverColor,
     this.dialogActionIcon,
@@ -48,6 +50,8 @@ class MultipleDialog extends StatefulWidget {
   final Color? activeHoverColor;
   final Duration? animationDuration;
   final Color? backgroundColor;
+  final String? createHint;
+  final TextStyle? createHintStyle;
   final OutlinedBorder? border;
   final bool deleteMode;
   final Color? deactivateHoverColor;
@@ -149,6 +153,8 @@ class _MultipleDialogState extends State<MultipleDialog> {
                 animationDuration: widget.animationDuration, 
                 backgroundColor: widget.backgroundColor, 
                 border: widget.border, 
+                createHint: widget.createHint,
+                createHintStyle: widget.createHintStyle,
                 deleteMode: widget.deleteMode,
                 deactivateHoverColor: widget.deactivateHoverColor, 
                 dialogActionIcon: widget.dialogActionIcon,

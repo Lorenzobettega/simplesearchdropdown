@@ -6,6 +6,8 @@ class NovoListView extends StatelessWidget {
   final Duration? animationDuration;
   final Color? backgroundColor;
   final TextEditingController controllerBar;
+  final String? createHint;
+  final TextStyle? createHintStyle;
   final bool deleteMode;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
@@ -29,6 +31,8 @@ class NovoListView extends StatelessWidget {
       required this.animationDuration,
       required this.backgroundColor,
       required this.controllerBar,
+      required this.createHint,
+      required this.createHintStyle,
       required this.deleteMode,
       required this.dialogActionIcon,
       required this.dialogActionWidget,
@@ -90,7 +94,7 @@ class NovoListView extends StatelessWidget {
                           onAddItem(controllerBar.text); 
                           listaFiltrada.add(controllerBar.text);
                         }, 
-                        child: const Text('Criar'),
+                        child: Text(createHint ?? 'Criar',style: createHintStyle,),
                       ),
                     ],
                   );

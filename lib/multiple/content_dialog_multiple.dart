@@ -8,6 +8,8 @@ class ContentMultiple extends StatefulWidget {
     required this.animationDuration,
     required this.backgroundColor,
     required this.border,
+    required this.createHint,
+    required this.createHintStyle,
     required this.deleteMode,
     required this.deactivateHoverColor,
     required this.dialogActionIcon,
@@ -40,6 +42,8 @@ class ContentMultiple extends StatefulWidget {
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
+  final String? createHint;
+  final TextStyle? createHintStyle;
   final bool deleteMode;
   final Color? deactivateHoverColor;
   final Icon? dialogActionIcon;
@@ -158,7 +162,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                       listafiltrada.add(controllerBar.text);
                                     });
                                   }, 
-                                  child: const Text('Criar'),
+                                  child: Text(widget.createHint ?? 'Criar',style: widget.createHintStyle,),
                                 ),
                               ],
                             );
