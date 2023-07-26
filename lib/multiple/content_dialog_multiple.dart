@@ -125,9 +125,10 @@ class _ContentMultipleState extends State<ContentMultiple> {
                 ),
                 const SizedBox(height: 5,),
                 Expanded( 
-                  child: ListView.builder( 
+                  child: ListView.separated( 
                     scrollDirection: Axis.vertical,
                     itemCount: listafiltrada.length + (widget.addMode ? 1 : 0),
+                    separatorBuilder: (context, index) => const SizedBox(height: 1,),
                     itemBuilder: (context, index) {
                       if (index == listafiltrada.length && widget.addMode) {
                         if(controllerBar.text != ''){
@@ -159,41 +160,43 @@ class _ContentMultipleState extends State<ContentMultiple> {
                         return Row(
                           children: [
                             Expanded(
-                              child: TextButton(
-                                  style: ButtonStyle(
-                                    backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                                      (Set<MaterialState> states) {
-                                        if (widget.selectedItens.contains(listafiltrada[index])) {
-                                          return widget.selectedDialogBoxColor ?? Colors.black38;
-                                        }
-                                        return Colors.transparent;
-                                      },
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 5),
+                                child: TextButton(
+                                    style: ButtonStyle(
+                                      backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                                        (Set<MaterialState> states) {
+                                          if (widget.selectedItens.contains(listafiltrada[index])) {
+                                            return widget.selectedDialogBoxColor ?? Colors.black38;
+                                          }
+                                          return Colors.transparent;
+                                        },
+                                      ),
+                                      shape: MaterialStateProperty.all<OutlinedBorder>(
+                                           RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                                      overlayColor: MaterialStateProperty.resolveWith<Color>(
+                                            (Set<MaterialState> states) {
+                                          if (widget.selectedItens.contains(listafiltrada[index])) {
+                                            return widget.activeHoverColor ?? Colors.grey.shade400;
+                                          }
+                                          return widget.deactivateHoverColor ?? Colors.grey.shade100;
+                                        },
+                                            
+                                      ),
                                     ),
-                                    shape: MaterialStateProperty.all<OutlinedBorder>(
-                                        const RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.zero)),
-                                    overlayColor: MaterialStateProperty.resolveWith<Color>(
-                                          (Set<MaterialState> states) {
-                                        if (widget.selectedItens.contains(listafiltrada[index])) {
-                                          return widget.activeHoverColor ?? Colors.grey.shade400;
-                                        }
-                                        return widget.deactivateHoverColor ?? Colors.grey.shade100;
-                                      },
-                                          
-                                    ),
-                                  ),
-                                  onPressed: () => addItem(listafiltrada[index]),
-                                  child: widget.dialogListviewWidgetBuilder ??
-                                      Align(
-                                          alignment: Alignment.centerLeft,
-                                          child: Text(
-                                            listafiltrada[index],
-                                            style: (controllerBar.text == listafiltrada[index]
-                                                ? widget.selectedInsideBoxTextStyle ??
-                                                    const TextStyle(color: Colors.black)
-                                                : widget.unselectedInsideBoxTextStyle ??
-                                                    const TextStyle(color: Colors.black45)),
-                                          ))),
+                                    onPressed: () => addItem(listafiltrada[index]),
+                                    child: widget.dialogListviewWidgetBuilder ??
+                                        Align(
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              listafiltrada[index],
+                                              style: (controllerBar.text == listafiltrada[index]
+                                                  ? widget.selectedInsideBoxTextStyle ??
+                                                      const TextStyle(color: Colors.black)
+                                                  : widget.unselectedInsideBoxTextStyle ??
+                                                      const TextStyle(color: Colors.black45)),
+                                            ))),
+                              ),
                             ),
                             widget.deleteMode 
                             ? widget.dialogActionWidget ?? IconButton(

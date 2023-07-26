@@ -58,8 +58,9 @@ class NovoListView extends StatelessWidget {
         duration: animationDuration ?? const Duration(milliseconds: 100),
         height: dialogHeight,
         width: width,
-        child: ListView.builder(
+        child: ListView.separated(
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
+          separatorBuilder: (context, index) => const SizedBox(height: 1,),
           itemBuilder: (context, index) {
             if (index == listaFiltrada.length && addMode) {
               if(controllerBar.text != ''){
@@ -89,34 +90,35 @@ class NovoListView extends StatelessWidget {
               return Row(
                 children: [
                   Expanded(
-                    child: TextButton(
-                        style: ButtonStyle(
-                          backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                            (Set<MaterialState> states) {
-                              if (controllerBar.text == listaFiltrada[index]) {
-                                return selectedDialogColor ?? Colors.black38;
-                              }
-                              return Colors.transparent;
-                            },
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 5),
+                      child: TextButton(
+                          style: ButtonStyle(
+                            backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                              (Set<MaterialState> states) {
+                                if (controllerBar.text == listaFiltrada[index]) {
+                                  return selectedDialogColor ?? Colors.black38;
+                                }
+                                return Colors.transparent;
+                              },
+                            ),
+                            shape: MaterialStateProperty.all<OutlinedBorder>(RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+                            overlayColor:
+                                MaterialStatePropertyAll(hoverColor ?? Colors.grey.shade100),
                           ),
-                          shape: MaterialStateProperty.all<OutlinedBorder>(
-                              const RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.zero)),
-                          overlayColor:
-                              MaterialStatePropertyAll(hoverColor ?? Colors.grey.shade100),
-                        ),
-                        onPressed: () => onPressed(listaFiltrada[index]),
-                        child: widgetBuilder ??
-                            Align(
-                                alignment: Alignment.centerLeft,
-                                child: Text(
-                                  listaFiltrada[index],
-                                  style: (controllerBar.text == listaFiltrada[index]
-                                      ? selectedInsideBoxTextStyle ??
-                                          const TextStyle(color: Colors.black)
-                                      : unselectedInsideBoxTextStyle ??
-                                          const TextStyle(color: Colors.black45)),
-                                ))),
+                          onPressed: () => onPressed(listaFiltrada[index]),
+                          child: widgetBuilder ??
+                              Align(
+                                  alignment: Alignment.centerLeft,
+                                  child: Text(
+                                    listaFiltrada[index],
+                                    style: (controllerBar.text == listaFiltrada[index]
+                                        ? selectedInsideBoxTextStyle ??
+                                            const TextStyle(color: Colors.black)
+                                        : unselectedInsideBoxTextStyle ??
+                                            const TextStyle(color: Colors.black45)),
+                                  ))),
+                    ),
                   ),
                   deleteMode ? dialogActionWidget ?? IconButton(
                     onPressed: (){
