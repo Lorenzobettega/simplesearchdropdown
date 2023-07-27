@@ -1,0 +1,15 @@
+name: search_dialog_example
+description: Demonstrates how to use the search_dialog plugin.
+publish_to: 'none'
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+dev_dependencies:
+  search_dialog:
+    path: ../
+flutter:
+  uses-material-design: true
