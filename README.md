@@ -19,13 +19,13 @@ This project is a widget to find items in a list without sacrifying beauty and u
 ### Features
 
 #### Add Mode:
-![Add Mode](assets/image-1.png)
+![Add Mode](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/d3b61c7e-b4ac-4b53-867b-71daab10d687)
 
 #### Delete Mode:
-![Delete Mode](assets/image-5.png)
+![Delete Mode](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/ee4df7de-ec95-4804-a239-dc9ab8b5af9b)
 
 #### Search:
-![Search Feature](assets/image-4.png)
+![Search Feature](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/2e8360a7-9dd2-4b23-9431-d50b44cb7e07)
 
 ### 1. Single SearchDropDown
 
@@ -40,7 +40,7 @@ This project is a widget to find items in a list without sacrifying beauty and u
     ),
 ```
 
-![Single Menu](assets/image.png)
+![Single Menu](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/826cf8ba-3dc2-4b2f-b5b8-7069a46893ed)
 
 ### 2. Multiple SearchDropDown
 
@@ -56,9 +56,9 @@ This project is a widget to find items in a list without sacrifying beauty and u
     ),
 ```
 
-![Multi Menu](assets/image-2.png)
+![Multi Menu](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/1a531a60-84e5-4dd4-84e1-8196cfe08fc5)
 
-![Multi Menu Selection](assets/image-3.png)
+![Multi Menu Selection](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/12f2db48-ca39-439a-9594-fc4b2b32b1f8)
 
 ## License
 
