@@ -1,6 +1,7 @@
+// ignore_for_file: avoid_print
+
 import 'package:flutter/material.dart';
-import 'package:searchdialog/multiple/multiple_dialog.dart';
-import 'package:searchdialog/single/searchdialog.dart';
+import 'package:search_dialog/search_dialog.dart';
 
 void main() {
   runApp(const MyApp());
@@ -75,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
               updateSelectedItem: updateSelectedItem,
             ),
             const SizedBox(height: 20,),
-            MultipleDialog(
+            MultipleSearchDialog(
               listItems: listitems,
               onDeleteItem: removeItem, 
               onAddItem: addItem,

@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:searchdialog/extensions.dart';
-import 'package:searchdialog/multiple/content_dialog_multiple.dart';
+import 'package:search_dialog/search_dialog.dart';
 
-class MultipleDialog extends StatefulWidget {
-  const MultipleDialog({
+class MultipleSearchDialog extends StatefulWidget {
+  const MultipleSearchDialog({
     Key? key,
     required this.listItems,
     required this.addMode,
@@ -85,10 +84,10 @@ class MultipleDialog extends StatefulWidget {
   final double width;
 
   @override
-  State<MultipleDialog> createState() => _MultipleDialogState();
+  State<MultipleSearchDialog> createState() => _MultipleSearchDialogState();
 }
 
-class _MultipleDialogState extends State<MultipleDialog> {
+class _MultipleSearchDialogState extends State<MultipleSearchDialog> {
   late double altura = 0;
   late bool aberto = false;
   OverlayEntry? overlayEntry;
