@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
-import 'package:search_dialog/search_dialog.dart';
+import 'package:search_dropdown/search_dropdown.dart';
 
 void main() {
   runApp(const MyApp());
@@ -31,7 +31,7 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<String> listitems = ['Lorenzo', 'Bettega', 'É', 'Muito', 'Bonito'];
+  final List<String> listitems = ['Lorenzo', 'É', 'Muito', 'Bonito'];
   List<String> selectedMultipleItems = [];
   String? selectedSingleItem;
 
@@ -67,7 +67,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            SearchDialog(
+            SearchDropDown(
               listItens: listitems,
               onDeleteItem: removeItem, 
               onAddItem: addItem,
@@ -76,7 +76,7 @@ class _MyHomePageState extends State<MyHomePage> {
               updateSelectedItem: updateSelectedItem,
             ),
             const SizedBox(height: 20,),
-            MultipleSearchDialog(
+            MultipleSearchDropDown(
               listItems: listitems,
               onDeleteItem: removeItem, 
               onAddItem: addItem,

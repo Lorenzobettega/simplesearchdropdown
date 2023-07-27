@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:search_dialog/search_dialog.dart';
+import 'package:search_dropdown/search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
-class SearchDialog extends StatefulWidget {
-  const SearchDialog({
+class SearchDropDown extends StatefulWidget {
+  const SearchDropDown({
     super.key,
     this.actions,
     required this.addMode,
@@ -61,10 +61,10 @@ class SearchDialog extends StatefulWidget {
   final double width;
 
   @override
-  State<SearchDialog> createState() => SearchDialogState();
+  State<SearchDropDown> createState() => SearchDropDownState();
 }
 
-class SearchDialogState extends State<SearchDialog> {
+class SearchDropDownState extends State<SearchDropDown> {
   @override
   void initState() {
     super.initState();

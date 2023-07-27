@@ -1,5 +1,5 @@
-name: search_dialog_example
-description: Demonstrates how to use the search_dialog plugin.
+name: search_dropdown_example
+description: Demonstrates how to use the search_dropdown plugin.
 publish_to: 'none'
 
 environment:
@@ -9,7 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
 dev_dependencies:
-  search_dialog:
+  search_dropdown:
     path: ../
 flutter:
   uses-material-design: true
