@@ -1,5 +1,5 @@
 # Search Dropdown
-Search DropDown is a dropdown that offers a search bar.
+Search DropDown is a dropdown that offers a search bar, multiple and single selections.
 
 ## Import
 ```dart
@@ -7,18 +7,12 @@ import 'package:searchdropdown/search_dropdown.dart';
 ```
 
 ## Getting Started
-This project is a sample widget for finding items in a list without sacrificing beauty and usefulness:
+This project is a widget to find items in a list without sacrifying beauty and usefulness:
 
 - Different styles: Search DropDown can be customized with various styles, including colors, text styles, icons, and more.
 - Multiple and single options: Search DropDown can be used to select multiple or single items.
 - Add and Delete Mode: Search Dropdown accepts functions to add and delete items from the list inside it
-- Compact and Simple: Search DropDown is very compact and takes up very little space on the screen (It's because the dropdown works with overlay).
-
-In pub.dev have famous packages like that:
-https://pub.dev/packages/dropdown_search
-https://pub.dev/packages/search_choices
-
-But no one is too simply, which give users more comfort and eliminates the need for pop-up or page navigations..
+- Compact and Simple: Search DropDown is very compact and takes up very little space on the screen.
 
 ## Usage
 
