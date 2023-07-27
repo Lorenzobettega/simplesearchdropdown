@@ -17,6 +17,8 @@ class SearchDropDown extends StatefulWidget {
     this.dialogActionWidget,
     this.dialogBackgroundColor,
     this.dialogHeight = 300,
+    this.dropdownDisableActionIcon,
+    this.dropdownEnableActionIcon,
     this.elevation = 2,
     this.hint,
     this.hintStyle,
@@ -45,6 +47,8 @@ class SearchDropDown extends StatefulWidget {
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
+  final IconData? dropdownDisableActionIcon;
+  final IconData? dropdownEnableActionIcon;
   final double elevation;
   final String? hint;
   final TextStyle? hintStyle;
@@ -193,8 +197,8 @@ class SearchDropDownState extends State<SearchDropDown> {
         trailing: widget.actions ??
             [
               aberto
-                  ? const Icon(Icons.arrow_drop_up)
-                  : const Icon(Icons.arrow_drop_down),
+                  ? Icon(widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up)
+                  : Icon(widget.dropdownDisableActionIcon ?? Icons.arrow_drop_down),
               Visibility(
                 visible: controllerBar.text != '',
                 child: Row(

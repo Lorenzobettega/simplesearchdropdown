@@ -23,6 +23,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.dialogSearchBarBorder,
     this.dialogSearchBarColor,
     this.dialogSearchBarElevation = 2,
+    this.dropdownDisableActionIcon,
+    this.dropdownEnableActionIcon,
     this.elevation = 1,
     this.hint,
     this.hintSearchBar,
@@ -62,6 +64,8 @@ class MultipleSearchDropDown extends StatefulWidget {
   final OutlinedBorder? dialogSearchBarBorder;
   final Color? dialogSearchBarColor;
   final double dialogSearchBarElevation;
+  final IconData? dropdownDisableActionIcon;
+  final IconData? dropdownEnableActionIcon;
   final double elevation;
   final String? hint;
   final String? hintSearchBar;
@@ -227,11 +231,12 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.all(Radius.circular(10)),
                 color: widget.backgroundColor ?? Colors.white,
+                border: Border.all(style: BorderStyle.none),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(0.5),
+                    color: Colors.grey.withOpacity(widget.elevation != 0 ? 0.5 : 0),
                     spreadRadius: 0.5,
-                    blurRadius: 1 * widget.elevation,
+                    blurRadius: widget.elevation,
                     offset: Offset(0, 0.5 * widget.elevation),
                   ),
                 ],
@@ -295,8 +300,8 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                             widget.selectedItems.isNotEmpty 
                               ? Icons.clear 
                               : aberto  
-                                ? Icons.arrow_drop_up
-                                : Icons.arrow_drop_down,size: widget.outsideIconSize,),
+                                ? widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up
+                                : widget.dropdownDisableActionIcon ?? Icons.arrow_drop_down,size: widget.outsideIconSize,),
                         ),
                       ],
                     ),
