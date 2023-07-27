@@ -1,7 +1,7 @@
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
-import 'package:search_dropdown/search_dropdown.dart';
+import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 void main() {
   runApp(const MyApp());

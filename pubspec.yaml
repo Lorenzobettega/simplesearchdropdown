@@ -1,5 +1,5 @@
-name: search_dropdown
-description: a dropdown that offers a search bar, multiple and single selections.
+name: simple_search_dropdown
+description: A dropdown that offers a search bar, multiple and single selections.
 homepage: https://github.com/Lorenzobettega/searchdropdown
 
 version: 1.0.0

@@ -1,5 +1,5 @@
-name: search_dropdown_example
-description: Demonstrates how to use the search_dropdown plugin.
+name: simple_search_dropdown_example
+description: Demonstrates how to use the simple_search_dropdown plugin.
 publish_to: 'none'
 
 environment:
@@ -9,7 +9,7 @@ dependencies:
   flutter:
     sdk: flutter
 dev_dependencies:
-  search_dropdown:
+  simple_search_dropdown:
     path: ../
 flutter:
   uses-material-design: true
