@@ -1,5 +1,5 @@
 ## [1.5.0] - 2023-08-03.
--   Convert ´List<String>´ to ´List<ValueItem>´, allowing the users to have anything as an object on the dropdown.
+-   Convert `List<String>` to `List<ValueItem>`, allowing the users to have anything as an object on the dropdown.
 
 ## [1.0.5] - 2023-08-02.
 -   Fix clearing single search via outside button
