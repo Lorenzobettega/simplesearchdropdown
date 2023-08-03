@@ -9,17 +9,3 @@ class MyCustomScrollBehavior extends MaterialScrollBehavior {
         PointerDeviceKind.mouse,
       };
 }
-
-extension ConcatWithNullableExtension on String {
-  String concatOrNull(String? other) => other == null ? this : '$this $other';
-  String everythingBefore(String divider) => substring(0, indexOf(divider));
-  String everythingBeforeOrAll(String divider) {
-    try {
-      return substring(0, indexOf(divider));
-    } catch (_) {
-      return this;
-    }
-  }
-
-  String splitInPosition(String divider, int index) => split(divider)[index];
-}

@@ -152,13 +152,17 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   surfaceTintColor: MaterialStatePropertyAll(
                       widget.dialogSearchBarColor ?? Colors.white),
                   shape: MaterialStateProperty.all<OutlinedBorder>(
-                      widget.dialogSearchBarBorder ??
-                          const RoundedRectangleBorder(
-                              borderRadius:
-                                  BorderRadius.all(Radius.circular(10.0)))),
+                    widget.dialogSearchBarBorder ??
+                        const RoundedRectangleBorder(
+                          borderRadius: BorderRadius.all(
+                            Radius.circular(10.0),
+                          ),
+                        ),
+                  ),
                   hintText: widget.hintSearchBar ?? 'Pesquisar',
                   hintStyle: MaterialStateProperty.all<TextStyle>(
-                      widget.hintStyle ?? const TextStyle(fontSize: 14)),
+                    widget.hintStyle ?? const TextStyle(fontSize: 14),
+                  ),
                   side: MaterialStateProperty.all<BorderSide>(
                     const BorderSide(
                       style: BorderStyle.none,
@@ -184,12 +188,14 @@ class _ContentMultipleState extends State<ContentMultiple> {
                       if (index == listafiltrada.length && widget.addMode) {
                         if (controllerBar.text != '') {
                           final list = listafiltrada
-                              .where((element) => element
-                                  .toLowerCase()
-                                  .latinize()
-                                  .contains(controllerBar.text
-                                      .toLowerCase()
-                                      .latinize()))
+                              .where(
+                                (element) =>
+                                    element.toLowerCase().latinize().contains(
+                                          controllerBar.text
+                                              .toLowerCase()
+                                              .latinize(),
+                                        ),
+                              )
                               .toList();
                           if (list.isEmpty) {
                             return Row(
@@ -239,10 +245,12 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                         },
                                       ),
                                       shape: MaterialStateProperty.all<
-                                              OutlinedBorder>(
-                                          RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(10))),
+                                          OutlinedBorder>(
+                                        RoundedRectangleBorder(
+                                          borderRadius:
+                                              BorderRadius.circular(10),
+                                        ),
+                                      ),
                                       overlayColor: MaterialStateProperty
                                           .resolveWith<Color>(
                                         (Set<MaterialState> states) {
@@ -278,16 +286,17 @@ class _ContentMultipleState extends State<ContentMultiple> {
                             widget.deleteMode
                                 ? widget.dialogActionWidget ??
                                     IconButton(
-                                        onPressed: () {
-                                          widget.onDeleteItem(
-                                              listafiltrada[index]);
-                                        },
-                                        icon: widget.dialogActionIcon ??
-                                            Icon(
-                                              Icons.delete,
-                                              color: Colors.red.shade900,
-                                              size: 20,
-                                            ))
+                                      onPressed: () {
+                                        widget
+                                            .onDeleteItem(listafiltrada[index]);
+                                      },
+                                      icon: widget.dialogActionIcon ??
+                                          Icon(
+                                            Icons.delete,
+                                            color: Colors.red.shade900,
+                                            size: 20,
+                                          ),
+                                    )
                                 : const SizedBox.shrink()
                           ],
                         );

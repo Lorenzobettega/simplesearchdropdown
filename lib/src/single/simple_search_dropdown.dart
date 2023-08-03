@@ -123,36 +123,37 @@ class SearchDropDownState extends State<SearchDropDown> {
             child: Material(
               color: Colors.transparent,
               child: NovoListView(
-                  addMode: widget.addMode,
-                  animationDuration: widget.animationDuration,
-                  backgroundColor: widget.backgroundColor,
-                  controllerBar: controllerBar,
-                  createHint: widget.createHint,
-                  createHintStyle: widget.createHintStyle,
-                  deleteMode: widget.deleteMode,
-                  dialogActionIcon: widget.dialogActionIcon,
-                  dialogActionWidget: widget.dialogActionWidget,
-                  dialogBackgroundColor: widget.dialogBackgroundColor,
-                  dialogHeight: widget.dialogHeight,
-                  elevation: widget.elevation,
-                  hoverColor: widget.hoverColor,
-                  listaFiltrada: listafiltrada,
-                  onAddItem: (val) => handleAddItem(
-                        val,
-                        context,
-                      ),
-                  onClear: (val) => handleDeleteItem(
-                        val,
-                        context,
-                      ),
-                  onPressed: (val) => hideOverlay(val),
-                  selectedDialogColor: widget.selectedDialogColor,
-                  selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
-                  sortSelecteds: widget.sortSelecteds,
-                  unselectedInsideBoxTextStyle:
-                      widget.unselectedInsideBoxTextStyle,
-                  widgetBuilder: widget.widgetBuilder,
-                  width: widget.width),
+                addMode: widget.addMode,
+                animationDuration: widget.animationDuration,
+                backgroundColor: widget.backgroundColor,
+                controllerBar: controllerBar,
+                createHint: widget.createHint,
+                createHintStyle: widget.createHintStyle,
+                deleteMode: widget.deleteMode,
+                dialogActionIcon: widget.dialogActionIcon,
+                dialogActionWidget: widget.dialogActionWidget,
+                dialogBackgroundColor: widget.dialogBackgroundColor,
+                dialogHeight: widget.dialogHeight,
+                elevation: widget.elevation,
+                hoverColor: widget.hoverColor,
+                listaFiltrada: listafiltrada,
+                onAddItem: (val) => handleAddItem(
+                  val,
+                  context,
+                ),
+                onClear: (val) => handleDeleteItem(
+                  val,
+                  context,
+                ),
+                onPressed: (val) => hideOverlay(val),
+                selectedDialogColor: widget.selectedDialogColor,
+                selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                sortSelecteds: widget.sortSelecteds,
+                unselectedInsideBoxTextStyle:
+                    widget.unselectedInsideBoxTextStyle,
+                widgetBuilder: widget.widgetBuilder,
+                width: widget.width,
+              ),
             ),
           ),
         ],
@@ -214,13 +215,16 @@ class SearchDropDownState extends State<SearchDropDown> {
                       width: 5,
                     ),
                     IconButton(
-                        onPressed: () {
-                          setState(() {
+                      onPressed: () {
+                        setState(
+                          () {
                             controllerBar.clear();
                             _filtrarLista(null);
-                          });
-                        },
-                        icon: const Icon(Icons.clear)),
+                          },
+                        );
+                      },
+                      icon: const Icon(Icons.clear),
+                    ),
                   ],
                 ),
               ),
@@ -234,9 +238,14 @@ class SearchDropDownState extends State<SearchDropDown> {
         constraints: BoxConstraints(maxHeight: 50, maxWidth: widget.width),
         surfaceTintColor:
             MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
-        shape: MaterialStateProperty.all<OutlinedBorder>(widget.border ??
-            const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10.0)))),
+        shape: MaterialStateProperty.all<OutlinedBorder>(
+          widget.border ??
+              const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(
+                  Radius.circular(10.0),
+                ),
+              ),
+        ),
         hintText: widget.hint ?? 'Selecione',
         side: MaterialStateProperty.all<BorderSide>(
           const BorderSide(

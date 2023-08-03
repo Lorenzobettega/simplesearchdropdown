@@ -83,10 +83,11 @@ class NovoListView extends StatelessWidget {
             if (index == listaFiltrada.length && addMode) {
               if (controllerBar.text != '') {
                 final list = listaFiltrada
-                    .where((element) => element
-                        .toLowerCase()
-                        .latinize()
-                        .contains(controllerBar.text.toLowerCase().latinize()))
+                    .where(
+                      (element) => element.toLowerCase().latinize().contains(
+                            controllerBar.text.toLowerCase().latinize(),
+                          ),
+                    )
                     .toList();
                 if (list.isEmpty) {
                   return Row(
@@ -118,51 +119,54 @@ class NovoListView extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 5),
                       child: TextButton(
-                          style: ButtonStyle(
-                            backgroundColor:
-                                MaterialStateProperty.resolveWith<Color>(
-                              (Set<MaterialState> states) {
-                                if (controllerBar.text ==
-                                    listaFiltrada[index]) {
-                                  return selectedDialogColor ?? Colors.black38;
-                                }
-                                return Colors.transparent;
-                              },
-                            ),
-                            shape: MaterialStateProperty.all<OutlinedBorder>(
-                                RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(10))),
-                            overlayColor: MaterialStatePropertyAll(
-                                hoverColor ?? Colors.grey.shade100),
+                        style: ButtonStyle(
+                          backgroundColor:
+                              MaterialStateProperty.resolveWith<Color>(
+                            (Set<MaterialState> states) {
+                              if (controllerBar.text == listaFiltrada[index]) {
+                                return selectedDialogColor ?? Colors.black38;
+                              }
+                              return Colors.transparent;
+                            },
                           ),
-                          onPressed: () => onPressed(listaFiltrada[index]),
-                          child: widgetBuilder ??
-                              Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Text(
-                                    listaFiltrada[index],
-                                    style: (controllerBar.text ==
-                                            listaFiltrada[index]
-                                        ? selectedInsideBoxTextStyle ??
-                                            const TextStyle(color: Colors.black)
-                                        : unselectedInsideBoxTextStyle ??
-                                            const TextStyle(
-                                                color: Colors.black45)),
-                                  ))),
+                          shape: MaterialStateProperty.all<OutlinedBorder>(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          overlayColor: MaterialStatePropertyAll(
+                              hoverColor ?? Colors.grey.shade100),
+                        ),
+                        onPressed: () => onPressed(listaFiltrada[index]),
+                        child: widgetBuilder ??
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: Text(
+                                listaFiltrada[index],
+                                style: (controllerBar.text ==
+                                        listaFiltrada[index]
+                                    ? selectedInsideBoxTextStyle ??
+                                        const TextStyle(color: Colors.black)
+                                    : unselectedInsideBoxTextStyle ??
+                                        const TextStyle(color: Colors.black45)),
+                              ),
+                            ),
+                      ),
                     ),
                   ),
                   deleteMode
                       ? dialogActionWidget ??
                           IconButton(
-                              onPressed: () {
-                                onClear(listaFiltrada[index]);
-                              },
-                              icon: dialogActionIcon ??
-                                  Icon(
-                                    Icons.delete,
-                                    color: Colors.red.shade900,
-                                    size: 20,
-                                  ))
+                            onPressed: () {
+                              onClear(listaFiltrada[index]);
+                            },
+                            icon: dialogActionIcon ??
+                                Icon(
+                                  Icons.delete,
+                                  color: Colors.red.shade900,
+                                  size: 20,
+                                ),
+                          )
                       : const SizedBox.shrink()
                 ],
               );
