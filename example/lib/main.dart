@@ -53,7 +53,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void updateSelectedItem(String newSelectedItem) {
+  void updateSelectedItem(String? newSelectedItem) {
     setState(() {
       selectedSingleItem = newSelectedItem;
     });

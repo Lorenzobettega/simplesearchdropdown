@@ -61,7 +61,7 @@ class SearchDropDown extends StatefulWidget {
   final TextStyle? selectedInsideBoxTextStyle;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
-  final Function(String) updateSelectedItem;
+  final Function(String?) updateSelectedItem;
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
@@ -222,6 +222,7 @@ class SearchDropDownState extends State<SearchDropDown> {
                           () {
                             controllerBar.clear();
                             _filtrarLista(null);
+                            widget.updateSelectedItem(null);
                           },
                         );
                       },

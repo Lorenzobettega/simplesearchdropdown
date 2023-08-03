@@ -105,8 +105,8 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
         widget.selectedItems.remove(val);
       } else {
         widget.selectedItems.add(val);
-        widget.updateSelectedItems(widget.selectedItems);
       }
+      //widget.updateSelectedItems(widget.selectedItems); //TODO checar necessidade
     });
   }
 
@@ -308,6 +308,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                               onTap: () {
                                 setState(() {
                                   widget.selectedItems.clear();
+                                  //widget.updateSelectedItems(widget.selectedItems); //TODO checar necessidade
                                 });
                               },
                               child: Icon(
