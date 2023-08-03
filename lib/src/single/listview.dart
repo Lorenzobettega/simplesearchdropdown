@@ -90,34 +90,34 @@ class NovoListView extends StatelessWidget {
                     )
                     .toList();
                 if (list.isEmpty) {
-                  return Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(controllerBar.text),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          onAddItem(controllerBar.text);
-                          listaFiltrada.add(controllerBar.text);
-                        },
-                        child: Text(
-                          createHint ?? 'Criar',
-                          style: createHintStyle,
+                  return Padding(
+                    padding: const EdgeInsets.fromLTRB(16,8,8,0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(controllerBar.text),
+                        TextButton(
+                          onPressed: () {
+                            onAddItem(controllerBar.text);
+                            listaFiltrada.add(controllerBar.text);
+                          },
+                          child: Text(
+                            createHint ?? 'Criar',
+                            style: createHintStyle,
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   );
                 }
               }
               return const SizedBox.shrink();
             } else {
-              return Row(
-                children: [
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 5),
+              return Padding(
+                padding: const EdgeInsets.symmetric(horizontal:4),
+                child: Row(
+                  children: [
+                    Expanded(
                       child: TextButton(
                         style: ButtonStyle(
                           backgroundColor:
@@ -153,22 +153,22 @@ class NovoListView extends StatelessWidget {
                             ),
                       ),
                     ),
-                  ),
-                  deleteMode
-                      ? dialogActionWidget ??
-                          IconButton(
-                            onPressed: () {
-                              onClear(listaFiltrada[index]);
-                            },
-                            icon: dialogActionIcon ??
-                                Icon(
-                                  Icons.delete,
-                                  color: Colors.red.shade900,
-                                  size: 20,
-                                ),
-                          )
-                      : const SizedBox.shrink()
-                ],
+                    deleteMode
+                        ? dialogActionWidget ??
+                            IconButton(
+                              onPressed: () {
+                                onClear(listaFiltrada[index]);
+                              },
+                              icon: dialogActionIcon ??
+                                  Icon(
+                                    Icons.delete,
+                                    color: Colors.red.shade900,
+                                    size: 20,
+                                  ),
+                            )
+                        : const SizedBox.shrink()
+                  ],
+                ),
               );
             }
           },

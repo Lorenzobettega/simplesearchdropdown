@@ -32,7 +32,8 @@ class SearchDropDown extends StatefulWidget {
     this.unselectedInsideBoxTextStyle,
     required this.updateSelectedItem,
     this.widgetBuilder,
-    this.width = 300,
+    this.dropdownwidth = 300,
+    this.dropdownHeight = 50,
   });
 
   final List<Widget>? actions;
@@ -62,7 +63,8 @@ class SearchDropDown extends StatefulWidget {
   final TextStyle? unselectedInsideBoxTextStyle;
   final Function(String) updateSelectedItem;
   final Widget? widgetBuilder;
-  final double width;
+  final double dropdownHeight;
+  final double dropdownwidth;
 
   @override
   State<SearchDropDown> createState() => SearchDropDownState();
@@ -152,7 +154,7 @@ class SearchDropDownState extends State<SearchDropDown> {
                 unselectedInsideBoxTextStyle:
                     widget.unselectedInsideBoxTextStyle,
                 widgetBuilder: widget.widgetBuilder,
-                width: widget.width,
+                width: widget.dropdownwidth,
               ),
             ),
           ),
@@ -197,8 +199,8 @@ class SearchDropDownState extends State<SearchDropDown> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: widget.width,
-      height: 50,
+      width: widget.dropdownwidth,
+      height: widget.dropdownHeight,
       child: SearchBar(
         key: overlayKey,
         trailing: widget.actions ??
@@ -235,7 +237,6 @@ class SearchDropDownState extends State<SearchDropDown> {
         hintStyle: MaterialStatePropertyAll(widget.hintStyle),
         overlayColor:
             MaterialStatePropertyAll(widget.hoverColor ?? Colors.grey.shade100),
-        constraints: BoxConstraints(maxHeight: 50, maxWidth: widget.width),
         surfaceTintColor:
             MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
         shape: MaterialStateProperty.all<OutlinedBorder>(

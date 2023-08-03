@@ -43,7 +43,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.unselectedInsideBoxTextStyle,
     required this.updateSelectedItems,
     this.widgetBuilder,
-    this.width = 300,
+    this.dropdownwidth = 300,
+    this.dropdownHeight = 50,
   }) : super(key: key);
 
   final Widget? action;
@@ -85,7 +86,8 @@ class MultipleSearchDropDown extends StatefulWidget {
   final Function(List<String>) updateSelectedItems;
   final List<String> listItems;
   final Widget? widgetBuilder;
-  final double width;
+  final double dropdownHeight;
+  final double dropdownwidth;
 
   @override
   State<MultipleSearchDropDown> createState() => _MultipleSearchDropDownState();
@@ -151,40 +153,40 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
             child: Material(
               color: Colors.transparent,
               child: ContentMultiple(
-                  addMode: widget.addMode,
-                  activeHoverColor: widget.activeHoverColor,
-                  animationDuration: widget.animationDuration,
-                  backgroundColor: widget.backgroundColor,
-                  border: widget.border,
-                  createHint: widget.createHint,
-                  createHintStyle: widget.createHintStyle,
-                  deleteMode: widget.deleteMode,
-                  deactivateHoverColor: widget.deactivateHoverColor,
-                  dialogActionIcon: widget.dialogActionIcon,
-                  dialogActionWidget: widget.dialogActionWidget,
-                  dialogBackgroundColor: widget.dialogBackgroundColor,
-                  dialogHeight: widget.dialogHeight,
-                  dialogListviewWidgetBuilder:
-                      widget.dialogListviewWidgetBuilder,
-                  dialogSearchBarBorder: widget.dialogSearchBarBorder,
-                  dialogSearchBarColor: widget.dialogSearchBarColor,
-                  dialogSearchBarElevation: widget.dialogSearchBarElevation,
-                  elevation: widget.elevation,
-                  hintSearchBar: widget.hintSearchBar,
-                  hintStyle: widget.hintStyle,
-                  listItens: widget.listItems,
-                  onAddItem: (val) => handleAddItem(val, context),
-                  onDeleteItem: (val) => handleDeleteItem(val, context),
-                  onItemSelected: (val) => onItemSelected(val),
-                  selectedDialogBoxColor: widget.selectedDialogBoxColor,
-                  selectedDialogColor: widget.selectedDialogColor,
-                  selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
-                  selectedItens: widget.selectedItems,
-                  sortSelecteds: widget.sortSelecteds,
-                  unselectedInsideBoxTextStyle:
-                      widget.unselectedInsideBoxTextStyle,
-                  updateSelectedItems: (val) => widget.updateSelectedItems(val),
-                  width: widget.width),
+                addMode: widget.addMode,
+                activeHoverColor: widget.activeHoverColor,
+                animationDuration: widget.animationDuration,
+                backgroundColor: widget.backgroundColor,
+                border: widget.border,
+                createHint: widget.createHint,
+                createHintStyle: widget.createHintStyle,
+                deleteMode: widget.deleteMode,
+                deactivateHoverColor: widget.deactivateHoverColor,
+                dialogActionIcon: widget.dialogActionIcon,
+                dialogActionWidget: widget.dialogActionWidget,
+                dialogBackgroundColor: widget.dialogBackgroundColor,
+                dialogHeight: widget.dialogHeight,
+                dialogListviewWidgetBuilder: widget.dialogListviewWidgetBuilder,
+                dialogSearchBarBorder: widget.dialogSearchBarBorder,
+                dialogSearchBarColor: widget.dialogSearchBarColor,
+                dialogSearchBarElevation: widget.dialogSearchBarElevation,
+                elevation: widget.elevation,
+                hintSearchBar: widget.hintSearchBar,
+                hintStyle: widget.hintStyle,
+                listItens: widget.listItems,
+                onAddItem: (val) => handleAddItem(val, context),
+                onDeleteItem: (val) => handleDeleteItem(val, context),
+                onItemSelected: (val) => onItemSelected(val),
+                selectedDialogBoxColor: widget.selectedDialogBoxColor,
+                selectedDialogColor: widget.selectedDialogColor,
+                selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                selectedItens: widget.selectedItems,
+                sortSelecteds: widget.sortSelecteds,
+                unselectedInsideBoxTextStyle:
+                    widget.unselectedInsideBoxTextStyle,
+                updateSelectedItems: (val) => widget.updateSelectedItems(val),
+                width: widget.dropdownwidth,
+              ),
             ),
           ),
         ],
@@ -208,8 +210,8 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 50,
-      width: widget.width,
+      height: widget.dropdownHeight,
+      width: widget.dropdownwidth,
       child: InkWell(
         key: overlayKey,
         onTap: () {
@@ -222,12 +224,6 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
         child: Stack(
           children: [
             Container(
-              constraints: BoxConstraints(
-                maxHeight: 50,
-                maxWidth: widget.width,
-                minHeight: 50,
-                minWidth: widget.width,
-              ),
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.all(Radius.circular(10)),
                 color: widget.backgroundColor ?? Colors.white,
@@ -265,7 +261,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                                       elevation: widget.elevation,
                                       child: Padding(
                                         padding: const EdgeInsets.symmetric(
-                                            horizontal: 10),
+                                            horizontal: 8),
                                         child: Row(
                                           mainAxisAlignment:
                                               MainAxisAlignment.spaceBetween,
