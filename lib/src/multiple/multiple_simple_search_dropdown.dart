@@ -108,8 +108,8 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     });
   }
 
-  void handleAddItem(String item, BuildContext context){
-    if(widget.addMode){
+  void handleAddItem(String item, BuildContext context) {
+    if (widget.addMode) {
       widget.onAddItem!(item);
       onItemSelected(item);
       setState(() {});
@@ -117,8 +117,8 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   }
 
   void handleDeleteItem(String item, BuildContext context) {
-    if(widget.deleteMode){
-      widget.onDeleteItem!(item); 
+    if (widget.deleteMode) {
+      widget.onDeleteItem!(item);
       hideOverlay();
       showOverlay(context);
     }
@@ -151,39 +151,40 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
             child: Material(
               color: Colors.transparent,
               child: ContentMultiple(
-                addMode: widget.addMode,
-                activeHoverColor: widget.activeHoverColor, 
-                animationDuration: widget.animationDuration, 
-                backgroundColor: widget.backgroundColor, 
-                border: widget.border, 
-                createHint: widget.createHint,
-                createHintStyle: widget.createHintStyle,
-                deleteMode: widget.deleteMode,
-                deactivateHoverColor: widget.deactivateHoverColor, 
-                dialogActionIcon: widget.dialogActionIcon,
-                dialogActionWidget: widget.dialogActionWidget,
-                dialogBackgroundColor: widget.dialogBackgroundColor, 
-                dialogHeight: widget.dialogHeight, 
-                dialogListviewWidgetBuilder: widget.dialogListviewWidgetBuilder, 
-                dialogSearchBarBorder: widget.dialogSearchBarBorder, 
-                dialogSearchBarColor: widget.dialogSearchBarColor, 
-                dialogSearchBarElevation: widget.dialogSearchBarElevation, 
-                elevation: widget.elevation, 
-                hintSearchBar: widget.hintSearchBar, 
-                hintStyle: widget.hintStyle, 
-                listItens: widget.listItems, 
-                onAddItem: (val) => handleAddItem(val,context),
-                onDeleteItem: (val) => handleDeleteItem(val,context),
-                onItemSelected: (val) => onItemSelected(val), 
-                selectedDialogBoxColor: widget.selectedDialogBoxColor, 
-                selectedDialogColor: widget.selectedDialogColor, 
-                selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
-                selectedItens: widget.selectedItems, 
-                sortSelecteds: widget.sortSelecteds,
-                unselectedInsideBoxTextStyle: widget.unselectedInsideBoxTextStyle, 
-                updateSelectedItems: (val) => widget.updateSelectedItems(val),
-                width: widget.width
-              ),
+                  addMode: widget.addMode,
+                  activeHoverColor: widget.activeHoverColor,
+                  animationDuration: widget.animationDuration,
+                  backgroundColor: widget.backgroundColor,
+                  border: widget.border,
+                  createHint: widget.createHint,
+                  createHintStyle: widget.createHintStyle,
+                  deleteMode: widget.deleteMode,
+                  deactivateHoverColor: widget.deactivateHoverColor,
+                  dialogActionIcon: widget.dialogActionIcon,
+                  dialogActionWidget: widget.dialogActionWidget,
+                  dialogBackgroundColor: widget.dialogBackgroundColor,
+                  dialogHeight: widget.dialogHeight,
+                  dialogListviewWidgetBuilder:
+                      widget.dialogListviewWidgetBuilder,
+                  dialogSearchBarBorder: widget.dialogSearchBarBorder,
+                  dialogSearchBarColor: widget.dialogSearchBarColor,
+                  dialogSearchBarElevation: widget.dialogSearchBarElevation,
+                  elevation: widget.elevation,
+                  hintSearchBar: widget.hintSearchBar,
+                  hintStyle: widget.hintStyle,
+                  listItens: widget.listItems,
+                  onAddItem: (val) => handleAddItem(val, context),
+                  onDeleteItem: (val) => handleDeleteItem(val, context),
+                  onItemSelected: (val) => onItemSelected(val),
+                  selectedDialogBoxColor: widget.selectedDialogBoxColor,
+                  selectedDialogColor: widget.selectedDialogColor,
+                  selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                  selectedItens: widget.selectedItems,
+                  sortSelecteds: widget.sortSelecteds,
+                  unselectedInsideBoxTextStyle:
+                      widget.unselectedInsideBoxTextStyle,
+                  updateSelectedItems: (val) => widget.updateSelectedItems(val),
+                  width: widget.width),
             ),
           ),
         ],
@@ -194,7 +195,6 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     setState(() {
       aberto = !aberto;
     });
-
   }
 
   void hideOverlay() {
@@ -234,7 +234,8 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                 border: Border.all(style: BorderStyle.none),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.grey.withOpacity(widget.elevation != 0 ? 0.5 : 0),
+                    color: Colors.grey
+                        .withOpacity(widget.elevation != 0 ? 0.5 : 0),
                     spreadRadius: 0.5,
                     blurRadius: widget.elevation,
                     offset: Offset(0, 0.5 * widget.elevation),
@@ -246,63 +247,84 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                 child: Row(
                   children: [
                     Expanded(
-                      child: widget.selectedItems.isNotEmpty 
-                      ?ScrollConfiguration(
-                        behavior: MyCustomScrollBehavior(),
-                        child: ListView.separated(
-                          scrollDirection: Axis.horizontal,
-                          separatorBuilder: (context, index) => const SizedBox(width: 5),
-                          itemCount: widget.selectedItems.length,
-                          itemBuilder: (context, index) {
-                            return Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 5),
-                              child: Card(
-                                color: widget.seletedItemsBoxColor ?? Colors.grey.shade300,
-                                elevation: widget.elevation,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    crossAxisAlignment: CrossAxisAlignment.center,
-                                    children: [
-                                      Text(widget.selectedItems[index],style:widget.selectedInsideBoxTextStyle),
-                                      InkWell(
-                                        onTap: () =>
-                                            onItemSelected(widget.selectedItems[index]),
-                                        child: Icon(Icons.close,size: widget.insideIconSize,),
+                      child: widget.selectedItems.isNotEmpty
+                          ? ScrollConfiguration(
+                              behavior: MyCustomScrollBehavior(),
+                              child: ListView.separated(
+                                scrollDirection: Axis.horizontal,
+                                separatorBuilder: (context, index) =>
+                                    const SizedBox(width: 5),
+                                itemCount: widget.selectedItems.length,
+                                itemBuilder: (context, index) {
+                                  return Padding(
+                                    padding:
+                                        const EdgeInsets.symmetric(vertical: 5),
+                                    child: Card(
+                                      color: widget.seletedItemsBoxColor ??
+                                          Colors.grey.shade300,
+                                      elevation: widget.elevation,
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 10),
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.center,
+                                          children: [
+                                            Text(widget.selectedItems[index],
+                                                style: widget
+                                                    .selectedInsideBoxTextStyle),
+                                            InkWell(
+                                              onTap: () => onItemSelected(
+                                                  widget.selectedItems[index]),
+                                              child: Icon(
+                                                Icons.close,
+                                                size: widget.insideIconSize,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ],
-                                  ),
-                                ),
+                                    ),
+                                  );
+                                },
                               ),
-                            );
-                          },
-                        ),
-                      ): Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(widget.hint ?? 'Selecione',textAlign: TextAlign.start,style: widget.hintStyle,),
-                        ],
-                      ),
+                            )
+                          : Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  widget.hint ?? 'Selecione',
+                                  textAlign: TextAlign.start,
+                                  style: widget.hintStyle,
+                                ),
+                              ],
+                            ),
                     ),
                     Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         const SizedBox(width: 5),
-                        widget.action ?? InkWell(
-                          onTap:  () {
-                            setState(() {
-                              widget.selectedItems.clear();
-                            });
-                          }, 
-                          child: Icon(
-                            widget.selectedItems.isNotEmpty 
-                              ? Icons.clear 
-                              : aberto  
-                                ? widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up
-                                : widget.dropdownDisableActionIcon ?? Icons.arrow_drop_down,size: widget.outsideIconSize,),
-                        ),
+                        widget.action ??
+                            InkWell(
+                              onTap: () {
+                                setState(() {
+                                  widget.selectedItems.clear();
+                                });
+                              },
+                              child: Icon(
+                                widget.selectedItems.isNotEmpty
+                                    ? Icons.clear
+                                    : aberto
+                                        ? widget.dropdownEnableActionIcon ??
+                                            Icons.arrow_drop_up
+                                        : widget.dropdownDisableActionIcon ??
+                                            Icons.arrow_drop_down,
+                                size: widget.outsideIconSize,
+                              ),
+                            ),
                       ],
                     ),
                   ],

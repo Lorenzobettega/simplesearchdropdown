@@ -59,7 +59,6 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -69,35 +68,43 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             SearchDropDown(
               listItens: listitems,
-              onDeleteItem: removeItem, 
+              onDeleteItem: removeItem,
               onAddItem: addItem,
               addMode: true,
               deleteMode: true,
               updateSelectedItem: updateSelectedItem,
             ),
-            const SizedBox(height: 20,),
+            const SizedBox(
+              height: 20,
+            ),
             MultipleSearchDropDown(
               listItems: listitems,
-              onDeleteItem: removeItem, 
+              onDeleteItem: removeItem,
               onAddItem: addItem,
               addMode: true,
               deleteMode: true,
               selectedItems: selectedMultipleItems,
               updateSelectedItems: updateSelectedItems,
             ),
-            const SizedBox(height: 20,),
+            const SizedBox(
+              height: 20,
+            ),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: (){print(selectedSingleItem);}, 
-                  child: const Text('Print Single Result')
+                    onPressed: () {
+                      print(selectedSingleItem);
+                    },
+                    child: const Text('Print Single Result')),
+                const SizedBox(
+                  width: 10,
                 ),
-                const SizedBox(width: 10,),
                 TextButton(
-                  onPressed: (){print(selectedMultipleItems);}, 
-                  child: const Text('Print Multiple Result')
-                ),
+                    onPressed: () {
+                      print(selectedMultipleItems);
+                    },
+                    child: const Text('Print Multiple Result')),
               ],
             ),
           ],

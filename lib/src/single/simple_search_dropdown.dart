@@ -87,8 +87,8 @@ class SearchDropDownState extends State<SearchDropDown> {
     } else {
       if (text != null && text != '') {
         listafiltrada = widget.listItens
-            .where(
-                (element) => element.toLowerCase().latinize().contains(text.toLowerCase()))
+            .where((element) =>
+                element.toLowerCase().latinize().contains(text.toLowerCase()))
             .toList();
       } else {
         listafiltrada = widget.listItens;
@@ -123,30 +123,36 @@ class SearchDropDownState extends State<SearchDropDown> {
             child: Material(
               color: Colors.transparent,
               child: NovoListView(
-                addMode: widget.addMode,
-                animationDuration: widget.animationDuration, 
-                backgroundColor: widget.backgroundColor, 
-                controllerBar: controllerBar, 
-                createHint: widget.createHint,
-                createHintStyle: widget.createHintStyle,
-                deleteMode: widget.deleteMode,
-                dialogActionIcon: widget.dialogActionIcon,
-                dialogActionWidget: widget.dialogActionWidget,
-                dialogBackgroundColor: widget.dialogBackgroundColor, 
-                dialogHeight: widget.dialogHeight, 
-                elevation: widget.elevation, 
-                hoverColor: widget.hoverColor, 
-                listaFiltrada: listafiltrada, 
-                onAddItem: (val) => handleAddItem(val, context,),
-                onClear: (val) => handleDeleteItem(val, context,),
-                onPressed: (val) => hideOverlay(val), 
-                selectedDialogColor: widget.selectedDialogColor, 
-                selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle, 
-                sortSelecteds: widget.sortSelecteds,
-                unselectedInsideBoxTextStyle: widget.unselectedInsideBoxTextStyle, 
-                widgetBuilder: widget.widgetBuilder, 
-                width: widget.width
-              ),
+                  addMode: widget.addMode,
+                  animationDuration: widget.animationDuration,
+                  backgroundColor: widget.backgroundColor,
+                  controllerBar: controllerBar,
+                  createHint: widget.createHint,
+                  createHintStyle: widget.createHintStyle,
+                  deleteMode: widget.deleteMode,
+                  dialogActionIcon: widget.dialogActionIcon,
+                  dialogActionWidget: widget.dialogActionWidget,
+                  dialogBackgroundColor: widget.dialogBackgroundColor,
+                  dialogHeight: widget.dialogHeight,
+                  elevation: widget.elevation,
+                  hoverColor: widget.hoverColor,
+                  listaFiltrada: listafiltrada,
+                  onAddItem: (val) => handleAddItem(
+                        val,
+                        context,
+                      ),
+                  onClear: (val) => handleDeleteItem(
+                        val,
+                        context,
+                      ),
+                  onPressed: (val) => hideOverlay(val),
+                  selectedDialogColor: widget.selectedDialogColor,
+                  selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                  sortSelecteds: widget.sortSelecteds,
+                  unselectedInsideBoxTextStyle:
+                      widget.unselectedInsideBoxTextStyle,
+                  widgetBuilder: widget.widgetBuilder,
+                  width: widget.width),
             ),
           ),
         ],
@@ -158,8 +164,8 @@ class SearchDropDownState extends State<SearchDropDown> {
     Overlay.of(context).insert(overlayEntry!);
   }
 
-  void handleAddItem(String item, BuildContext context){
-    if(widget.addMode){
+  void handleAddItem(String item, BuildContext context) {
+    if (widget.addMode) {
       widget.onAddItem!(item);
       hideOverlay(item);
       setState(() {});
@@ -167,7 +173,7 @@ class SearchDropDownState extends State<SearchDropDown> {
   }
 
   void handleDeleteItem(String item, BuildContext context) {
-    if(widget.deleteMode){
+    if (widget.deleteMode) {
       widget.onDeleteItem!(item);
       hideOverlay(null);
       setState(() {});
@@ -198,7 +204,8 @@ class SearchDropDownState extends State<SearchDropDown> {
             [
               aberto
                   ? Icon(widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up)
-                  : Icon(widget.dropdownDisableActionIcon ?? Icons.arrow_drop_down),
+                  : Icon(widget.dropdownDisableActionIcon ??
+                      Icons.arrow_drop_down),
               Visibility(
                 visible: controllerBar.text != '',
                 child: Row(
@@ -207,14 +214,13 @@ class SearchDropDownState extends State<SearchDropDown> {
                       width: 5,
                     ),
                     IconButton(
-                      onPressed: () {
-                        setState(() {
-                          controllerBar.clear();
-                          _filtrarLista(null);
-                        });
-                      },  
-                      icon: const Icon(Icons.clear)
-                    ),
+                        onPressed: () {
+                          setState(() {
+                            controllerBar.clear();
+                            _filtrarLista(null);
+                          });
+                        },
+                        icon: const Icon(Icons.clear)),
                   ],
                 ),
               ),
