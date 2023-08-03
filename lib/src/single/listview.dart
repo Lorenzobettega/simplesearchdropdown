@@ -91,7 +91,7 @@ class NovoListView extends StatelessWidget {
                     .toList();
                 if (list.isEmpty) {
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(16,8,8,0),
+                    padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -114,7 +114,7 @@ class NovoListView extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal:4),
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
                     Expanded(

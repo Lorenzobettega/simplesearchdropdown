@@ -27,7 +27,8 @@ class ValueItem {
   }
 
   /// toMap method for [ValueItem]
-  Map<String, dynamic> _toMap(Map<String, dynamic> Function(dynamic value)? customValueToMap) {
+  Map<String, dynamic> _toMap(
+      Map<String, dynamic> Function(dynamic value)? customValueToMap) {
     return {
       'label': label,
       'value': customValueToMap != null ? customValueToMap(value) : value,
@@ -35,25 +36,29 @@ class ValueItem {
   }
 
   /// fromMap method for [ValueItem]
-  factory ValueItem._fromMap(Map<String, dynamic> map,dynamic Function(Map<String, dynamic>)? customValueFromMap) {
+  factory ValueItem._fromMap(Map<String, dynamic> map,
+      dynamic Function(Map<String, dynamic>)? customValueFromMap) {
     return ValueItem(
       label: map['label'] ?? '',
       value: customValueFromMap != null
-        ? customValueFromMap(map['value'])
-        : map['value'],
+          ? customValueFromMap(map['value'])
+          : map['value'],
     );
   }
 
   /// toJson method for [ValueItem]
-  /// 
+  ///
   /// [customValueToMap] is an optional toMap function to use if value is a custom class.
-  String toJson(Map<String, dynamic> Function(dynamic value)? customValueToMap) => json.encode(_toMap(customValueToMap));
+  String toJson(
+          Map<String, dynamic> Function(dynamic value)? customValueToMap) =>
+      json.encode(_toMap(customValueToMap));
 
   /// fromJson method for [ValueItem]
-  /// 
+  ///
   /// [customValueFromMap] is an optional fromMap function to use if value is a custom class.
-  factory ValueItem.fromJson(String source,dynamic Function(Map<String, dynamic>)? customValueFromMap) =>
-      ValueItem._fromMap(json.decode(source),customValueFromMap);
+  factory ValueItem.fromJson(String source,
+          dynamic Function(Map<String, dynamic>)? customValueFromMap) =>
+      ValueItem._fromMap(json.decode(source), customValueFromMap);
 
   /// Equality operator for [ValueItem]
   @override
