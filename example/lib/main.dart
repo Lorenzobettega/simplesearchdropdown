@@ -31,29 +31,34 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final List<String> listitems = ['Lorenzo', 'É', 'Muito', 'Bonito'];
-  List<String> selectedMultipleItems = [];
-  String? selectedSingleItem;
+  final List<ValueItem> listitems = [
+    ValueItem(label: 'Lorenzo', value: 'Lorenzo'),
+    ValueItem(label: 'Teste', value: 'Teste'),
+    ValueItem(label: '3', value: '3'),
+    ValueItem(label: 'one more', value: 'one more2')
+  ];
+  List<ValueItem> selectedMultipleItems = [];
+  ValueItem? selectedSingleItem;
 
-  void removeItem(String item) {
+  void removeItem(ValueItem item) {
     setState(() {
       listitems.remove(item);
     });
   }
 
-  void addItem(String item) {
+  void addItem(ValueItem item) {
     setState(() {
       listitems.add(item);
     });
   }
 
-  void updateSelectedItems(List<String> newSelectedItems) {
+  void updateSelectedItems(List<ValueItem> newSelectedItems) {
     setState(() {
       selectedMultipleItems = newSelectedItems;
     });
   }
 
-  void updateSelectedItem(String? newSelectedItem) {
+  void updateSelectedItem(ValueItem? newSelectedItem) {
     setState(() {
       selectedSingleItem = newSelectedItem;
     });

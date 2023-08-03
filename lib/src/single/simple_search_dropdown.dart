@@ -54,14 +54,14 @@ class SearchDropDown extends StatefulWidget {
   final String? hint;
   final TextStyle? hintStyle;
   final Color? hoverColor;
-  final List<String> listItens;
-  final Function(String)? onAddItem;
-  final Function(String)? onDeleteItem;
+  final List<ValueItem> listItens;
+  final Function(ValueItem)? onAddItem;
+  final Function(ValueItem)? onDeleteItem;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
-  final Function(String?) updateSelectedItem;
+  final Function(ValueItem?) updateSelectedItem;
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
@@ -77,7 +77,7 @@ class SearchDropDownState extends State<SearchDropDown> {
     _filtrarLista(null, start: true);
   }
 
-  List<String> listafiltrada = [];
+  List<ValueItem> listafiltrada = [];
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
   bool aberto = false;
@@ -89,8 +89,10 @@ class SearchDropDownState extends State<SearchDropDown> {
     } else {
       if (text != null && text != '') {
         listafiltrada = widget.listItens
-            .where((element) =>
-                element.toLowerCase().latinize().contains(text.toLowerCase()))
+            .where((element) => element.label
+                .toLowerCase()
+                .latinize()
+                .contains(text.toLowerCase()))
             .toList();
       } else {
         listafiltrada = widget.listItens;
@@ -167,7 +169,7 @@ class SearchDropDownState extends State<SearchDropDown> {
     Overlay.of(context).insert(overlayEntry!);
   }
 
-  void handleAddItem(String item, BuildContext context) {
+  void handleAddItem(ValueItem item, BuildContext context) {
     if (widget.addMode) {
       widget.onAddItem!(item);
       hideOverlay(item);
@@ -175,7 +177,7 @@ class SearchDropDownState extends State<SearchDropDown> {
     }
   }
 
-  void handleDeleteItem(String item, BuildContext context) {
+  void handleDeleteItem(ValueItem item, BuildContext context) {
     if (widget.deleteMode) {
       widget.onDeleteItem!(item);
       hideOverlay(null);
@@ -184,14 +186,14 @@ class SearchDropDownState extends State<SearchDropDown> {
     }
   }
 
-  void hideOverlay(String? val) {
+  void hideOverlay(ValueItem? val) {
     overlayEntry?.remove();
     overlayEntry = null;
     setState(() {
       aberto = !aberto;
       if (val != null) {
         widget.updateSelectedItem(val);
-        controllerBar.text = val;
+        controllerBar.text = val.label;
       }
     });
   }

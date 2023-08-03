@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
 class NovoListView extends StatelessWidget {
@@ -15,10 +16,10 @@ class NovoListView extends StatelessWidget {
   final double dialogHeight;
   final double elevation;
   final Color? hoverColor;
-  final List<String> listaFiltrada;
-  final Function(String) onAddItem;
-  final Function(String) onClear;
-  final Function(String) onPressed;
+  final List<ValueItem> listaFiltrada;
+  final Function(ValueItem) onAddItem;
+  final Function(ValueItem) onClear;
+  final Function(ValueItem) onPressed;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final bool sortSelecteds;
@@ -54,10 +55,11 @@ class NovoListView extends StatelessWidget {
   }) : super(key: key);
 
   void organizarLista() {
-    List<String>? selecionado =
-        listaFiltrada.where((item) => item == controllerBar.text).toList();
+    List<ValueItem> selecionado = listaFiltrada
+        .where((item) => item.label == controllerBar.text)
+        .toList();
     if (selecionado.isNotEmpty) {
-      listaFiltrada.removeWhere((item) => item == controllerBar.text);
+      listaFiltrada.removeWhere((item) => item.label == controllerBar.text);
       listaFiltrada.insert(0, selecionado[0]);
     }
   }
@@ -84,9 +86,10 @@ class NovoListView extends StatelessWidget {
               if (controllerBar.text != '') {
                 final list = listaFiltrada
                     .where(
-                      (element) => element.toLowerCase().latinize().contains(
-                            controllerBar.text.toLowerCase().latinize(),
-                          ),
+                      (element) =>
+                          element.label.toLowerCase().latinize().contains(
+                                controllerBar.text.toLowerCase().latinize(),
+                              ),
                     )
                     .toList();
                 if (list.isEmpty) {
@@ -98,8 +101,12 @@ class NovoListView extends StatelessWidget {
                         Text(controllerBar.text),
                         TextButton(
                           onPressed: () {
-                            onAddItem(controllerBar.text);
-                            listaFiltrada.add(controllerBar.text);
+                            final item = ValueItem(
+                              label: controllerBar.text,
+                              value: controllerBar.text,
+                            );
+                            onAddItem(item);
+                            listaFiltrada.add(item);
                           },
                           child: Text(
                             createHint ?? 'Criar',
@@ -123,7 +130,8 @@ class NovoListView extends StatelessWidget {
                           backgroundColor:
                               MaterialStateProperty.resolveWith<Color>(
                             (Set<MaterialState> states) {
-                              if (controllerBar.text == listaFiltrada[index]) {
+                              if (controllerBar.text ==
+                                  listaFiltrada[index].label) {
                                 return selectedDialogColor ?? Colors.black38;
                               }
                               return Colors.transparent;
@@ -142,9 +150,9 @@ class NovoListView extends StatelessWidget {
                             Align(
                               alignment: Alignment.centerLeft,
                               child: Text(
-                                listaFiltrada[index],
+                                listaFiltrada[index].label,
                                 style: (controllerBar.text ==
-                                        listaFiltrada[index]
+                                        listaFiltrada[index].label
                                     ? selectedInsideBoxTextStyle ??
                                         const TextStyle(color: Colors.black)
                                     : unselectedInsideBoxTextStyle ??

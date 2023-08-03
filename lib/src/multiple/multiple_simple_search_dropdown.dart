@@ -72,19 +72,19 @@ class MultipleSearchDropDown extends StatefulWidget {
   final String? hintSearchBar;
   final TextStyle? hintStyle;
   final double insideIconSize;
-  final Function(String)? onAddItem;
-  final Function(String)? onDeleteItem;
+  final Function(ValueItem)? onAddItem;
+  final Function(ValueItem)? onDeleteItem;
   final double outsideIconSize;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
-  final List<String> selectedItems;
+  final List<ValueItem> selectedItems;
   final TextStyle? selectedItemsBoxTextStyle;
   final Color? seletedItemsBoxColor;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
-  final Function(List<String>) updateSelectedItems;
-  final List<String> listItems;
+  final Function(List<ValueItem>) updateSelectedItems;
+  final List<ValueItem> listItems;
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
@@ -99,7 +99,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
 
-  void onItemSelected(String val) {
+  void onItemSelected(ValueItem val) {
     setState(() {
       if (widget.selectedItems.contains(val)) {
         widget.selectedItems.remove(val);
@@ -110,7 +110,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     });
   }
 
-  void handleAddItem(String item, BuildContext context) {
+  void handleAddItem(ValueItem item, BuildContext context) {
     if (widget.addMode) {
       widget.onAddItem!(item);
       onItemSelected(item);
@@ -118,7 +118,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     }
   }
 
-  void handleDeleteItem(String item, BuildContext context) {
+  void handleDeleteItem(ValueItem item, BuildContext context) {
     if (widget.deleteMode) {
       widget.onDeleteItem!(item);
       hideOverlay();
@@ -268,7 +268,9 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                                           crossAxisAlignment:
                                               CrossAxisAlignment.center,
                                           children: [
-                                            Text(widget.selectedItems[index],
+                                            Text(
+                                                widget
+                                                    .selectedItems[index].label,
                                                 style: widget
                                                     .selectedInsideBoxTextStyle),
                                             InkWell(

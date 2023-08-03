@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
 class ContentMultiple extends StatefulWidget {
@@ -55,20 +56,20 @@ class ContentMultiple extends StatefulWidget {
   final Color? dialogSearchBarColor;
   final double dialogSearchBarElevation;
   final double elevation;
-  final Function(String) onAddItem;
-  final Function(String) onDeleteItem;
-  final Function(String value) onItemSelected;
+  final Function(ValueItem) onAddItem;
+  final Function(ValueItem) onDeleteItem;
+  final Function(ValueItem value) onItemSelected;
   final Widget? dialogListviewWidgetBuilder;
   final TextStyle? hintStyle;
   final String? hintSearchBar;
-  final List<String> listItens;
-  final List<String> selectedItens;
+  final List<ValueItem> listItens;
+  final List<ValueItem> selectedItens;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
-  final Function(List<String>) updateSelectedItems;
+  final Function(List<ValueItem>) updateSelectedItems;
   final double width;
 
   @override
@@ -76,7 +77,7 @@ class ContentMultiple extends StatefulWidget {
 }
 
 class _ContentMultipleState extends State<ContentMultiple> {
-  List<String> listafiltrada = [];
+  List<ValueItem> listafiltrada = [];
   final TextEditingController controllerBar = TextEditingController();
 
   @override
@@ -86,7 +87,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
   }
 
   void organizarLista() {
-    List<String>? selecionado = listafiltrada
+    List<ValueItem> selecionado = listafiltrada
         .where((item) => widget.selectedItens.contains(item))
         .toList();
     if (selecionado.isNotEmpty) {
@@ -100,8 +101,10 @@ class _ContentMultipleState extends State<ContentMultiple> {
   ) {
     if (text != null && text != '') {
       listafiltrada = widget.listItens
-          .where((element) =>
-              element.toLowerCase().latinize().contains(text.toLowerCase()))
+          .where((element) => element.label
+              .toLowerCase()
+              .latinize()
+              .contains(text.toLowerCase()))
           .toList();
     } else {
       listafiltrada = widget.listItens;
@@ -113,7 +116,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
         : null;
   }
 
-  void addItem(String value) {
+  void addItem(ValueItem value) {
     widget.onItemSelected.call(value);
     widget.sortSelecteds
         ? setState(() {
@@ -189,12 +192,14 @@ class _ContentMultipleState extends State<ContentMultiple> {
                         if (controllerBar.text != '') {
                           final list = listafiltrada
                               .where(
-                                (element) =>
-                                    element.toLowerCase().latinize().contains(
-                                          controllerBar.text
-                                              .toLowerCase()
-                                              .latinize(),
-                                        ),
+                                (element) => element.label
+                                    .toLowerCase()
+                                    .latinize()
+                                    .contains(
+                                      controllerBar.text
+                                          .toLowerCase()
+                                          .latinize(),
+                                    ),
                               )
                               .toList();
                           if (list.isEmpty) {
@@ -209,8 +214,12 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                 TextButton(
                                   onPressed: () {
                                     setState(() {
-                                      widget.onAddItem(controllerBar.text);
-                                      listafiltrada.add(controllerBar.text);
+                                      final item = ValueItem(
+                                        label: controllerBar.text,
+                                        value: controllerBar.text,
+                                      );
+                                      widget.onAddItem(item);
+                                      listafiltrada.add(item);
                                     });
                                   },
                                   child: Text(
@@ -270,9 +279,9 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                         Align(
                                             alignment: Alignment.centerLeft,
                                             child: Text(
-                                              listafiltrada[index],
+                                              listafiltrada[index].label,
                                               style: (controllerBar.text ==
-                                                      listafiltrada[index]
+                                                      listafiltrada[index].label
                                                   ? widget.selectedInsideBoxTextStyle ??
                                                       const TextStyle(
                                                           color: Colors.black)
