@@ -30,7 +30,7 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.hintSearchBar,
     this.hintStyle,
     this.insideIconSize = 18,
-    this.onAddItem,
+    required this.onAddItem,
     this.onDeleteItem,
     this.outsideIconSize = 20,
     this.selectedDialogColor,
@@ -72,7 +72,7 @@ class MultipleSearchDropDown extends StatefulWidget {
   final String? hintSearchBar;
   final TextStyle? hintStyle;
   final double insideIconSize;
-  final Function(ValueItem)? onAddItem;
+  final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
   final double outsideIconSize;
   final Color? selectedDialogBoxColor;
@@ -112,7 +112,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
 
   void handleAddItem(ValueItem item, BuildContext context) {
     if (widget.addMode) {
-      widget.onAddItem!(item);
+      widget.onAddItem(item);
       onItemSelected(item);
       setState(() {});
     }
@@ -186,6 +186,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                     widget.unselectedInsideBoxTextStyle,
                 updateSelectedItems: (val) => widget.updateSelectedItems(val),
                 width: widget.dropdownwidth,
+                minHeight: widget.dropdownHeight,
               ),
             ),
           ),

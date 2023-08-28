@@ -24,7 +24,7 @@ class SearchDropDown extends StatefulWidget {
     this.hintStyle,
     this.hoverColor,
     required this.listItens,
-    this.onAddItem,
+    required this.onAddItem,
     this.onDeleteItem,
     this.selectedDialogColor,
     this.selectedInsideBoxTextStyle,
@@ -55,7 +55,7 @@ class SearchDropDown extends StatefulWidget {
   final TextStyle? hintStyle;
   final Color? hoverColor;
   final List<ValueItem> listItens;
-  final Function(ValueItem)? onAddItem;
+  final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -143,7 +143,6 @@ class SearchDropDownState extends State<SearchDropDown> {
                 listaFiltrada: listafiltrada,
                 onAddItem: (val) => handleAddItem(
                   val,
-                  context,
                 ),
                 onClear: (val) => handleDeleteItem(
                   val,
@@ -169,9 +168,9 @@ class SearchDropDownState extends State<SearchDropDown> {
     Overlay.of(context).insert(overlayEntry!);
   }
 
-  void handleAddItem(ValueItem item, BuildContext context) {
+  void handleAddItem(ValueItem item) {
     if (widget.addMode) {
-      widget.onAddItem!(item);
+      widget.onAddItem(item);
       hideOverlay(item);
       setState(() {});
     }

@@ -37,6 +37,7 @@ class ContentMultiple extends StatefulWidget {
     required this.unselectedInsideBoxTextStyle,
     required this.updateSelectedItems,
     required this.width,
+    required this.minHeight,
   });
 
   final bool addMode;
@@ -71,6 +72,7 @@ class ContentMultiple extends StatefulWidget {
   final TextStyle? unselectedInsideBoxTextStyle;
   final Function(List<ValueItem>) updateSelectedItems;
   final double width;
+  final double minHeight;
 
   @override
   State<ContentMultiple> createState() => _ContentMultipleState();
@@ -151,7 +153,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   overlayColor: MaterialStatePropertyAll(
                       widget.deactivateHoverColor ?? Colors.grey.shade100),
                   constraints:
-                      BoxConstraints(maxHeight: 50, maxWidth: widget.width),
+                      BoxConstraints(minHeight: widget.minHeight, maxWidth: widget.width),
                   surfaceTintColor: MaterialStatePropertyAll(
                       widget.dialogSearchBarColor ?? Colors.white),
                   shape: MaterialStateProperty.all<OutlinedBorder>(
