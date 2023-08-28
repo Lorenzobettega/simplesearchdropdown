@@ -1,3 +1,7 @@
+## [1.6.0] - 2023-08-27.
+-   Made `onAddItem` parameter a `required` one.
+-   Mini fix on searchbar Height
+
 ## [1.5.0] - 2023-08-03.
 -   Convert `List<String>` to `List<ValueItem>`, allowing the users to have anything as an object on the dropdown.
 
