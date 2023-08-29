@@ -152,8 +152,8 @@ class _ContentMultipleState extends State<ContentMultiple> {
                       widget.dialogSearchBarColor ?? Colors.white),
                   overlayColor: MaterialStatePropertyAll(
                       widget.deactivateHoverColor ?? Colors.grey.shade100),
-                  constraints:
-                      BoxConstraints(minHeight: widget.minHeight, maxWidth: widget.width),
+                  constraints: BoxConstraints(
+                      minHeight: widget.minHeight, maxWidth: widget.width),
                   surfaceTintColor: MaterialStatePropertyAll(
                       widget.dialogSearchBarColor ?? Colors.white),
                   shape: MaterialStateProperty.all<OutlinedBorder>(

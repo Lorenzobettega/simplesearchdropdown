@@ -100,7 +100,7 @@ class SearchDropDownState extends State<SearchDropDown> {
     }
   }
 
-  void showOverlay(
+  void _showOverlay(
     BuildContext context,
   ) {
     final RenderBox overlay =
@@ -176,12 +176,19 @@ class SearchDropDownState extends State<SearchDropDown> {
     }
   }
 
+  void clearSelection() {
+    setState(() {
+      widget.updateSelectedItem(null);
+      controllerBar.text = '';
+    });
+  }
+
   void handleDeleteItem(ValueItem item, BuildContext context) {
     if (widget.deleteMode) {
       widget.onDeleteItem!(item);
       hideOverlay(null);
       setState(() {});
-      showOverlay(context);
+      _showOverlay(context);
     }
   }
 
@@ -257,7 +264,7 @@ class SearchDropDownState extends State<SearchDropDown> {
         ),
         onTap: () {
           if (overlayEntry == null) {
-            showOverlay(context);
+            _showOverlay(context);
           } else {
             hideOverlay(null);
           }
@@ -265,7 +272,7 @@ class SearchDropDownState extends State<SearchDropDown> {
         onChanged: (a) {
           _filtrarLista(a);
           hideOverlay(null);
-          showOverlay(context);
+          _showOverlay(context);
         },
         elevation: MaterialStateProperty.all<double>(
           widget.elevation,
