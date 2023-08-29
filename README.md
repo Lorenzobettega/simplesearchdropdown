@@ -56,6 +56,30 @@ This project is a widget to find items in a list without sacrifying beauty and u
     ),
 ```
 
+### 3. Reseting the dropdown to the unselected state:
+
+```dart
+    //create a key and add it to the dropdown:
+    final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
+    SearchDropDown(
+        listItens: listitems,
+        onDeleteItem: removeItem, 
+        onAddItem: addItem,
+        addMode: true,
+        deleteMode: true,
+        updateSelectedItem: updateSelectedItem,
+    ),
+    //create a function to clear the selection:
+    void clearSingleSelection() {
+        singleSearchKey.currentState?.clearSelection();
+    }
+    //assign it to a widget (like a button):
+    TextButton(
+        onPressed: clearSingleSelection,
+        child: const Text('Clear Single Selection'),
+    ),
+```
+
 ![Multi Menu](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/1a531a60-84e5-4dd4-84e1-8196cfe08fc5)
 
 ![Multi Menu Selection](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/12f2db48-ca39-439a-9594-fc4b2b32b1f8)

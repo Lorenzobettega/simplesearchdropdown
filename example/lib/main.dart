@@ -31,37 +31,39 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+  final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
+  final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
   final List<ValueItem> listitems = [
-    ValueItem(label: 'Lorenzo', value: 'Lorenzo'),
-    ValueItem(label: 'Teste', value: 'Teste'),
-    ValueItem(label: '3', value: '3'),
-    ValueItem(label: 'one more', value: 'one more2')
+    const ValueItem(label: 'Lorenzo', value: 'Lorenzo'),
+    const ValueItem(label: 'Teste', value: 'Teste'),
+    const ValueItem(label: '3', value: '3'),
+    const ValueItem(label: 'one more', value: 'one more2')
   ];
   List<ValueItem> selectedMultipleItems = [];
   ValueItem? selectedSingleItem;
 
   void removeItem(ValueItem item) {
-    setState(() {
-      listitems.remove(item);
-    });
+    listitems.remove(item);
   }
 
   void addItem(ValueItem item) {
-    setState(() {
-      listitems.add(item);
-    });
+    listitems.add(item);
   }
 
   void updateSelectedItems(List<ValueItem> newSelectedItems) {
-    setState(() {
-      selectedMultipleItems = newSelectedItems;
-    });
+    selectedMultipleItems = newSelectedItems;
   }
 
   void updateSelectedItem(ValueItem? newSelectedItem) {
-    setState(() {
-      selectedSingleItem = newSelectedItem;
-    });
+    selectedSingleItem = newSelectedItem;
+  }
+
+  void clearSingleSelection() {
+    singleSearchKey.currentState?.clearSelection();
+  }
+
+  void clearMultipleSelection() {
+    multipleSearchKey.currentState?.clearSelection();
   }
 
   @override
@@ -72,6 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SearchDropDown(
+              key: singleSearchKey,
               listItens: listitems,
               onDeleteItem: removeItem,
               onAddItem: addItem,
@@ -83,6 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 20,
             ),
             MultipleSearchDropDown(
+              key: multipleSearchKey,
               listItems: listitems,
               onDeleteItem: removeItem,
               onAddItem: addItem,
@@ -98,18 +102,39 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                    onPressed: () {
-                      print(selectedSingleItem);
-                    },
-                    child: const Text('Print Single Result')),
+                  onPressed: () {
+                    print(selectedSingleItem);
+                  },
+                  child: const Text('Print Single Result'),
+                ),
                 const SizedBox(
                   width: 10,
                 ),
                 TextButton(
-                    onPressed: () {
-                      print(selectedMultipleItems);
-                    },
-                    child: const Text('Print Multiple Result')),
+                  onPressed: () {
+                    print(selectedMultipleItems);
+                  },
+                  child: const Text('Print Multiple Result'),
+                ),
+              ],
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: clearSingleSelection,
+                  child: const Text('Clear Single Selection'),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                TextButton(
+                  onPressed: clearMultipleSelection,
+                  child: const Text('Clear Multiple Selection'),
+                ),
               ],
             ),
           ],
