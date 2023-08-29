@@ -1,3 +1,8 @@
+## [1.7.0] - 2023-08-27.
+-   Added `clearSelection()` function on multiple and single search widgets. It allows the user to reset the dropdown to the initial state.
+-   Improved sample.
+-   Improved readme.
+
 ## [1.6.0] - 2023-08-27.
 -   Made `onAddItem` parameter a `required` one.
 -   Mini fix on searchbar Height

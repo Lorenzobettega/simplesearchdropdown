@@ -32,6 +32,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
+  final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
   final List<ValueItem> listitems = [
     const ValueItem(label: 'Lorenzo', value: 'Lorenzo'),
     const ValueItem(label: 'Teste', value: 'Teste'),
@@ -61,6 +62,10 @@ class _MyHomePageState extends State<MyHomePage> {
     singleSearchKey.currentState?.clearSelection();
   }
 
+  void clearMultipleSelection() {
+    multipleSearchKey.currentState?.clearSelection();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -81,6 +86,7 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 20,
             ),
             MultipleSearchDropDown(
+              key: multipleSearchKey,
               listItems: listitems,
               onDeleteItem: removeItem,
               onAddItem: addItem,
@@ -115,9 +121,21 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(
               height: 20,
             ),
-            TextButton(
-              onPressed: clearSingleSelection,
-              child: const Text('Clear Single Selection'),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: clearSingleSelection,
+                  child: const Text('Clear Single Selection'),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                TextButton(
+                  onPressed: clearMultipleSelection,
+                  child: const Text('Clear Multiple Selection'),
+                ),
+              ],
             ),
           ],
         ),

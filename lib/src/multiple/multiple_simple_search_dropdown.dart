@@ -90,10 +90,10 @@ class MultipleSearchDropDown extends StatefulWidget {
   final double dropdownwidth;
 
   @override
-  State<MultipleSearchDropDown> createState() => _MultipleSearchDropDownState();
+  State<MultipleSearchDropDown> createState() => MultipleSearchDropDownState();
 }
 
-class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
+class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   late double altura = 0;
   late bool aberto = false;
   OverlayEntry? overlayEntry;
@@ -107,6 +107,12 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
         widget.selectedItems.add(val);
       }
       //widget.updateSelectedItems(widget.selectedItems); //TODO checar necessidade
+    });
+  }
+
+  void clearSelection() {
+    setState(() {
+      widget.selectedItems.clear();
     });
   }
 
