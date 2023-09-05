@@ -1,3 +1,6 @@
+## [1.8.0] - 2023-08-27.
+-   Added `selectedItem` property to single search widget. It allows the user to set an initial value to the dropdown. 
+
 ## [1.7.0] - 2023-08-27.
 -   Added `clearSelection()` function on multiple and single search widgets. It allows the user to reset the dropdown to the initial state.
 -   Improved sample.

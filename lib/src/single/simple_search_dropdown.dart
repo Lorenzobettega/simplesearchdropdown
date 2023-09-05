@@ -34,6 +34,7 @@ class SearchDropDown extends StatefulWidget {
     this.widgetBuilder,
     this.dropdownwidth = 300,
     this.dropdownHeight = 50,
+    this.selectedItem,
   });
 
   final List<Widget>? actions;
@@ -65,6 +66,7 @@ class SearchDropDown extends StatefulWidget {
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
+  final ValueItem? selectedItem;
 
   @override
   State<SearchDropDown> createState() => SearchDropDownState();
@@ -75,13 +77,14 @@ class SearchDropDownState extends State<SearchDropDown> {
   void initState() {
     super.initState();
     _filtrarLista(null, start: true);
+    controllerBar = TextEditingController(text: widget.selectedItem != null ? widget.selectedItem!.label : null);
   }
 
   List<ValueItem> listafiltrada = [];
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
   bool aberto = false;
-  final TextEditingController controllerBar = TextEditingController();
+  late TextEditingController controllerBar;
 
   void _filtrarLista(String? text, {bool start = false}) {
     if (start) {

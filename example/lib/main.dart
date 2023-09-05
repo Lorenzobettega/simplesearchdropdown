@@ -81,6 +81,7 @@ class _MyHomePageState extends State<MyHomePage> {
               addMode: true,
               deleteMode: true,
               updateSelectedItem: updateSelectedItem,
+              selectedItem: listitems[0],
             ),
             const SizedBox(
               height: 20,
