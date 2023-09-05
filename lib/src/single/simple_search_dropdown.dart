@@ -77,7 +77,8 @@ class SearchDropDownState extends State<SearchDropDown> {
   void initState() {
     super.initState();
     _filtrarLista(null, start: true);
-    controllerBar = TextEditingController(text: widget.selectedItem != null ? widget.selectedItem!.label : null);
+    controllerBar = TextEditingController(
+        text: widget.selectedItem != null ? widget.selectedItem!.label : null);
   }
 
   List<ValueItem> listafiltrada = [];
