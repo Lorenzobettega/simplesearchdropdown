@@ -32,7 +32,6 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.insideIconSize = 18,
     required this.onAddItem,
     this.onDeleteItem,
-    this.outsideIconSize = 20,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
@@ -45,6 +44,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.widgetBuilder,
     this.dropdownwidth = 300,
     this.dropdownHeight = 50,
+    this.outsideIconColor,
+    this.outsideIconSize = 20,
   }) : super(key: key);
 
   final Widget? action;
@@ -74,7 +75,6 @@ class MultipleSearchDropDown extends StatefulWidget {
   final double insideIconSize;
   final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
-  final double outsideIconSize;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -88,6 +88,8 @@ class MultipleSearchDropDown extends StatefulWidget {
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
+  final double outsideIconSize;
+  final Color? outsideIconColor;
 
   @override
   State<MultipleSearchDropDown> createState() => MultipleSearchDropDownState();
@@ -329,6 +331,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                                         : widget.dropdownDisableActionIcon ??
                                             Icons.arrow_drop_down,
                                 size: widget.outsideIconSize,
+                                color: widget.outsideIconColor,
                               ),
                             ),
                       ],

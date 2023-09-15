@@ -35,6 +35,8 @@ class SearchDropDown extends StatefulWidget {
     this.dropdownwidth = 300,
     this.dropdownHeight = 50,
     this.selectedItem,
+    this.outsideIconColor,
+    this.outsideIconSize = 20,
   });
 
   final List<Widget>? actions;
@@ -67,6 +69,8 @@ class SearchDropDown extends StatefulWidget {
   final double dropdownHeight;
   final double dropdownwidth;
   final ValueItem? selectedItem;
+  final Color? outsideIconColor;
+  final double outsideIconSize;
 
   @override
   State<SearchDropDown> createState() => SearchDropDownState();
@@ -77,7 +81,8 @@ class SearchDropDownState extends State<SearchDropDown> {
   void initState() {
     super.initState();
     _filtrarLista(null, start: true);
-    controllerBar = TextEditingController(text: widget.selectedItem != null ? widget.selectedItem!.label : null);
+    controllerBar = TextEditingController(
+        text: widget.selectedItem != null ? widget.selectedItem!.label : null);
   }
 
   List<ValueItem> listafiltrada = [];
@@ -217,9 +222,16 @@ class SearchDropDownState extends State<SearchDropDown> {
         trailing: widget.actions ??
             [
               aberto
-                  ? Icon(widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up)
-                  : Icon(widget.dropdownDisableActionIcon ??
-                      Icons.arrow_drop_down),
+                  ? Icon(
+                      widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up,
+                      color: widget.outsideIconColor,
+                      size: widget.outsideIconSize,
+                    )
+                  : Icon(
+                      widget.dropdownDisableActionIcon ?? Icons.arrow_drop_down,
+                      color: widget.outsideIconColor,
+                      size: widget.outsideIconSize,
+                    ),
               Visibility(
                 visible: controllerBar.text != '',
                 child: Row(
