@@ -20,8 +20,10 @@ class NovoListView extends StatelessWidget {
   final Function(ValueItem) onAddItem;
   final Function(ValueItem) onClear;
   final Function(ValueItem) onPressed;
+  final EdgeInsets? padding;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final double? separatorHeight;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Widget? widgetBuilder;
@@ -45,8 +47,10 @@ class NovoListView extends StatelessWidget {
     required this.onAddItem,
     required this.onClear,
     required this.onPressed,
+    required this.padding,
     required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
+    required this.separatorHeight,
     required this.sortSelecteds,
     required this.unselectedInsideBoxTextStyle,
     required this.widgetBuilder,
@@ -77,8 +81,8 @@ class NovoListView extends StatelessWidget {
         width: width,
         child: ListView.separated(
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
-          separatorBuilder: (context, index) => const SizedBox(
-            height: 1,
+          separatorBuilder: (context, index) => SizedBox(
+            height: separatorHeight ?? 1,
           ),
           itemBuilder: (context, index) {
             sortSelecteds ? organizarLista() : null;
@@ -121,7 +125,7 @@ class NovoListView extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
+                padding: padding ?? const EdgeInsets.symmetric(horizontal: 4,vertical: 6),
                 child: Row(
                   children: [
                     Expanded(

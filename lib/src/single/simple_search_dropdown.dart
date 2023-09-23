@@ -27,8 +27,10 @@ class SearchDropDown extends StatefulWidget {
     required this.listItens,
     required this.onAddItem,
     this.onDeleteItem,
+    this.padding,
     this.selectedDialogColor,
     this.selectedInsideBoxTextStyle,
+    this.separatorHeight,
     this.sortSelecteds = true,
     this.unselectedInsideBoxTextStyle,
     required this.updateSelectedItem,
@@ -62,8 +64,10 @@ class SearchDropDown extends StatefulWidget {
   final List<ValueItem> listItens;
   final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
+  final EdgeInsets? padding;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final double? separatorHeight;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Function(ValueItem?) updateSelectedItem;
@@ -159,8 +163,10 @@ class SearchDropDownState extends State<SearchDropDown> {
                   context,
                 ),
                 onPressed: (val) => hideOverlay(val),
+                padding: widget.padding,
                 selectedDialogColor: widget.selectedDialogColor,
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                separatorHeight: widget.separatorHeight,
                 sortSelecteds: widget.sortSelecteds,
                 unselectedInsideBoxTextStyle:
                     widget.unselectedInsideBoxTextStyle,
@@ -191,9 +197,8 @@ class SearchDropDownState extends State<SearchDropDown> {
   void clearSelection() {
     setState(() {
       controllerBar.clear();
-                            _filtrarLista(null);
-                            widget.updateSelectedItem(null);
-      
+      _filtrarLista(null);
+      widget.updateSelectedItem(null);
     });
   }
 
@@ -248,11 +253,7 @@ class SearchDropDownState extends State<SearchDropDown> {
                     ),
                     IconButton(
                       onPressed: () {
-                        setState(
-                          () {
-                            
-                          },
-                        );
+                        setState( () => clearSelection(),);
                       },
                       icon: Icon(Icons.clear,color: widget.clearIconColor,),
                     ),

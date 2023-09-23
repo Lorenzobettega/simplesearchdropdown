@@ -29,9 +29,11 @@ class ContentMultiple extends StatefulWidget {
     required this.onAddItem,
     required this.onDeleteItem,
     required this.onItemSelected,
+    required this.padding,
     required this.selectedDialogBoxColor,
     required this.selectedInsideBoxTextStyle,
     required this.selectedItens,
+    required this.separatorHeight,
     required this.sortSelecteds,
     required this.unselectedInsideBoxTextStyle,
     required this.updateSelectedItems,
@@ -52,6 +54,7 @@ class ContentMultiple extends StatefulWidget {
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
+  final Widget? dialogListviewWidgetBuilder;
   final OutlinedBorder? dialogSearchBarBorder;
   final Color? dialogSearchBarColor;
   final double dialogSearchBarElevation;
@@ -59,13 +62,14 @@ class ContentMultiple extends StatefulWidget {
   final Function(ValueItem) onAddItem;
   final Function(ValueItem) onDeleteItem;
   final Function(ValueItem value) onItemSelected;
-  final Widget? dialogListviewWidgetBuilder;
+  final EdgeInsets? padding;
   final TextStyle? hintStyle;
   final String? hintSearchBar;
   final List<ValueItem> listItens;
   final List<ValueItem> selectedItens;
   final Color? selectedDialogBoxColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final double? separatorHeight;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Function(List<ValueItem>) updateSelectedItems;
@@ -184,8 +188,8 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   child: ListView.separated(
                     scrollDirection: Axis.vertical,
                     itemCount: listafiltrada.length + (widget.addMode ? 1 : 0),
-                    separatorBuilder: (context, index) => const SizedBox(
-                      height: 1,
+                    separatorBuilder: (context, index) => SizedBox(
+                      height: widget.separatorHeight ?? 1,
                     ),
                     itemBuilder: (context, index) {
                       if (index == listafiltrada.length && widget.addMode) {
@@ -237,8 +241,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                           children: [
                             Expanded(
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 5),
+                                padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 5,vertical: 6),
                                 child: TextButton(
                                     style: ButtonStyle(
                                       backgroundColor: MaterialStateProperty
