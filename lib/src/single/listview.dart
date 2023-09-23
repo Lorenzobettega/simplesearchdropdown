@@ -20,9 +20,13 @@ class NovoListView extends StatelessWidget {
   final Function(ValueItem) onAddItem;
   final Function(ValueItem) onClear;
   final Function(ValueItem) onPressed;
+  final EdgeInsets? padding;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedItemHoverColor;
+  final double? separatorHeight;
   final bool sortSelecteds;
+  final Color? unselectedItemHoverColor;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Widget? widgetBuilder;
   final double width;
@@ -45,9 +49,13 @@ class NovoListView extends StatelessWidget {
     required this.onAddItem,
     required this.onClear,
     required this.onPressed,
+    required this.padding,
     required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
+    required this.selectedItemHoverColor,
+    required this.separatorHeight,
     required this.sortSelecteds,
+    required this.unselectedItemHoverColor,
     required this.unselectedInsideBoxTextStyle,
     required this.widgetBuilder,
     required this.width,
@@ -77,8 +85,8 @@ class NovoListView extends StatelessWidget {
         width: width,
         child: ListView.separated(
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
-          separatorBuilder: (context, index) => const SizedBox(
-            height: 1,
+          separatorBuilder: (context, index) => SizedBox(
+            height: separatorHeight ?? 1,
           ),
           itemBuilder: (context, index) {
             sortSelecteds ? organizarLista() : null;
@@ -121,7 +129,7 @@ class NovoListView extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
+                padding: padding ?? const EdgeInsets.symmetric(horizontal: 4,vertical: 6),
                 child: Row(
                   children: [
                     Expanded(
@@ -142,8 +150,16 @@ class NovoListView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          overlayColor: MaterialStatePropertyAll(
-                              hoverColor ?? Colors.grey.shade100),
+                          overlayColor: 
+                              MaterialStateProperty.resolveWith<Color>(
+                            (Set<MaterialState> states) {
+                              if (controllerBar.text ==
+                                  listaFiltrada[index].label) {
+                                return selectedItemHoverColor ?? Colors.grey.shade300;
+                              }
+                              return unselectedItemHoverColor ?? Colors.grey.shade100;
+                            },
+                          ),
                         ),
                         onPressed: () => onPressed(listaFiltrada[index]),
                         child: widgetBuilder ??

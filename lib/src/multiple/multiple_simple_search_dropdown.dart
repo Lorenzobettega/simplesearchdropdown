@@ -7,14 +7,12 @@ class MultipleSearchDropDown extends StatefulWidget {
     required this.listItems,
     required this.addMode,
     this.action,
-    this.activeHoverColor,
     this.animationDuration,
     this.backgroundColor,
     this.border,
     this.createHint,
     this.createHintStyle,
     required this.deleteMode,
-    this.deactivateHoverColor,
     this.dialogActionIcon,
     this.dialogActionWidget,
     this.dialogBackgroundColor,
@@ -30,16 +28,21 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.hintSearchBar,
     this.hintStyle,
     this.insideIconSize = 18,
+    this.miniBoxIconColor,
     required this.onAddItem,
     this.onDeleteItem,
+    this.padding,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
     required this.selectedItems,
     this.selectedItemsBoxTextStyle,
     this.seletedItemsBoxColor,
+    this.selectedItemHoverColor,
+    this.separatorHeight,
     this.sortSelecteds = true,
     this.unselectedInsideBoxTextStyle,
+    this.unselectedItemHoverColor,
     required this.updateSelectedItems,
     this.widgetBuilder,
     this.dropdownwidth = 300,
@@ -50,14 +53,12 @@ class MultipleSearchDropDown extends StatefulWidget {
 
   final Widget? action;
   final bool addMode;
-  final Color? activeHoverColor;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final String? createHint;
   final TextStyle? createHintStyle;
   final OutlinedBorder? border;
   final bool deleteMode;
-  final Color? deactivateHoverColor;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
@@ -73,16 +74,21 @@ class MultipleSearchDropDown extends StatefulWidget {
   final String? hintSearchBar;
   final TextStyle? hintStyle;
   final double insideIconSize;
+  final Color? miniBoxIconColor;
   final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
+  final EdgeInsets? padding;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final List<ValueItem> selectedItems;
   final TextStyle? selectedItemsBoxTextStyle;
   final Color? seletedItemsBoxColor;
+  final Color? selectedItemHoverColor;
+  final double? separatorHeight;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
+  final Color? unselectedItemHoverColor;
   final Function(List<ValueItem>) updateSelectedItems;
   final List<ValueItem> listItems;
   final Widget? widgetBuilder;
@@ -100,7 +106,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   late bool aberto = false;
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
-
+  
   void onItemSelected(ValueItem val) {
     setState(() {
       if (widget.selectedItems.contains(val)) {
@@ -162,14 +168,12 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
               color: Colors.transparent,
               child: ContentMultiple(
                 addMode: widget.addMode,
-                activeHoverColor: widget.activeHoverColor,
                 animationDuration: widget.animationDuration,
                 backgroundColor: widget.backgroundColor,
                 border: widget.border,
                 createHint: widget.createHint,
                 createHintStyle: widget.createHintStyle,
                 deleteMode: widget.deleteMode,
-                deactivateHoverColor: widget.deactivateHoverColor,
                 dialogActionIcon: widget.dialogActionIcon,
                 dialogActionWidget: widget.dialogActionWidget,
                 dialogBackgroundColor: widget.dialogBackgroundColor,
@@ -185,13 +189,16 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                 onAddItem: (val) => handleAddItem(val, context),
                 onDeleteItem: (val) => handleDeleteItem(val, context),
                 onItemSelected: (val) => onItemSelected(val),
+                padding: widget.padding,
                 selectedDialogBoxColor: widget.selectedDialogBoxColor,
-                selectedDialogColor: widget.selectedDialogColor,
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                selectedItemHoverColor: widget.selectedItemHoverColor,
                 selectedItens: widget.selectedItems,
+                separatorHeight: widget.separatorHeight,
                 sortSelecteds: widget.sortSelecteds,
                 unselectedInsideBoxTextStyle:
                     widget.unselectedInsideBoxTextStyle,
+                unselectedItemHoverColor: widget.unselectedItemHoverColor,
                 width: widget.dropdownwidth,
                 minHeight: widget.dropdownHeight,
               ),
@@ -287,6 +294,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                                               child: Icon(
                                                 Icons.close,
                                                 size: widget.insideIconSize,
+                                                color: widget.miniBoxIconColor,
                                               ),
                                             ),
                                           ],

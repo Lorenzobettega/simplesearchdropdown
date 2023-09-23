@@ -6,14 +6,13 @@ class ContentMultiple extends StatefulWidget {
   const ContentMultiple({
     super.key,
     required this.addMode,
-    required this.activeHoverColor,
     required this.animationDuration,
     required this.backgroundColor,
     required this.border,
     required this.createHint,
     required this.createHintStyle,
     required this.deleteMode,
-    required this.deactivateHoverColor,
+    required this.unselectedItemHoverColor,
     required this.dialogActionIcon,
     required this.dialogActionWidget,
     required this.dialogBackgroundColor,
@@ -29,10 +28,12 @@ class ContentMultiple extends StatefulWidget {
     required this.onAddItem,
     required this.onDeleteItem,
     required this.onItemSelected,
+    required this.padding,
     required this.selectedDialogBoxColor,
-    required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
+    required this.selectedItemHoverColor,
     required this.selectedItens,
+    required this.separatorHeight,
     required this.sortSelecteds,
     required this.unselectedInsideBoxTextStyle,
     required this.width,
@@ -40,18 +41,17 @@ class ContentMultiple extends StatefulWidget {
   });
 
   final bool addMode;
-  final Color? activeHoverColor;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
   final String? createHint;
   final TextStyle? createHintStyle;
   final bool deleteMode;
-  final Color? deactivateHoverColor;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double dialogHeight;
+  final Widget? dialogListviewWidgetBuilder;
   final OutlinedBorder? dialogSearchBarBorder;
   final Color? dialogSearchBarColor;
   final double dialogSearchBarElevation;
@@ -59,16 +59,18 @@ class ContentMultiple extends StatefulWidget {
   final Function(ValueItem) onAddItem;
   final Function(ValueItem) onDeleteItem;
   final Function(ValueItem value) onItemSelected;
-  final Widget? dialogListviewWidgetBuilder;
+  final EdgeInsets? padding;
   final TextStyle? hintStyle;
   final String? hintSearchBar;
   final List<ValueItem> listItens;
   final List<ValueItem> selectedItens;
   final Color? selectedDialogBoxColor;
-  final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedItemHoverColor;
+  final double? separatorHeight;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
+  final Color? unselectedItemHoverColor;
   final double width;
   final double minHeight;
 
@@ -149,7 +151,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   backgroundColor: MaterialStatePropertyAll(
                       widget.dialogSearchBarColor ?? Colors.white),
                   overlayColor: MaterialStatePropertyAll(
-                      widget.deactivateHoverColor ?? Colors.grey.shade100),
+                      widget.unselectedItemHoverColor ?? Colors.grey.shade100),
                   constraints: BoxConstraints(
                       minHeight: widget.minHeight, maxWidth: widget.width),
                   surfaceTintColor: MaterialStatePropertyAll(
@@ -184,8 +186,8 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   child: ListView.separated(
                     scrollDirection: Axis.vertical,
                     itemCount: listafiltrada.length + (widget.addMode ? 1 : 0),
-                    separatorBuilder: (context, index) => const SizedBox(
-                      height: 1,
+                    separatorBuilder: (context, index) => SizedBox(
+                      height: widget.separatorHeight ?? 1,
                     ),
                     itemBuilder: (context, index) {
                       if (index == listafiltrada.length && widget.addMode) {
@@ -237,8 +239,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                           children: [
                             Expanded(
                               child: Padding(
-                                padding:
-                                    const EdgeInsets.symmetric(horizontal: 5),
+                                padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 5,vertical: 6),
                                 child: TextButton(
                                     style: ButtonStyle(
                                       backgroundColor: MaterialStateProperty
@@ -265,10 +266,10 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                         (Set<MaterialState> states) {
                                           if (widget.selectedItens
                                               .contains(listafiltrada[index])) {
-                                            return widget.activeHoverColor ??
-                                                Colors.grey.shade400;
+                                            return widget.selectedItemHoverColor ??
+                                                Colors.grey.shade300;
                                           }
-                                          return widget.deactivateHoverColor ??
+                                          return widget.unselectedItemHoverColor ??
                                               Colors.grey.shade100;
                                         },
                                       ),
