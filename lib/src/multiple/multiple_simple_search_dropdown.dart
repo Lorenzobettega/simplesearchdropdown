@@ -318,7 +318,8 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                               onTap: () {
                                 setState(() {
                                   widget.selectedItems.clear();
-                                  widget.updateSelectedItems(widget.selectedItems);
+                                  widget.updateSelectedItems(
+                                      widget.selectedItems);
                                 });
                               },
                               child: Icon(
