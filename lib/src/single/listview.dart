@@ -23,8 +23,10 @@ class NovoListView extends StatelessWidget {
   final EdgeInsets? padding;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedItemHoverColor;
   final double? separatorHeight;
   final bool sortSelecteds;
+  final Color? unselectedItemHoverColor;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Widget? widgetBuilder;
   final double width;
@@ -50,8 +52,10 @@ class NovoListView extends StatelessWidget {
     required this.padding,
     required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
+    required this.selectedItemHoverColor,
     required this.separatorHeight,
     required this.sortSelecteds,
+    required this.unselectedItemHoverColor,
     required this.unselectedInsideBoxTextStyle,
     required this.widgetBuilder,
     required this.width,
@@ -146,8 +150,16 @@ class NovoListView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          overlayColor: MaterialStatePropertyAll(
-                              hoverColor ?? Colors.grey.shade100),
+                          overlayColor: 
+                              MaterialStateProperty.resolveWith<Color>(
+                            (Set<MaterialState> states) {
+                              if (controllerBar.text ==
+                                  listaFiltrada[index].label) {
+                                return selectedItemHoverColor ?? Colors.grey.shade300;
+                              }
+                              return unselectedItemHoverColor ?? Colors.grey.shade100;
+                            },
+                          ),
                         ),
                         onPressed: () => onPressed(listaFiltrada[index]),
                         child: widgetBuilder ??

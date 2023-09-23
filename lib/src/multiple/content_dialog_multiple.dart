@@ -6,14 +6,13 @@ class ContentMultiple extends StatefulWidget {
   const ContentMultiple({
     super.key,
     required this.addMode,
-    required this.activeHoverColor,
     required this.animationDuration,
     required this.backgroundColor,
     required this.border,
     required this.createHint,
     required this.createHintStyle,
     required this.deleteMode,
-    required this.deactivateHoverColor,
+    required this.unselectedItemHoverColor,
     required this.dialogActionIcon,
     required this.dialogActionWidget,
     required this.dialogBackgroundColor,
@@ -32,6 +31,7 @@ class ContentMultiple extends StatefulWidget {
     required this.padding,
     required this.selectedDialogBoxColor,
     required this.selectedInsideBoxTextStyle,
+    required this.selectedItemHoverColor,
     required this.selectedItens,
     required this.separatorHeight,
     required this.sortSelecteds,
@@ -42,14 +42,12 @@ class ContentMultiple extends StatefulWidget {
   });
 
   final bool addMode;
-  final Color? activeHoverColor;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
   final String? createHint;
   final TextStyle? createHintStyle;
   final bool deleteMode;
-  final Color? deactivateHoverColor;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
@@ -69,9 +67,11 @@ class ContentMultiple extends StatefulWidget {
   final List<ValueItem> selectedItens;
   final Color? selectedDialogBoxColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedItemHoverColor;
   final double? separatorHeight;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
+  final Color? unselectedItemHoverColor;
   final Function(List<ValueItem>) updateSelectedItems;
   final double width;
   final double minHeight;
@@ -153,7 +153,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                   backgroundColor: MaterialStatePropertyAll(
                       widget.dialogSearchBarColor ?? Colors.white),
                   overlayColor: MaterialStatePropertyAll(
-                      widget.deactivateHoverColor ?? Colors.grey.shade100),
+                      widget.unselectedItemHoverColor ?? Colors.grey.shade100),
                   constraints: BoxConstraints(
                       minHeight: widget.minHeight, maxWidth: widget.width),
                   surfaceTintColor: MaterialStatePropertyAll(
@@ -268,10 +268,10 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                         (Set<MaterialState> states) {
                                           if (widget.selectedItens
                                               .contains(listafiltrada[index])) {
-                                            return widget.activeHoverColor ??
-                                                Colors.grey.shade400;
+                                            return widget.selectedItemHoverColor ??
+                                                Colors.grey.shade300;
                                           }
-                                          return widget.deactivateHoverColor ??
+                                          return widget.unselectedItemHoverColor ??
                                               Colors.grey.shade100;
                                         },
                                       ),

@@ -29,10 +29,12 @@ class SearchDropDown extends StatefulWidget {
     this.onDeleteItem,
     this.padding,
     this.selectedDialogColor,
+    this.selectedItemHoverColor,
     this.selectedInsideBoxTextStyle,
     this.separatorHeight,
     this.sortSelecteds = true,
     this.unselectedInsideBoxTextStyle,
+    this.unselectedItemHoverColor,
     required this.updateSelectedItem,
     this.widgetBuilder,
     this.dropdownwidth = 300,
@@ -67,9 +69,11 @@ class SearchDropDown extends StatefulWidget {
   final EdgeInsets? padding;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedItemHoverColor;
   final double? separatorHeight;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
+  final Color? unselectedItemHoverColor;
   final Function(ValueItem?) updateSelectedItem;
   final Widget? widgetBuilder;
   final double dropdownHeight;
@@ -166,8 +170,10 @@ class SearchDropDownState extends State<SearchDropDown> {
                 padding: widget.padding,
                 selectedDialogColor: widget.selectedDialogColor,
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                selectedItemHoverColor: widget.selectedItemHoverColor,
                 separatorHeight: widget.separatorHeight,
                 sortSelecteds: widget.sortSelecteds,
+                unselectedItemHoverColor: widget.unselectedItemHoverColor,
                 unselectedInsideBoxTextStyle:
                     widget.unselectedInsideBoxTextStyle,
                 widgetBuilder: widget.widgetBuilder,
