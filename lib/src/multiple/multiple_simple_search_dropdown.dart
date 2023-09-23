@@ -98,7 +98,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   late bool aberto = false;
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
-
+  
   void onItemSelected(ValueItem val) {
     setState(() {
       if (widget.selectedItems.contains(val)) {
@@ -153,7 +153,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
             child: Material(
               color: Colors.transparent,
               child: ContentMultiple(
-                addMode: widget.addMode,
+                                addMode: widget.addMode,
                 activeHoverColor: widget.activeHoverColor,
                 animationDuration: widget.animationDuration,
                 backgroundColor: widget.backgroundColor,
@@ -178,7 +178,6 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                 onDeleteItem: (val) => handleDeleteItem(val, context),
                 onItemSelected: (val) => onItemSelected(val),
                 selectedDialogBoxColor: widget.selectedDialogBoxColor,
-                selectedDialogColor: widget.selectedDialogColor,
                 selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
                 selectedItens: widget.selectedItems,
                 sortSelecteds: widget.sortSelecteds,

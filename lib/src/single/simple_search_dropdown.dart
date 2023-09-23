@@ -12,6 +12,7 @@ class SearchDropDown extends StatefulWidget {
     this.border,
     this.createHint,
     this.createHintStyle,
+    this.clearIconColor,
     required this.deleteMode,
     this.dialogActionIcon,
     this.dialogActionWidget,
@@ -43,6 +44,7 @@ class SearchDropDown extends StatefulWidget {
   final OutlinedBorder? border;
   final String? createHint;
   final TextStyle? createHintStyle;
+  final Color? clearIconColor;
   final bool deleteMode;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
@@ -171,25 +173,28 @@ class SearchDropDownState extends State<SearchDropDown> {
 
   void handleAddItem(ValueItem item, BuildContext context) {
     if (widget.addMode) {
-      widget.onAddItem!(item);
-      hideOverlay(item);
-      setState(() {});
+      setState(() {
+        widget.onAddItem!(item);
+        hideOverlay(item);
+        _filtrarLista(item.label);
+      });
     }
   }
 
   void handleDeleteItem(ValueItem item, BuildContext context) {
     if (widget.deleteMode) {
-      widget.onDeleteItem!(item);
-      hideOverlay(null);
-      setState(() {});
-      showOverlay(context);
+      setState(() {
+        widget.onDeleteItem!(item);
+        hideOverlay(null);
+        showOverlay(context);
+      });
     }
   }
 
   void hideOverlay(ValueItem? val) {
-    overlayEntry?.remove();
-    overlayEntry = null;
     setState(() {
+      overlayEntry?.remove();
+      overlayEntry = null;
       aberto = !aberto;
       if (val != null) {
         widget.updateSelectedItem(val);
@@ -228,7 +233,7 @@ class SearchDropDownState extends State<SearchDropDown> {
                           },
                         );
                       },
-                      icon: const Icon(Icons.clear),
+                      icon: Icon(Icons.clear,color: widget.clearIconColor,),
                     ),
                   ],
                 ),

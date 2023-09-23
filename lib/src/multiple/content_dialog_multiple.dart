@@ -30,7 +30,6 @@ class ContentMultiple extends StatefulWidget {
     required this.onDeleteItem,
     required this.onItemSelected,
     required this.selectedDialogBoxColor,
-    required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
     required this.selectedItens,
     required this.sortSelecteds,
@@ -65,7 +64,6 @@ class ContentMultiple extends StatefulWidget {
   final List<ValueItem> listItens;
   final List<ValueItem> selectedItens;
   final Color? selectedDialogBoxColor;
-  final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
