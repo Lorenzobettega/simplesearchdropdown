@@ -106,7 +106,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   late bool aberto = false;
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
-  
+
   void onItemSelected(ValueItem val) {
     setState(() {
       if (widget.selectedItems.contains(val)) {
