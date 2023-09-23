@@ -259,9 +259,14 @@ class SearchDropDownState extends State<SearchDropDown> {
                     ),
                     IconButton(
                       onPressed: () {
-                        setState( () => clearSelection(),);
+                        setState(
+                          () => clearSelection(),
+                        );
                       },
-                      icon: Icon(Icons.clear,color: widget.clearIconColor,),
+                      icon: Icon(
+                        Icons.clear,
+                        color: widget.clearIconColor,
+                      ),
                     ),
                   ],
                 ),

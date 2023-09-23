@@ -239,7 +239,9 @@ class _ContentMultipleState extends State<ContentMultiple> {
                           children: [
                             Expanded(
                               child: Padding(
-                                padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 5,vertical: 6),
+                                padding: widget.padding ??
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 6),
                                 child: TextButton(
                                     style: ButtonStyle(
                                       backgroundColor: MaterialStateProperty
@@ -266,10 +268,12 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                         (Set<MaterialState> states) {
                                           if (widget.selectedItens
                                               .contains(listafiltrada[index])) {
-                                            return widget.selectedItemHoverColor ??
+                                            return widget
+                                                    .selectedItemHoverColor ??
                                                 Colors.grey.shade300;
                                           }
-                                          return widget.unselectedItemHoverColor ??
+                                          return widget
+                                                  .unselectedItemHoverColor ??
                                               Colors.grey.shade100;
                                         },
                                       ),

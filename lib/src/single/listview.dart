@@ -129,7 +129,8 @@ class NovoListView extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding: padding ?? const EdgeInsets.symmetric(horizontal: 4,vertical: 6),
+                padding: padding ??
+                    const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
                 child: Row(
                   children: [
                     Expanded(
@@ -150,14 +151,16 @@ class NovoListView extends StatelessWidget {
                               borderRadius: BorderRadius.circular(10),
                             ),
                           ),
-                          overlayColor: 
+                          overlayColor:
                               MaterialStateProperty.resolveWith<Color>(
                             (Set<MaterialState> states) {
                               if (controllerBar.text ==
                                   listaFiltrada[index].label) {
-                                return selectedItemHoverColor ?? Colors.grey.shade300;
+                                return selectedItemHoverColor ??
+                                    Colors.grey.shade300;
                               }
-                              return unselectedItemHoverColor ?? Colors.grey.shade100;
+                              return unselectedItemHoverColor ??
+                                  Colors.grey.shade100;
                             },
                           ),
                         ),
