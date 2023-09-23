@@ -1,3 +1,8 @@
+## [1.8.2] - 2023-08-27.
+-   Added `miniBoxIconColor` property to multiple search widget. It allows the user to set inside mini boxes icons color. 
+-   Added `padding` property to single and multiple search widgets. It allows the user to set inside drop items padding. 
+-   Added `separatorHeight` property to single and multiple search widgets. It allows the user to set a size between to items inside the drop. 
+
 ## [1.8.1] - 2023-08-27.
 -   Added `outsideIconColor` property to single and multiple search widgets. It allows the user to set a color to the dropdown arrow. 
 -   Added `outsideIconSize` property to single search widget. It allows the user to set a size to the dropdown arrow. 
