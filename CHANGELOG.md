@@ -1,3 +1,6 @@
+## [1.8.2] - 2023-09-23.
+-   Mini fix on `updateSelectedItems` function. 
+
 ## [1.8.1] - 2023-08-27.
 -   Added `outsideIconColor` property to single and multiple search widgets. It allows the user to set a color to the dropdown arrow. 
 -   Added `outsideIconSize` property to single search widget. It allows the user to set a size to the dropdown arrow. 

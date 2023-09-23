@@ -108,7 +108,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
       } else {
         widget.selectedItems.add(val);
       }
-      //widget.updateSelectedItems(widget.selectedItems); //TODO checar necessidade
+      widget.updateSelectedItems(widget.selectedItems);
     });
   }
 
@@ -192,7 +192,6 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                 sortSelecteds: widget.sortSelecteds,
                 unselectedInsideBoxTextStyle:
                     widget.unselectedInsideBoxTextStyle,
-                updateSelectedItems: (val) => widget.updateSelectedItems(val),
                 width: widget.dropdownwidth,
                 minHeight: widget.dropdownHeight,
               ),
@@ -319,7 +318,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                               onTap: () {
                                 setState(() {
                                   widget.selectedItems.clear();
-                                  //widget.updateSelectedItems(widget.selectedItems); //TODO checar necessidade
+                                  widget.updateSelectedItems(widget.selectedItems);
                                 });
                               },
                               child: Icon(
