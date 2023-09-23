@@ -25,7 +25,7 @@ class SearchDropDown extends StatefulWidget {
     this.hintStyle,
     this.hoverColor,
     required this.listItens,
-    this.onAddItem,
+    required this.onAddItem,
     this.onDeleteItem,
     this.selectedDialogColor,
     this.selectedInsideBoxTextStyle,
@@ -35,6 +35,9 @@ class SearchDropDown extends StatefulWidget {
     this.widgetBuilder,
     this.dropdownwidth = 300,
     this.dropdownHeight = 50,
+    this.selectedItem,
+    this.outsideIconColor,
+    this.outsideIconSize = 20,
   });
 
   final List<Widget>? actions;
@@ -57,7 +60,7 @@ class SearchDropDown extends StatefulWidget {
   final TextStyle? hintStyle;
   final Color? hoverColor;
   final List<ValueItem> listItens;
-  final Function(ValueItem)? onAddItem;
+  final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -67,6 +70,9 @@ class SearchDropDown extends StatefulWidget {
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
+  final ValueItem? selectedItem;
+  final Color? outsideIconColor;
+  final double outsideIconSize;
 
   @override
   State<SearchDropDown> createState() => SearchDropDownState();
@@ -77,13 +83,15 @@ class SearchDropDownState extends State<SearchDropDown> {
   void initState() {
     super.initState();
     _filtrarLista(null, start: true);
+    controllerBar = TextEditingController(
+        text: widget.selectedItem != null ? widget.selectedItem!.label : null);
   }
 
   List<ValueItem> listafiltrada = [];
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
   bool aberto = false;
-  final TextEditingController controllerBar = TextEditingController();
+  late TextEditingController controllerBar;
 
   void _filtrarLista(String? text, {bool start = false}) {
     if (start) {
@@ -102,7 +110,7 @@ class SearchDropDownState extends State<SearchDropDown> {
     }
   }
 
-  void showOverlay(
+  void _showOverlay(
     BuildContext context,
   ) {
     final RenderBox overlay =
@@ -145,7 +153,6 @@ class SearchDropDownState extends State<SearchDropDown> {
                 listaFiltrada: listafiltrada,
                 onAddItem: (val) => handleAddItem(
                   val,
-                  context,
                 ),
                 onClear: (val) => handleDeleteItem(
                   val,
@@ -171,14 +178,23 @@ class SearchDropDownState extends State<SearchDropDown> {
     Overlay.of(context).insert(overlayEntry!);
   }
 
-  void handleAddItem(ValueItem item, BuildContext context) {
+  void handleAddItem(ValueItem item) {
     if (widget.addMode) {
       setState(() {
-        widget.onAddItem!(item);
+        widget.onAddItem(item);
         hideOverlay(item);
         _filtrarLista(item.label);
       });
     }
+  }
+
+  void clearSelection() {
+    setState(() {
+      controllerBar.clear();
+                            _filtrarLista(null);
+                            widget.updateSelectedItem(null);
+      
+    });
   }
 
   void handleDeleteItem(ValueItem item, BuildContext context) {
@@ -186,7 +202,7 @@ class SearchDropDownState extends State<SearchDropDown> {
       setState(() {
         widget.onDeleteItem!(item);
         hideOverlay(null);
-        showOverlay(context);
+        _showOverlay(context);
       });
     }
   }
@@ -213,9 +229,16 @@ class SearchDropDownState extends State<SearchDropDown> {
         trailing: widget.actions ??
             [
               aberto
-                  ? Icon(widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up)
-                  : Icon(widget.dropdownDisableActionIcon ??
-                      Icons.arrow_drop_down),
+                  ? Icon(
+                      widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up,
+                      color: widget.outsideIconColor,
+                      size: widget.outsideIconSize,
+                    )
+                  : Icon(
+                      widget.dropdownDisableActionIcon ?? Icons.arrow_drop_down,
+                      color: widget.outsideIconColor,
+                      size: widget.outsideIconSize,
+                    ),
               Visibility(
                 visible: controllerBar.text != '',
                 child: Row(
@@ -227,9 +250,7 @@ class SearchDropDownState extends State<SearchDropDown> {
                       onPressed: () {
                         setState(
                           () {
-                            controllerBar.clear();
-                            _filtrarLista(null);
-                            widget.updateSelectedItem(null);
+                            
                           },
                         );
                       },
@@ -263,7 +284,7 @@ class SearchDropDownState extends State<SearchDropDown> {
         ),
         onTap: () {
           if (overlayEntry == null) {
-            showOverlay(context);
+            _showOverlay(context);
           } else {
             hideOverlay(null);
           }
@@ -271,7 +292,7 @@ class SearchDropDownState extends State<SearchDropDown> {
         onChanged: (a) {
           _filtrarLista(a);
           hideOverlay(null);
-          showOverlay(context);
+          _showOverlay(context);
         },
         elevation: MaterialStateProperty.all<double>(
           widget.elevation,

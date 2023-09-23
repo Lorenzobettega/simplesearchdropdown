@@ -30,9 +30,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.hintSearchBar,
     this.hintStyle,
     this.insideIconSize = 18,
-    this.onAddItem,
+    required this.onAddItem,
     this.onDeleteItem,
-    this.outsideIconSize = 20,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
@@ -45,6 +44,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.widgetBuilder,
     this.dropdownwidth = 300,
     this.dropdownHeight = 50,
+    this.outsideIconColor,
+    this.outsideIconSize = 20,
   }) : super(key: key);
 
   final Widget? action;
@@ -72,9 +73,8 @@ class MultipleSearchDropDown extends StatefulWidget {
   final String? hintSearchBar;
   final TextStyle? hintStyle;
   final double insideIconSize;
-  final Function(ValueItem)? onAddItem;
+  final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
-  final double outsideIconSize;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -88,12 +88,14 @@ class MultipleSearchDropDown extends StatefulWidget {
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
+  final double outsideIconSize;
+  final Color? outsideIconColor;
 
   @override
-  State<MultipleSearchDropDown> createState() => _MultipleSearchDropDownState();
+  State<MultipleSearchDropDown> createState() => MultipleSearchDropDownState();
 }
 
-class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
+class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   late double altura = 0;
   late bool aberto = false;
   OverlayEntry? overlayEntry;
@@ -110,9 +112,15 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     });
   }
 
+  void clearSelection() {
+    setState(() {
+      widget.selectedItems.clear();
+    });
+  }
+
   void handleAddItem(ValueItem item, BuildContext context) {
     if (widget.addMode) {
-      widget.onAddItem!(item);
+      widget.onAddItem(item);
       onItemSelected(item);
       setState(() {});
     }
@@ -185,6 +193,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                     widget.unselectedInsideBoxTextStyle,
                 updateSelectedItems: (val) => widget.updateSelectedItems(val),
                 width: widget.dropdownwidth,
+                minHeight: widget.dropdownHeight,
               ),
             ),
           ),
@@ -321,6 +330,7 @@ class _MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                                         : widget.dropdownDisableActionIcon ??
                                             Icons.arrow_drop_down,
                                 size: widget.outsideIconSize,
+                                color: widget.outsideIconColor,
                               ),
                             ),
                       ],
