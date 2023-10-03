@@ -66,8 +66,31 @@ class _MyHomePageState extends State<MyHomePage> {
     multipleSearchKey.currentState?.clearSelection();
   }
 
-  Future<bool> retornaTrue() async {
-    return true;
+  Future<bool> confirmDeleteDialog(BuildContext context) async {
+    return await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text('Are you sure?'),
+          content: Text("This action is permanent"),
+          actions: [
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: Text('Cancel'),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStatePropertyAll(Colors.blue)),
+            ),
+            FilledButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: Text('Delete'),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStatePropertyAll(Colors.red)),
+            )
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -80,8 +103,8 @@ class _MyHomePageState extends State<MyHomePage> {
             SearchDropDown(
               key: singleSearchKey,
               listItens: listitems,
-              preAceptDeleteMode: true,
-              preAceptDelete: retornaTrue(),
+              confirmDelete: true,
+              confirmDeleteFunction: () => confirmDeleteDialog(context),
               onDeleteItem: removeItem,
               onAddItem: addItem,
               addMode: true,
@@ -95,8 +118,8 @@ class _MyHomePageState extends State<MyHomePage> {
             MultipleSearchDropDown(
               key: multipleSearchKey,
               listItems: listitems,
-              preAceptDeleteMode: true,
-              preAceptDelete: retornaTrue(),
+              confirmDelete: true,
+              confirmDeleteFunction: () => confirmDeleteDialog(context),
               onDeleteItem: removeItem,
               onAddItem: addItem,
               addMode: true,

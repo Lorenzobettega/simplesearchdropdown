@@ -1,5 +1,5 @@
 ## [1.8.3] - 2023-10-03.
--   Added `preAceptDeleteMode` property to single and multiple search widgets. It allows a boolean pre Function for confirmed delete. 
+-   Added `confirmDelete` and `confirmDeleteFunction` properties to single and multiple search widgets. It allows the user to confirm the action before deleting the row. 
 
 ## [1.8.2] - 2023-09-16.
 -   Added `miniBoxIconColor` property to multiple search widget. It allows the user to set inside mini boxes icons color. 
