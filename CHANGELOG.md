@@ -1,4 +1,7 @@
-## [1.8.2] - 2023-08-27.
+## [1.8.3] - 2023-10-03.
+-   Added `preAceptDeleteMode` property to single and multiple search widgets. It allows a boolean pre Function for confirmed delete. 
+
+## [1.8.2] - 2023-09-16.
 -   Added `miniBoxIconColor` property to multiple search widget. It allows the user to set inside mini boxes icons color. 
 -   Added `padding` property to single and multiple search widgets. It allows the user to set inside drop items padding. 
 -   Added `separatorHeight` property to single and multiple search widgets. It allows the user to set a size between to items inside the drop. 

@@ -66,6 +66,10 @@ class _MyHomePageState extends State<MyHomePage> {
     multipleSearchKey.currentState?.clearSelection();
   }
 
+  Future<bool> retornaTrue() async {
+    return true;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -76,6 +80,8 @@ class _MyHomePageState extends State<MyHomePage> {
             SearchDropDown(
               key: singleSearchKey,
               listItens: listitems,
+              preAceptDeleteMode: true,
+              preAceptDelete: retornaTrue(),
               onDeleteItem: removeItem,
               onAddItem: addItem,
               addMode: true,
@@ -89,6 +95,8 @@ class _MyHomePageState extends State<MyHomePage> {
             MultipleSearchDropDown(
               key: multipleSearchKey,
               listItems: listitems,
+              preAceptDeleteMode: true,
+              preAceptDelete: retornaTrue(),
               onDeleteItem: removeItem,
               onAddItem: addItem,
               addMode: true,

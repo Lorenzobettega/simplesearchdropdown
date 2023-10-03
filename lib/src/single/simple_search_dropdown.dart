@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
@@ -28,6 +29,8 @@ class SearchDropDown extends StatefulWidget {
     required this.onAddItem,
     this.onDeleteItem,
     this.padding,
+    this.preAceptDeleteMode = false,
+    this.preAceptDelete,
     this.selectedDialogColor,
     this.selectedItemHoverColor,
     this.selectedInsideBoxTextStyle,
@@ -67,6 +70,8 @@ class SearchDropDown extends StatefulWidget {
   final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
   final EdgeInsets? padding;
+  final bool preAceptDeleteMode;
+  final Future<bool>? preAceptDelete;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
@@ -208,13 +213,23 @@ class SearchDropDownState extends State<SearchDropDown> {
     });
   }
 
-  void handleDeleteItem(ValueItem item, BuildContext context) {
+  void handleDeleteItem(ValueItem item,BuildContext context) async {
     if (widget.deleteMode) {
-      setState(() {
-        widget.onDeleteItem!(item);
+      if (widget.preAceptDeleteMode) {
         hideOverlay(null);
+        widget.preAceptDelete!.then((res) {
+          if (res) {
+            widget.onDeleteItem!(item);
+          }
+        });
         _showOverlay(context);
-      });
+      } else {
+        setState(() {
+          widget.onDeleteItem!(item);
+          hideOverlay(null);
+          _showOverlay(context);
+        });
+      }
     }
   }
 

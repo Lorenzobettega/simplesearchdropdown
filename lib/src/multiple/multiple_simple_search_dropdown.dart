@@ -32,6 +32,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     required this.onAddItem,
     this.onDeleteItem,
     this.padding,
+    this.preAceptDeleteMode = false,
+    this.preAceptDelete,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
@@ -78,6 +80,8 @@ class MultipleSearchDropDown extends StatefulWidget {
   final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
   final EdgeInsets? padding;
+  final bool preAceptDeleteMode;
+  final Future<bool>? preAceptDelete;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -132,11 +136,23 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     }
   }
 
-  void handleDeleteItem(ValueItem item, BuildContext context) {
+  void handleDeleteItem(ValueItem item,BuildContext context) async {
     if (widget.deleteMode) {
-      widget.onDeleteItem!(item);
-      hideOverlay();
-      showOverlay(context);
+      if (widget.preAceptDeleteMode) {
+        hideOverlay();
+        widget.preAceptDelete!.then((res) {
+          if (res) {
+            widget.onDeleteItem!(item);
+          }
+        });
+        showOverlay(context);
+      } else {
+        setState(() {
+          widget.onDeleteItem!(item);
+          hideOverlay();
+          showOverlay(context);
+        });
+      }
     }
   }
 
