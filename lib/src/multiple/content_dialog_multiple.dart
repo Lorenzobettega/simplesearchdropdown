@@ -36,7 +36,6 @@ class ContentMultiple extends StatefulWidget {
     required this.separatorHeight,
     required this.sortSelecteds,
     required this.unselectedInsideBoxTextStyle,
-    required this.updateSelectedItems,
     required this.width,
     required this.minHeight,
   });
@@ -72,7 +71,6 @@ class ContentMultiple extends StatefulWidget {
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
-  final Function(List<ValueItem>) updateSelectedItems;
   final double width;
   final double minHeight;
 
@@ -241,7 +239,9 @@ class _ContentMultipleState extends State<ContentMultiple> {
                           children: [
                             Expanded(
                               child: Padding(
-                                padding: widget.padding ?? const EdgeInsets.symmetric(horizontal: 5,vertical: 6),
+                                padding: widget.padding ??
+                                    const EdgeInsets.symmetric(
+                                        horizontal: 5, vertical: 6),
                                 child: TextButton(
                                     style: ButtonStyle(
                                       backgroundColor: MaterialStateProperty
@@ -268,10 +268,12 @@ class _ContentMultipleState extends State<ContentMultiple> {
                                         (Set<MaterialState> states) {
                                           if (widget.selectedItens
                                               .contains(listafiltrada[index])) {
-                                            return widget.selectedItemHoverColor ??
+                                            return widget
+                                                    .selectedItemHoverColor ??
                                                 Colors.grey.shade300;
                                           }
-                                          return widget.unselectedItemHoverColor ??
+                                          return widget
+                                                  .unselectedItemHoverColor ??
                                               Colors.grey.shade100;
                                         },
                                       ),

@@ -110,7 +110,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
   late bool aberto = false;
   OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
-  
+
   void onItemSelected(ValueItem val) {
     setState(() {
       if (widget.selectedItems.contains(val)) {
@@ -118,7 +118,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
       } else {
         widget.selectedItems.add(val);
       }
-      //widget.updateSelectedItems(widget.selectedItems); //TODO checar necessidade
+      widget.updateSelectedItems(widget.selectedItems);
     });
   }
 
@@ -215,7 +215,6 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                 unselectedInsideBoxTextStyle:
                     widget.unselectedInsideBoxTextStyle,
                 unselectedItemHoverColor: widget.unselectedItemHoverColor,
-                updateSelectedItems: (val) => widget.updateSelectedItems(val),
                 width: widget.dropdownwidth,
                 minHeight: widget.dropdownHeight,
               ),
@@ -343,7 +342,8 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                               onTap: () {
                                 setState(() {
                                   widget.selectedItems.clear();
-                                  //widget.updateSelectedItems(widget.selectedItems); //TODO checar necessidade
+                                  widget.updateSelectedItems(
+                                      widget.selectedItems);
                                 });
                               },
                               child: Icon(
