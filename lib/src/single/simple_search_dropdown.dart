@@ -29,8 +29,8 @@ class SearchDropDown extends StatefulWidget {
     required this.onAddItem,
     this.onDeleteItem,
     this.padding,
-    this.preAceptDeleteMode = false,
-    this.preAceptDelete,
+    this.confirmDelete = false,
+    this.confirmDeleteFunction,
     this.selectedDialogColor,
     this.selectedItemHoverColor,
     this.selectedInsideBoxTextStyle,
@@ -45,7 +45,8 @@ class SearchDropDown extends StatefulWidget {
     this.selectedItem,
     this.outsideIconColor,
     this.outsideIconSize = 20,
-  });
+  }) : assert(confirmDelete && confirmDeleteFunction != null || !confirmDelete,
+            'confirmDelete can only be true if confirmDeleteFunction != null ');
 
   final List<Widget>? actions;
   final bool addMode;
@@ -70,8 +71,8 @@ class SearchDropDown extends StatefulWidget {
   final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
   final EdgeInsets? padding;
-  final bool preAceptDeleteMode;
-  final Future<bool>? preAceptDelete;
+  final bool confirmDelete;
+  final Future<bool> Function()? confirmDeleteFunction;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
@@ -213,15 +214,15 @@ class SearchDropDownState extends State<SearchDropDown> {
     });
   }
 
-  void handleDeleteItem(ValueItem item,BuildContext context) async {
+  Future<void> handleDeleteItem(ValueItem item, BuildContext context) async {
     if (widget.deleteMode) {
-      if (widget.preAceptDeleteMode) {
+      if (widget.confirmDelete) {
         hideOverlay(null);
-        widget.preAceptDelete!.then((res) {
-          if (res) {
-            widget.onDeleteItem!(item);
-          }
-        });
+        final result = await widget.confirmDeleteFunction!();
+        if (result) {
+          widget.onDeleteItem!(item);
+        }
+        // ignore: use_build_context_synchronously
         _showOverlay(context);
       } else {
         setState(() {

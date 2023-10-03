@@ -3,7 +3,7 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 class MultipleSearchDropDown extends StatefulWidget {
   const MultipleSearchDropDown({
-    Key? key,
+    super.key,
     required this.listItems,
     required this.addMode,
     this.action,
@@ -32,8 +32,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     required this.onAddItem,
     this.onDeleteItem,
     this.padding,
-    this.preAceptDeleteMode = false,
-    this.preAceptDelete,
+    this.confirmDelete = false,
+    this.confirmDeleteFunction,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
@@ -51,7 +51,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.dropdownHeight = 50,
     this.outsideIconColor,
     this.outsideIconSize = 20,
-  }) : super(key: key);
+  }) : assert(confirmDelete && confirmDeleteFunction != null || !confirmDelete,
+            'confirmDelete can only be true if confirmDeleteFunction != null ');
 
   final Widget? action;
   final bool addMode;
@@ -80,8 +81,8 @@ class MultipleSearchDropDown extends StatefulWidget {
   final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
   final EdgeInsets? padding;
-  final bool preAceptDeleteMode;
-  final Future<bool>? preAceptDelete;
+  final bool confirmDelete;
+  final Future<bool> Function()? confirmDeleteFunction;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -138,25 +139,25 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
 
   void handleDeleteItem(ValueItem item,BuildContext context) async {
     if (widget.deleteMode) {
-      if (widget.preAceptDeleteMode) {
+      if (widget.confirmDelete) {
         hideOverlay();
-        widget.preAceptDelete!.then((res) {
-          if (res) {
-            widget.onDeleteItem!(item);
-          }
-        });
-        showOverlay(context);
+        final result = await widget.confirmDeleteFunction!();
+        if (result) {
+          widget.onDeleteItem!(item);
+        }
+        // ignore: use_build_context_synchronously
+        _showOverlay(context);
       } else {
         setState(() {
           widget.onDeleteItem!(item);
           hideOverlay();
-          showOverlay(context);
+          _showOverlay(context);
         });
       }
     }
   }
 
-  void showOverlay(
+  void _showOverlay(
     BuildContext context,
   ) {
     final RenderBox overlay =
@@ -247,7 +248,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
         key: overlayKey,
         onTap: () {
           if (overlayEntry == null) {
-            showOverlay(context);
+            _showOverlay(context);
           } else {
             hideOverlay();
           }
