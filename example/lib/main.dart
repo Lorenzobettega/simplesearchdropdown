@@ -59,38 +59,11 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void clearSingleSelection() {
-    singleSearchKey.currentState?.clearSelection();
+    singleSearchKey.currentState?.resetSelection();
   }
 
   void clearMultipleSelection() {
-    multipleSearchKey.currentState?.clearSelection();
-  }
-
-  Future<bool> confirmDeleteDialog(BuildContext context) async {
-    return await showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: Text('Are you sure?'),
-          content: Text("This action is permanent"),
-          actions: [
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(false),
-              child: Text('Cancel'),
-              style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll(Colors.blue)),
-            ),
-            FilledButton(
-              onPressed: () => Navigator.of(context).pop(true),
-              child: Text('Delete'),
-              style: ButtonStyle(
-                  backgroundColor: MaterialStatePropertyAll(Colors.red)),
-            )
-          ],
-        );
-      },
-    );
+    multipleSearchKey.currentState?.resetSelection();
   }
 
   @override
@@ -102,9 +75,8 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             SearchDropDown(
               key: singleSearchKey,
-              listItens: listitems,
+              listItems: listitems,
               confirmDelete: true,
-              confirmDeleteFunction: () => confirmDeleteDialog(context),
               onDeleteItem: removeItem,
               onAddItem: addItem,
               addMode: true,
@@ -119,7 +91,6 @@ class _MyHomePageState extends State<MyHomePage> {
               key: multipleSearchKey,
               listItems: listitems,
               confirmDelete: true,
-              confirmDeleteFunction: () => confirmDeleteDialog(context),
               onDeleteItem: removeItem,
               onAddItem: addItem,
               addMode: true,

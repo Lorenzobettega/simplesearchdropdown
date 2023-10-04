@@ -1,5 +1,9 @@
-## [1.8.3] - 2023-10-03.
--   Added `confirmDelete` and `confirmDeleteFunction` properties to single and multiple search widgets. It allows the user to confirm the action before deleting the row. 
+## [2.0.0] - 2023-10-04.
+-   Added `confirmDelete` property to single and multiple search widgets. It allows the user to confirm the action before deleting the row. 
+-   Added `deleteDialogSettings` property to allow customizing the delete confirmation dialog. 
+-   Remake of the overlay handling system to improve the code. 
+-   (breaking) Renamed `clearSelection` to `resetSelection`.
+-   Fixed typo in single search `listItems` property.
 
 ## [1.8.2] - 2023-09-16.
 -   Added `miniBoxIconColor` property to multiple search widget. It allows the user to set inside mini boxes icons color. 

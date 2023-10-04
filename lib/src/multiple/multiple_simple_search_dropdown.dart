@@ -33,7 +33,6 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.onDeleteItem,
     this.padding,
     this.confirmDelete = false,
-    this.confirmDeleteFunction,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
@@ -51,8 +50,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.dropdownHeight = 50,
     this.outsideIconColor,
     this.outsideIconSize = 20,
-  }) : assert(confirmDelete && confirmDeleteFunction != null || !confirmDelete,
-            'confirmDelete can only be true if confirmDeleteFunction != null ');
+    this.deleteDialogSettings,
+  });
 
   final Widget? action;
   final bool addMode;
@@ -82,7 +81,6 @@ class MultipleSearchDropDown extends StatefulWidget {
   final Function(ValueItem)? onDeleteItem;
   final EdgeInsets? padding;
   final bool confirmDelete;
-  final Future<bool> Function()? confirmDeleteFunction;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -101,16 +99,24 @@ class MultipleSearchDropDown extends StatefulWidget {
   final double dropdownwidth;
   final double outsideIconSize;
   final Color? outsideIconColor;
+  final DialogSettings? deleteDialogSettings;
 
   @override
   State<MultipleSearchDropDown> createState() => MultipleSearchDropDownState();
 }
 
 class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
-  late double altura = 0;
-  late bool aberto = false;
-  OverlayEntry? overlayEntry;
+  bool aberto = false;
+  bool isKeyboardOpen = false;
+  late OverlayScreen overlayScreen;
   final GlobalKey overlayKey = GlobalKey();
+
+  @override
+  void initState() {
+    super.initState();
+    widget.listItems.sort((a, b) => a.label.compareTo(b.label));
+    overlayScreen = OverlayScreen.of(context);
+  }
 
   void onItemSelected(ValueItem val) {
     setState(() {
@@ -123,7 +129,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     });
   }
 
-  void clearSelection() {
+  void resetSelection() {
     setState(() {
       widget.selectedItems.clear();
     });
@@ -137,16 +143,23 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     }
   }
 
-  void handleDeleteItem(ValueItem item,BuildContext context) async {
+  void handleDeleteItem(ValueItem item, BuildContext context) {
     if (widget.deleteMode) {
       if (widget.confirmDelete) {
-        hideOverlay();
-        final result = await widget.confirmDeleteFunction!();
-        if (result) {
-          widget.onDeleteItem!(item);
-        }
-        // ignore: use_build_context_synchronously
-        _showOverlay(context);
+        overlayScreen.show(
+          OverlayEntry(
+            builder: (context) => ConfirmDeleteDialog(
+              returnFunction: (result) {
+                if (result) {
+                  widget.onDeleteItem!(item);
+                  resetSelection();
+                }
+                overlayScreen.closeLast();
+              },
+              settings: widget.deleteDialogSettings,
+            ),
+          ),
+        );
       } else {
         setState(() {
           widget.onDeleteItem!(item);
@@ -161,82 +174,83 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
     BuildContext context,
   ) {
     final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+        overlayScreen.overlayState.context.findRenderObject() as RenderBox;
     final RenderBox widgetPosition =
         overlayKey.currentContext!.findRenderObject() as RenderBox;
     final Offset offset =
         widgetPosition.localToGlobal(Offset.zero, ancestor: overlay);
 
-    overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: hideOverlay,
-              child: Container(
+    overlayScreen.show(
+      OverlayEntry(
+        builder: (context) => Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: hideOverlay,
+                child: Container(
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+            Positioned(
+              top: offset.dy +
+                  widgetPosition.size.height -
+                  (isKeyboardOpen
+                      ? MediaQuery.of(context).viewInsets.bottom / 2
+                      : 0),
+              left: offset.dx - 4,
+              child: Material(
                 color: Colors.transparent,
+                child: ContentMultiple(
+                  addMode: widget.addMode,
+                  animationDuration: widget.animationDuration,
+                  backgroundColor: widget.backgroundColor,
+                  border: widget.border,
+                  createHint: widget.createHint,
+                  createHintStyle: widget.createHintStyle,
+                  deleteMode: widget.deleteMode,
+                  dialogActionIcon: widget.dialogActionIcon,
+                  dialogActionWidget: widget.dialogActionWidget,
+                  dialogBackgroundColor: widget.dialogBackgroundColor,
+                  dialogHeight: widget.dialogHeight,
+                  dialogListviewWidgetBuilder:
+                      widget.dialogListviewWidgetBuilder,
+                  dialogSearchBarBorder: widget.dialogSearchBarBorder,
+                  dialogSearchBarColor: widget.dialogSearchBarColor,
+                  dialogSearchBarElevation: widget.dialogSearchBarElevation,
+                  elevation: widget.elevation,
+                  hintSearchBar: widget.hintSearchBar,
+                  hintStyle: widget.hintStyle,
+                  listItens: widget.listItems,
+                  onAddItem: (val) => handleAddItem(val, context),
+                  onDeleteItem: (val) => handleDeleteItem(val, context),
+                  onItemSelected: (val) => onItemSelected(val),
+                  padding: widget.padding,
+                  selectedDialogBoxColor: widget.selectedDialogBoxColor,
+                  selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                  selectedItemHoverColor: widget.selectedItemHoverColor,
+                  selectedItens: widget.selectedItems,
+                  separatorHeight: widget.separatorHeight,
+                  sortSelecteds: widget.sortSelecteds,
+                  unselectedInsideBoxTextStyle:
+                      widget.unselectedInsideBoxTextStyle,
+                  unselectedItemHoverColor: widget.unselectedItemHoverColor,
+                  width: widget.dropdownwidth,
+                  minHeight: widget.dropdownHeight,
+                ),
               ),
             ),
-          ),
-          Positioned(
-            top: offset.dy + widgetPosition.size.height,
-            left: offset.dx - 4,
-            child: Material(
-              color: Colors.transparent,
-              child: ContentMultiple(
-                addMode: widget.addMode,
-                animationDuration: widget.animationDuration,
-                backgroundColor: widget.backgroundColor,
-                border: widget.border,
-                createHint: widget.createHint,
-                createHintStyle: widget.createHintStyle,
-                deleteMode: widget.deleteMode,
-                dialogActionIcon: widget.dialogActionIcon,
-                dialogActionWidget: widget.dialogActionWidget,
-                dialogBackgroundColor: widget.dialogBackgroundColor,
-                dialogHeight: widget.dialogHeight,
-                dialogListviewWidgetBuilder: widget.dialogListviewWidgetBuilder,
-                dialogSearchBarBorder: widget.dialogSearchBarBorder,
-                dialogSearchBarColor: widget.dialogSearchBarColor,
-                dialogSearchBarElevation: widget.dialogSearchBarElevation,
-                elevation: widget.elevation,
-                hintSearchBar: widget.hintSearchBar,
-                hintStyle: widget.hintStyle,
-                listItens: widget.listItems,
-                onAddItem: (val) => handleAddItem(val, context),
-                onDeleteItem: (val) => handleDeleteItem(val, context),
-                onItemSelected: (val) => onItemSelected(val),
-                padding: widget.padding,
-                selectedDialogBoxColor: widget.selectedDialogBoxColor,
-                selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
-                selectedItemHoverColor: widget.selectedItemHoverColor,
-                selectedItens: widget.selectedItems,
-                separatorHeight: widget.separatorHeight,
-                sortSelecteds: widget.sortSelecteds,
-                unselectedInsideBoxTextStyle:
-                    widget.unselectedInsideBoxTextStyle,
-                unselectedItemHoverColor: widget.unselectedItemHoverColor,
-                width: widget.dropdownwidth,
-                minHeight: widget.dropdownHeight,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-
-    Overlay.of(context).insert(overlayEntry!);
-    setState(() {
-      aberto = !aberto;
-    });
   }
 
   void hideOverlay() {
-    overlayEntry?.remove();
-    overlayEntry = null;
     setState(() {
       aberto = !aberto;
     });
+    overlayScreen.closeAll();
   }
 
   @override
@@ -247,7 +261,10 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
       child: InkWell(
         key: overlayKey,
         onTap: () {
-          if (overlayEntry == null) {
+          if (overlayScreen.overlayEntrys.isEmpty) {
+            setState(() {
+              aberto = !aberto;
+            });
             _showOverlay(context);
           } else {
             hideOverlay();
