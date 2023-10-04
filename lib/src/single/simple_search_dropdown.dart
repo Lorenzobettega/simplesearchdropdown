@@ -1,4 +1,3 @@
-import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 // import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
@@ -26,12 +25,11 @@ class SearchDropDown extends StatefulWidget {
     this.hint,
     this.hintStyle,
     this.hoverColor,
-    required this.listItens,
+    required this.listItems,
     required this.onAddItem,
     this.onDeleteItem,
     this.padding,
     this.confirmDelete = false,
-    this.confirmDeleteFunction,
     this.selectedDialogColor,
     this.selectedItemHoverColor,
     this.selectedInsideBoxTextStyle,
@@ -46,8 +44,8 @@ class SearchDropDown extends StatefulWidget {
     this.selectedItem,
     this.outsideIconColor,
     this.outsideIconSize = 20,
-  }) : assert(confirmDelete && confirmDeleteFunction != null || !confirmDelete,
-            'confirmDelete can only be true if confirmDeleteFunction != null ');
+    this.deleteDialogSettings,
+  });
 
   final List<Widget>? actions;
   final bool addMode;
@@ -68,12 +66,11 @@ class SearchDropDown extends StatefulWidget {
   final String? hint;
   final TextStyle? hintStyle;
   final Color? hoverColor;
-  final List<ValueItem> listItens;
+  final List<ValueItem> listItems;
   final Function(ValueItem) onAddItem;
   final Function(ValueItem)? onDeleteItem;
   final EdgeInsets? padding;
   final bool confirmDelete;
-  final Future<bool> Function()? confirmDeleteFunction;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
@@ -88,6 +85,7 @@ class SearchDropDown extends StatefulWidget {
   final ValueItem? selectedItem;
   final Color? outsideIconColor;
   final double outsideIconSize;
+  final DialogSettings? deleteDialogSettings;
 
   @override
   State<SearchDropDown> createState() => SearchDropDownState();
@@ -95,17 +93,20 @@ class SearchDropDown extends StatefulWidget {
 
 class SearchDropDownState extends State<SearchDropDown> {
   // late StreamSubscription<bool> keyboardSubscription;
+  late OverlayScreen overlayScreen;
   List<ValueItem> listafiltrada = [];
-  OverlayEntry? overlayEntry;
   final GlobalKey overlayKey = GlobalKey();
   bool aberto = false;
   bool isKeyboardOpen = false;
-  late TextEditingController controllerBar;
+
+  late final TextEditingController controllerBar;
 
   @override
   void initState() {
     super.initState();
+    widget.listItems.sort((a, b) => a.label.compareTo(b.label));
     _filtrarLista(null, start: true);
+    overlayScreen = OverlayScreen.of(context);
     controllerBar = TextEditingController(
         text: widget.selectedItem != null ? widget.selectedItem!.label : null);
     // final keyboardVisibilityController = KeyboardVisibilityController();
@@ -117,17 +118,57 @@ class SearchDropDownState extends State<SearchDropDown> {
 
   void _filtrarLista(String? text, {bool start = false}) {
     if (start) {
-      listafiltrada = widget.listItens;
+      listafiltrada = widget.listItems;
     } else {
       if (text != null && text != '') {
-        listafiltrada = widget.listItens
+        listafiltrada = widget.listItems
             .where((element) => element.label
                 .toLowerCase()
                 .latinize()
                 .contains(text.toLowerCase()))
             .toList();
       } else {
-        listafiltrada = widget.listItens;
+        listafiltrada = widget.listItems;
+      }
+    }
+  }
+
+  void handleAddItem(ValueItem item) {
+    if (widget.addMode) {
+      setState(() {
+        widget.onAddItem(item);
+        hideOverlay(item);
+        _filtrarLista(null);
+      });
+    }
+  }
+
+  void resetSelection() {
+    controllerBar.clear();
+    _filtrarLista(null);
+    widget.updateSelectedItem(null);
+  }
+
+  void handleDeleteItem(ValueItem item, BuildContext context) {
+    if (widget.deleteMode) {
+      if (widget.confirmDelete) {
+        overlayScreen.show(
+          OverlayEntry(
+            builder: (context) => ConfirmDeleteDialog(
+              returnFunction: (result) {
+                if (result) {
+                  widget.onDeleteItem!(item);
+                  resetSelection();
+                }
+                overlayScreen.closeLast();
+              },
+              settings: widget.deleteDialogSettings,
+            ),
+          ),
+        );
+      } else {
+        widget.onDeleteItem!(item);
+        resetSelection();
       }
     }
   }
@@ -136,124 +177,85 @@ class SearchDropDownState extends State<SearchDropDown> {
     BuildContext context,
   ) {
     final RenderBox overlay =
-        Overlay.of(context).context.findRenderObject() as RenderBox;
+        overlayScreen.overlayState.context.findRenderObject() as RenderBox;
     final RenderBox widgetPosition =
         overlayKey.currentContext!.findRenderObject() as RenderBox;
     final Offset offset =
         widgetPosition.localToGlobal(Offset.zero, ancestor: overlay);
 
-    overlayEntry = OverlayEntry(
-      builder: (context) => Stack(
-        children: [
-          Positioned.fill(
-            child: GestureDetector(
-              onTap: () => hideOverlay(null),
-              child: Container(
+    overlayScreen.show(
+      OverlayEntry(
+        builder: (context) => Stack(
+          children: [
+            Positioned.fill(
+              child: GestureDetector(
+                onTap: () => hideOverlay(null),
+                child: Container(
+                  color: Colors.transparent,
+                ),
+              ),
+            ),
+            Positioned(
+              top: offset.dy +
+                  widgetPosition.size.height -
+                  (isKeyboardOpen
+                      ? MediaQuery.of(context).viewInsets.bottom / 2
+                      : 0),
+              left: offset.dx - 4,
+              child: Material(
                 color: Colors.transparent,
+                child: NovoListView(
+                  addMode: widget.addMode,
+                  animationDuration: widget.animationDuration,
+                  backgroundColor: widget.backgroundColor,
+                  controllerBar: controllerBar,
+                  createHint: widget.createHint,
+                  createHintStyle: widget.createHintStyle,
+                  deleteMode: widget.deleteMode,
+                  dialogActionIcon: widget.dialogActionIcon,
+                  dialogActionWidget: widget.dialogActionWidget,
+                  dialogBackgroundColor: widget.dialogBackgroundColor,
+                  dialogHeight: widget.dialogHeight,
+                  elevation: widget.elevation,
+                  hoverColor: widget.hoverColor,
+                  listaFiltrada: listafiltrada,
+                  onAddItem: (val) => handleAddItem(
+                    val,
+                  ),
+                  onClear: (val) => handleDeleteItem(
+                    val,
+                    context,
+                  ),
+                  onPressed: (val) => hideOverlay(val),
+                  padding: widget.padding,
+                  selectedDialogColor: widget.selectedDialogColor,
+                  selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
+                  selectedItemHoverColor: widget.selectedItemHoverColor,
+                  separatorHeight: widget.separatorHeight,
+                  sortSelecteds: widget.sortSelecteds,
+                  unselectedItemHoverColor: widget.unselectedItemHoverColor,
+                  unselectedInsideBoxTextStyle:
+                      widget.unselectedInsideBoxTextStyle,
+                  widgetBuilder: widget.widgetBuilder,
+                  width: widget.dropdownwidth,
+                ),
               ),
             ),
-          ),
-          Positioned(
-            top: offset.dy +
-                widgetPosition.size.height -
-                (isKeyboardOpen ? MediaQuery.of(context).viewInsets.bottom / 2 : 0),
-            left: offset.dx - 4,
-            child: Material(
-              color: Colors.transparent,
-              child: NovoListView(
-                addMode: widget.addMode,
-                animationDuration: widget.animationDuration,
-                backgroundColor: widget.backgroundColor,
-                controllerBar: controllerBar,
-                createHint: widget.createHint,
-                createHintStyle: widget.createHintStyle,
-                deleteMode: widget.deleteMode,
-                dialogActionIcon: widget.dialogActionIcon,
-                dialogActionWidget: widget.dialogActionWidget,
-                dialogBackgroundColor: widget.dialogBackgroundColor,
-                dialogHeight: widget.dialogHeight,
-                elevation: widget.elevation,
-                hoverColor: widget.hoverColor,
-                listaFiltrada: listafiltrada,
-                onAddItem: (val) => handleAddItem(
-                  val,
-                ),
-                onClear: (val) => handleDeleteItem(
-                  val,
-                  context,
-                ),
-                onPressed: (val) => hideOverlay(val),
-                padding: widget.padding,
-                selectedDialogColor: widget.selectedDialogColor,
-                selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
-                selectedItemHoverColor: widget.selectedItemHoverColor,
-                separatorHeight: widget.separatorHeight,
-                sortSelecteds: widget.sortSelecteds,
-                unselectedItemHoverColor: widget.unselectedItemHoverColor,
-                unselectedInsideBoxTextStyle:
-                    widget.unselectedInsideBoxTextStyle,
-                widgetBuilder: widget.widgetBuilder,
-                width: widget.dropdownwidth,
-              ),
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
-    setState(() {
-      aberto = !aberto;
-    });
-    Overlay.of(context).insert(overlayEntry!);
-  }
-
-  void handleAddItem(ValueItem item) {
-    if (widget.addMode) {
-      setState(() {
-        widget.onAddItem(item);
-        hideOverlay(item);
-        _filtrarLista(item.label);
-      });
-    }
-  }
-
-  void clearSelection() {
-    setState(() {
-      controllerBar.clear();
-      _filtrarLista(null);
-      widget.updateSelectedItem(null);
-    });
-  }
-
-  Future<void> handleDeleteItem(ValueItem item, BuildContext context) async {
-    if (widget.deleteMode) {
-      if (widget.confirmDelete) {
-        hideOverlay(null);
-        final result = await widget.confirmDeleteFunction!();
-        if (result) {
-          widget.onDeleteItem!(item);
-        }
-        // ignore: use_build_context_synchronously
-        _showOverlay(context);
-      } else {
-        setState(() {
-          widget.onDeleteItem!(item);
-          hideOverlay(null);
-          _showOverlay(context);
-        });
-      }
-    }
   }
 
   void hideOverlay(ValueItem? val) {
     setState(() {
-      overlayEntry?.remove();
-      overlayEntry = null;
       aberto = !aberto;
-      if (val != null) {
-        widget.updateSelectedItem(val);
-        controllerBar.text = val.label;
-      }
     });
+    if (val != null) {
+      widget.updateSelectedItem(val);
+      controllerBar.text = val.label;
+    }
+    overlayScreen.closeAll();
   }
 
   @override
@@ -284,11 +286,7 @@ class SearchDropDownState extends State<SearchDropDown> {
                       width: 5,
                     ),
                     IconButton(
-                      onPressed: () {
-                        setState(
-                          () => clearSelection(),
-                        );
-                      },
+                      onPressed: resetSelection,
                       icon: Icon(
                         Icons.clear,
                         color: widget.clearIconColor,
@@ -321,7 +319,10 @@ class SearchDropDownState extends State<SearchDropDown> {
           ),
         ),
         onTap: () {
-          if (overlayEntry == null) {
+          if (overlayScreen.overlayEntrys.isEmpty) {
+            setState(() {
+              aberto = !aberto;
+            });
             _showOverlay(context);
           } else {
             hideOverlay(null);
@@ -329,6 +330,7 @@ class SearchDropDownState extends State<SearchDropDown> {
         },
         onChanged: (a) {
           _filtrarLista(a);
+          //TODO fix: não deveria ter que ficar refazendo o overlay pra atualizar a lista
           hideOverlay(null);
           _showOverlay(context);
         },
