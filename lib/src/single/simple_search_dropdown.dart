@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+// import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:stringr/stringr.dart';
 
 class SearchDropDown extends StatefulWidget {
@@ -93,19 +94,26 @@ class SearchDropDown extends StatefulWidget {
 }
 
 class SearchDropDownState extends State<SearchDropDown> {
+  // late StreamSubscription<bool> keyboardSubscription;
+  List<ValueItem> listafiltrada = [];
+  OverlayEntry? overlayEntry;
+  final GlobalKey overlayKey = GlobalKey();
+  bool aberto = false;
+  bool isKeyboardOpen = false;
+  late TextEditingController controllerBar;
+
   @override
   void initState() {
     super.initState();
     _filtrarLista(null, start: true);
     controllerBar = TextEditingController(
         text: widget.selectedItem != null ? widget.selectedItem!.label : null);
+    // final keyboardVisibilityController = KeyboardVisibilityController();
+    // keyboardSubscription =
+    //     keyboardVisibilityController.onChange.listen((bool visible) {
+    //   isKeyboardOpen = visible;
+    // });
   }
-
-  List<ValueItem> listafiltrada = [];
-  OverlayEntry? overlayEntry;
-  final GlobalKey overlayKey = GlobalKey();
-  bool aberto = false;
-  late TextEditingController controllerBar;
 
   void _filtrarLista(String? text, {bool start = false}) {
     if (start) {
@@ -146,7 +154,9 @@ class SearchDropDownState extends State<SearchDropDown> {
             ),
           ),
           Positioned(
-            top: offset.dy + widgetPosition.size.height,
+            top: offset.dy +
+                widgetPosition.size.height -
+                (isKeyboardOpen ? MediaQuery.of(context).viewInsets.bottom / 2 : 0),
             left: offset.dx - 4,
             child: Material(
               color: Colors.transparent,
