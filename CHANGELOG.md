@@ -1,3 +1,7 @@
+## [2.2.0] - 2023-10-06.
+-   Fixed a issue where the dropdown didn't follow the textfield when the keyboard is open. [5](https://github.com/Lorenzobettega/simplesearchdropdown/issues/5)
+-   Mini visual improvements.
+
 ## [2.0.0] - 2023-10-04.
 -   Added `confirmDelete` property to single and multiple search widgets. It allows the user to confirm the action before deleting the row. 
 -   Added `deleteDialogSettings` property to allow customizing the delete confirmation dialog. 
