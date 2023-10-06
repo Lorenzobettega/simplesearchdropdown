@@ -94,7 +94,7 @@ class SearchDropDown extends StatefulWidget {
 class SearchDropDownState extends State<SearchDropDown> {
   late OverlayScreen overlayScreen;
   List<ValueItem> listafiltrada = [];
-  final GlobalKey overlayKey = GlobalKey();
+  final LayerLink _layerLink = LayerLink();
   bool aberto = false;
 
   late final TextEditingController controllerBar;
@@ -169,13 +169,8 @@ class SearchDropDownState extends State<SearchDropDown> {
   void _showOverlay(
     BuildContext context,
   ) {
-    
-    final RenderBox overlay =
-        overlayScreen.overlayState.context.findRenderObject() as RenderBox;
-    final RenderBox widgetPosition =
-        overlayKey.currentContext!.findRenderObject() as RenderBox;
-    final Offset offset =
-        widgetPosition.localToGlobal(Offset.zero, ancestor: overlay);
+    final RenderBox renderBox = context.findRenderObject() as RenderBox;
+    final size = renderBox.size;
     overlayScreen.show(
       OverlayEntry(
         builder: (context) => Stack(
@@ -189,45 +184,49 @@ class SearchDropDownState extends State<SearchDropDown> {
               ),
             ),
             Positioned(
-              top: offset.dy +
-                  widgetPosition.size.height,
-              left: offset.dx - 4,
-              child: Material(
-                color: Colors.transparent,
-                child: NovoListView(
-                  addMode: widget.addMode,
-                  animationDuration: widget.animationDuration,
-                  backgroundColor: widget.backgroundColor,
-                  controllerBar: controllerBar,
-                  createHint: widget.createHint,
-                  createHintStyle: widget.createHintStyle,
-                  deleteMode: widget.deleteMode,
-                  dialogActionIcon: widget.dialogActionIcon,
-                  dialogActionWidget: widget.dialogActionWidget,
-                  dialogBackgroundColor: widget.dialogBackgroundColor,
-                  dialogHeight: widget.dialogHeight ?? 200,
-                  elevation: widget.elevation,
-                  hoverColor: widget.hoverColor,
-                  listaFiltrada: listafiltrada,
-                  onAddItem: (val) => handleAddItem(
-                    val,
+              width: size.width,
+              child: CompositedTransformFollower(
+                link: _layerLink,
+                showWhenUnlinked: false,
+                offset: Offset(0.0, size.height + 3.0),
+                child: Material(
+                  color: Colors.transparent,
+                  child: NovoListView(
+                    addMode: widget.addMode,
+                    animationDuration: widget.animationDuration,
+                    backgroundColor: widget.backgroundColor,
+                    controllerBar: controllerBar,
+                    createHint: widget.createHint,
+                    createHintStyle: widget.createHintStyle,
+                    deleteMode: widget.deleteMode,
+                    dialogActionIcon: widget.dialogActionIcon,
+                    dialogActionWidget: widget.dialogActionWidget,
+                    dialogBackgroundColor: widget.dialogBackgroundColor,
+                    dialogHeight: widget.dialogHeight ?? 200,
+                    elevation: widget.elevation,
+                    hoverColor: widget.hoverColor,
+                    listaFiltrada: listafiltrada,
+                    onAddItem: (val) => handleAddItem(
+                      val,
+                    ),
+                    onClear: (val) => handleDeleteItem(
+                      val,
+                      context,
+                    ),
+                    onPressed: (val) => hideOverlay(val),
+                    padding: widget.padding,
+                    selectedDialogColor: widget.selectedDialogColor,
+                    selectedInsideBoxTextStyle:
+                        widget.selectedInsideBoxTextStyle,
+                    selectedItemHoverColor: widget.selectedItemHoverColor,
+                    separatorHeight: widget.separatorHeight,
+                    sortSelecteds: widget.sortSelecteds,
+                    unselectedItemHoverColor: widget.unselectedItemHoverColor,
+                    unselectedInsideBoxTextStyle:
+                        widget.unselectedInsideBoxTextStyle,
+                    widgetBuilder: widget.widgetBuilder,
+                    width: widget.dropdownwidth,
                   ),
-                  onClear: (val) => handleDeleteItem(
-                    val,
-                    context,
-                  ),
-                  onPressed: (val) => hideOverlay(val),
-                  padding: widget.padding,
-                  selectedDialogColor: widget.selectedDialogColor,
-                  selectedInsideBoxTextStyle: widget.selectedInsideBoxTextStyle,
-                  selectedItemHoverColor: widget.selectedItemHoverColor,
-                  separatorHeight: widget.separatorHeight,
-                  sortSelecteds: widget.sortSelecteds,
-                  unselectedItemHoverColor: widget.unselectedItemHoverColor,
-                  unselectedInsideBoxTextStyle:
-                      widget.unselectedInsideBoxTextStyle,
-                  widgetBuilder: widget.widgetBuilder,
-                  width: widget.dropdownwidth,
                 ),
               ),
             ),
@@ -250,82 +249,85 @@ class SearchDropDownState extends State<SearchDropDown> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.dropdownwidth,
-      height: widget.dropdownHeight,
-      child: SearchBar(
-        key: overlayKey,
-        trailing: widget.actions ??
-            [
-              aberto
-                  ? Icon(
-                      widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up,
-                      color: widget.outsideIconColor,
-                      size: widget.outsideIconSize,
-                    )
-                  : Icon(
-                      widget.dropdownDisableActionIcon ?? Icons.arrow_drop_down,
-                      color: widget.outsideIconColor,
-                      size: widget.outsideIconSize,
-                    ),
-              Visibility(
-                visible: controllerBar.text != '',
-                child: Row(
-                  children: [
-                    const SizedBox(
-                      width: 5,
-                    ),
-                    IconButton(
-                      onPressed: resetSelection,
-                      icon: Icon(
-                        Icons.clear,
-                        color: widget.clearIconColor,
+    return CompositedTransformTarget(
+      link: _layerLink,
+      child: SizedBox(
+        width: widget.dropdownwidth,
+        height: widget.dropdownHeight,
+        child: SearchBar(
+          trailing: widget.actions ??
+              [
+                aberto
+                    ? Icon(
+                        widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up,
+                        color: widget.outsideIconColor,
+                        size: widget.outsideIconSize,
+                      )
+                    : Icon(
+                        widget.dropdownDisableActionIcon ??
+                            Icons.arrow_drop_down,
+                        color: widget.outsideIconColor,
+                        size: widget.outsideIconSize,
                       ),
-                    ),
-                  ],
+                Visibility(
+                  visible: controllerBar.text != '',
+                  child: Row(
+                    children: [
+                      const SizedBox(
+                        width: 5,
+                      ),
+                      IconButton(
+                        onPressed: resetSelection,
+                        icon: Icon(
+                          Icons.clear,
+                          color: widget.clearIconColor,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
-        controller: controllerBar,
-        backgroundColor:
-            MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
-        hintStyle: MaterialStatePropertyAll(widget.hintStyle),
-        overlayColor:
-            MaterialStatePropertyAll(widget.hoverColor ?? Colors.grey.shade100),
-        surfaceTintColor:
-            MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
-        shape: MaterialStateProperty.all<OutlinedBorder>(
-          widget.border ??
-              const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(
-                  Radius.circular(10.0),
+              ],
+          controller: controllerBar,
+          backgroundColor:
+              MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
+          hintStyle: MaterialStatePropertyAll(widget.hintStyle),
+          overlayColor: MaterialStatePropertyAll(
+              widget.hoverColor ?? Colors.grey.shade100),
+          surfaceTintColor:
+              MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
+          shape: MaterialStateProperty.all<OutlinedBorder>(
+            widget.border ??
+                const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(
+                    Radius.circular(10.0),
+                  ),
                 ),
-              ),
-        ),
-        hintText: widget.hint ?? 'Selecione',
-        side: MaterialStateProperty.all<BorderSide>(
-          const BorderSide(
-            style: BorderStyle.none,
           ),
-        ),
-        onTap: () {
-          if (overlayScreen.overlayEntrys.isEmpty) {
-            setState(() {
-              aberto = !aberto;
-            });
-            _showOverlay(context);
-          } else {
+          hintText: widget.hint ?? 'Selecione',
+          side: MaterialStateProperty.all<BorderSide>(
+            const BorderSide(
+              style: BorderStyle.none,
+            ),
+          ),
+          onTap: () {
+            if (overlayScreen.overlayEntrys.isEmpty) {
+              setState(() {
+                aberto = !aberto;
+              });
+              _showOverlay(context);
+            } else {
+              hideOverlay(null);
+            }
+          },
+          onChanged: (a) {
+            _filtrarLista(a);
+            //TODO fix: não deveria ter que ficar refazendo o overlay pra atualizar a lista
             hideOverlay(null);
-          }
-        },
-        onChanged: (a) {
-          _filtrarLista(a);
-          //TODO fix: não deveria ter que ficar refazendo o overlay pra atualizar a lista
-          hideOverlay(null);
-          _showOverlay(context);
-        },
-        elevation: MaterialStateProperty.all<double>(
-          widget.elevation,
+            _showOverlay(context);
+          },
+          elevation: MaterialStateProperty.all<double>(
+            widget.elevation,
+          ),
         ),
       ),
     );

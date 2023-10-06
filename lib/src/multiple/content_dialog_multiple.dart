@@ -129,200 +129,188 @@ class _ContentMultipleState extends State<ContentMultiple> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Card(
-          surfaceTintColor: widget.dialogBackgroundColor ??
-              widget.backgroundColor ??
-              Colors.white,
-          color: widget.dialogBackgroundColor ??
-              widget.backgroundColor ??
-              Colors.white,
-          elevation: widget.elevation,
-          child: AnimatedContainer(
-            duration:
-                widget.animationDuration ?? const Duration(milliseconds: 100),
-            height: widget.dialogHeight,
-            width: widget.width,
-            child: Column(
-              children: [
-                SearchBar(
-                  controller: controllerBar,
-                  backgroundColor: MaterialStatePropertyAll(
-                      widget.dialogSearchBarColor ?? Colors.white),
-                  overlayColor: MaterialStatePropertyAll(
-                      widget.unselectedItemHoverColor ?? Colors.grey.shade100),
-                  constraints: BoxConstraints(
-                      minHeight: widget.minHeight, maxWidth: widget.width),
-                  surfaceTintColor: MaterialStatePropertyAll(
-                      widget.dialogSearchBarColor ?? Colors.white),
-                  shape: MaterialStateProperty.all<OutlinedBorder>(
-                    widget.dialogSearchBarBorder ??
-                        const RoundedRectangleBorder(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(10.0),
-                          ),
-                        ),
-                  ),
-                  hintText: widget.hintSearchBar ?? 'Pesquisar',
-                  hintStyle: MaterialStateProperty.all<TextStyle>(
-                    widget.hintStyle ?? const TextStyle(fontSize: 14),
-                  ),
-                  side: MaterialStateProperty.all<BorderSide>(
-                    const BorderSide(
-                      style: BorderStyle.none,
+    return Card(
+      surfaceTintColor: widget.dialogBackgroundColor ??
+          widget.backgroundColor ??
+          Colors.white,
+      color: widget.dialogBackgroundColor ??
+          widget.backgroundColor ??
+          Colors.white,
+      elevation: widget.elevation,
+      child: AnimatedContainer(
+        duration: widget.animationDuration ?? const Duration(milliseconds: 100),
+        height: widget.dialogHeight,
+        width: widget.width,
+        child: Column(
+          children: [
+            SearchBar(
+              controller: controllerBar,
+              backgroundColor: MaterialStatePropertyAll(
+                  widget.dialogSearchBarColor ?? Colors.white),
+              overlayColor: MaterialStatePropertyAll(
+                  widget.unselectedItemHoverColor ?? Colors.grey.shade100),
+              constraints: BoxConstraints(
+                  minHeight: widget.minHeight, maxWidth: widget.width),
+              surfaceTintColor: MaterialStatePropertyAll(
+                  widget.dialogSearchBarColor ?? Colors.white),
+              shape: MaterialStateProperty.all<OutlinedBorder>(
+                widget.dialogSearchBarBorder ??
+                    const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(
+                        Radius.circular(10.0),
+                      ),
                     ),
-                  ),
-                  onChanged: (a) {
-                    filtrarLista(a);
-                  },
-                  elevation: MaterialStateProperty.all<double>(
-                      widget.dialogSearchBarElevation),
+              ),
+              hintText: widget.hintSearchBar ?? 'Pesquisar',
+              hintStyle: MaterialStateProperty.all<TextStyle>(
+                widget.hintStyle ?? const TextStyle(fontSize: 14),
+              ),
+              side: MaterialStateProperty.all<BorderSide>(
+                const BorderSide(
+                  style: BorderStyle.none,
                 ),
-                const SizedBox(
-                  height: 5,
+              ),
+              onChanged: (a) {
+                filtrarLista(a);
+              },
+              elevation: MaterialStateProperty.all<double>(
+                  widget.dialogSearchBarElevation),
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            Expanded(
+              child: ListView.separated(
+                padding: EdgeInsets.zero,
+                scrollDirection: Axis.vertical,
+                itemCount: listafiltrada.length + (widget.addMode ? 1 : 0),
+                separatorBuilder: (context, index) => SizedBox(
+                  height: widget.separatorHeight ?? 1,
                 ),
-                Expanded(
-                  child: ListView.separated(
-                    scrollDirection: Axis.vertical,
-                    itemCount: listafiltrada.length + (widget.addMode ? 1 : 0),
-                    separatorBuilder: (context, index) => SizedBox(
-                      height: widget.separatorHeight ?? 1,
-                    ),
-                    itemBuilder: (context, index) {
-                      if (index == listafiltrada.length && widget.addMode) {
-                        if (controllerBar.text != '') {
-                          final list = listafiltrada
-                              .where(
-                                (element) => element.label
-                                    .toLowerCase()
-                                    .latinize()
-                                    .contains(
-                                      controllerBar.text
-                                          .toLowerCase()
-                                          .latinize(),
-                                    ),
-                              )
-                              .toList();
-                          if (list.isEmpty) {
-                            return Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 12),
-                                  child: Text(controllerBar.text),
+                itemBuilder: (context, index) {
+                  if (index == listafiltrada.length && widget.addMode) {
+                    if (controllerBar.text != '') {
+                      final list = listafiltrada
+                          .where(
+                            (element) => element.label
+                                .toLowerCase()
+                                .latinize()
+                                .contains(
+                                  controllerBar.text.toLowerCase().latinize(),
                                 ),
-                                TextButton(
-                                  onPressed: () {
-                                    setState(() {
-                                      final item = ValueItem(
-                                        label: controllerBar.text,
-                                        value: controllerBar.text,
-                                      );
-                                      widget.onAddItem(item);
-                                      listafiltrada.add(item);
-                                    });
-                                  },
-                                  child: Text(
-                                    widget.createHint ?? 'Criar',
-                                    style: widget.createHintStyle,
-                                  ),
-                                ),
-                              ],
-                            );
-                          }
-                        }
-                        return const SizedBox.shrink();
-                      } else {
+                          )
+                          .toList();
+                      if (list.isEmpty) {
                         return Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Expanded(
-                              child: Padding(
-                                padding: widget.padding ??
-                                    const EdgeInsets.symmetric(
-                                        horizontal: 5, vertical: 6),
-                                child: TextButton(
-                                    style: ButtonStyle(
-                                      backgroundColor: MaterialStateProperty
-                                          .resolveWith<Color>(
-                                        (Set<MaterialState> states) {
-                                          if (widget.selectedItens
-                                              .contains(listafiltrada[index])) {
-                                            return widget
-                                                    .selectedDialogBoxColor ??
-                                                Colors.black38;
-                                          }
-                                          return Colors.transparent;
-                                        },
-                                      ),
-                                      shape: MaterialStateProperty.all<
-                                          OutlinedBorder>(
-                                        RoundedRectangleBorder(
-                                          borderRadius:
-                                              BorderRadius.circular(10),
-                                        ),
-                                      ),
-                                      overlayColor: MaterialStateProperty
-                                          .resolveWith<Color>(
-                                        (Set<MaterialState> states) {
-                                          if (widget.selectedItens
-                                              .contains(listafiltrada[index])) {
-                                            return widget
-                                                    .selectedItemHoverColor ??
-                                                Colors.grey.shade300;
-                                          }
-                                          return widget
-                                                  .unselectedItemHoverColor ??
-                                              Colors.grey.shade100;
-                                        },
-                                      ),
-                                    ),
-                                    onPressed: () =>
-                                        addItem(listafiltrada[index]),
-                                    child: widget.dialogListviewWidgetBuilder ??
-                                        Align(
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              listafiltrada[index].label,
-                                              style: (controllerBar.text ==
-                                                      listafiltrada[index].label
-                                                  ? widget.selectedInsideBoxTextStyle ??
-                                                      const TextStyle(
-                                                          color: Colors.black)
-                                                  : widget.unselectedInsideBoxTextStyle ??
-                                                      const TextStyle(
-                                                          color:
-                                                              Colors.black45)),
-                                            ))),
+                            Padding(
+                              padding:
+                                  const EdgeInsets.symmetric(horizontal: 12),
+                              child: Text(controllerBar.text),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                setState(() {
+                                  final item = ValueItem(
+                                    label: controllerBar.text,
+                                    value: controllerBar.text,
+                                  );
+                                  widget.onAddItem(item);
+                                  listafiltrada.add(item);
+                                });
+                              },
+                              child: Text(
+                                widget.createHint ?? 'Criar',
+                                style: widget.createHintStyle,
                               ),
                             ),
-                            widget.deleteMode
-                                ? widget.dialogActionWidget ??
-                                    IconButton(
-                                      onPressed: () {
-                                        widget
-                                            .onDeleteItem(listafiltrada[index]);
-                                      },
-                                      icon: widget.dialogActionIcon ??
-                                          Icon(
-                                            Icons.delete,
-                                            color: Colors.red.shade900,
-                                            size: 20,
-                                          ),
-                                    )
-                                : const SizedBox.shrink()
                           ],
                         );
                       }
-                    },
-                  ),
-                ),
-              ],
+                    }
+                    return const SizedBox.shrink();
+                  } else {
+                    return Row(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: widget.padding ??
+                                const EdgeInsets.symmetric(horizontal: 4),
+                            child: TextButton(
+                              style: ButtonStyle(
+                                backgroundColor:
+                                    MaterialStateProperty.resolveWith<Color>(
+                                  (Set<MaterialState> states) {
+                                    if (widget.selectedItens
+                                        .contains(listafiltrada[index])) {
+                                      return widget.selectedDialogBoxColor ??
+                                          Colors.black38;
+                                    }
+                                    return Colors.transparent;
+                                  },
+                                ),
+                                shape:
+                                    MaterialStateProperty.all<OutlinedBorder>(
+                                  RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                overlayColor:
+                                    MaterialStateProperty.resolveWith<Color>(
+                                  (Set<MaterialState> states) {
+                                    if (widget.selectedItens
+                                        .contains(listafiltrada[index])) {
+                                      return widget.selectedItemHoverColor ??
+                                          Colors.grey.shade300;
+                                    }
+                                    return widget.unselectedItemHoverColor ??
+                                        Colors.grey.shade100;
+                                  },
+                                ),
+                              ),
+                              onPressed: () => addItem(listafiltrada[index]),
+                              child: widget.dialogListviewWidgetBuilder ??
+                                  Align(
+                                    alignment: Alignment.centerLeft,
+                                    child: Text(
+                                      listafiltrada[index].label,
+                                      style: (controllerBar.text ==
+                                              listafiltrada[index].label
+                                          ? widget.selectedInsideBoxTextStyle ??
+                                              const TextStyle(
+                                                  color: Colors.black)
+                                          : widget.unselectedInsideBoxTextStyle ??
+                                              const TextStyle(
+                                                  color: Colors.black45)),
+                                    ),
+                                  ),
+                            ),
+                          ),
+                        ),
+                        widget.deleteMode
+                            ? widget.dialogActionWidget ??
+                                IconButton(
+                                  onPressed: () {
+                                    widget.onDeleteItem(listafiltrada[index]);
+                                  },
+                                  icon: widget.dialogActionIcon ??
+                                      Icon(
+                                        Icons.delete,
+                                        color: Colors.red.shade900,
+                                        size: 20,
+                                      ),
+                                )
+                            : const SizedBox.shrink()
+                      ],
+                    );
+                  }
+                },
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

@@ -84,6 +84,7 @@ class NovoListView extends StatelessWidget {
         height: dialogHeight,
         width: width,
         child: ListView.separated(
+          padding: EdgeInsets.zero,
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
           separatorBuilder: (context, index) => SizedBox(
             height: separatorHeight ?? 1,
@@ -102,7 +103,7 @@ class NovoListView extends StatelessWidget {
                     .toList();
                 if (list.isEmpty) {
                   return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 8, 8, 0),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
@@ -129,8 +130,7 @@ class NovoListView extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding: padding ??
-                    const EdgeInsets.symmetric(horizontal: 4, vertical: 6),
+                padding: padding ?? const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
                     Expanded(
