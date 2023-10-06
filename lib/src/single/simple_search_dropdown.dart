@@ -1,6 +1,6 @@
+// ignore_for_file: use_build_context_synchronously
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-// import 'package:flutter_keyboard_visibility/flutter_keyboard_visibility.dart';
 import 'package:stringr/stringr.dart';
 
 class SearchDropDown extends StatefulWidget {
@@ -18,7 +18,7 @@ class SearchDropDown extends StatefulWidget {
     this.dialogActionIcon,
     this.dialogActionWidget,
     this.dialogBackgroundColor,
-    this.dialogHeight = 300,
+    this.dialogHeight,
     this.dropdownDisableActionIcon,
     this.dropdownEnableActionIcon,
     this.elevation = 2,
@@ -59,7 +59,7 @@ class SearchDropDown extends StatefulWidget {
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
-  final double dialogHeight;
+  final double? dialogHeight;
   final IconData? dropdownDisableActionIcon;
   final IconData? dropdownEnableActionIcon;
   final double elevation;
@@ -92,12 +92,10 @@ class SearchDropDown extends StatefulWidget {
 }
 
 class SearchDropDownState extends State<SearchDropDown> {
-  // late StreamSubscription<bool> keyboardSubscription;
   late OverlayScreen overlayScreen;
   List<ValueItem> listafiltrada = [];
   final GlobalKey overlayKey = GlobalKey();
   bool aberto = false;
-  bool isKeyboardOpen = false;
 
   late final TextEditingController controllerBar;
 
@@ -109,11 +107,6 @@ class SearchDropDownState extends State<SearchDropDown> {
     overlayScreen = OverlayScreen.of(context);
     controllerBar = TextEditingController(
         text: widget.selectedItem != null ? widget.selectedItem!.label : null);
-    // final keyboardVisibilityController = KeyboardVisibilityController();
-    // keyboardSubscription =
-    //     keyboardVisibilityController.onChange.listen((bool visible) {
-    //   isKeyboardOpen = visible;
-    // });
   }
 
   void _filtrarLista(String? text, {bool start = false}) {
@@ -176,13 +169,13 @@ class SearchDropDownState extends State<SearchDropDown> {
   void _showOverlay(
     BuildContext context,
   ) {
+    
     final RenderBox overlay =
         overlayScreen.overlayState.context.findRenderObject() as RenderBox;
     final RenderBox widgetPosition =
         overlayKey.currentContext!.findRenderObject() as RenderBox;
     final Offset offset =
         widgetPosition.localToGlobal(Offset.zero, ancestor: overlay);
-
     overlayScreen.show(
       OverlayEntry(
         builder: (context) => Stack(
@@ -197,10 +190,7 @@ class SearchDropDownState extends State<SearchDropDown> {
             ),
             Positioned(
               top: offset.dy +
-                  widgetPosition.size.height -
-                  (isKeyboardOpen
-                      ? MediaQuery.of(context).viewInsets.bottom / 2
-                      : 0),
+                  widgetPosition.size.height,
               left: offset.dx - 4,
               child: Material(
                 color: Colors.transparent,
@@ -215,7 +205,7 @@ class SearchDropDownState extends State<SearchDropDown> {
                   dialogActionIcon: widget.dialogActionIcon,
                   dialogActionWidget: widget.dialogActionWidget,
                   dialogBackgroundColor: widget.dialogBackgroundColor,
-                  dialogHeight: widget.dialogHeight,
+                  dialogHeight: widget.dialogHeight ?? 200,
                   elevation: widget.elevation,
                   hoverColor: widget.hoverColor,
                   listaFiltrada: listafiltrada,

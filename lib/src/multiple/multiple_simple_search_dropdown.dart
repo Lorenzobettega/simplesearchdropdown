@@ -16,7 +16,7 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.dialogActionIcon,
     this.dialogActionWidget,
     this.dialogBackgroundColor,
-    this.dialogHeight = 300,
+    this.dialogHeight,
     this.dialogListviewWidgetBuilder,
     this.dialogSearchBarBorder,
     this.dialogSearchBarColor,
@@ -64,7 +64,7 @@ class MultipleSearchDropDown extends StatefulWidget {
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
-  final double dialogHeight;
+  final double? dialogHeight;
   final Widget? dialogListviewWidgetBuilder;
   final OutlinedBorder? dialogSearchBarBorder;
   final Color? dialogSearchBarColor;
@@ -212,7 +212,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
                   dialogActionIcon: widget.dialogActionIcon,
                   dialogActionWidget: widget.dialogActionWidget,
                   dialogBackgroundColor: widget.dialogBackgroundColor,
-                  dialogHeight: widget.dialogHeight,
+                  dialogHeight: widget.dialogHeight ?? 200,
                   dialogListviewWidgetBuilder:
                       widget.dialogListviewWidgetBuilder,
                   dialogSearchBarBorder: widget.dialogSearchBarBorder,
