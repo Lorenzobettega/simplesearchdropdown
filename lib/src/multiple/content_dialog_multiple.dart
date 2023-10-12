@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
-class ContentMultiple extends StatefulWidget {
+class ContentMultiple<T> extends StatefulWidget {
   const ContentMultiple({
     super.key,
     required this.addMode,
@@ -38,6 +38,7 @@ class ContentMultiple extends StatefulWidget {
     required this.unselectedInsideBoxTextStyle,
     required this.width,
     required this.minHeight,
+    required this.newValueItem,
   });
 
   final bool addMode;
@@ -56,14 +57,14 @@ class ContentMultiple extends StatefulWidget {
   final Color? dialogSearchBarColor;
   final double dialogSearchBarElevation;
   final double elevation;
-  final Function(ValueItem) onAddItem;
-  final Function(ValueItem) onDeleteItem;
-  final Function(ValueItem value) onItemSelected;
+  final Function(ValueItem<T> value) onAddItem;
+  final Function(ValueItem<T> value) onDeleteItem;
+  final Function(ValueItem<T> value) onItemSelected;
   final EdgeInsets? padding;
   final TextStyle? hintStyle;
   final String? hintSearchBar;
-  final List<ValueItem> listItens;
-  final List<ValueItem> selectedItens;
+  final List<ValueItem<T>> listItens;
+  final List<ValueItem<T>> selectedItens;
   final Color? selectedDialogBoxColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
@@ -73,13 +74,14 @@ class ContentMultiple extends StatefulWidget {
   final Color? unselectedItemHoverColor;
   final double width;
   final double minHeight;
+  final ValueItem<T> Function(String input)? newValueItem;
 
   @override
-  State<ContentMultiple> createState() => _ContentMultipleState();
+  State<ContentMultiple<T>> createState() => _ContentMultipleState<T>();
 }
 
-class _ContentMultipleState extends State<ContentMultiple> {
-  List<ValueItem> listafiltrada = [];
+class _ContentMultipleState<T> extends State<ContentMultiple<T>> {
+  List<ValueItem<T>> listafiltrada = [];
   final TextEditingController controllerBar = TextEditingController();
 
   @override
@@ -89,7 +91,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
   }
 
   void organizarLista() {
-    List<ValueItem> selecionado = listafiltrada
+    List<ValueItem<T>> selecionado = listafiltrada
         .where((item) => widget.selectedItens.contains(item))
         .toList();
     if (selecionado.isNotEmpty) {
@@ -118,7 +120,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
         : null;
   }
 
-  void addItem(ValueItem value) {
+  void addItem(ValueItem<T> value) {
     widget.onItemSelected.call(value);
     widget.sortSelecteds
         ? setState(() {
@@ -212,10 +214,7 @@ class _ContentMultipleState extends State<ContentMultiple> {
                             TextButton(
                               onPressed: () {
                                 setState(() {
-                                  final item = ValueItem(
-                                    label: controllerBar.text,
-                                    value: controllerBar.text,
-                                  );
+                                  final item = widget.newValueItem!(controllerBar.text);
                                   widget.onAddItem(item);
                                   listafiltrada.add(item);
                                 });
