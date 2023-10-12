@@ -54,8 +54,8 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.deleteDialogSettings,
     this.verifyInputItem,
     this.verifyDialogSettings,
-  })  : assert((addMode && newValueItem != null) || !addMode,
-      'addMode can only be used with newValueItem != null');
+  }) : assert((addMode && newValueItem != null) || !addMode,
+            'addMode can only be used with newValueItem != null');
 
   final Widget? action;
   final bool addMode;

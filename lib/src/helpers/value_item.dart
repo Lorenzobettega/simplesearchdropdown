@@ -49,8 +49,7 @@ class ValueItem<T> {
   /// toJson method for [ValueItem]
   ///
   /// [customValueToMap] is an optional toMap function to use if value is a custom class.
-  String toJson(
-          Map<String, dynamic> Function(T? value)? customValueToMap) =>
+  String toJson(Map<String, dynamic> Function(T? value)? customValueToMap) =>
       json.encode(_toMap(customValueToMap));
 
   /// fromJson method for [ValueItem]
@@ -65,7 +64,9 @@ class ValueItem<T> {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is ValueItem<T> && other.label == label && other.value == value;
+    return other is ValueItem<T> &&
+        other.label == label &&
+        other.value == value;
   }
 
   /// Hashcode for [ValueItem]
