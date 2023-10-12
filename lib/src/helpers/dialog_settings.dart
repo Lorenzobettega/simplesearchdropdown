@@ -85,7 +85,7 @@ class DefaultDialogTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       confirmDialog ? 'Tem certeza?' : 'Erro!',
-      style:const TextStyle(
+      style: const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 18,
       ),
@@ -100,7 +100,9 @@ class DefaultDialogContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      confirmDialog ? 'Essa ação não poderá ser desfeita.' : 'O valor adicionado não é válido.',
+      confirmDialog
+          ? 'Essa ação não poderá ser desfeita.'
+          : 'O valor adicionado não é válido.',
       style: const TextStyle(
         fontSize: 16,
       ),
