@@ -7,12 +7,12 @@ import 'dart:convert';
 /// const ValueItem(label: 'Option 1', value: '1')
 /// ```
 
-class ValueItem {
+class ValueItem<T> {
   /// The label of the value item
   final String label;
 
   /// The value of the value item
-  final dynamic value;
+  final T? value;
 
   /// Default constructor for [ValueItem]
   const ValueItem({
@@ -28,7 +28,7 @@ class ValueItem {
 
   /// toMap method for [ValueItem]
   Map<String, dynamic> _toMap(
-      Map<String, dynamic> Function(dynamic value)? customValueToMap) {
+      Map<String, dynamic> Function(T? value)? customValueToMap) {
     return {
       'label': label,
       'value': customValueToMap != null ? customValueToMap(value) : value,
@@ -38,7 +38,7 @@ class ValueItem {
   /// fromMap method for [ValueItem]
   factory ValueItem._fromMap(Map<String, dynamic> map,
       dynamic Function(Map<String, dynamic>)? customValueFromMap) {
-    return ValueItem(
+    return ValueItem<T>(
       label: map['label'] ?? '',
       value: customValueFromMap != null
           ? customValueFromMap(map['value'])
@@ -50,7 +50,7 @@ class ValueItem {
   ///
   /// [customValueToMap] is an optional toMap function to use if value is a custom class.
   String toJson(
-          Map<String, dynamic> Function(dynamic value)? customValueToMap) =>
+          Map<String, dynamic> Function(T? value)? customValueToMap) =>
       json.encode(_toMap(customValueToMap));
 
   /// fromJson method for [ValueItem]
@@ -58,14 +58,14 @@ class ValueItem {
   /// [customValueFromMap] is an optional fromMap function to use if value is a custom class.
   factory ValueItem.fromJson(String source,
           dynamic Function(Map<String, dynamic>)? customValueFromMap) =>
-      ValueItem._fromMap(json.decode(source), customValueFromMap);
+      ValueItem<T>._fromMap(json.decode(source), customValueFromMap);
 
   /// Equality operator for [ValueItem]
   @override
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is ValueItem && other.label == label && other.value == value;
+    return other is ValueItem<T> && other.label == label && other.value == value;
   }
 
   /// Hashcode for [ValueItem]
@@ -73,9 +73,9 @@ class ValueItem {
   int get hashCode => label.hashCode ^ value.hashCode;
 
   /// CopyWith method for [ValueItem]
-  ValueItem copyWith({
+  ValueItem<T> copyWith({
     String? label,
-    dynamic value,
+    T? value,
   }) {
     return ValueItem(
       label: label ?? this.label,
