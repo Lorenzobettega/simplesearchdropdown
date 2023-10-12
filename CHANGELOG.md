@@ -1,3 +1,9 @@
+## [3.0.0] - 2023-10-12.
+-   Made `addMode` and `deleteMode` true by default.
+-   [Breaking] Added new parameter `newValueItem` to define how the text on the input transforms to a `ValueItem` of type `T`.
+-   [Breaking] `ValueItem` now has a type.
+-   Improved sample to show the usage with custom classes.
+
 ## [2.3.0] - 2023-10-12.
 -   Added `verifyInputItem` property to single and multiple search widgets. It allows the dev to check if the item added is valid based on some rule.
 -   Added `verifyDialogSettings` property to allow customizing the dialog that pops up after the user inserts some invalid value. To change the button on the dialog, use the `customVerifyButtonSettings` property. 

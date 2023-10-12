@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown_example/custom.dart';
 
 void main() {
   runApp(const MyApp());
@@ -32,6 +33,7 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
+  final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
   final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
   final List<ValueItem> listitems = [
     const ValueItem(label: 'Lorenzo', value: 'Lorenzo'),
@@ -39,6 +41,14 @@ class _MyHomePageState extends State<MyHomePage> {
     const ValueItem(label: '3', value: '3'),
     const ValueItem(label: 'one more', value: 'one more2')
   ];
+  final List<ValueItem<Custom>> customListitems = [
+    ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134)),
+    ValueItem(label: 'Peter', value: Custom('Peter', 1)),
+    ValueItem(label: 'Lucas', value: Custom('Lucas', 3)),
+    ValueItem(label: 'Gian', value: Custom('Gian', 70)),
+  ];
+  ValueItem<Custom>? selectedSingleCustom;
+
   List<ValueItem> selectedMultipleItems = [];
   ValueItem? selectedSingleItem;
 
@@ -50,10 +60,6 @@ class _MyHomePageState extends State<MyHomePage> {
     listitems.add(item);
   }
 
-  void updateSelectedItems(List<ValueItem> newSelectedItems) {
-    selectedMultipleItems = newSelectedItems;
-  }
-
   void updateSelectedItem(ValueItem? newSelectedItem) {
     selectedSingleItem = newSelectedItem;
   }
@@ -62,8 +68,28 @@ class _MyHomePageState extends State<MyHomePage> {
     singleSearchKey.currentState?.resetSelection();
   }
 
+  void updateSelectedItems(List<ValueItem> newSelectedItems) {
+    selectedMultipleItems = newSelectedItems;
+  }
+
   void clearMultipleSelection() {
     multipleSearchKey.currentState?.resetSelection();
+  }
+
+  void removeCustom(ValueItem<Custom> item) {
+    customListitems.remove(item);
+  }
+
+  void addCustom(ValueItem<Custom> item) {
+    customListitems.add(item);
+  }
+
+  void updateSelectedCustom(ValueItem<Custom>? newSelectedItem) {
+    selectedSingleCustom = newSelectedItem;
+  }
+
+  void clearCustomSelection() {
+    customSearchKey.currentState?.resetSelection();
   }
 
   bool verifyInput(ValueItem item) {
@@ -88,6 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
               updateSelectedItem: updateSelectedItem,
               selectedItem: listitems[0],
               verifyInputItem: verifyInput,
+              newValueItem: (input) => ValueItem(label: input, value: input),
             ),
             const SizedBox(
               height: 20,
@@ -102,6 +129,25 @@ class _MyHomePageState extends State<MyHomePage> {
               deleteMode: true,
               selectedItems: selectedMultipleItems,
               updateSelectedItems: updateSelectedItems,
+              newValueItem: (input) => ValueItem(label: input, value: input),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            SearchDropDown<Custom>(
+              key: customSearchKey,
+              listItems: customListitems,
+              confirmDelete: true,
+              onDeleteItem: removeCustom,
+              onAddItem: addCustom,
+              addMode: true,
+              deleteMode: true,
+              updateSelectedItem: updateSelectedCustom,
+              verifyInputItem: verifyInput,
+              newValueItem: (input) => ValueItem(
+                label: input,
+                value: Custom(input, getRandomInt(4)),
+              ),
             ),
             const SizedBox(
               height: 20,
@@ -142,6 +188,30 @@ class _MyHomePageState extends State<MyHomePage> {
                 TextButton(
                   onPressed: clearMultipleSelection,
                   child: const Text('Clear Multiple Selection'),
+                ),
+              ],
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: () {
+                    print(selectedSingleCustom);
+                    if (selectedSingleCustom != null) {
+                      print('name: ${selectedSingleCustom!.value!.name}');
+                    }
+                  },
+                  child: const Text('Print Custom Result'),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                TextButton(
+                  onPressed: clearCustomSelection,
+                  child: const Text('Clear Custom Selection'),
                 ),
               ],
             ),

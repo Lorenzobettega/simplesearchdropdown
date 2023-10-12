@@ -3,51 +3,53 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
-class SearchDropDown extends StatefulWidget {
+class SearchDropDown<T> extends StatefulWidget {
   const SearchDropDown({
     super.key,
+    this.newValueItem,
+    required this.listItems,
+    required this.onAddItem,
+    required this.updateSelectedItem,
+    this.addMode = true,
+    this.deleteMode = true,
+    this.sortSelecteds = true,
+    this.confirmDelete = false,
+    this.elevation = 2,
+    this.dropdownwidth = 300,
+    this.dropdownHeight = 50,
+    this.outsideIconSize = 20,
     this.actions,
-    required this.addMode,
     this.animationDuration,
     this.backgroundColor,
     this.border,
     this.createHint,
     this.createHintStyle,
     this.clearIconColor,
-    required this.deleteMode,
     this.dialogActionIcon,
     this.dialogActionWidget,
     this.dialogBackgroundColor,
     this.dialogHeight,
     this.dropdownDisableActionIcon,
     this.dropdownEnableActionIcon,
-    this.elevation = 2,
     this.hint,
     this.hintStyle,
     this.hoverColor,
-    required this.listItems,
-    required this.onAddItem,
     this.onDeleteItem,
     this.padding,
-    this.confirmDelete = false,
     this.selectedDialogColor,
     this.selectedItemHoverColor,
     this.selectedInsideBoxTextStyle,
     this.separatorHeight,
-    this.sortSelecteds = true,
     this.unselectedInsideBoxTextStyle,
     this.unselectedItemHoverColor,
-    required this.updateSelectedItem,
     this.widgetBuilder,
-    this.dropdownwidth = 300,
-    this.dropdownHeight = 50,
     this.selectedItem,
     this.outsideIconColor,
-    this.outsideIconSize = 20,
     this.deleteDialogSettings,
     this.verifyInputItem,
     this.verifyDialogSettings,
-  });
+  }) : assert((addMode && newValueItem != null) || !addMode,
+      'addMode can only be used with newValueItem != null');
 
   final List<Widget>? actions;
   final bool addMode;
@@ -68,9 +70,9 @@ class SearchDropDown extends StatefulWidget {
   final String? hint;
   final TextStyle? hintStyle;
   final Color? hoverColor;
-  final List<ValueItem> listItems;
-  final Function(ValueItem) onAddItem;
-  final Function(ValueItem)? onDeleteItem;
+  final List<ValueItem<T>> listItems;
+  final Function(ValueItem<T>) onAddItem;
+  final Function(ValueItem<T>)? onDeleteItem;
   final EdgeInsets? padding;
   final bool confirmDelete;
   final Color? selectedDialogColor;
@@ -80,24 +82,25 @@ class SearchDropDown extends StatefulWidget {
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
-  final Function(ValueItem?) updateSelectedItem;
+  final Function(ValueItem<T>?) updateSelectedItem;
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
-  final ValueItem? selectedItem;
+  final ValueItem<T>? selectedItem;
   final Color? outsideIconColor;
   final double outsideIconSize;
   final DialogSettings? deleteDialogSettings;
-  final bool Function(ValueItem)? verifyInputItem;
+  final bool Function(ValueItem<T>)? verifyInputItem;
   final DialogSettings? verifyDialogSettings;
+  final ValueItem<T> Function(String input)? newValueItem;
 
   @override
-  State<SearchDropDown> createState() => SearchDropDownState();
+  State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
 }
 
-class SearchDropDownState extends State<SearchDropDown> {
+class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   late OverlayScreen overlayScreen;
-  List<ValueItem> listafiltrada = [];
+  List<ValueItem<T>> listafiltrada = [];
   final LayerLink _layerLink = LayerLink();
   bool aberto = false;
 
@@ -133,7 +136,7 @@ class SearchDropDownState extends State<SearchDropDown> {
     }
   }
 
-  void handleAddItem(ValueItem item) {
+  void handleAddItem(ValueItem<T> item) {
     if (widget.addMode) {
       if (widget.verifyInputItem != null) {
         if (!widget.verifyInputItem!(item)) {
@@ -167,7 +170,7 @@ class SearchDropDownState extends State<SearchDropDown> {
     widget.updateSelectedItem(null);
   }
 
-  void handleDeleteItem(ValueItem item, BuildContext context) {
+  void handleDeleteItem(ValueItem<T> item, BuildContext context) {
     if (widget.deleteMode) {
       if (widget.confirmDelete) {
         overlayScreen.show(
@@ -251,6 +254,7 @@ class SearchDropDownState extends State<SearchDropDown> {
                         widget.unselectedInsideBoxTextStyle,
                     widgetBuilder: widget.widgetBuilder,
                     width: widget.dropdownwidth,
+                    newValueItem: widget.newValueItem,
                   ),
                 ),
               ),
@@ -261,7 +265,7 @@ class SearchDropDownState extends State<SearchDropDown> {
     );
   }
 
-  void hideOverlay(ValueItem? val) {
+  void hideOverlay(ValueItem<T>? val) {
     setState(() {
       aberto = !aberto;
     });

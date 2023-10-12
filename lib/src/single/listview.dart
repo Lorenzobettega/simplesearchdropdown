@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
-class NovoListView extends StatelessWidget {
+class NovoListView<T> extends StatelessWidget {
   final bool addMode;
   final Duration? animationDuration;
   final Color? backgroundColor;
@@ -16,10 +16,10 @@ class NovoListView extends StatelessWidget {
   final double dialogHeight;
   final double elevation;
   final Color? hoverColor;
-  final List<ValueItem> listaFiltrada;
-  final Function(ValueItem) onAddItem;
-  final Function(ValueItem) onClear;
-  final Function(ValueItem) onPressed;
+  final List<ValueItem<T>> listaFiltrada;
+  final Function(ValueItem<T> value) onAddItem;
+  final Function(ValueItem<T> value) onClear;
+  final Function(ValueItem<T> value) onPressed;
   final EdgeInsets? padding;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
@@ -30,6 +30,7 @@ class NovoListView extends StatelessWidget {
   final TextStyle? unselectedInsideBoxTextStyle;
   final Widget? widgetBuilder;
   final double width;
+  final ValueItem<T> Function(String input)? newValueItem;
 
   const NovoListView({
     required this.addMode,
@@ -59,11 +60,12 @@ class NovoListView extends StatelessWidget {
     required this.unselectedInsideBoxTextStyle,
     required this.widgetBuilder,
     required this.width,
+    required this.newValueItem,
     Key? key,
   }) : super(key: key);
 
   void organizarLista() {
-    List<ValueItem> selecionado = listaFiltrada
+    List<ValueItem<T>> selecionado = listaFiltrada
         .where((item) => item.label == controllerBar.text)
         .toList();
     if (selecionado.isNotEmpty) {
@@ -110,10 +112,7 @@ class NovoListView extends StatelessWidget {
                         Text(controllerBar.text),
                         TextButton(
                           onPressed: () {
-                            final item = ValueItem(
-                              label: controllerBar.text,
-                              value: controllerBar.text,
-                            );
+                            final item = newValueItem!(controllerBar.text);
                             onAddItem(item);
                             listaFiltrada.add(item);
                           },
