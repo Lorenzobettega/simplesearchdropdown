@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:simple_search_dropdown/src/delete_dialog/dialog_settings.dart';
+import 'package:simple_search_dropdown/src/helpers/dialog_settings.dart';
 
 class DialogButton extends StatelessWidget {
   const DialogButton({

@@ -66,6 +66,10 @@ class _MyHomePageState extends State<MyHomePage> {
     multipleSearchKey.currentState?.resetSelection();
   }
 
+  bool verifyInput(ValueItem item) {
+    return item.label != 'name';
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -83,6 +87,7 @@ class _MyHomePageState extends State<MyHomePage> {
               deleteMode: true,
               updateSelectedItem: updateSelectedItem,
               selectedItem: listitems[0],
+              verifyInputItem: verifyInput,
             ),
             const SizedBox(
               height: 20,

@@ -51,6 +51,8 @@ class MultipleSearchDropDown extends StatefulWidget {
     this.outsideIconColor,
     this.outsideIconSize = 20,
     this.deleteDialogSettings,
+    this.verifyInputItem,
+    this.verifyDialogSettings,
   });
 
   final Widget? action;
@@ -100,6 +102,8 @@ class MultipleSearchDropDown extends StatefulWidget {
   final double outsideIconSize;
   final Color? outsideIconColor;
   final DialogSettings? deleteDialogSettings;
+  final bool Function(ValueItem)? verifyInputItem;
+  final DialogSettings? verifyDialogSettings;
 
   @override
   State<MultipleSearchDropDown> createState() => MultipleSearchDropDownState();
@@ -136,6 +140,23 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
 
   void handleAddItem(ValueItem item, BuildContext context) {
     if (widget.addMode) {
+      if (widget.verifyInputItem != null) {
+        if (!widget.verifyInputItem!(item)) {
+          //TODO arrumar pra não parecer que o item foi adicionado
+          //TODO na pratica o item é visualmente adicionado e depois removido. Ajustar pra nem adicionar.
+          return overlayScreen.show(
+            OverlayEntry(
+              builder: (context) => WarningDialog(
+                confirmDialog: false,
+                returnFunction: (result) {
+                  overlayScreen.closeLast();
+                },
+                settings: widget.verifyDialogSettings,
+              ),
+            ),
+          );
+        }
+      }
       widget.onAddItem(item);
       onItemSelected(item);
       setState(() {});
@@ -147,7 +168,7 @@ class MultipleSearchDropDownState extends State<MultipleSearchDropDown> {
       if (widget.confirmDelete) {
         overlayScreen.show(
           OverlayEntry(
-            builder: (context) => ConfirmDeleteDialog(
+            builder: (context) => WarningDialog(
               returnFunction: (result) {
                 if (result) {
                   widget.onDeleteItem!(item);

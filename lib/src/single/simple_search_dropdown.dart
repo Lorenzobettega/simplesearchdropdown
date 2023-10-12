@@ -45,6 +45,8 @@ class SearchDropDown extends StatefulWidget {
     this.outsideIconColor,
     this.outsideIconSize = 20,
     this.deleteDialogSettings,
+    this.verifyInputItem,
+    this.verifyDialogSettings,
   });
 
   final List<Widget>? actions;
@@ -86,6 +88,8 @@ class SearchDropDown extends StatefulWidget {
   final Color? outsideIconColor;
   final double outsideIconSize;
   final DialogSettings? deleteDialogSettings;
+  final bool Function(ValueItem)? verifyInputItem;
+  final DialogSettings? verifyDialogSettings;
 
   @override
   State<SearchDropDown> createState() => SearchDropDownState();
@@ -97,16 +101,19 @@ class SearchDropDownState extends State<SearchDropDown> {
   final LayerLink _layerLink = LayerLink();
   bool aberto = false;
 
-  late final TextEditingController controllerBar;
+  final TextEditingController controllerBar = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    widget.listItems.sort((a, b) => a.label.compareTo(b.label));
-    _filtrarLista(null, start: true);
+    if (widget.listItems.isNotEmpty) {
+      widget.listItems.sort((a, b) => a.label.compareTo(b.label));
+      _filtrarLista(null, start: true);
+      if (widget.selectedItem != null) {
+        controllerBar.text = widget.selectedItem!.label;
+      }
+    }
     overlayScreen = OverlayScreen.of(context);
-    controllerBar = TextEditingController(
-        text: widget.selectedItem != null ? widget.selectedItem!.label : null);
   }
 
   void _filtrarLista(String? text, {bool start = false}) {
@@ -128,6 +135,24 @@ class SearchDropDownState extends State<SearchDropDown> {
 
   void handleAddItem(ValueItem item) {
     if (widget.addMode) {
+      if (widget.verifyInputItem != null) {
+        if (!widget.verifyInputItem!(item)) {
+          //TODO na pratica o item é visualmente adicionado e depois removido. Ajustar pra nem adicionar.
+          controllerBar.clear();
+          _filtrarLista(null);
+          return overlayScreen.show(
+            OverlayEntry(
+              builder: (context) => WarningDialog(
+                confirmDialog: false,
+                returnFunction: (result) {
+                  overlayScreen.closeLast();
+                },
+                settings: widget.verifyDialogSettings,
+              ),
+            ),
+          );
+        }
+      }
       setState(() {
         widget.onAddItem(item);
         hideOverlay(item);
@@ -147,7 +172,7 @@ class SearchDropDownState extends State<SearchDropDown> {
       if (widget.confirmDelete) {
         overlayScreen.show(
           OverlayEntry(
-            builder: (context) => ConfirmDeleteDialog(
+            builder: (context) => WarningDialog(
               returnFunction: (result) {
                 if (result) {
                   widget.onDeleteItem!(item);
