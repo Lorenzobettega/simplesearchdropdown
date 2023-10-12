@@ -5,6 +5,7 @@ class DialogSettings {
   final Widget? content;
   final DialogButtonSettings? customCancelButtonSettings;
   final DialogButtonSettings? customDeleteButtonSettings;
+  final DialogButtonSettings? customVerifyButtonSettings;
   final EdgeInsetsGeometry? contentPadding, titlePadding, actionsPadding;
   final EdgeInsets insetPadding;
   final MainAxisAlignment? actionsAlignment;
@@ -24,6 +25,7 @@ class DialogSettings {
     this.shape,
     this.customCancelButtonSettings,
     this.customDeleteButtonSettings,
+    this.customVerifyButtonSettings,
     this.insetPadding = const EdgeInsets.symmetric(
       horizontal: 40.0,
       vertical: 24.0,
@@ -71,14 +73,19 @@ final defaultCancelButtonSettings = DialogButtonSettings(
   activeBorder: true,
 );
 
-class DefaultDialogTitle extends StatelessWidget {
-  const DefaultDialogTitle({super.key});
+final defaultVerifyButtonSettings = DialogButtonSettings(
+  'OK',
+  customWidth: 160,
+);
 
+class DefaultDialogTitle extends StatelessWidget {
+  const DefaultDialogTitle({super.key, required this.confirmDialog});
+  final bool confirmDialog;
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      'Tem certeza?',
-      style: TextStyle(
+    return Text(
+      confirmDialog ? 'Tem certeza?' : 'Erro!',
+      style:const TextStyle(
         fontWeight: FontWeight.bold,
         fontSize: 18,
       ),
@@ -88,13 +95,13 @@ class DefaultDialogTitle extends StatelessWidget {
 }
 
 class DefaultDialogContent extends StatelessWidget {
-  const DefaultDialogContent({super.key});
-
+  const DefaultDialogContent({super.key, required this.confirmDialog});
+  final bool confirmDialog;
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      "Essa ação não poderá ser desfeita.",
-      style: TextStyle(
+    return Text(
+      confirmDialog ? 'Essa ação não poderá ser desfeita.' : 'O valor adicionado não é válido.',
+      style: const TextStyle(
         fontSize: 16,
       ),
       textAlign: TextAlign.center,

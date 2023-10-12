@@ -1,12 +1,13 @@
 library simple_search_dropdown;
 
-export './src/extensions.dart';
+export './src/helpers/extensions.dart';
 export './src/single/simple_search_dropdown.dart';
 export './src/single/listview.dart';
 export './src/multiple/content_dialog_multiple.dart';
 export './src/multiple/multiple_simple_search_dropdown.dart';
-export './src/value_item.dart';
-export './src/overlay_screen.dart';
-export './src/delete_dialog/dialog_settings.dart';
-export './src/delete_dialog/dialog_button.dart';
-export './src/delete_dialog/confirm_delete_dialog.dart';
+export './src/helpers/value_item.dart';
+export './src/helpers/overlay_screen.dart';
+export './src/helpers/dialog_settings.dart';
+export './src/helpers/dialog_button.dart';
+export './src/dialogs/warning_dialog.dart';
+
