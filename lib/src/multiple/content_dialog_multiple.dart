@@ -214,7 +214,8 @@ class _ContentMultipleState<T> extends State<ContentMultiple<T>> {
                             TextButton(
                               onPressed: () {
                                 setState(() {
-                                  final item = widget.newValueItem!(controllerBar.text);
+                                  final item =
+                                      widget.newValueItem!(controllerBar.text);
                                   widget.onAddItem(item);
                                   listafiltrada.add(item);
                                 });

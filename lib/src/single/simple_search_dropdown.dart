@@ -49,7 +49,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.verifyInputItem,
     this.verifyDialogSettings,
   }) : assert((addMode && newValueItem != null) || !addMode,
-      'addMode can only be used with newValueItem != null');
+            'addMode can only be used with newValueItem != null');
 
   final List<Widget>? actions;
   final bool addMode;
