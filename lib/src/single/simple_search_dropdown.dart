@@ -48,6 +48,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.deleteDialogSettings,
     this.verifyInputItem,
     this.verifyDialogSettings,
+    this.clearOnClose = false,
   }) : assert((addMode && newValueItem != null) || !addMode,
             'addMode can only be used with newValueItem != null');
 
@@ -93,6 +94,7 @@ class SearchDropDown<T> extends StatefulWidget {
   final bool Function(ValueItem<T>)? verifyInputItem;
   final DialogSettings? verifyDialogSettings;
   final ValueItem<T> Function(String input)? newValueItem;
+  final bool clearOnClose;
 
   @override
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
@@ -103,6 +105,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   List<ValueItem<T>> listafiltrada = [];
   final LayerLink _layerLink = LayerLink();
   bool aberto = false;
+  ValueItem<T>? selectedValue;
 
   final TextEditingController controllerBar = TextEditingController();
 
@@ -114,6 +117,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       _filtrarLista(null, start: true);
       if (widget.selectedItem != null) {
         controllerBar.text = widget.selectedItem!.label;
+        selectedValue = widget.selectedItem!;
       }
     }
     overlayScreen = OverlayScreen.of(context);
@@ -167,6 +171,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   void resetSelection() {
     controllerBar.clear();
     _filtrarLista(null);
+    selectedValue = null;
     widget.updateSelectedItem(null);
   }
 
@@ -270,8 +275,20 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       aberto = !aberto;
     });
     if (val != null) {
+      selectedValue = val;
       widget.updateSelectedItem(val);
       controllerBar.text = val.label;
+    } else {
+      if (selectedValue != null) {
+        final label = selectedValue!.label;
+        if (controllerBar.text != label) {
+          controllerBar.text = label;
+        }
+      } else {
+        if (widget.clearOnClose || !widget.addMode) {
+          controllerBar.clear();
+        }
+      }
     }
     overlayScreen.closeAll();
   }
@@ -350,13 +367,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           },
           onChanged: (a) {
             _filtrarLista(a);
-            //TODO fix: não deveria ter que ficar refazendo o overlay pra atualizar a lista
-            hideOverlay(null);
-            _showOverlay(context);
+            overlayScreen.updateLast();
           },
-          elevation: MaterialStateProperty.all<double>(
-            widget.elevation,
-          ),
+          elevation: MaterialStateProperty.all<double>(widget.elevation),
         ),
       ),
     );

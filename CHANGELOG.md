@@ -1,3 +1,7 @@
+## [3.1.1] - 2023-10-06.
+-   Fixed a issue where an incomplete selection in `SearchDropDown` after a search, passed the impression that the selected value changed + added `clearOnClose` parameter to `SearchDropDown`. If it's true or `addMode` = `false`, after the user closes the overlay without selecting an option and nothing was previously selected, the textfield will be cleared.  [18](https://github.com/Lorenzobettega/simplesearchdropdown/issues/18)
+-   Fixed an older incorrect implementation of `SearchDropDown`.
+
 ## [3.0.0] - 2023-10-12.
 -   Made `addMode` and `deleteMode` true by default.
 -   [Breaking] Added new parameter `newValueItem` to define how the text on the input transforms to a `ValueItem` of type `T`.
