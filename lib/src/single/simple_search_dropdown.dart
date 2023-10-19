@@ -350,9 +350,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           },
           onChanged: (a) {
             _filtrarLista(a);
-            //TODO fix: não deveria ter que ficar refazendo o overlay pra atualizar a lista
-            hideOverlay(null);
-            _showOverlay(context);
+            overlayScreen.updateLast();
           },
           elevation: MaterialStateProperty.all<double>(
             widget.elevation,

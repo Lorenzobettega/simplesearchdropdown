@@ -19,6 +19,10 @@ class OverlayScreen {
     overlayEntrys.removeLast().remove();
   }
 
+  void updateLast() {
+    overlayEntrys.last.markNeedsBuild();
+  }
+
   void show(OverlayEntry entry) {
     overlayEntrys.add(entry);
 
