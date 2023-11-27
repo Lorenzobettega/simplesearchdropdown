@@ -24,8 +24,8 @@ class SearchDropDown<T> extends StatefulWidget {
     this.animationDuration,
     this.backgroundColor,
     this.border,
-    this.createHint,
-    this.createHintStyle,
+    this.addItemHint,
+    this.addItemHintStyle,
     this.clearIconColor,
     this.dialogActionIcon,
     this.dialogActionWidget,
@@ -36,7 +36,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.hint,
     this.hintStyle,
     this.hoverColor,
-    this.padding,
+    this.itemsPadding,
     this.selectedDialogColor,
     this.selectedItemHoverColor,
     this.selectedInsideBoxTextStyle,
@@ -56,50 +56,86 @@ class SearchDropDown<T> extends StatefulWidget {
             'addMode can only be used with newValueItem != null && onAddItem != null'),
         assert((deleteMode && onDeleteItem != null) || !deleteMode,
             'deleteMode can only be used with onDeleteItem != null');
-
+  
+  ///List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
+  ///Allow the user to add items to the list.
   final bool addMode;
+  ///Function to be executed after the item was added.
   final Function(ValueItem<T>)? onAddItem;
+  ///Function that defines how the user input transforms into a new ValueItem on the list.
+  ///
+  ///Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
   final ValueItem<T> Function(String input)? newValueItem;
+  ///The text of the add button when user is allowed to add items in the list.
+  final String? addItemHint;
+  ///The style of the add button when user is allowed to add items in the list.
+  final TextStyle? addItemHintStyle;
+  ///Allow the user to delete items of the list.
   final bool deleteMode;
+  ///Function to be executed after the item was deleted.
   final Function(ValueItem<T>)? onDeleteItem;
-  final List<Widget>? actions;
+  ///Force the user to confirm delete
+  final bool confirmDelete;
+  ///The duration of the dropdown opening animation.
   final Duration? animationDuration;
+  ///The background color of the searchbar and overlay.
   final Color? backgroundColor;
+  ///The border of the searchbar.
   final OutlinedBorder? border;
-  final String? createHint;
-  final TextStyle? createHintStyle;
+  ///The color of "x" clear icon on the end of the searchbar.
   final Color? clearIconColor;
+  ///List of widgets that will go on the end of the search bar.
+  final List<Widget>? actions;
+  ///The text to be presented on the hint of the searchbar.
+  final String? hint;
+  ///The style of the hint of the searchbar.
+  final TextStyle? hintStyle;
+  ///The elevation of the searchbar.
+  final double elevation;
+  ///The hover color of the searchbar.
+  final Color? hoverColor;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double? dialogHeight;
   final IconData? dropdownDisableActionIcon;
   final IconData? dropdownEnableActionIcon;
-  final double elevation;
-  final String? hint;
-  final TextStyle? hintStyle;
-  final Color? hoverColor;
-  final EdgeInsets? padding;
-  final bool confirmDelete;
+  ///The padding for the items of the list.
+  ///
+  ///default: `EdgeInsets.symmetric(horizontal: 4)`
+  final EdgeInsets? itemsPadding;
+  ///The hover color of the selected item of the list.
+  final Color? selectedItemHoverColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
-  final Color? selectedItemHoverColor;
   final double? separatorHeight;
-  final int sortType;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
-  final Function(ValueItem<T>?) updateSelectedItem;
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
-  final ValueItem<T>? selectedItem;
   final Color? outsideIconColor;
   final double outsideIconSize;
   final DialogSettings? deleteDialogSettings;
   final bool Function(ValueItem<T>)? verifyInputItem;
   final DialogSettings? verifyDialogSettings;
+  ///If true, the value on the Searchbar will be cleared if nothing was selected.
   final bool clearOnClose;
+  ///The initial selected value of the dropdown.
+  final ValueItem<T>? selectedItem;
+  ///The function to be executed after the user selects a value.
+  final Function(ValueItem<T>?) updateSelectedItem;
+  ///The way the items should be sorted.
+  ///
+  ///If `0`(default), no sort will be applied
+  ///
+  ///If `1`, the items will be sorted on alphabetical order.
+  ///
+  ///If `2`, the items will be sorted on reverse alphabetical order.
+  ///
+  ///If `3`, the selected item will be put on first position.
+  final int sortType;
 
   @override
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
@@ -118,7 +154,6 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   void initState() {
     super.initState();
     if (widget.listItems.isNotEmpty) {
-      widget.listItems.sort((a, b) => a.label.compareTo(b.label));
       _filtrarLista(null, start: true);
       if (widget.selectedItem != null) {
         controllerBar.text = widget.selectedItem!.label;
@@ -232,8 +267,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     animationDuration: widget.animationDuration,
                     backgroundColor: widget.backgroundColor,
                     controllerBar: controllerBar,
-                    createHint: widget.createHint,
-                    createHintStyle: widget.createHintStyle,
+                    addItemHint: widget.addItemHint,
+                    addItemHintStyle: widget.addItemHintStyle,
                     deleteMode: widget.deleteMode,
                     dialogActionIcon: widget.dialogActionIcon,
                     dialogActionWidget: widget.dialogActionWidget,
@@ -250,7 +285,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       context,
                     ),
                     onPressed: (val) => hideOverlay(val),
-                    padding: widget.padding,
+                    itemsPadding: widget.itemsPadding,
                     selectedDialogColor: widget.selectedDialogColor,
                     selectedInsideBoxTextStyle:
                         widget.selectedInsideBoxTextStyle,
@@ -340,7 +375,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           controller: controllerBar,
           backgroundColor:
               MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
-          hintStyle: MaterialStatePropertyAll(widget.hintStyle),
+          hintStyle: MaterialStatePropertyAll(widget.hintStyle ?? const TextStyle(fontSize: 14)),
           overlayColor: MaterialStatePropertyAll(
               widget.hoverColor ?? Colors.grey.shade100),
           surfaceTintColor:

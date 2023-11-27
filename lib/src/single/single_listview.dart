@@ -4,36 +4,6 @@ import 'package:stringr/stringr.dart';
 
 ///This creates the list that contains the items to be selected.
 class SingleListView<T> extends StatelessWidget {
-  final bool addMode;
-  final Function(ValueItem<T> value) onAddItem;
-  final ValueItem<T> Function(String input)? newValueItem;
-  final Duration? animationDuration;
-  final Color? backgroundColor;
-  final TextEditingController controllerBar;
-  final String? createHint;
-  final TextStyle? createHintStyle;
-  final bool deleteMode;
-  final Icon? dialogActionIcon;
-  final Widget? dialogActionWidget;
-  final Color? dialogBackgroundColor;
-  final double dialogHeight;
-  final double elevation;
-  final Color? hoverColor;
-  final List<ValueItem<T>> listaFiltrada;
-  final Function(ValueItem<T> value) onClear;
-  final Function(ValueItem<T> value) onPressed;
-  final EdgeInsets? padding;
-  final Color? selectedDialogColor;
-  final TextStyle? selectedInsideBoxTextStyle;
-  final Color? selectedItemHoverColor;
-  final double? separatorHeight;
-  final int sortType;
-  final Color? unselectedItemHoverColor;
-  final TextStyle? unselectedInsideBoxTextStyle;
-  final Widget? widgetBuilder;
-  final double width;
-  final ValueItem<T>? selectedItem;
-
   const SingleListView({
     required this.addMode,
     required this.onAddItem,
@@ -41,8 +11,8 @@ class SingleListView<T> extends StatelessWidget {
     required this.animationDuration,
     required this.backgroundColor,
     required this.controllerBar,
-    required this.createHint,
-    required this.createHintStyle,
+    required this.addItemHint,
+    required this.addItemHintStyle,
     required this.deleteMode,
     required this.dialogActionIcon,
     required this.dialogActionWidget,
@@ -53,7 +23,7 @@ class SingleListView<T> extends StatelessWidget {
     required this.listaFiltrada,
     required this.onClear,
     required this.onPressed,
-    required this.padding,
+    required this.itemsPadding,
     required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
     required this.selectedItemHoverColor,
@@ -64,8 +34,40 @@ class SingleListView<T> extends StatelessWidget {
     required this.widgetBuilder,
     required this.width,
     required this.selectedItem,
-    Key? key,
-  }) : super(key: key);
+    super.key,
+  });
+  ///Allow the user to add items to the list.
+  final bool addMode;
+  ///Function to be executed after the item was added.
+  final Function(ValueItem<T> value) onAddItem;
+  ///Function that defines how the user input transforms into a new ValueItem on the list.
+  final ValueItem<T> Function(String input)? newValueItem;
+  final Duration? animationDuration;
+  final Color? backgroundColor;
+  final TextEditingController controllerBar;
+  final String? addItemHint;
+  final TextStyle? addItemHintStyle;
+  final bool deleteMode;
+  final Icon? dialogActionIcon;
+  final Widget? dialogActionWidget;
+  final Color? dialogBackgroundColor;
+  final double dialogHeight;
+  final double elevation;
+  final Color? hoverColor;
+  final List<ValueItem<T>> listaFiltrada;
+  final Function(ValueItem<T> value) onClear;
+  final Function(ValueItem<T> value) onPressed;
+  final EdgeInsets? itemsPadding;
+  final Color? selectedDialogColor;
+  final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedItemHoverColor;
+  final double? separatorHeight;
+  final int sortType;
+  final Color? unselectedItemHoverColor;
+  final TextStyle? unselectedInsideBoxTextStyle;
+  final Widget? widgetBuilder;
+  final double width;
+  final ValueItem<T>? selectedItem;
 
   void sortFunction() {
     switch (sortType) {
@@ -89,6 +91,7 @@ class SingleListView<T> extends StatelessWidget {
     }
   }
 
+  ///Function to scroll the list to the selected item
   void goToSelectedItem(ScrollController controller, ValueItem<T> item) {
     final index = listaFiltrada.indexOf(item);
     if (index > 0) {
@@ -98,7 +101,7 @@ class SingleListView<T> extends StatelessWidget {
       final target = contentSize * index / listaFiltrada.length;
       controller.position.animateTo(
         target,
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
       );
     }
@@ -154,8 +157,8 @@ class SingleListView<T> extends StatelessWidget {
                             listaFiltrada.add(item);
                           },
                           child: Text(
-                            createHint ?? 'Criar',
-                            style: createHintStyle,
+                            addItemHint ?? 'Criar',
+                            style: addItemHintStyle,
                           ),
                         ),
                       ],
@@ -166,7 +169,7 @@ class SingleListView<T> extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding: padding ?? const EdgeInsets.symmetric(horizontal: 4),
+                padding: itemsPadding ?? const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
                     Expanded(

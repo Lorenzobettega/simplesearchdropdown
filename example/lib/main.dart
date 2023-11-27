@@ -36,7 +36,9 @@ class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
   final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
   final List<ValueItem> listitems = [
-    const ValueItem(label: 'Lorenzo', value: 'Lorenzo'),
+    const ValueItem(
+      label: 'Lorenzo',
+    ),
     const ValueItem(label: 'Teste', value: 'Teste'),
     const ValueItem(label: '3', value: '3'),
     const ValueItem(label: 'one more', value: 'one more2')
@@ -158,6 +160,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 TextButton(
                   onPressed: () {
                     print(selectedSingleItem);
+                    print(selectedSingleItem.runtimeType);
                   },
                   child: const Text('Print Single Result'),
                 ),
@@ -202,6 +205,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     print(selectedSingleCustom);
                     if (selectedSingleCustom != null) {
                       print('name: ${selectedSingleCustom!.value!.name}');
+                      print(selectedSingleCustom.runtimeType);
                     }
                   },
                   child: const Text('Print Custom Result'),
