@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
+///This creates a multiple selection dropdown widget.
 class MultipleSearchDropDown<T> extends StatefulWidget {
   const MultipleSearchDropDown({
     super.key,
@@ -220,7 +221,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                 offset: Offset(0.0, size.height + 3.0),
                 child: Material(
                   color: Colors.transparent,
-                  child: ContentMultiple(
+                  child: MultipleListView(
                     addMode: widget.addMode,
                     animationDuration: widget.animationDuration,
                     backgroundColor: widget.backgroundColor,

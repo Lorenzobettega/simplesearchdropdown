@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
-class ContentMultiple<T> extends StatefulWidget {
-  const ContentMultiple({
+class MultipleListView<T> extends StatefulWidget {
+  const MultipleListView({
     super.key,
     required this.addMode,
     required this.animationDuration,
@@ -77,10 +77,10 @@ class ContentMultiple<T> extends StatefulWidget {
   final ValueItem<T> Function(String input)? newValueItem;
 
   @override
-  State<ContentMultiple<T>> createState() => _ContentMultipleState<T>();
+  State<MultipleListView<T>> createState() => _MultipleListViewState<T>();
 }
 
-class _ContentMultipleState<T> extends State<ContentMultiple<T>> {
+class _MultipleListViewState<T> extends State<MultipleListView<T>> {
   List<ValueItem<T>> listafiltrada = [];
   final TextEditingController controllerBar = TextEditingController();
 
