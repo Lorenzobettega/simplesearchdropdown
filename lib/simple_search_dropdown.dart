@@ -1,9 +1,13 @@
+// Copyright 2023 Gianluca & Lorenzo. All rights reserved.
+// Use of this source code is governed by a license that can be
+// found in the LICENSE file.
+
 library simple_search_dropdown;
 
 export './src/helpers/extensions.dart';
 export './src/single/simple_search_dropdown.dart';
-export './src/single/listview.dart';
-export './src/multiple/content_dialog_multiple.dart';
+export 'src/single/single_listview.dart';
+export 'src/multiple/multiple_listview.dart';
 export './src/multiple/multiple_simple_search_dropdown.dart';
 export './src/helpers/value_item.dart';
 export './src/helpers/overlay_screen.dart';

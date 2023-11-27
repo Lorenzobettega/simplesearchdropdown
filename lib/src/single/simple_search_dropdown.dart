@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
+///This creates a single selection dropdown widget.
 class SearchDropDown<T> extends StatefulWidget {
   const SearchDropDown({
     super.key,
@@ -12,7 +13,7 @@ class SearchDropDown<T> extends StatefulWidget {
     required this.updateSelectedItem,
     this.addMode = true,
     this.deleteMode = true,
-    this.sortSelecteds = true,
+    this.sortType = 0,
     this.confirmDelete = false,
     this.elevation = 2,
     this.dropdownwidth = 300,
@@ -80,7 +81,7 @@ class SearchDropDown<T> extends StatefulWidget {
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
-  final bool sortSelecteds;
+  final int sortType;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
   final Function(ValueItem<T>?) updateSelectedItem;
@@ -160,11 +161,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           );
         }
       }
-      setState(() {
-        widget.onAddItem(item);
-        hideOverlay(item);
-        _filtrarLista(null);
-      });
+      hideOverlay(item);
+      widget.onAddItem(item);
+      _filtrarLista(null);
     }
   }
 
@@ -224,7 +223,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                 offset: Offset(0.0, size.height + 3.0),
                 child: Material(
                   color: Colors.transparent,
-                  child: NovoListView(
+                  child: SingleListView(
                     addMode: widget.addMode,
                     animationDuration: widget.animationDuration,
                     backgroundColor: widget.backgroundColor,
@@ -253,13 +252,14 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                         widget.selectedInsideBoxTextStyle,
                     selectedItemHoverColor: widget.selectedItemHoverColor,
                     separatorHeight: widget.separatorHeight,
-                    sortSelecteds: widget.sortSelecteds,
+                    sortType: widget.sortType,
                     unselectedItemHoverColor: widget.unselectedItemHoverColor,
                     unselectedInsideBoxTextStyle:
                         widget.unselectedInsideBoxTextStyle,
                     widgetBuilder: widget.widgetBuilder,
                     width: widget.dropdownwidth,
                     newValueItem: widget.newValueItem,
+                    selectedItem: selectedValue,
                   ),
                 ),
               ),

@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
-class NovoListView<T> extends StatelessWidget {
+///This creates the list that contains the items to be selected.
+class SingleListView<T> extends StatelessWidget {
   final bool addMode;
   final Duration? animationDuration;
   final Color? backgroundColor;
@@ -25,14 +26,15 @@ class NovoListView<T> extends StatelessWidget {
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
-  final bool sortSelecteds;
+  final int sortType;
   final Color? unselectedItemHoverColor;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Widget? widgetBuilder;
   final double width;
   final ValueItem<T> Function(String input)? newValueItem;
+  final ValueItem<T>? selectedItem;
 
-  const NovoListView({
+  const SingleListView({
     required this.addMode,
     required this.animationDuration,
     required this.backgroundColor,
@@ -55,27 +57,61 @@ class NovoListView<T> extends StatelessWidget {
     required this.selectedInsideBoxTextStyle,
     required this.selectedItemHoverColor,
     required this.separatorHeight,
-    required this.sortSelecteds,
+    required this.sortType,
     required this.unselectedItemHoverColor,
     required this.unselectedInsideBoxTextStyle,
     required this.widgetBuilder,
     required this.width,
     required this.newValueItem,
+    required this.selectedItem,
     Key? key,
   }) : super(key: key);
 
-  void organizarLista() {
-    List<ValueItem<T>> selecionado = listaFiltrada
-        .where((item) => item.label == controllerBar.text)
-        .toList();
-    if (selecionado.isNotEmpty) {
-      listaFiltrada.removeWhere((item) => item.label == controllerBar.text);
-      listaFiltrada.insert(0, selecionado[0]);
+  void sortFunction() {
+    switch (sortType) {
+      case 0:
+        break;
+      case 1:
+        listaFiltrada.sort((a, b) => a.label.compareTo(b.label));
+        break;
+      case 2:
+        listaFiltrada.sort((a, b) => b.label.compareTo(a.label));
+        break;
+      case 3:
+        if (selectedItem != null) {
+          final indx = listaFiltrada.indexOf(selectedItem!);
+          if (indx != -1) {
+            listaFiltrada.removeAt(indx);
+            listaFiltrada.insert(0, selectedItem!);
+          }
+        }
+        break;
+    }
+  }
+
+  void goToSelectedItem(ScrollController controller, ValueItem<T> item) {
+    final index = listaFiltrada.indexOf(item);
+    if (index > 0) {
+      final contentSize = controller.position.viewportDimension +
+          controller.position.maxScrollExtent;
+
+      final target = contentSize * index / listaFiltrada.length;
+      controller.position.animateTo(
+        target,
+        duration: const Duration(milliseconds: 200),
+        curve: Curves.easeOut,
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final controller = ScrollController();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (selectedItem != null) {
+        goToSelectedItem(controller, selectedItem!);
+      }
+    });
     return Card(
       surfaceTintColor:
           dialogBackgroundColor ?? backgroundColor ?? Colors.white,
@@ -86,13 +122,14 @@ class NovoListView<T> extends StatelessWidget {
         height: dialogHeight,
         width: width,
         child: ListView.separated(
+          controller: controller,
           padding: EdgeInsets.zero,
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
           separatorBuilder: (context, index) => SizedBox(
             height: separatorHeight ?? 1,
           ),
           itemBuilder: (context, index) {
-            sortSelecteds ? organizarLista() : null;
+            sortFunction();
             if (index == listaFiltrada.length && addMode) {
               if (controllerBar.text != '') {
                 final list = listaFiltrada
