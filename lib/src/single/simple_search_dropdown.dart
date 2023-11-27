@@ -7,12 +7,13 @@ import 'package:stringr/stringr.dart';
 class SearchDropDown<T> extends StatefulWidget {
   const SearchDropDown({
     super.key,
-    this.newValueItem,
     required this.listItems,
-    required this.onAddItem,
-    required this.updateSelectedItem,
     this.addMode = true,
+    this.onAddItem,
+    this.newValueItem,
     this.deleteMode = true,
+    this.onDeleteItem,
+    required this.updateSelectedItem,
     this.sortType = 0,
     this.confirmDelete = false,
     this.elevation = 2,
@@ -35,7 +36,6 @@ class SearchDropDown<T> extends StatefulWidget {
     this.hint,
     this.hintStyle,
     this.hoverColor,
-    this.onDeleteItem,
     this.padding,
     this.selectedDialogColor,
     this.selectedItemHoverColor,
@@ -50,18 +50,26 @@ class SearchDropDown<T> extends StatefulWidget {
     this.verifyInputItem,
     this.verifyDialogSettings,
     this.clearOnClose = false,
-  }) : assert((addMode && newValueItem != null) || !addMode,
-            'addMode can only be used with newValueItem != null');
+  }) : assert(
+            (addMode && (newValueItem != null && onAddItem != null)) ||
+                !addMode,
+            'addMode can only be used with newValueItem != null && onAddItem != null'),
+        assert((deleteMode && onDeleteItem != null) || !deleteMode,
+            'deleteMode can only be used with onDeleteItem != null');
 
-  final List<Widget>? actions;
+  final List<ValueItem<T>> listItems;
   final bool addMode;
+  final Function(ValueItem<T>)? onAddItem;
+  final ValueItem<T> Function(String input)? newValueItem;
+  final bool deleteMode;
+  final Function(ValueItem<T>)? onDeleteItem;
+  final List<Widget>? actions;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final OutlinedBorder? border;
   final String? createHint;
   final TextStyle? createHintStyle;
   final Color? clearIconColor;
-  final bool deleteMode;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
@@ -72,9 +80,6 @@ class SearchDropDown<T> extends StatefulWidget {
   final String? hint;
   final TextStyle? hintStyle;
   final Color? hoverColor;
-  final List<ValueItem<T>> listItems;
-  final Function(ValueItem<T>) onAddItem;
-  final Function(ValueItem<T>)? onDeleteItem;
   final EdgeInsets? padding;
   final bool confirmDelete;
   final Color? selectedDialogColor;
@@ -94,7 +99,6 @@ class SearchDropDown<T> extends StatefulWidget {
   final DialogSettings? deleteDialogSettings;
   final bool Function(ValueItem<T>)? verifyInputItem;
   final DialogSettings? verifyDialogSettings;
-  final ValueItem<T> Function(String input)? newValueItem;
   final bool clearOnClose;
 
   @override
@@ -162,7 +166,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         }
       }
       hideOverlay(item);
-      widget.onAddItem(item);
+      widget.onAddItem!(item);
       _filtrarLista(null);
     }
   }
