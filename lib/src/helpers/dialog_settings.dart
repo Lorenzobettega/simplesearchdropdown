@@ -1,18 +1,7 @@
 import 'package:flutter/material.dart';
 
+///Class to hold all the customizations of the confirmation dialog.
 class DialogSettings {
-  final Widget? title;
-  final Widget? content;
-  final DialogButtonSettings? customCancelButtonSettings;
-  final DialogButtonSettings? customDeleteButtonSettings;
-  final DialogButtonSettings? customVerifyButtonSettings;
-  final EdgeInsetsGeometry? contentPadding, titlePadding, actionsPadding;
-  final EdgeInsets insetPadding;
-  final MainAxisAlignment? actionsAlignment;
-  final Color? backgroundColor;
-  final double? elevation;
-  final ShapeBorder? shape;
-
   DialogSettings({
     this.title,
     this.content,
@@ -31,18 +20,22 @@ class DialogSettings {
       vertical: 24.0,
     ),
   });
+
+  final Widget? title;
+  final Widget? content;
+  final DialogButtonSettings? customCancelButtonSettings;
+  final DialogButtonSettings? customDeleteButtonSettings;
+  final DialogButtonSettings? customVerifyButtonSettings;
+  final EdgeInsetsGeometry? contentPadding, titlePadding, actionsPadding;
+  final EdgeInsets insetPadding;
+  final MainAxisAlignment? actionsAlignment;
+  final Color? backgroundColor;
+  final double? elevation;
+  final ShapeBorder? shape;
 }
 
+///Class to hold all the customizations of the buttons in the dialog.
 class DialogButtonSettings {
-  final String text;
-  final Color? backgroundColor;
-  final Color textColor;
-  final bool activeBorder, mediumFont;
-  final EdgeInsets padding;
-  final double? customWidth, customHeight, iconsize;
-  final IconData? icon;
-  final double fontSize, radius;
-
   DialogButtonSettings(
     this.text, {
     this.padding = const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
@@ -57,14 +50,25 @@ class DialogButtonSettings {
     this.backgroundColor,
     this.icon,
   });
+
+  final String text;
+  final Color? backgroundColor;
+  final Color textColor;
+  final bool activeBorder, mediumFont;
+  final EdgeInsets padding;
+  final double? customWidth, customHeight, iconsize;
+  final IconData? icon;
+  final double fontSize, radius;
 }
 
+///Default settings for Delete button.
 final defaultDeleteButtonSettings = DialogButtonSettings(
   'Apagar',
   backgroundColor: const Color.fromARGB(255, 198, 0, 0),
   customWidth: 160,
 );
 
+///Default settings for Cancel button.
 final defaultCancelButtonSettings = DialogButtonSettings(
   'Cancelar',
   backgroundColor: Colors.white,
@@ -73,11 +77,13 @@ final defaultCancelButtonSettings = DialogButtonSettings(
   activeBorder: true,
 );
 
+///Default settings for OK button.
 final defaultVerifyButtonSettings = DialogButtonSettings(
   'OK',
   customWidth: 160,
 );
 
+///Default title for the dialog.
 class DefaultDialogTitle extends StatelessWidget {
   const DefaultDialogTitle({super.key, required this.confirmDialog});
   final bool confirmDialog;
@@ -94,6 +100,7 @@ class DefaultDialogTitle extends StatelessWidget {
   }
 }
 
+///Default content for the dialog.
 class DefaultDialogContent extends StatelessWidget {
   const DefaultDialogContent({super.key, required this.confirmDialog});
   final bool confirmDialog;
