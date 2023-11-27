@@ -39,7 +39,7 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.hintSearchBar,
     this.hintStyle,
     this.miniBoxIconColor,
-    this.padding,
+    this.itemsPadding,
     this.selectedDialogColor,
     this.selectedDialogBoxColor,
     this.selectedInsideBoxTextStyle,
@@ -90,7 +90,7 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   final TextStyle? hintStyle;
   final double insideIconSize;
   final Color? miniBoxIconColor;
-  final EdgeInsets? padding;
+  final EdgeInsets? itemsPadding;
   final bool confirmDelete;
   final Color? selectedDialogBoxColor;
   final Color? selectedDialogColor;
@@ -100,6 +100,7 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   final Color? seletedItemsBoxColor;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
+  //TODO change sort rule
   final bool sortSelecteds;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
@@ -249,7 +250,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     onAddItem: (val) => handleAddItem(val, context),
                     onDeleteItem: (val) => handleDeleteItem(val, context),
                     onItemSelected: (val) => onItemSelected(val),
-                    padding: widget.padding,
+                    itemsPadding: widget.itemsPadding,
                     selectedDialogBoxColor: widget.selectedDialogBoxColor,
                     selectedInsideBoxTextStyle:
                         widget.selectedInsideBoxTextStyle,

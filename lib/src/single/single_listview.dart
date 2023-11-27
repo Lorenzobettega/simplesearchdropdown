@@ -23,7 +23,7 @@ class SingleListView<T> extends StatelessWidget {
     required this.listaFiltrada,
     required this.onClear,
     required this.onPressed,
-    required this.padding,
+    required this.itemsPadding,
     required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
     required this.selectedItemHoverColor,
@@ -57,7 +57,7 @@ class SingleListView<T> extends StatelessWidget {
   final List<ValueItem<T>> listaFiltrada;
   final Function(ValueItem<T> value) onClear;
   final Function(ValueItem<T> value) onPressed;
-  final EdgeInsets? padding;
+  final EdgeInsets? itemsPadding;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
@@ -168,7 +168,7 @@ class SingleListView<T> extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding: padding ?? const EdgeInsets.symmetric(horizontal: 4),
+                padding: itemsPadding ?? const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
                     Expanded(

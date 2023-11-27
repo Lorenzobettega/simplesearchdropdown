@@ -28,7 +28,7 @@ class MultipleListView<T> extends StatefulWidget {
     required this.onAddItem,
     required this.onDeleteItem,
     required this.onItemSelected,
-    required this.padding,
+    required this.itemsPadding,
     required this.selectedDialogBoxColor,
     required this.selectedInsideBoxTextStyle,
     required this.selectedItemHoverColor,
@@ -60,7 +60,7 @@ class MultipleListView<T> extends StatefulWidget {
   final Function(ValueItem<T> value) onAddItem;
   final Function(ValueItem<T> value) onDeleteItem;
   final Function(ValueItem<T> value) onItemSelected;
-  final EdgeInsets? padding;
+  final EdgeInsets? itemsPadding;
   final TextStyle? hintStyle;
   final String? hintSearchBar;
   final List<ValueItem<T>> listItens;
@@ -235,7 +235,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                       children: [
                         Expanded(
                           child: Padding(
-                            padding: widget.padding ??
+                            padding: widget.itemsPadding ??
                                 const EdgeInsets.symmetric(horizontal: 4),
                             child: TextButton(
                               style: ButtonStyle(

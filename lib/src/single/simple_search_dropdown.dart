@@ -36,7 +36,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.hint,
     this.hintStyle,
     this.hoverColor,
-    this.padding,
+    this.itemsPadding,
     this.selectedDialogColor,
     this.selectedItemHoverColor,
     this.selectedInsideBoxTextStyle,
@@ -77,8 +77,6 @@ class SearchDropDown<T> extends StatefulWidget {
   final Function(ValueItem<T>)? onDeleteItem;
   ///Force the user to confirm delete
   final bool confirmDelete;
-  ///List of widgets that will go on the end of the search bar.
-  final List<Widget>? actions;
   ///The duration of the dropdown opening animation.
   final Duration? animationDuration;
   ///The background color of the searchbar and overlay.
@@ -87,24 +85,33 @@ class SearchDropDown<T> extends StatefulWidget {
   final OutlinedBorder? border;
   ///The color of "x" clear icon on the end of the searchbar.
   final Color? clearIconColor;
+  ///List of widgets that will go on the end of the search bar.
+  final List<Widget>? actions;
+  ///The text to be presented on the hint of the searchbar.
+  final String? hint;
+  ///The style of the hint of the searchbar.
+  final TextStyle? hintStyle;
+  ///The elevation of the searchbar.
+  final double elevation;
+  ///The hover color of the searchbar.
+  final Color? hoverColor;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
   final Color? dialogBackgroundColor;
   final double? dialogHeight;
   final IconData? dropdownDisableActionIcon;
   final IconData? dropdownEnableActionIcon;
-  final double elevation;
-  final String? hint;
-  final TextStyle? hintStyle;
-  final Color? hoverColor;
-  final EdgeInsets? padding;
+  ///The padding for the items of the list.
+  ///
+  ///default: `EdgeInsets.symmetric(horizontal: 4)`
+  final EdgeInsets? itemsPadding;
+  ///The hover color of the selected item of the list.
+  final Color? selectedItemHoverColor;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
-  final Color? selectedItemHoverColor;
   final double? separatorHeight;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
-  final Function(ValueItem<T>?) updateSelectedItem;
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
@@ -113,8 +120,21 @@ class SearchDropDown<T> extends StatefulWidget {
   final DialogSettings? deleteDialogSettings;
   final bool Function(ValueItem<T>)? verifyInputItem;
   final DialogSettings? verifyDialogSettings;
+  ///If true, the value on the Searchbar will be cleared if nothing was selected.
   final bool clearOnClose;
+  ///The initial selected value of the dropdown.
   final ValueItem<T>? selectedItem;
+  ///The function to be executed after the user selects a value.
+  final Function(ValueItem<T>?) updateSelectedItem;
+  ///The way the items should be sorted.
+  ///
+  ///If `0`(default), no sort will be applied
+  ///
+  ///If `1`, the items will be sorted on alphabetical order.
+  ///
+  ///If `2`, the items will be sorted on reverse alphabetical order.
+  ///
+  ///If `3`, the selected item will be put on first position.
   final int sortType;
 
   @override
@@ -266,7 +286,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       context,
                     ),
                     onPressed: (val) => hideOverlay(val),
-                    padding: widget.padding,
+                    itemsPadding: widget.itemsPadding,
                     selectedDialogColor: widget.selectedDialogColor,
                     selectedInsideBoxTextStyle:
                         widget.selectedInsideBoxTextStyle,
