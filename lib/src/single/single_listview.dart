@@ -5,6 +5,8 @@ import 'package:stringr/stringr.dart';
 ///This creates the list that contains the items to be selected.
 class SingleListView<T> extends StatelessWidget {
   final bool addMode;
+  final Function(ValueItem<T> value) onAddItem;
+  final ValueItem<T> Function(String input)? newValueItem;
   final Duration? animationDuration;
   final Color? backgroundColor;
   final TextEditingController controllerBar;
@@ -18,7 +20,6 @@ class SingleListView<T> extends StatelessWidget {
   final double elevation;
   final Color? hoverColor;
   final List<ValueItem<T>> listaFiltrada;
-  final Function(ValueItem<T> value) onAddItem;
   final Function(ValueItem<T> value) onClear;
   final Function(ValueItem<T> value) onPressed;
   final EdgeInsets? padding;
@@ -31,11 +32,12 @@ class SingleListView<T> extends StatelessWidget {
   final TextStyle? unselectedInsideBoxTextStyle;
   final Widget? widgetBuilder;
   final double width;
-  final ValueItem<T> Function(String input)? newValueItem;
   final ValueItem<T>? selectedItem;
 
   const SingleListView({
     required this.addMode,
+    required this.onAddItem,
+    required this.newValueItem,
     required this.animationDuration,
     required this.backgroundColor,
     required this.controllerBar,
@@ -49,7 +51,6 @@ class SingleListView<T> extends StatelessWidget {
     required this.elevation,
     required this.hoverColor,
     required this.listaFiltrada,
-    required this.onAddItem,
     required this.onClear,
     required this.onPressed,
     required this.padding,
@@ -62,7 +63,6 @@ class SingleListView<T> extends StatelessWidget {
     required this.unselectedInsideBoxTextStyle,
     required this.widgetBuilder,
     required this.width,
-    required this.newValueItem,
     required this.selectedItem,
     Key? key,
   }) : super(key: key);
