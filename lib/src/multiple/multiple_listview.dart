@@ -81,22 +81,28 @@ class MultipleListView<T> extends StatefulWidget {
 }
 
 class _MultipleListViewState<T> extends State<MultipleListView<T>> {
-  List<ValueItem<T>> listafiltrada = [];
+  List<ValueItem<T>> listaFiltrada = [];
   final TextEditingController controllerBar = TextEditingController();
+  final controller = ScrollController();
 
   @override
   void initState() {
     super.initState();
     filtrarLista(null);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (widget.selectedItens.isNotEmpty) {
+        goToSelectedItem(widget.selectedItens.first);
+      }
+    });
   }
 
   void organizarLista() {
-    List<ValueItem<T>> selecionado = listafiltrada
+    List<ValueItem<T>> selecionado = listaFiltrada
         .where((item) => widget.selectedItens.contains(item))
         .toList();
     if (selecionado.isNotEmpty) {
-      listafiltrada.removeWhere((item) => widget.selectedItens.contains(item));
-      listafiltrada.insertAll(0, selecionado);
+      listaFiltrada.removeWhere((item) => widget.selectedItens.contains(item));
+      listaFiltrada.insertAll(0, selecionado);
     }
   }
 
@@ -104,14 +110,14 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     String? text,
   ) {
     if (text != null && text != '') {
-      listafiltrada = widget.listItens
+      listaFiltrada = widget.listItens
           .where((element) => element.label
               .toLowerCase()
               .latinize()
               .contains(text.toLowerCase()))
           .toList();
     } else {
-      listafiltrada = widget.listItens;
+      listaFiltrada = widget.listItens;
     }
     widget.sortSelecteds
         ? setState(() {
@@ -127,6 +133,22 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
             organizarLista();
           })
         : null;
+  }
+
+  ///Function to scroll the list to the selected item
+  void goToSelectedItem(ValueItem<T> item) {
+    final index = listaFiltrada.indexOf(item);
+    if (index > 0) {
+      final contentSize = controller.position.viewportDimension +
+          controller.position.maxScrollExtent;
+
+      final target = contentSize * index / listaFiltrada.length;
+      controller.position.animateTo(
+        target,
+        duration: const Duration(milliseconds: 150),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
@@ -183,16 +205,17 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
             ),
             Expanded(
               child: ListView.separated(
+                controller: controller,
                 padding: EdgeInsets.zero,
                 scrollDirection: Axis.vertical,
-                itemCount: listafiltrada.length + (widget.addMode ? 1 : 0),
+                itemCount: listaFiltrada.length + (widget.addMode ? 1 : 0),
                 separatorBuilder: (context, index) => SizedBox(
                   height: widget.separatorHeight ?? 1,
                 ),
                 itemBuilder: (context, index) {
-                  if (index == listafiltrada.length && widget.addMode) {
+                  if (index == listaFiltrada.length && widget.addMode) {
                     if (controllerBar.text != '') {
-                      final list = listafiltrada
+                      final list = listaFiltrada
                           .where(
                             (element) => element.label
                                 .toLowerCase()
@@ -217,7 +240,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                   final item =
                                       widget.newValueItem!(controllerBar.text);
                                   widget.onAddItem(item);
-                                  listafiltrada.add(item);
+                                  listaFiltrada.add(item);
                                 });
                               },
                               child: Text(
@@ -243,7 +266,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                     MaterialStateProperty.resolveWith<Color>(
                                   (Set<MaterialState> states) {
                                     if (widget.selectedItens
-                                        .contains(listafiltrada[index])) {
+                                        .contains(listaFiltrada[index])) {
                                       return widget.selectedDialogBoxColor ??
                                           Colors.black38;
                                     }
@@ -260,7 +283,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                     MaterialStateProperty.resolveWith<Color>(
                                   (Set<MaterialState> states) {
                                     if (widget.selectedItens
-                                        .contains(listafiltrada[index])) {
+                                        .contains(listaFiltrada[index])) {
                                       return widget.selectedItemHoverColor ??
                                           Colors.grey.shade300;
                                     }
@@ -269,14 +292,14 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                   },
                                 ),
                               ),
-                              onPressed: () => addItem(listafiltrada[index]),
+                              onPressed: () => addItem(listaFiltrada[index]),
                               child: widget.dialogListviewWidgetBuilder ??
                                   Align(
                                     alignment: Alignment.centerLeft,
                                     child: Text(
-                                      listafiltrada[index].label,
+                                      listaFiltrada[index].label,
                                       style: (controllerBar.text ==
-                                              listafiltrada[index].label
+                                              listaFiltrada[index].label
                                           ? widget.selectedInsideBoxTextStyle ??
                                               const TextStyle(
                                                   color: Colors.black)
@@ -292,7 +315,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                             ? widget.dialogActionWidget ??
                                 IconButton(
                                   onPressed: () {
-                                    widget.onDeleteItem(listafiltrada[index]);
+                                    widget.onDeleteItem(listaFiltrada[index]);
                                   },
                                   icon: widget.dialogActionIcon ??
                                       Icon(

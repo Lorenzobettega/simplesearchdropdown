@@ -91,6 +91,7 @@ class SingleListView<T> extends StatelessWidget {
     }
   }
 
+  ///Function to scroll the list to the selected item
   void goToSelectedItem(ScrollController controller, ValueItem<T> item) {
     final index = listaFiltrada.indexOf(item);
     if (index > 0) {
@@ -100,7 +101,7 @@ class SingleListView<T> extends StatelessWidget {
       final target = contentSize * index / listaFiltrada.length;
       controller.position.animateTo(
         target,
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
       );
     }

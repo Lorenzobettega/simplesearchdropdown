@@ -376,7 +376,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           controller: controllerBar,
           backgroundColor:
               MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
-          hintStyle: MaterialStatePropertyAll(widget.hintStyle),
+          hintStyle: MaterialStatePropertyAll(widget.hintStyle ?? const TextStyle(fontSize: 14)),
           overlayColor: MaterialStatePropertyAll(
               widget.hoverColor ?? Colors.grey.shade100),
           surfaceTintColor:
