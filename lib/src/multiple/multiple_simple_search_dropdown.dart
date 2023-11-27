@@ -12,7 +12,7 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.deleteMode = true,
     this.onDeleteItem,
     required this.updateSelectedItems,
-    this.sortSelecteds = true,
+    this.sortType = 0,
     this.confirmDelete = false,
     this.elevation = 2,
     this.dropdownwidth = 300,
@@ -100,8 +100,7 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   final Color? seletedItemsBoxColor;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
-  //TODO change sort rule
-  final bool sortSelecteds;
+  final int sortType;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
   final Function(List<ValueItem<T>>) updateSelectedItems;
@@ -127,7 +126,6 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   @override
   void initState() {
     super.initState();
-    widget.listItems.sort((a, b) => a.label.compareTo(b.label));
     overlayScreen = OverlayScreen.of(context);
   }
 
@@ -257,7 +255,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     selectedItemHoverColor: widget.selectedItemHoverColor,
                     selectedItens: widget.selectedItems,
                     separatorHeight: widget.separatorHeight,
-                    sortSelecteds: widget.sortSelecteds,
+                    sortType: widget.sortType,
                     unselectedInsideBoxTextStyle:
                         widget.unselectedInsideBoxTextStyle,
                     unselectedItemHoverColor: widget.unselectedItemHoverColor,

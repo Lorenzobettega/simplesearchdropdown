@@ -34,7 +34,7 @@ class MultipleListView<T> extends StatefulWidget {
     required this.selectedItemHoverColor,
     required this.selectedItens,
     required this.separatorHeight,
-    required this.sortSelecteds,
+    required this.sortType,
     required this.unselectedInsideBoxTextStyle,
     required this.width,
     required this.minHeight,
@@ -69,7 +69,7 @@ class MultipleListView<T> extends StatefulWidget {
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
-  final bool sortSelecteds;
+  final int sortType;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
   final double width;
@@ -96,13 +96,26 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     });
   }
 
-  void organizarLista() {
-    List<ValueItem<T>> selecionado = listaFiltrada
-        .where((item) => widget.selectedItens.contains(item))
-        .toList();
-    if (selecionado.isNotEmpty) {
-      listaFiltrada.removeWhere((item) => widget.selectedItens.contains(item));
-      listaFiltrada.insertAll(0, selecionado);
+  void sortFunction() {
+    switch (widget.sortType) {
+      case 0:
+        break;
+      case 1:
+        listaFiltrada.sort((a, b) => a.label.compareTo(b.label));
+        break;
+      case 2:
+        listaFiltrada.sort((a, b) => b.label.compareTo(a.label));
+        break;
+      case 3:
+        if (widget.selectedItens.isNotEmpty) {
+          final first = widget.selectedItens.first;
+          final indx = listaFiltrada.indexOf(first);
+          if (indx != -1) {
+            listaFiltrada.removeAt(indx);
+            listaFiltrada.insert(0, first);
+          }
+        }
+        break;
     }
   }
 
@@ -119,18 +132,18 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     } else {
       listaFiltrada = widget.listItens;
     }
-    widget.sortSelecteds
+    widget.sortType > 0
         ? setState(() {
-            organizarLista();
+            sortFunction();
           })
-        : null;
+        : setState(() {});
   }
 
   void addItem(ValueItem<T> value) {
     widget.onItemSelected.call(value);
-    widget.sortSelecteds
+    widget.sortType > 0
         ? setState(() {
-            organizarLista();
+            sortFunction();
           })
         : null;
   }
@@ -241,7 +254,9 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                       widget.newValueItem!(controllerBar.text);
                                   widget.onAddItem(item);
                                   listaFiltrada.add(item);
+                                  controllerBar.clear();
                                 });
+                                filtrarLista(null);
                               },
                               child: Text(
                                 widget.createHint ?? 'Criar',

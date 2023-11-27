@@ -154,7 +154,6 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   void initState() {
     super.initState();
     if (widget.listItems.isNotEmpty) {
-      widget.listItems.sort((a, b) => a.label.compareTo(b.label));
       _filtrarLista(null, start: true);
       if (widget.selectedItem != null) {
         controllerBar.text = widget.selectedItem!.label;
