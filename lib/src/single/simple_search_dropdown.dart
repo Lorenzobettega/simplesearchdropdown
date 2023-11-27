@@ -24,8 +24,8 @@ class SearchDropDown<T> extends StatefulWidget {
     this.animationDuration,
     this.backgroundColor,
     this.border,
-    this.createHint,
-    this.createHintStyle,
+    this.addItemHint,
+    this.addItemHintStyle,
     this.clearIconColor,
     this.dialogActionIcon,
     this.dialogActionWidget,
@@ -56,19 +56,36 @@ class SearchDropDown<T> extends StatefulWidget {
             'addMode can only be used with newValueItem != null && onAddItem != null'),
         assert((deleteMode && onDeleteItem != null) || !deleteMode,
             'deleteMode can only be used with onDeleteItem != null');
-
+  
+  ///List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
+  ///Allow the user to add items to the list.
   final bool addMode;
+  ///Function to be executed after the item was added.
   final Function(ValueItem<T>)? onAddItem;
+  ///Function that defines how the user input transforms into a new ValueItem on the list.
+  ///
+  ///Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
   final ValueItem<T> Function(String input)? newValueItem;
+  ///The text of the add button when user is allowed to add items in the list.
+  final String? addItemHint;
+  ///The style of the add button when user is allowed to add items in the list.
+  final TextStyle? addItemHintStyle;
+  ///Allow the user to delete items of the list.
   final bool deleteMode;
+  ///Function to be executed after the item was deleted.
   final Function(ValueItem<T>)? onDeleteItem;
+  ///Force the user to confirm delete
+  final bool confirmDelete;
+  ///List of widgets that will go on the end of the search bar.
   final List<Widget>? actions;
+  ///The duration of the dropdown opening animation.
   final Duration? animationDuration;
+  ///The background color of the searchbar and overlay.
   final Color? backgroundColor;
+  ///The border of the searchbar.
   final OutlinedBorder? border;
-  final String? createHint;
-  final TextStyle? createHintStyle;
+  ///The color of "x" clear icon on the end of the searchbar.
   final Color? clearIconColor;
   final Icon? dialogActionIcon;
   final Widget? dialogActionWidget;
@@ -81,25 +98,24 @@ class SearchDropDown<T> extends StatefulWidget {
   final TextStyle? hintStyle;
   final Color? hoverColor;
   final EdgeInsets? padding;
-  final bool confirmDelete;
   final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
-  final int sortType;
   final TextStyle? unselectedInsideBoxTextStyle;
   final Color? unselectedItemHoverColor;
   final Function(ValueItem<T>?) updateSelectedItem;
   final Widget? widgetBuilder;
   final double dropdownHeight;
   final double dropdownwidth;
-  final ValueItem<T>? selectedItem;
   final Color? outsideIconColor;
   final double outsideIconSize;
   final DialogSettings? deleteDialogSettings;
   final bool Function(ValueItem<T>)? verifyInputItem;
   final DialogSettings? verifyDialogSettings;
   final bool clearOnClose;
+  final ValueItem<T>? selectedItem;
+  final int sortType;
 
   @override
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
@@ -232,8 +248,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     animationDuration: widget.animationDuration,
                     backgroundColor: widget.backgroundColor,
                     controllerBar: controllerBar,
-                    createHint: widget.createHint,
-                    createHintStyle: widget.createHintStyle,
+                    addItemHint: widget.addItemHint,
+                    addItemHintStyle: widget.addItemHintStyle,
                     deleteMode: widget.deleteMode,
                     dialogActionIcon: widget.dialogActionIcon,
                     dialogActionWidget: widget.dialogActionWidget,
