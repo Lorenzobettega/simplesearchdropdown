@@ -17,8 +17,6 @@ class SearchDropDown<T> extends StatefulWidget {
     this.sortType = 0,
     this.confirmDelete = false,
     this.elevation = 2,
-    this.dropdownwidth = 300,
-    this.dropdownHeight = 50,
     this.animationDuration,
     this.backgroundColor,
     this.addItemHint,
@@ -40,7 +38,6 @@ class SearchDropDown<T> extends StatefulWidget {
     this.deleteDialogSettings,
     this.verifyInputItem,
     this.verifyDialogSettings,
-    this.clearOnClose = false,
   }) : assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
@@ -104,16 +101,10 @@ class SearchDropDown<T> extends StatefulWidget {
   final Color? unselectedItemHoverColor;
   ///Custom droplist item widget.
   final Widget? widgetBuilder;
-  ///Main/outside Container height(default:50)
-  final double dropdownHeight;
-  ///Main/outside Container width(default:300)
-  final double dropdownwidth;
   ///Function to check if the item added is valid or not.
   final bool Function(ValueItem<T>)? verifyInputItem;
   ///Visual verify dialog settings
   final DialogSettings? verifyDialogSettings;
-  ///If true, the value on the Searchbar will be cleared if nothing was selected.
-  final bool clearOnClose;
   ///The initial selected value of the dropdown.
   final ValueItem<T>? selectedItem;
   ///The function to be executed after the user selects a value.
@@ -287,7 +278,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     unselectedInsideBoxTextStyle:
                         widget.unselectedItemTextStyle,
                     widgetBuilder: widget.widgetBuilder,
-                    width: widget.dropdownwidth,
+                    width: widget.searchBarSettings?.dropdownwidth ?? 300,
                     newValueItem: widget.newValueItem,
                     selectedItem: selectedValue,
                   ),
@@ -315,7 +306,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           controllerBar.text = label;
         }
       } else {
-        if (widget.clearOnClose || !widget.addMode) {
+        if ((widget.searchBarSettings?.clearOnClose ?? false)  || !widget.addMode) {
           controllerBar.clear();
         }
       }
@@ -328,8 +319,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     return CompositedTransformTarget(
       link: _layerLink,
       child: SizedBox(
-        width: widget.dropdownwidth,
-        height: widget.dropdownHeight,
+        width: widget.searchBarSettings?.dropdownwidth ?? 300,
+        height: widget.searchBarSettings?.dropdownHeight ?? 50,
         child: SearchBar(
           trailing: widget.searchBarSettings?.actions ??
               [
