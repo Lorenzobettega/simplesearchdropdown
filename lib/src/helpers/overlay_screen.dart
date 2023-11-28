@@ -4,8 +4,10 @@ import 'package:flutter/material.dart';
 class OverlayScreen {
   /// The context of the dropdown.
   BuildContext _context;
+
   /// The overlay state of the dropdown.
   late OverlayState overlayState;
+
   /// Declared [overlayEntrys] as List<OverlayEntry> because we might have
   /// more than one Overlay on the screen, so we keep it on a list and remove all at once.
   List<OverlayEntry> overlayEntrys = [];

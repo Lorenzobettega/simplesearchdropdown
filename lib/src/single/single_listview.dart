@@ -35,10 +35,13 @@ class SingleListView<T> extends StatelessWidget {
     required this.selectedItem,
     super.key,
   });
+
   ///Allow the user to add items to the list.
   final bool addMode;
+
   ///Function to be executed after the item was added.
   final Function(ValueItem<T> value) onAddItem;
+
   ///Function that defines how the user input transforms into a new ValueItem on the list.
   final ValueItem<T> Function(String input)? newValueItem;
   final Duration? animationDuration;
@@ -167,7 +170,8 @@ class SingleListView<T> extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding: itemsPadding ?? const EdgeInsets.symmetric(horizontal: 4),
+                padding:
+                    itemsPadding ?? const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
                     Expanded(
