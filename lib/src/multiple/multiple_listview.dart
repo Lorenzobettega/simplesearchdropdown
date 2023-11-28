@@ -29,7 +29,7 @@ class MultipleListView<T> extends StatefulWidget {
     required this.onDeleteItem,
     required this.onItemSelected,
     required this.itemsPadding,
-    required this.selectedDialogBoxColor,
+    required this.selectedDialogColor,
     required this.selectedInsideBoxTextStyle,
     required this.selectedItemHoverColor,
     required this.selectedItens,
@@ -65,7 +65,7 @@ class MultipleListView<T> extends StatefulWidget {
   final String? hintSearchBar;
   final List<ValueItem<T>> listItens;
   final List<ValueItem<T>> selectedItens;
-  final Color? selectedDialogBoxColor;
+  final Color? selectedDialogColor;
   final TextStyle? selectedInsideBoxTextStyle;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
@@ -282,7 +282,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                   (Set<MaterialState> states) {
                                     if (widget.selectedItens
                                         .contains(listaFiltrada[index])) {
-                                      return widget.selectedDialogBoxColor ??
+                                      return widget.selectedDialogColor ??
                                           Colors.black38;
                                     }
                                     return Colors.transparent;
@@ -313,8 +313,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                     alignment: Alignment.centerLeft,
                                     child: Text(
                                       listaFiltrada[index].label,
-                                      style: (controllerBar.text ==
-                                              listaFiltrada[index].label
+                                      style: (widget.selectedItens
+                                        .contains(listaFiltrada[index])
                                           ? widget.selectedInsideBoxTextStyle ??
                                               const TextStyle(
                                                   color: Colors.black)

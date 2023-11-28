@@ -64,14 +64,14 @@ class SearchDropDown<T> extends StatefulWidget {
   ///Force the user to confirm delete
   final bool confirmDelete;
 
+  ///Visual delete dialog settings
+  final DialogSettings? deleteDialogSettings;
+
   ///The SearchBarSettings.
   final SimpleSearchbarSettings? searchBarSettings;
 
   ///The overlay list of items settings.
   final SimpleOverlaySettings? overlayListSettings;
-
-  ///Visual delete dialog settings
-  final DialogSettings? deleteDialogSettings;
 
   ///The background color of the searchbar and overlay.
   final Color? backgroundColor;

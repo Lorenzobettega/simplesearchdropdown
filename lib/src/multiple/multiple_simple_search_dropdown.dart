@@ -15,12 +15,12 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.sortType = 0,
     this.confirmDelete = false,
     this.elevation = 2,
-    this.dropdownwidth = 300,
+    this.dropdownWidth = 300,
     this.dropdownHeight = 50,
-    this.outsideIconSize = 20,
-    this.insideIconSize = 20,
+    this.arrowIconSize = 20,
+    this.boxSelectedIconSize = 20,
     this.dialogSearchBarElevation = 2,
-    this.action,
+    this.actionWidget,
     this.animationDuration,
     this.backgroundColor,
     this.border,
@@ -33,25 +33,24 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.dialogListviewWidgetBuilder,
     this.dialogSearchBarBorder,
     this.dialogSearchBarColor,
-    this.dropdownDisableActionIcon,
-    this.dropdownEnableActionIcon,
+    this.dropdownClosedArrowIcon,
+    this.dropdownOpenedArrowIcon,
     this.hint,
     this.hintSearchBar,
     this.hintStyle,
-    this.miniBoxIconColor,
+    this.boxSelectedIconColor,
     this.itemsPadding,
-    this.selectedDialogColor,
-    this.selectedDialogBoxColor,
-    this.selectedInsideBoxTextStyle,
+    this.selectedItemsColor,
+    this.boxSelectedTextStyle,
     required this.selectedItems,
-    this.selectedItemsBoxTextStyle,
-    this.seletedItemsBoxColor,
+    this.selectedItemsTextStyle,
+    this.boxSelectedColor,
     this.selectedItemHoverColor,
     this.separatorHeight,
-    this.unselectedInsideBoxTextStyle,
+    this.unselectedItemsTextStyle,
     this.unselectedItemHoverColor,
-    this.widgetBuilder,
-    this.outsideIconColor,
+    this.dropdownWidgetBuilder,
+    this.arrowIconColor,
     this.deleteDialogSettings,
     this.verifyInputItem,
     this.verifyDialogSettings,
@@ -62,56 +61,115 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
         assert((deleteMode && onDeleteItem != null) || !deleteMode,
             'deleteMode can only be used with onDeleteItem != null');
 
+  ///List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
-  final bool addMode;
-  final Function(ValueItem<T>)? onAddItem;
-  final ValueItem<T> Function(String input)? newValueItem;
-  final bool deleteMode;
-  final Function(ValueItem<T>)? onDeleteItem;
-  final Widget? action;
-  final Duration? animationDuration;
-  final Color? backgroundColor;
-  final String? createHint;
-  final TextStyle? createHintStyle;
-  final OutlinedBorder? border;
-  final Icon? dialogActionIcon;
-  final Widget? dialogActionWidget;
-  final Color? dialogBackgroundColor;
-  final double? dialogHeight;
-  final Widget? dialogListviewWidgetBuilder;
-  final OutlinedBorder? dialogSearchBarBorder;
-  final Color? dialogSearchBarColor;
-  final double dialogSearchBarElevation;
-  final IconData? dropdownDisableActionIcon;
-  final IconData? dropdownEnableActionIcon;
-  final double elevation;
-  final String? hint;
-  final String? hintSearchBar;
-  final TextStyle? hintStyle;
-  final double insideIconSize;
-  final Color? miniBoxIconColor;
-  final EdgeInsets? itemsPadding;
-  final bool confirmDelete;
-  final Color? selectedDialogBoxColor;
-  final Color? selectedDialogColor;
-  final TextStyle? selectedInsideBoxTextStyle;
+  ///List of the items already selected on the dropdown.
   final List<ValueItem<T>> selectedItems;
-  final TextStyle? selectedItemsBoxTextStyle;
-  final Color? seletedItemsBoxColor;
-  final Color? selectedItemHoverColor;
-  final double? separatorHeight;
-  final int sortType;
-  final TextStyle? unselectedInsideBoxTextStyle;
-  final Color? unselectedItemHoverColor;
+  ///Function to update the list of selected items on change
   final Function(List<ValueItem<T>>) updateSelectedItems;
-  final Widget? widgetBuilder;
-  final double dropdownHeight;
-  final double dropdownwidth;
-  final double outsideIconSize;
-  final Color? outsideIconColor;
+  ///Allow the user to add items to the list.
+  final bool addMode;
+  ///Function to be executed after the item was added.
+  final Function(ValueItem<T>)? onAddItem;
+  ///Function that defines how the user input transforms into a new ValueItem on the list.
+  ///
+  ///Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
+  final ValueItem<T> Function(String input)? newValueItem;
+  ///Allow the user to delete items of the list.
+  final bool deleteMode;
+  ///Function to be executed after the item was deleted.
+  final Function(ValueItem<T>)? onDeleteItem;
+  ///Force the user to confirm delete
+  final bool confirmDelete;
+  ///Visual delete dialog settings
   final DialogSettings? deleteDialogSettings;
+  ///The action widget on dropdown
+  final Widget? actionWidget;
+  ///The duration of the dropdown opening animation.
+  final Duration? animationDuration;
+  ///The background color of the searchbar and overlay.
+  final Color? backgroundColor;
+  ///Border of dropdown
+  final OutlinedBorder? border;
+  ///Outside/horizontal list of selecteds items Widget builder
+  final Widget? dropdownWidgetBuilder;
+  ///Outside/horizontal list of selecteds clear icon size(default:20)
+  final double boxSelectedIconSize;
+  ///Outside/horizontal list of selecteds clear icon Color(default:20)
+  final Color? boxSelectedIconColor;
+  ///Outside/horizontal list of selecteds box color
+  final Color? boxSelectedColor;
+  ///Outside/horizontal list of selecteds box Text Style
+  final TextStyle? boxSelectedTextStyle;
+  ///Dropdown height(default:50)
+  final double dropdownHeight;
+  ///Dropdown Width(default:300)
+  final double dropdownWidth;
+  //Dropdown elevation
+  final double elevation;
+  //Dropdown hint(default:'Selecione')
+  final String? hint;
+  ///Action Icon showed when dropdown is closed
+  final IconData? dropdownClosedArrowIcon;
+  ///Action Icon showed when dropdown is opened
+  final IconData? dropdownOpenedArrowIcon;
+  ///Action Icon size
+  final double arrowIconSize;
+  ///Action Icon color
+  final Color? arrowIconColor;
+  ///Dropdown Container color
+  final Color? dialogBackgroundColor;
+  ///Dropdown Container heigth
+  final double? dialogHeight;
+  ///The way the items should be sorted.
+  ///
+  ///If `0`(default), no sort will be applied
+  ///
+  ///If `1`, the items will be sorted on alphabetical order.
+  ///
+  ///If `2`, the items will be sorted on reverse alphabetical order.
+  ///
+  ///If `3`, the selected item will be put on first position.
+  final int sortType;
+  ///Custom droplist item widget.
+  final Widget? dialogListviewWidgetBuilder;
+  ///Custom droplist action icon.
+  final Icon? dialogActionIcon;
+  ///Custom droplist action Widget.
+  final Widget? dialogActionWidget;
+  ///Droplist separator height.
+  final double? separatorHeight;
+  ///Droplist item padding(default: EdgeInsets.symmetric(horizontal: 4))
+  final EdgeInsets? itemsPadding;
+  ///Searchbar border
+  final OutlinedBorder? dialogSearchBarBorder;
+  ///Searchbar color
+  final Color? dialogSearchBarColor;
+  ///Searchbar elevation
+  final double dialogSearchBarElevation;
+  ///Searchbar hint
+  final String? hintSearchBar;
+  ///Searchbar hint TextStyle
+  final TextStyle? hintStyle;
+  ///Create button text
+  final String? createHint;
+  ///Create button TextStyle
+  final TextStyle? createHintStyle;
+  ///Function to check if the item added is valid or not.
   final bool Function(ValueItem<T>)? verifyInputItem;
+  ///Visual verify dialog settings
   final DialogSettings? verifyDialogSettings;
+  ///Selected droplist items background color
+  final Color? selectedItemsColor;
+  ///Selected droplist items Text Style
+  final TextStyle? selectedItemsTextStyle;
+  ///Unselected droplist items Text Style
+  final TextStyle? unselectedItemsTextStyle;
+  ///Selected droplist items hover color
+  final Color? selectedItemHoverColor;
+  ///Unselected droplist items hover color
+  final Color? unselectedItemHoverColor;
+  
 
   @override
   State<MultipleSearchDropDown<T>> createState() =>
@@ -249,17 +307,17 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     onDeleteItem: (val) => handleDeleteItem(val, context),
                     onItemSelected: (val) => onItemSelected(val),
                     itemsPadding: widget.itemsPadding,
-                    selectedDialogBoxColor: widget.selectedDialogBoxColor,
+                    selectedDialogColor: widget.selectedItemsColor,
                     selectedInsideBoxTextStyle:
-                        widget.selectedInsideBoxTextStyle,
+                        widget.selectedItemsTextStyle,
                     selectedItemHoverColor: widget.selectedItemHoverColor,
                     selectedItens: widget.selectedItems,
                     separatorHeight: widget.separatorHeight,
                     sortType: widget.sortType,
                     unselectedInsideBoxTextStyle:
-                        widget.unselectedInsideBoxTextStyle,
+                        widget.unselectedItemsTextStyle,
                     unselectedItemHoverColor: widget.unselectedItemHoverColor,
-                    width: widget.dropdownwidth,
+                    width: widget.dropdownWidth,
                     minHeight: widget.dropdownHeight,
                     newValueItem: widget.newValueItem,
                   ),
@@ -285,7 +343,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
       link: _layerLink,
       child: SizedBox(
         height: widget.dropdownHeight,
-        width: widget.dropdownwidth,
+        width: widget.dropdownWidth,
         child: InkWell(
           onTap: () {
             if (overlayScreen.overlayEntrys.isEmpty) {
@@ -328,11 +386,11 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                       const SizedBox(width: 5),
                                   itemCount: widget.selectedItems.length,
                                   itemBuilder: (context, index) {
-                                    return Padding(
+                                    return widget.dropdownWidgetBuilder ?? Padding(
                                       padding: const EdgeInsets.symmetric(
                                           vertical: 5),
                                       child: Card(
-                                        color: widget.seletedItemsBoxColor ??
+                                        color: widget.boxSelectedColor ??
                                             Colors.grey.shade300,
                                         elevation: widget.elevation,
                                         child: Padding(
@@ -348,16 +406,16 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                                   widget.selectedItems[index]
                                                       .label,
                                                   style: widget
-                                                      .selectedInsideBoxTextStyle),
+                                                      .boxSelectedTextStyle),
                                               InkWell(
                                                 onTap: () => onItemSelected(
                                                     widget
                                                         .selectedItems[index]),
                                                 child: Icon(
                                                   Icons.close,
-                                                  size: widget.insideIconSize,
+                                                  size: widget.boxSelectedIconSize,
                                                   color:
-                                                      widget.miniBoxIconColor,
+                                                      widget.boxSelectedIconColor,
                                                 ),
                                               ),
                                             ],
@@ -384,7 +442,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           const SizedBox(width: 5),
-                          widget.action ??
+                          widget.actionWidget ??
                               InkWell(
                                 onTap: () {
                                   setState(() {
@@ -397,12 +455,12 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                   widget.selectedItems.isNotEmpty
                                       ? Icons.clear
                                       : aberto
-                                          ? widget.dropdownEnableActionIcon ??
+                                          ? widget.dropdownOpenedArrowIcon ??
                                               Icons.arrow_drop_up
-                                          : widget.dropdownDisableActionIcon ??
+                                          : widget.dropdownClosedArrowIcon ??
                                               Icons.arrow_drop_down,
-                                  size: widget.outsideIconSize,
-                                  color: widget.outsideIconColor,
+                                  size: widget.arrowIconSize,
+                                  color: widget.arrowIconColor,
                                 ),
                               ),
                         ],
