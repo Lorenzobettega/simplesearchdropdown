@@ -19,23 +19,15 @@ class SearchDropDown<T> extends StatefulWidget {
     this.elevation = 2,
     this.dropdownwidth = 300,
     this.dropdownHeight = 50,
-    this.outsideIconSize = 20,
-    this.actions,
     this.animationDuration,
     this.backgroundColor,
-    this.border,
     this.addItemHint,
     this.addItemHintStyle,
-    this.clearIconColor,
     this.dialogActionIcon,
     this.dialogActionWidget,
     this.dialogBackgroundColor,
     this.dialogHeight,
-    this.dropdownClosedArrowIcon,
-    this.dropdownOpenedArrowIcon,
-    this.hint,
-    this.hintStyle,
-    this.hoverColor,
+    this.searchBarSettings,
     this.itemsPadding,
     this.selectedItemBackgroundColor,
     this.selectedItemHoverColor,
@@ -45,7 +37,6 @@ class SearchDropDown<T> extends StatefulWidget {
     this.unselectedItemHoverColor,
     this.widgetBuilder,
     this.selectedItem,
-    this.outsideIconColor,
     this.deleteDialogSettings,
     this.verifyInputItem,
     this.verifyDialogSettings,
@@ -77,26 +68,16 @@ class SearchDropDown<T> extends StatefulWidget {
   final Function(ValueItem<T>)? onDeleteItem;
   ///Force the user to confirm delete
   final bool confirmDelete;
+  ///The SearchBarSettings.
+  final SimpleSearchbarSettings? searchBarSettings;
   ///Visual delete dialog settings
   final DialogSettings? deleteDialogSettings;
   ///The duration of the dropdown opening animation.
   final Duration? animationDuration;
   ///The background color of the searchbar and overlay.
   final Color? backgroundColor;
-  ///The border of the searchbar.
-  final OutlinedBorder? border;
-  ///The color of "x" clear icon on the end of the searchbar.
-  final Color? clearIconColor;
-  ///List of widgets that will go on the end of the search bar.
-  final List<Widget>? actions;
-  ///The text to be presented on the hint of the searchbar.
-  final String? hint;
-  ///The style of the hint of the searchbar.
-  final TextStyle? hintStyle;
   ///The elevation of the searchbar(default:2).
   final double elevation;
-  ///The hover color of the searchbar.
-  final Color? hoverColor;
   ///The delete Icon in dropdown listview (default:red trash)
   final Icon? dialogActionIcon;
   ///The delete Widget in dropdown listview (default:IconButton). It replaces the `dialogActionIcon`
@@ -105,14 +86,6 @@ class SearchDropDown<T> extends StatefulWidget {
   final Color? dialogBackgroundColor;
   ///Dropdown Container height
   final double? dialogHeight;
-  ///Action Icon showed when dropdown is closed
-  final IconData? dropdownClosedArrowIcon;
-  ///Action Icon showed when dropdown is opened
-  final IconData? dropdownOpenedArrowIcon;
-  ///Action dropdown Icon color
-  final Color? outsideIconColor;
-  ///Action dropdown Icon size(default:20)
-  final double outsideIconSize;
   ///The padding for the items of the list.
   ///
   ///default: `EdgeInsets.symmetric(horizontal: 4)`
@@ -294,7 +267,6 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     dialogBackgroundColor: widget.dialogBackgroundColor,
                     dialogHeight: widget.dialogHeight ?? 200,
                     elevation: widget.elevation,
-                    hoverColor: widget.hoverColor,
                     listaFiltrada: listafiltrada,
                     onAddItem: (val) => handleAddItem(
                       val,
@@ -359,19 +331,19 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         width: widget.dropdownwidth,
         height: widget.dropdownHeight,
         child: SearchBar(
-          trailing: widget.actions ??
+          trailing: widget.searchBarSettings?.actions ??
               [
                 aberto
                     ? Icon(
-                        widget.dropdownOpenedArrowIcon ?? Icons.arrow_drop_up,
-                        color: widget.outsideIconColor,
-                        size: widget.outsideIconSize,
+                        widget.searchBarSettings?.dropdownOpenedArrowIcon ?? Icons.arrow_drop_up,
+                        color: widget.searchBarSettings?.outsideIconColor,
+                        size: widget.searchBarSettings?.outsideIconSize ?? 20,
                       )
                     : Icon(
-                        widget.dropdownClosedArrowIcon ??
+                        widget.searchBarSettings?.dropdownClosedArrowIcon ??
                             Icons.arrow_drop_down,
-                        color: widget.outsideIconColor,
-                        size: widget.outsideIconSize,
+                        color: widget.searchBarSettings?.outsideIconColor,
+                        size: widget.searchBarSettings?.outsideIconSize ?? 20,
                       ),
                 Visibility(
                   visible: controllerBar.text != '',
@@ -384,7 +356,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                         onPressed: resetSelection,
                         icon: Icon(
                           Icons.clear,
-                          color: widget.clearIconColor,
+                          color: widget.searchBarSettings?.clearIconColor,
                         ),
                       ),
                     ],
@@ -394,20 +366,20 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           controller: controllerBar,
           backgroundColor:
               MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
-          hintStyle: MaterialStatePropertyAll(widget.hintStyle ?? const TextStyle(fontSize: 14)),
+          hintStyle: MaterialStatePropertyAll(widget.searchBarSettings?.hintStyle ?? const TextStyle(fontSize: 14)),
           overlayColor: MaterialStatePropertyAll(
-              widget.hoverColor ?? Colors.grey.shade100),
+              widget.searchBarSettings?.hoverColor ?? Colors.grey.shade100),
           surfaceTintColor:
               MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
           shape: MaterialStateProperty.all<OutlinedBorder>(
-            widget.border ??
+            widget.searchBarSettings?.border ??
                 const RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(
                     Radius.circular(10.0),
                   ),
                 ),
           ),
-          hintText: widget.hint ?? 'Selecione',
+          hintText: widget.searchBarSettings?.hint ?? 'Selecione',
           side: MaterialStateProperty.all<BorderSide>(
             const BorderSide(
               style: BorderStyle.none,

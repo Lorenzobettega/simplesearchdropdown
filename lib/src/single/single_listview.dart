@@ -19,7 +19,6 @@ class SingleListView<T> extends StatelessWidget {
     required this.dialogBackgroundColor,
     required this.dialogHeight,
     required this.elevation,
-    required this.hoverColor,
     required this.listaFiltrada,
     required this.onClear,
     required this.onPressed,
@@ -53,7 +52,6 @@ class SingleListView<T> extends StatelessWidget {
   final Color? dialogBackgroundColor;
   final double dialogHeight;
   final double elevation;
-  final Color? hoverColor;
   final List<ValueItem<T>> listaFiltrada;
   final Function(ValueItem<T> value) onClear;
   final Function(ValueItem<T> value) onPressed;

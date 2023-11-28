@@ -14,3 +14,4 @@ export './src/helpers/overlay_screen.dart';
 export './src/helpers/dialog_settings.dart';
 export './src/helpers/dialog_button.dart';
 export './src/dialogs/warning_dialog.dart';
+export './src/single/simple_searchbar_settings.dart';
