@@ -31,17 +31,17 @@ class SearchDropDown<T> extends StatefulWidget {
     this.dialogActionWidget,
     this.dialogBackgroundColor,
     this.dialogHeight,
-    this.dropdownDisableActionIcon,
-    this.dropdownEnableActionIcon,
+    this.dropdownClosedArrowIcon,
+    this.dropdownOpenedArrowIcon,
     this.hint,
     this.hintStyle,
     this.hoverColor,
     this.itemsPadding,
-    this.selectedDialogColor,
+    this.selectedItemBackgroundColor,
     this.selectedItemHoverColor,
-    this.selectedInsideBoxTextStyle,
+    this.selectedItemTextStyle,
     this.separatorHeight,
-    this.unselectedInsideBoxTextStyle,
+    this.unselectedItemTextStyle,
     this.unselectedItemHoverColor,
     this.widgetBuilder,
     this.selectedItem,
@@ -77,6 +77,8 @@ class SearchDropDown<T> extends StatefulWidget {
   final Function(ValueItem<T>)? onDeleteItem;
   ///Force the user to confirm delete
   final bool confirmDelete;
+  ///Visual delete dialog settings
+  final DialogSettings? deleteDialogSettings;
   ///The duration of the dropdown opening animation.
   final Duration? animationDuration;
   ///The background color of the searchbar and overlay.
@@ -91,34 +93,51 @@ class SearchDropDown<T> extends StatefulWidget {
   final String? hint;
   ///The style of the hint of the searchbar.
   final TextStyle? hintStyle;
-  ///The elevation of the searchbar.
+  ///The elevation of the searchbar(default:2).
   final double elevation;
   ///The hover color of the searchbar.
   final Color? hoverColor;
+  ///The delete Icon in dropdown listview (default:red trash)
   final Icon? dialogActionIcon;
+  ///The delete Widget in dropdown listview (default:IconButton). It replaces the `dialogActionIcon`
   final Widget? dialogActionWidget;
+  ///Dropdown Container color
   final Color? dialogBackgroundColor;
+  ///Dropdown Container height
   final double? dialogHeight;
-  final IconData? dropdownDisableActionIcon;
-  final IconData? dropdownEnableActionIcon;
+  ///Action Icon showed when dropdown is closed
+  final IconData? dropdownClosedArrowIcon;
+  ///Action Icon showed when dropdown is opened
+  final IconData? dropdownOpenedArrowIcon;
+  ///Action dropdown Icon color
+  final Color? outsideIconColor;
+  ///Action dropdown Icon size(default:20)
+  final double outsideIconSize;
   ///The padding for the items of the list.
   ///
   ///default: `EdgeInsets.symmetric(horizontal: 4)`
   final EdgeInsets? itemsPadding;
   ///The hover color of the selected item of the list.
   final Color? selectedItemHoverColor;
-  final Color? selectedDialogColor;
-  final TextStyle? selectedInsideBoxTextStyle;
+  ///Selected item background color
+  final Color? selectedItemBackgroundColor;
+  ///Selected item TextStyle
+  final TextStyle? selectedItemTextStyle;
+  ///Separator between two items inside the droplist
   final double? separatorHeight;
-  final TextStyle? unselectedInsideBoxTextStyle;
+  ///Unselecteds droplist items TextStyle.
+  final TextStyle? unselectedItemTextStyle;
+  ///The hover color of the unselecteds items of the list.
   final Color? unselectedItemHoverColor;
+  ///Custom droplist item widget.
   final Widget? widgetBuilder;
+  ///Main/outside Container height(default:50)
   final double dropdownHeight;
+  ///Main/outside Container width(default:300)
   final double dropdownwidth;
-  final Color? outsideIconColor;
-  final double outsideIconSize;
-  final DialogSettings? deleteDialogSettings;
+  ///Function to check if the item added is valid or not.
   final bool Function(ValueItem<T>)? verifyInputItem;
+  ///Visual verify dialog settings
   final DialogSettings? verifyDialogSettings;
   ///If true, the value on the Searchbar will be cleared if nothing was selected.
   final bool clearOnClose;
@@ -286,15 +305,15 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     ),
                     onPressed: (val) => hideOverlay(val),
                     itemsPadding: widget.itemsPadding,
-                    selectedDialogColor: widget.selectedDialogColor,
+                    selectedDialogColor: widget.selectedItemBackgroundColor,
                     selectedInsideBoxTextStyle:
-                        widget.selectedInsideBoxTextStyle,
+                        widget.selectedItemTextStyle,
                     selectedItemHoverColor: widget.selectedItemHoverColor,
                     separatorHeight: widget.separatorHeight,
                     sortType: widget.sortType,
                     unselectedItemHoverColor: widget.unselectedItemHoverColor,
                     unselectedInsideBoxTextStyle:
-                        widget.unselectedInsideBoxTextStyle,
+                        widget.unselectedItemTextStyle,
                     widgetBuilder: widget.widgetBuilder,
                     width: widget.dropdownwidth,
                     newValueItem: widget.newValueItem,
@@ -344,12 +363,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
               [
                 aberto
                     ? Icon(
-                        widget.dropdownEnableActionIcon ?? Icons.arrow_drop_up,
+                        widget.dropdownOpenedArrowIcon ?? Icons.arrow_drop_up,
                         color: widget.outsideIconColor,
                         size: widget.outsideIconSize,
                       )
                     : Icon(
-                        widget.dropdownDisableActionIcon ??
+                        widget.dropdownClosedArrowIcon ??
                             Icons.arrow_drop_down,
                         color: widget.outsideIconColor,
                         size: widget.outsideIconSize,
