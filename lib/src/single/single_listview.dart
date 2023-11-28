@@ -8,29 +8,16 @@ class SingleListView<T> extends StatelessWidget {
     required this.addMode,
     required this.onAddItem,
     required this.newValueItem,
-    required this.animationDuration,
     required this.backgroundColor,
     required this.controllerBar,
-    required this.addItemHint,
-    required this.addItemHintStyle,
     required this.deleteMode,
-    required this.dialogActionIcon,
-    required this.dialogActionWidget,
-    required this.dialogBackgroundColor,
-    required this.dialogHeight,
     required this.elevation,
     required this.listaFiltrada,
     required this.onClear,
     required this.onPressed,
-    required this.itemsPadding,
-    required this.selectedItemBackgroundColor,
-    required this.selectedItemTextStyle,
-    required this.selectedItemHoverColor,
-    required this.separatorHeight,
     required this.sortType,
-    required this.unselectedItemHoverColor,
-    required this.unselectedItemTextStyle,
     required this.widgetBuilder,
+    required this.overlayListSettings,
     required this.dropdownwidth,
     required this.selectedItem,
     super.key,
@@ -44,28 +31,19 @@ class SingleListView<T> extends StatelessWidget {
 
   ///Function that defines how the user input transforms into a new ValueItem on the list.
   final ValueItem<T> Function(String input)? newValueItem;
-  final Duration? animationDuration;
+
+  ///The overlay list of items settings.
+  final SimpleOverlaySettings? overlayListSettings;
+
+ 
   final Color? backgroundColor;
   final TextEditingController controllerBar;
-  final String? addItemHint;
-  final TextStyle? addItemHintStyle;
   final bool deleteMode;
-  final Icon? dialogActionIcon;
-  final Widget? dialogActionWidget;
-  final Color? dialogBackgroundColor;
-  final double dialogHeight;
   final double elevation;
   final List<ValueItem<T>> listaFiltrada;
   final Function(ValueItem<T> value) onClear;
   final Function(ValueItem<T> value) onPressed;
-  final EdgeInsets? itemsPadding;
-  final Color? selectedItemBackgroundColor;
-  final TextStyle? selectedItemTextStyle;
-  final Color? selectedItemHoverColor;
-  final double? separatorHeight;
   final int sortType;
-  final Color? unselectedItemHoverColor;
-  final TextStyle? unselectedItemTextStyle;
   final Widget? widgetBuilder;
   final double dropdownwidth;
   final ValueItem<T>? selectedItem;
@@ -118,19 +96,19 @@ class SingleListView<T> extends StatelessWidget {
     });
     return Card(
       surfaceTintColor:
-          dialogBackgroundColor ?? backgroundColor ?? Colors.white,
-      color: dialogBackgroundColor ?? backgroundColor ?? Colors.white,
+          overlayListSettings?.dialogBackgroundColor ?? backgroundColor ?? Colors.white,
+      color: overlayListSettings?.dialogBackgroundColor ?? backgroundColor ?? Colors.white,
       elevation: elevation,
       child: AnimatedContainer(
-        duration: animationDuration ?? const Duration(milliseconds: 100),
-        height: dialogHeight,
+        duration: overlayListSettings?.animationDuration ?? const Duration(milliseconds: 100),
+        height: overlayListSettings?.dialogHeight ?? 200,
         width: dropdownwidth,
         child: ListView.separated(
           controller: controller,
           padding: EdgeInsets.zero,
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
           separatorBuilder: (context, index) => SizedBox(
-            height: separatorHeight ?? 1,
+            height: overlayListSettings?.separatorHeight ?? 1,
           ),
           itemBuilder: (context, index) {
             sortFunction();
@@ -158,8 +136,8 @@ class SingleListView<T> extends StatelessWidget {
                             listaFiltrada.add(item);
                           },
                           child: Text(
-                            addItemHint ?? 'Criar',
-                            style: addItemHintStyle,
+                            overlayListSettings?.addItemHint ?? 'Criar',
+                            style: overlayListSettings?.addItemHintStyle,
                           ),
                         ),
                       ],
@@ -171,7 +149,7 @@ class SingleListView<T> extends StatelessWidget {
             } else {
               return Padding(
                 padding:
-                    itemsPadding ?? const EdgeInsets.symmetric(horizontal: 4),
+                    overlayListSettings?.itemsPadding ?? const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
                     Expanded(
@@ -182,7 +160,7 @@ class SingleListView<T> extends StatelessWidget {
                             (Set<MaterialState> states) {
                               if (controllerBar.text ==
                                   listaFiltrada[index].label) {
-                                return selectedItemBackgroundColor ?? Colors.black38;
+                                return overlayListSettings?.selectedItemBackgroundColor ?? Colors.black38;
                               }
                               return Colors.transparent;
                             },
@@ -197,10 +175,10 @@ class SingleListView<T> extends StatelessWidget {
                             (Set<MaterialState> states) {
                               if (controllerBar.text ==
                                   listaFiltrada[index].label) {
-                                return selectedItemHoverColor ??
+                                return overlayListSettings?.selectedItemHoverColor ??
                                     Colors.grey.shade300;
                               }
-                              return unselectedItemHoverColor ??
+                              return overlayListSettings?.unselectedItemHoverColor ??
                                   Colors.grey.shade100;
                             },
                           ),
@@ -213,21 +191,21 @@ class SingleListView<T> extends StatelessWidget {
                                 listaFiltrada[index].label,
                                 style: (controllerBar.text ==
                                         listaFiltrada[index].label
-                                    ? selectedItemTextStyle ??
+                                    ? overlayListSettings?.selectedItemTextStyle ??
                                         const TextStyle(color: Colors.black)
-                                    : unselectedItemTextStyle ??
+                                    : overlayListSettings?.unselectedItemTextStyle ??
                                         const TextStyle(color: Colors.black45)),
                               ),
                             ),
                       ),
                     ),
                     deleteMode
-                        ? dialogActionWidget ??
+                        ? overlayListSettings?.dialogActionWidget ??
                             IconButton(
                               onPressed: () {
                                 onClear(listaFiltrada[index]);
                               },
-                              icon: dialogActionIcon ??
+                              icon: overlayListSettings?.dialogActionIcon ??
                                   Icon(
                                     Icons.delete,
                                     color: Colors.red.shade900,

@@ -5,6 +5,8 @@ class SimpleSearchbarSettings {
   const SimpleSearchbarSettings({
     this.dropdownwidth,
     this.dropdownHeight,
+    this.elevation,
+    this.backgroundColor,
     this.border,
     this.clearIconColor,
     this.actions,
@@ -23,6 +25,12 @@ class SimpleSearchbarSettings {
 
   ///Main/outside Container width(default:300)
   final double? dropdownwidth;
+
+  ///The background color of the searchbar and overlay.
+  final Color? backgroundColor;
+
+  ///The elevation of the searchbar and overlay (default:2).
+  final double? elevation;
 
   ///The border of the searchbar.
   final OutlinedBorder? border;
@@ -57,3 +65,4 @@ class SimpleSearchbarSettings {
   ///If true, the value on the Searchbar will be cleared if nothing was selected(default:false).
   final bool? clearOnClose;
 }
+//TODO add a default searchbar settings instead of being nullable.

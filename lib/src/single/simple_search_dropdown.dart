@@ -16,11 +16,6 @@ class SearchDropDown<T> extends StatefulWidget {
     required this.updateSelectedItem,
     this.sortType = 0,
     this.confirmDelete = false,
-    this.elevation = 2,
-    this.backgroundColor,
-    this.addItemHint,
-    this.addItemHintStyle,
-    this.dialogBackgroundColor,
     this.searchBarSettings,
     this.overlayListSettings,
     this.widgetBuilder,
@@ -49,12 +44,6 @@ class SearchDropDown<T> extends StatefulWidget {
   ///Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
   final ValueItem<T> Function(String input)? newValueItem;
 
-  ///The text of the add button when user is allowed to add items in the list.
-  final String? addItemHint;
-
-  ///The style of the add button when user is allowed to add items in the list.
-  final TextStyle? addItemHintStyle;
-
   ///Allow the user to delete items of the list.
   final bool deleteMode;
 
@@ -72,15 +61,6 @@ class SearchDropDown<T> extends StatefulWidget {
 
   ///The overlay list of items settings.
   final SimpleOverlaySettings? overlayListSettings;
-
-  ///The background color of the searchbar and overlay.
-  final Color? backgroundColor;
-
-  ///The elevation of the searchbar(default:2).
-  final double elevation;
-
-  ///Dropdown Container color
-  final Color? dialogBackgroundColor;
 
   ///Custom droplist item widget.
   final Widget? widgetBuilder;
@@ -235,21 +215,10 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   color: Colors.transparent,
                   child: SingleListView(
                     addMode: widget.addMode,
-                    animationDuration:
-                        widget.overlayListSettings?.animationDuration,
-                    backgroundColor: widget.backgroundColor,
+                    backgroundColor: widget.searchBarSettings?.backgroundColor,
                     controllerBar: controllerBar,
-                    addItemHint: widget.addItemHint,
-                    addItemHintStyle: widget.addItemHintStyle,
                     deleteMode: widget.deleteMode,
-                    dialogActionIcon:
-                        widget.overlayListSettings?.dialogActionIcon,
-                    dialogActionWidget:
-                        widget.overlayListSettings?.dialogActionWidget,
-                    dialogBackgroundColor: widget.dialogBackgroundColor,
-                    dialogHeight:
-                        widget.overlayListSettings?.dialogHeight ?? 200,
-                    elevation: widget.elevation,
+                    elevation: widget.searchBarSettings?.elevation ?? 2,
                     listaFiltrada: listafiltrada,
                     onAddItem: (val) => handleAddItem(
                       val,
@@ -259,24 +228,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       context,
                     ),
                     onPressed: (val) => hideOverlay(val),
-                    itemsPadding: widget.overlayListSettings?.itemsPadding,
-                    selectedItemBackgroundColor:
-                        widget.overlayListSettings?.selectedItemBackgroundColor,
-                    selectedItemTextStyle:
-                        widget.overlayListSettings?.selectedItemTextStyle,
-                    selectedItemHoverColor:
-                        widget.overlayListSettings?.selectedItemHoverColor,
-                    separatorHeight:
-                        widget.overlayListSettings?.separatorHeight,
                     sortType: widget.sortType,
-                    unselectedItemHoverColor:
-                        widget.overlayListSettings?.unselectedItemHoverColor,
-                    unselectedItemTextStyle:
-                        widget.overlayListSettings?.unselectedItemTextStyle,
                     widgetBuilder: widget.widgetBuilder,
                     dropdownwidth: widget.searchBarSettings?.dropdownwidth ?? 300,
                     newValueItem: widget.newValueItem,
                     selectedItem: selectedValue,
+                    overlayListSettings: widget.overlayListSettings,
                   ),
                 ),
               ),
@@ -354,14 +311,14 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
               ],
           controller: controllerBar,
           backgroundColor:
-              MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
+              MaterialStatePropertyAll(widget.searchBarSettings?.backgroundColor ?? Colors.white),
           hintStyle: MaterialStatePropertyAll(
               widget.searchBarSettings?.hintStyle ??
                   const TextStyle(fontSize: 14)),
           overlayColor: MaterialStatePropertyAll(
               widget.searchBarSettings?.hoverColor ?? Colors.grey.shade100),
           surfaceTintColor:
-              MaterialStatePropertyAll(widget.backgroundColor ?? Colors.white),
+              MaterialStatePropertyAll(widget.searchBarSettings?.backgroundColor ?? Colors.white),
           shape: MaterialStateProperty.all<OutlinedBorder>(
             widget.searchBarSettings?.border ??
                 const RoundedRectangleBorder(
@@ -390,7 +347,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             _filtrarLista(a);
             overlayScreen.updateLast();
           },
-          elevation: MaterialStateProperty.all<double>(widget.elevation),
+          elevation: MaterialStateProperty.all<double>(widget.searchBarSettings?.elevation ?? 2),
         ),
       ),
     );
