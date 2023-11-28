@@ -23,15 +23,15 @@ class SingleListView<T> extends StatelessWidget {
     required this.onClear,
     required this.onPressed,
     required this.itemsPadding,
-    required this.selectedDialogColor,
-    required this.selectedInsideBoxTextStyle,
+    required this.selectedItemBackgroundColor,
+    required this.selectedItemTextStyle,
     required this.selectedItemHoverColor,
     required this.separatorHeight,
     required this.sortType,
     required this.unselectedItemHoverColor,
-    required this.unselectedInsideBoxTextStyle,
+    required this.unselectedItemTextStyle,
     required this.widgetBuilder,
-    required this.width,
+    required this.dropdownwidth,
     required this.selectedItem,
     super.key,
   });
@@ -59,15 +59,15 @@ class SingleListView<T> extends StatelessWidget {
   final Function(ValueItem<T> value) onClear;
   final Function(ValueItem<T> value) onPressed;
   final EdgeInsets? itemsPadding;
-  final Color? selectedDialogColor;
-  final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedItemBackgroundColor;
+  final TextStyle? selectedItemTextStyle;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
   final int sortType;
   final Color? unselectedItemHoverColor;
-  final TextStyle? unselectedInsideBoxTextStyle;
+  final TextStyle? unselectedItemTextStyle;
   final Widget? widgetBuilder;
-  final double width;
+  final double dropdownwidth;
   final ValueItem<T>? selectedItem;
 
   void sortFunction() {
@@ -124,7 +124,7 @@ class SingleListView<T> extends StatelessWidget {
       child: AnimatedContainer(
         duration: animationDuration ?? const Duration(milliseconds: 100),
         height: dialogHeight,
-        width: width,
+        width: dropdownwidth,
         child: ListView.separated(
           controller: controller,
           padding: EdgeInsets.zero,
@@ -182,7 +182,7 @@ class SingleListView<T> extends StatelessWidget {
                             (Set<MaterialState> states) {
                               if (controllerBar.text ==
                                   listaFiltrada[index].label) {
-                                return selectedDialogColor ?? Colors.black38;
+                                return selectedItemBackgroundColor ?? Colors.black38;
                               }
                               return Colors.transparent;
                             },
@@ -213,9 +213,9 @@ class SingleListView<T> extends StatelessWidget {
                                 listaFiltrada[index].label,
                                 style: (controllerBar.text ==
                                         listaFiltrada[index].label
-                                    ? selectedInsideBoxTextStyle ??
+                                    ? selectedItemTextStyle ??
                                         const TextStyle(color: Colors.black)
-                                    : unselectedInsideBoxTextStyle ??
+                                    : unselectedItemTextStyle ??
                                         const TextStyle(color: Colors.black45)),
                               ),
                             ),

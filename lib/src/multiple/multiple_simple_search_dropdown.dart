@@ -307,17 +307,17 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     onDeleteItem: (val) => handleDeleteItem(val, context),
                     onItemSelected: (val) => onItemSelected(val),
                     itemsPadding: widget.itemsPadding,
-                    selectedDialogColor: widget.selectedItemsColor,
-                    selectedInsideBoxTextStyle:
+                    selectedItemsColor: widget.selectedItemsColor,
+                    selectedItemsTextStyle:
                         widget.selectedItemsTextStyle,
                     selectedItemHoverColor: widget.selectedItemHoverColor,
                     selectedItens: widget.selectedItems,
                     separatorHeight: widget.separatorHeight,
                     sortType: widget.sortType,
-                    unselectedInsideBoxTextStyle:
+                    unselectedItemsTextStyle:
                         widget.unselectedItemsTextStyle,
                     unselectedItemHoverColor: widget.unselectedItemHoverColor,
-                    width: widget.dropdownWidth,
+                    dropdownWidth: widget.dropdownWidth,
                     minHeight: widget.dropdownHeight,
                     newValueItem: widget.newValueItem,
                   ),

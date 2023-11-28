@@ -29,14 +29,14 @@ class MultipleListView<T> extends StatefulWidget {
     required this.onDeleteItem,
     required this.onItemSelected,
     required this.itemsPadding,
-    required this.selectedDialogColor,
-    required this.selectedInsideBoxTextStyle,
+    required this.selectedItemsColor,
+    required this.selectedItemsTextStyle,
     required this.selectedItemHoverColor,
     required this.selectedItens,
     required this.separatorHeight,
     required this.sortType,
-    required this.unselectedInsideBoxTextStyle,
-    required this.width,
+    required this.unselectedItemsTextStyle,
+    required this.dropdownWidth,
     required this.minHeight,
     required this.newValueItem,
   });
@@ -65,14 +65,14 @@ class MultipleListView<T> extends StatefulWidget {
   final String? hintSearchBar;
   final List<ValueItem<T>> listItens;
   final List<ValueItem<T>> selectedItens;
-  final Color? selectedDialogColor;
-  final TextStyle? selectedInsideBoxTextStyle;
+  final Color? selectedItemsColor;
+  final TextStyle? selectedItemsTextStyle;
   final Color? selectedItemHoverColor;
   final double? separatorHeight;
   final int sortType;
-  final TextStyle? unselectedInsideBoxTextStyle;
+  final TextStyle? unselectedItemsTextStyle;
   final Color? unselectedItemHoverColor;
-  final double width;
+  final double dropdownWidth;
   final double minHeight;
   final ValueItem<T> Function(String input)? newValueItem;
 
@@ -177,7 +177,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
       child: AnimatedContainer(
         duration: widget.animationDuration ?? const Duration(milliseconds: 100),
         height: widget.dialogHeight,
-        width: widget.width,
+        width: widget.dropdownWidth,
         child: Column(
           children: [
             SearchBar(
@@ -187,7 +187,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
               overlayColor: MaterialStatePropertyAll(
                   widget.unselectedItemHoverColor ?? Colors.grey.shade100),
               constraints: BoxConstraints(
-                  minHeight: widget.minHeight, maxWidth: widget.width),
+                  minHeight: widget.minHeight, maxWidth: widget.dropdownWidth),
               surfaceTintColor: MaterialStatePropertyAll(
                   widget.dialogSearchBarColor ?? Colors.white),
               shape: MaterialStateProperty.all<OutlinedBorder>(
@@ -282,7 +282,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                   (Set<MaterialState> states) {
                                     if (widget.selectedItens
                                         .contains(listaFiltrada[index])) {
-                                      return widget.selectedDialogColor ??
+                                      return widget.selectedItemsColor ??
                                           Colors.black38;
                                     }
                                     return Colors.transparent;
@@ -315,10 +315,10 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                       listaFiltrada[index].label,
                                       style: (widget.selectedItens
                                         .contains(listaFiltrada[index])
-                                          ? widget.selectedInsideBoxTextStyle ??
+                                          ? widget.selectedItemsTextStyle ??
                                               const TextStyle(
                                                   color: Colors.black)
-                                          : widget.unselectedInsideBoxTextStyle ??
+                                          : widget.unselectedItemsTextStyle ??
                                               const TextStyle(
                                                   color: Colors.black45)),
                                     ),

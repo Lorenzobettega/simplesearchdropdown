@@ -260,9 +260,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     ),
                     onPressed: (val) => hideOverlay(val),
                     itemsPadding: widget.overlayListSettings?.itemsPadding,
-                    selectedDialogColor:
+                    selectedItemBackgroundColor:
                         widget.overlayListSettings?.selectedItemBackgroundColor,
-                    selectedInsideBoxTextStyle:
+                    selectedItemTextStyle:
                         widget.overlayListSettings?.selectedItemTextStyle,
                     selectedItemHoverColor:
                         widget.overlayListSettings?.selectedItemHoverColor,
@@ -271,10 +271,10 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     sortType: widget.sortType,
                     unselectedItemHoverColor:
                         widget.overlayListSettings?.unselectedItemHoverColor,
-                    unselectedInsideBoxTextStyle:
+                    unselectedItemTextStyle:
                         widget.overlayListSettings?.unselectedItemTextStyle,
                     widgetBuilder: widget.widgetBuilder,
-                    width: widget.searchBarSettings?.dropdownwidth ?? 300,
+                    dropdownwidth: widget.searchBarSettings?.dropdownwidth ?? 300,
                     newValueItem: widget.newValueItem,
                     selectedItem: selectedValue,
                   ),
