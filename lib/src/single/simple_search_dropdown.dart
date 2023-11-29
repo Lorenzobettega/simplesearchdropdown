@@ -302,12 +302,14 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                 ),
               ],
           controller: controllerBar,
-          backgroundColor: MaterialStatePropertyAll(widget.searchBarSettings.backgroundColor),
+          backgroundColor: MaterialStatePropertyAll(
+              widget.searchBarSettings.backgroundColor),
           hintStyle:
               MaterialStatePropertyAll(widget.searchBarSettings.hintStyle),
           overlayColor:
               MaterialStatePropertyAll(widget.searchBarSettings.hoverColor),
-          surfaceTintColor: MaterialStatePropertyAll(widget.searchBarSettings.backgroundColor),
+          surfaceTintColor: MaterialStatePropertyAll(
+              widget.searchBarSettings.backgroundColor),
           shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
           hintText: widget.searchBarSettings.hint,
           side: MaterialStateProperty.all<BorderSide>(
@@ -329,7 +331,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             _filtrarLista(a);
             overlayScreen.updateLast();
           },
-          elevation: MaterialStateProperty.all<double>(widget.searchBarSettings.elevation),
+          elevation: MaterialStateProperty.all<double>(
+              widget.searchBarSettings.elevation),
         ),
       ),
     );

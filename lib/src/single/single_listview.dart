@@ -69,7 +69,7 @@ class SingleListView<T> extends StatelessWidget {
   ///Function to scroll the list to the selected item
   void goToSelectedItem(ScrollController controller, ValueItem<T> item) {
     final index = listaFiltrada.indexOf(item);
-    if (index > 0) {
+    if (index > 1) {
       final contentSize = controller.position.viewportDimension +
           controller.position.maxScrollExtent;
 
@@ -91,10 +91,9 @@ class SingleListView<T> extends StatelessWidget {
       }
     });
     return Card(
-      surfaceTintColor: overlayListSettings?.dialogBackgroundColor ??
-          backgroundColor,
-      color: overlayListSettings?.dialogBackgroundColor ??
-          backgroundColor,
+      surfaceTintColor:
+          overlayListSettings?.dialogBackgroundColor ?? backgroundColor,
+      color: overlayListSettings?.dialogBackgroundColor ?? backgroundColor,
       elevation: elevation,
       child: AnimatedContainer(
         duration: overlayListSettings?.animationDuration ??
