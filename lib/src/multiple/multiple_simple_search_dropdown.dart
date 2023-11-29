@@ -63,64 +63,91 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
 
   ///List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
+
   ///List of the items already selected on the dropdown.
   final List<ValueItem<T>> selectedItems;
+
   ///Function to update the list of selected items on change
   final Function(List<ValueItem<T>>) updateSelectedItems;
+
   ///Allow the user to add items to the list.
   final bool addMode;
+
   ///Function to be executed after the item was added.
   final Function(ValueItem<T>)? onAddItem;
+
   ///Function that defines how the user input transforms into a new ValueItem on the list.
   ///
   ///Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
   final ValueItem<T> Function(String input)? newValueItem;
+
   ///Allow the user to delete items of the list.
   final bool deleteMode;
+
   ///Function to be executed after the item was deleted.
   final Function(ValueItem<T>)? onDeleteItem;
+
   ///Force the user to confirm delete
   final bool confirmDelete;
+
   ///Visual delete dialog settings
   final DialogSettings? deleteDialogSettings;
+
   ///The action widget on dropdown
   final Widget? actionWidget;
+
   ///The duration of the dropdown opening animation.
   final Duration? animationDuration;
+
   ///The background color of the searchbar and overlay.
   final Color? backgroundColor;
+
   ///Border of dropdown
   final OutlinedBorder? border;
+
   ///Outside/horizontal list of selecteds items Widget builder
   final Widget? dropdownWidgetBuilder;
+
   ///Outside/horizontal list of selecteds clear icon size(default:20)
   final double boxSelectedIconSize;
+
   ///Outside/horizontal list of selecteds clear icon Color(default:20)
   final Color? boxSelectedIconColor;
+
   ///Outside/horizontal list of selecteds box color
   final Color? boxSelectedColor;
+
   ///Outside/horizontal list of selecteds box Text Style
   final TextStyle? boxSelectedTextStyle;
+
   ///Dropdown height(default:50)
   final double dropdownHeight;
+
   ///Dropdown Width(default:300)
   final double dropdownWidth;
   //Dropdown elevation
   final double elevation;
   //Dropdown hint(default:'Selecione')
   final String? hint;
+
   ///Action Icon showed when dropdown is closed
   final IconData? dropdownClosedArrowIcon;
+
   ///Action Icon showed when dropdown is opened
   final IconData? dropdownOpenedArrowIcon;
+
   ///Action Icon size
   final double arrowIconSize;
+
   ///Action Icon color
   final Color? arrowIconColor;
+
   ///Dropdown Container color
   final Color? dialogBackgroundColor;
+
   ///Dropdown Container heigth
   final double? dialogHeight;
+
   ///The way the items should be sorted.
   ///
   ///If `0`(default), no sort will be applied
@@ -131,45 +158,63 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   ///
   ///If `3`, the selected item will be put on first position.
   final int sortType;
+
   ///Custom droplist item widget.
   final Widget? dialogListviewWidgetBuilder;
+
   ///Custom droplist action icon.
   final Icon? dialogActionIcon;
+
   ///Custom droplist action Widget.
   final Widget? dialogActionWidget;
+
   ///Droplist separator height.
   final double? separatorHeight;
+
   ///Droplist item padding(default: EdgeInsets.symmetric(horizontal: 4))
   final EdgeInsets? itemsPadding;
+
   ///Searchbar border
   final OutlinedBorder? dialogSearchBarBorder;
+
   ///Searchbar color
   final Color? dialogSearchBarColor;
+
   ///Searchbar elevation
   final double dialogSearchBarElevation;
+
   ///Searchbar hint
   final String? hintSearchBar;
+
   ///Searchbar hint TextStyle
   final TextStyle? hintStyle;
+
   ///Create button text
   final String? createHint;
+
   ///Create button TextStyle
   final TextStyle? createHintStyle;
+
   ///Function to check if the item added is valid or not.
   final bool Function(ValueItem<T>)? verifyInputItem;
+
   ///Visual verify dialog settings
   final DialogSettings? verifyDialogSettings;
+
   ///Selected droplist items background color
   final Color? selectedItemsColor;
+
   ///Selected droplist items Text Style
   final TextStyle? selectedItemsTextStyle;
+
   ///Unselected droplist items Text Style
   final TextStyle? unselectedItemsTextStyle;
+
   ///Selected droplist items hover color
   final Color? selectedItemHoverColor;
+
   ///Unselected droplist items hover color
   final Color? unselectedItemHoverColor;
-  
 
   @override
   State<MultipleSearchDropDown<T>> createState() =>
@@ -308,14 +353,12 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     onItemSelected: (val) => onItemSelected(val),
                     itemsPadding: widget.itemsPadding,
                     selectedItemsColor: widget.selectedItemsColor,
-                    selectedItemsTextStyle:
-                        widget.selectedItemsTextStyle,
+                    selectedItemsTextStyle: widget.selectedItemsTextStyle,
                     selectedItemHoverColor: widget.selectedItemHoverColor,
                     selectedItens: widget.selectedItems,
                     separatorHeight: widget.separatorHeight,
                     sortType: widget.sortType,
-                    unselectedItemsTextStyle:
-                        widget.unselectedItemsTextStyle,
+                    unselectedItemsTextStyle: widget.unselectedItemsTextStyle,
                     unselectedItemHoverColor: widget.unselectedItemHoverColor,
                     dropdownWidth: widget.dropdownWidth,
                     minHeight: widget.dropdownHeight,
@@ -386,43 +429,48 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                       const SizedBox(width: 5),
                                   itemCount: widget.selectedItems.length,
                                   itemBuilder: (context, index) {
-                                    return widget.dropdownWidgetBuilder ?? Padding(
-                                      padding: const EdgeInsets.symmetric(
-                                          vertical: 5),
-                                      child: Card(
-                                        color: widget.boxSelectedColor ??
-                                            Colors.grey.shade300,
-                                        elevation: widget.elevation,
-                                        child: Padding(
+                                    return widget.dropdownWidgetBuilder ??
+                                        Padding(
                                           padding: const EdgeInsets.symmetric(
-                                              horizontal: 8),
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.center,
-                                            children: [
-                                              Text(
-                                                  widget.selectedItems[index]
-                                                      .label,
-                                                  style: widget
-                                                      .boxSelectedTextStyle),
-                                              InkWell(
-                                                onTap: () => onItemSelected(
-                                                    widget
-                                                        .selectedItems[index]),
-                                                child: Icon(
-                                                  Icons.close,
-                                                  size: widget.boxSelectedIconSize,
-                                                  color:
-                                                      widget.boxSelectedIconColor,
-                                                ),
+                                              vertical: 5),
+                                          child: Card(
+                                            color: widget.boxSelectedColor ??
+                                                Colors.grey.shade300,
+                                            elevation: widget.elevation,
+                                            child: Padding(
+                                              padding:
+                                                  const EdgeInsets.symmetric(
+                                                      horizontal: 8),
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.center,
+                                                children: [
+                                                  Text(
+                                                      widget
+                                                          .selectedItems[index]
+                                                          .label,
+                                                      style: widget
+                                                          .boxSelectedTextStyle),
+                                                  InkWell(
+                                                    onTap: () => onItemSelected(
+                                                        widget.selectedItems[
+                                                            index]),
+                                                    child: Icon(
+                                                      Icons.close,
+                                                      size: widget
+                                                          .boxSelectedIconSize,
+                                                      color: widget
+                                                          .boxSelectedIconColor,
+                                                    ),
+                                                  ),
+                                                ],
                                               ),
-                                            ],
+                                            ),
                                           ),
-                                        ),
-                                      ),
-                                    );
+                                        );
                                   },
                                 ),
                               )

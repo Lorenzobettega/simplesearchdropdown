@@ -117,6 +117,12 @@ class _MyHomePageState extends State<MyHomePage> {
               selectedItem: listitems[0],
               verifyInputItem: verifyInput,
               newValueItem: (input) => ValueItem(label: input, value: input),
+              overlayListSettings: SimpleOverlaySettings(
+                itemWidgetBuilder: (item) => Container(
+                  child: Text(item.label),
+                  color: Colors.blue,
+                ),
+              ),
             ),
             const SizedBox(
               height: 20,

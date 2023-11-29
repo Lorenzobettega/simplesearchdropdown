@@ -16,7 +16,6 @@ class SingleListView<T> extends StatelessWidget {
     required this.onClear,
     required this.onPressed,
     required this.sortType,
-    required this.widgetBuilder,
     required this.overlayListSettings,
     required this.dropdownwidth,
     required this.selectedItem,
@@ -34,8 +33,6 @@ class SingleListView<T> extends StatelessWidget {
 
   ///The overlay list of items settings.
   final SimpleOverlaySettings? overlayListSettings;
-
- 
   final Color? backgroundColor;
   final TextEditingController controllerBar;
   final bool deleteMode;
@@ -44,7 +41,6 @@ class SingleListView<T> extends StatelessWidget {
   final Function(ValueItem<T> value) onClear;
   final Function(ValueItem<T> value) onPressed;
   final int sortType;
-  final Widget? widgetBuilder;
   final double dropdownwidth;
   final ValueItem<T>? selectedItem;
 
@@ -95,12 +91,14 @@ class SingleListView<T> extends StatelessWidget {
       }
     });
     return Card(
-      surfaceTintColor:
-          overlayListSettings?.dialogBackgroundColor ?? backgroundColor ?? Colors.white,
-      color: overlayListSettings?.dialogBackgroundColor ?? backgroundColor ?? Colors.white,
+      surfaceTintColor: overlayListSettings?.dialogBackgroundColor ??
+          backgroundColor,
+      color: overlayListSettings?.dialogBackgroundColor ??
+          backgroundColor,
       elevation: elevation,
       child: AnimatedContainer(
-        duration: overlayListSettings?.animationDuration ?? const Duration(milliseconds: 100),
+        duration: overlayListSettings?.animationDuration ??
+            const Duration(milliseconds: 100),
         height: overlayListSettings?.dialogHeight ?? 200,
         width: dropdownwidth,
         child: ListView.separated(
@@ -148,8 +146,8 @@ class SingleListView<T> extends StatelessWidget {
               return const SizedBox.shrink();
             } else {
               return Padding(
-                padding:
-                    overlayListSettings?.itemsPadding ?? const EdgeInsets.symmetric(horizontal: 4),
+                padding: overlayListSettings?.itemsPadding ??
+                    const EdgeInsets.symmetric(horizontal: 4),
                 child: Row(
                   children: [
                     Expanded(
@@ -160,7 +158,9 @@ class SingleListView<T> extends StatelessWidget {
                             (Set<MaterialState> states) {
                               if (controllerBar.text ==
                                   listaFiltrada[index].label) {
-                                return overlayListSettings?.selectedItemBackgroundColor ?? Colors.black38;
+                                return overlayListSettings
+                                        ?.selectedItemBackgroundColor ??
+                                    Colors.black38;
                               }
                               return Colors.transparent;
                             },
@@ -175,28 +175,35 @@ class SingleListView<T> extends StatelessWidget {
                             (Set<MaterialState> states) {
                               if (controllerBar.text ==
                                   listaFiltrada[index].label) {
-                                return overlayListSettings?.selectedItemHoverColor ??
+                                return overlayListSettings
+                                        ?.selectedItemHoverColor ??
                                     Colors.grey.shade300;
                               }
-                              return overlayListSettings?.unselectedItemHoverColor ??
+                              return overlayListSettings
+                                      ?.unselectedItemHoverColor ??
                                   Colors.grey.shade100;
                             },
                           ),
                         ),
                         onPressed: () => onPressed(listaFiltrada[index]),
-                        child: widgetBuilder ??
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                listaFiltrada[index].label,
-                                style: (controllerBar.text ==
-                                        listaFiltrada[index].label
-                                    ? overlayListSettings?.selectedItemTextStyle ??
-                                        const TextStyle(color: Colors.black)
-                                    : overlayListSettings?.unselectedItemTextStyle ??
-                                        const TextStyle(color: Colors.black45)),
+                        child: overlayListSettings?.itemWidgetBuilder != null
+                            ? overlayListSettings!
+                                .itemWidgetBuilder!(listaFiltrada[index])
+                            : Align(
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  listaFiltrada[index].label,
+                                  style: (controllerBar.text ==
+                                          listaFiltrada[index].label
+                                      ? overlayListSettings
+                                              ?.selectedItemTextStyle ??
+                                          const TextStyle(color: Colors.black)
+                                      : overlayListSettings
+                                              ?.unselectedItemTextStyle ??
+                                          const TextStyle(
+                                              color: Colors.black45)),
+                                ),
                               ),
-                            ),
                       ),
                     ),
                     deleteMode
