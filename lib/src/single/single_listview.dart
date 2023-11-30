@@ -32,7 +32,7 @@ class SingleListView<T> extends StatelessWidget {
   final ValueItem<T> Function(String input)? newValueItem;
 
   ///The overlay list of items settings.
-  final SimpleOverlaySettings? overlayListSettings;
+  final SimpleOverlaySettings overlayListSettings;
   final Color? backgroundColor;
   final TextEditingController controllerBar;
   final bool deleteMode;
@@ -71,7 +71,7 @@ class SingleListView<T> extends StatelessWidget {
   void goToSelectedItem(
       ScrollController controller, ValueItem<T> item, GlobalKey key) {
     final index = listaFiltrada.indexOf(item);
-    final double separator = overlayListSettings?.separatorHeight ?? 1;
+    final double separator = overlayListSettings.separatorHeight;
     final context = key.currentContext;
     if (index > 1 && context != null) {
       controller.position.animateTo(
@@ -99,20 +99,19 @@ class SingleListView<T> extends StatelessWidget {
     });
     return Card(
       surfaceTintColor:
-          overlayListSettings?.dialogBackgroundColor ?? backgroundColor,
-      color: overlayListSettings?.dialogBackgroundColor ?? backgroundColor,
+          overlayListSettings.dialogBackgroundColor ?? backgroundColor,
+      color: overlayListSettings.dialogBackgroundColor ?? backgroundColor,
       elevation: elevation,
       child: AnimatedContainer(
-        duration: overlayListSettings?.animationDuration ??
-            const Duration(milliseconds: 100),
-        height: overlayListSettings?.dialogHeight ?? 200,
+        duration: overlayListSettings.animationDuration,
+        height: overlayListSettings.dialogHeight,
         width: dropdownwidth,
         child: ListView.separated(
           controller: controller,
           padding: EdgeInsets.zero,
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
           separatorBuilder: (context, index) => SizedBox(
-            height: overlayListSettings?.separatorHeight ?? 1,
+            height: overlayListSettings.separatorHeight,
           ),
           itemBuilder: (context, index) {
             sortFunction();
