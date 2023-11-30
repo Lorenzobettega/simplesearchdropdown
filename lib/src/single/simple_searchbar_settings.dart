@@ -7,12 +7,16 @@ class SimpleSearchbarSettings {
     this.dropdownHeight = 50,
     this.elevation = 2,
     this.backgroundColor = Colors.white,
-    this.border,
+    this.border = const RoundedRectangleBorder(
+      borderRadius: BorderRadius.all(
+        Radius.circular(10),
+      ),
+    ),
     this.clearIconColor,
     this.actions,
-    this.hint,
-    this.hintStyle,
-    this.hoverColor,
+    this.hint = 'Selecione',
+    this.hintStyle = const TextStyle(fontSize: 14),
+    this.hoverColor = const Color.fromRGBO(245, 245, 245, 1),
     this.dropdownClosedArrowIcon = Icons.arrow_drop_down,
     this.dropdownOpenedArrowIcon = Icons.arrow_drop_up,
     this.outsideIconColor,
@@ -48,7 +52,7 @@ class SimpleSearchbarSettings {
   final TextStyle? hintStyle;
 
   ///The hover color of the searchbar.
-  final Color? hoverColor;
+  final Color hoverColor;
 
   ///Action Icon showed when dropdown is closed
   final IconData dropdownClosedArrowIcon;
@@ -67,13 +71,4 @@ class SimpleSearchbarSettings {
 }
 
 ///The default settings for the SimpleSearchbar.
-const defaultSearchBarSettings = SimpleSearchbarSettings(
-  hintStyle: const TextStyle(fontSize: 14),
-  hoverColor: const Color.fromRGBO(245, 245, 245, 1),
-  border: const RoundedRectangleBorder(
-    borderRadius: BorderRadius.all(
-      Radius.circular(10),
-    ),
-  ),
-  hint: 'Selecione',
-);
+const defaultSearchBarSettings = SimpleSearchbarSettings();

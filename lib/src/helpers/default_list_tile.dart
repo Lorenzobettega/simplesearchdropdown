@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
+///The default widget that will be presented on the list.
 class DefaultListTile<T> extends StatelessWidget {
   const DefaultListTile({
     required this.deleteMode,
@@ -11,9 +12,9 @@ class DefaultListTile<T> extends StatelessWidget {
     required this.selected,
     super.key,
   });
-  
+
   ///The overlay list of items settings.
-  final SimpleOverlaySettings? overlayListSettings;
+  final SimpleOverlaySettings overlayListSettings;
   final bool deleteMode;
   final ValueItem<T> item;
   final Function(ValueItem<T> value) onDelete;
@@ -23,8 +24,7 @@ class DefaultListTile<T> extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: overlayListSettings?.itemsPadding ??
-          const EdgeInsets.symmetric(horizontal: 4),
+      padding: overlayListSettings.itemsPadding,
       child: Row(
         children: [
           Expanded(
@@ -33,8 +33,7 @@ class DefaultListTile<T> extends StatelessWidget {
                 backgroundColor: MaterialStateProperty.resolveWith<Color>(
                   (Set<MaterialState> states) {
                     if (selected) {
-                      return overlayListSettings?.selectedItemBackgroundColor ??
-                          Colors.black38;
+                      return overlayListSettings.selectedItemBackgroundColor;
                     }
                     return Colors.transparent;
                   },
@@ -47,42 +46,33 @@ class DefaultListTile<T> extends StatelessWidget {
                 overlayColor: MaterialStateProperty.resolveWith<Color>(
                   (Set<MaterialState> states) {
                     if (selected) {
-                      return overlayListSettings?.selectedItemHoverColor ??
-                          Colors.grey.shade300;
+                      return overlayListSettings.selectedItemHoverColor;
                     }
-                    return overlayListSettings?.unselectedItemHoverColor ??
-                        Colors.grey.shade100;
+                    return overlayListSettings.unselectedItemHoverColor;
                   },
                 ),
               ),
               onPressed: () => onPressed(item),
-              child: overlayListSettings?.itemWidgetBuilder != null
-                  ? overlayListSettings!.itemWidgetBuilder!(item)
+              child: overlayListSettings.itemWidgetBuilder != null
+                  ? overlayListSettings.itemWidgetBuilder!(item)
                   : Align(
                       alignment: Alignment.centerLeft,
                       child: Text(
                         item.label,
                         style: (selected
-                            ? overlayListSettings?.selectedItemTextStyle ??
-                                const TextStyle(color: Colors.black)
-                            : overlayListSettings?.unselectedItemTextStyle ??
-                                const TextStyle(color: Colors.black45)),
+                            ? overlayListSettings.selectedItemTextStyle
+                            : overlayListSettings.unselectedItemTextStyle),
                       ),
                     ),
             ),
           ),
           deleteMode
-              ? overlayListSettings?.dialogActionWidget ??
+              ? overlayListSettings.dialogActionWidget ??
                   IconButton(
                     onPressed: () {
                       onDelete(item);
                     },
-                    icon: overlayListSettings?.dialogActionIcon ??
-                        Icon(
-                          Icons.delete,
-                          color: Colors.red.shade900,
-                          size: 20,
-                        ),
+                    icon: overlayListSettings.dialogDeleteIcon,
                   )
               : const SizedBox.shrink()
         ],

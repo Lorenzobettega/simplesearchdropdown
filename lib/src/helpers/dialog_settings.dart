@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 ///Class to hold all the customizations of the confirmation dialog.
 class DialogSettings {
-  DialogSettings({
+  const DialogSettings({
     this.title,
     this.content,
     this.contentPadding,
@@ -12,9 +12,9 @@ class DialogSettings {
     this.backgroundColor,
     this.elevation,
     this.shape,
-    this.customCancelButtonSettings,
-    this.customDeleteButtonSettings,
-    this.customVerifyButtonSettings,
+    this.customCancelButtonSettings = defaultCancelButtonSettings,
+    this.customDeleteButtonSettings = defaultDeleteButtonSettings,
+    this.customVerifyButtonSettings = defaultVerifyButtonSettings,
     this.insetPadding = const EdgeInsets.symmetric(
       horizontal: 40.0,
       vertical: 24.0,
@@ -23,9 +23,9 @@ class DialogSettings {
 
   final Widget? title;
   final Widget? content;
-  final DialogButtonSettings? customCancelButtonSettings;
-  final DialogButtonSettings? customDeleteButtonSettings;
-  final DialogButtonSettings? customVerifyButtonSettings;
+  final DialogButtonSettings customCancelButtonSettings;
+  final DialogButtonSettings customDeleteButtonSettings;
+  final DialogButtonSettings customVerifyButtonSettings;
   final EdgeInsetsGeometry? contentPadding, titlePadding, actionsPadding;
   final EdgeInsets insetPadding;
   final MainAxisAlignment? actionsAlignment;
@@ -36,7 +36,7 @@ class DialogSettings {
 
 ///Class to hold all the customizations of the buttons in the dialog.
 class DialogButtonSettings {
-  DialogButtonSettings(
+  const DialogButtonSettings(
     this.text, {
     this.padding = const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
     this.textColor = Colors.white,
@@ -62,14 +62,14 @@ class DialogButtonSettings {
 }
 
 ///Default settings for Delete button.
-final defaultDeleteButtonSettings = DialogButtonSettings(
+const defaultDeleteButtonSettings = DialogButtonSettings(
   'Apagar',
   backgroundColor: const Color.fromARGB(255, 198, 0, 0),
   customWidth: 160,
 );
 
 ///Default settings for Cancel button.
-final defaultCancelButtonSettings = DialogButtonSettings(
+const  defaultCancelButtonSettings = DialogButtonSettings(
   'Cancelar',
   backgroundColor: Colors.white,
   textColor: const Color.fromARGB(255, 66, 70, 76),
@@ -78,7 +78,7 @@ final defaultCancelButtonSettings = DialogButtonSettings(
 );
 
 ///Default settings for OK button.
-final defaultVerifyButtonSettings = DialogButtonSettings(
+const defaultVerifyButtonSettings = DialogButtonSettings(
   'OK',
   customWidth: 160,
 );

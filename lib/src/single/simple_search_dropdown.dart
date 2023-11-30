@@ -17,7 +17,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.sortType = 0,
     this.confirmDelete = false,
     this.searchBarSettings = defaultSearchBarSettings,
-    this.overlayListSettings,
+    this.overlayListSettings = defaultOverlaySettings,
     this.selectedItem,
     this.deleteDialogSettings,
     this.verifyInputItem,
@@ -59,7 +59,7 @@ class SearchDropDown<T> extends StatefulWidget {
   final SimpleSearchbarSettings searchBarSettings;
 
   ///The overlay list of items settings.
-  final SimpleOverlaySettings? overlayListSettings;
+  final SimpleOverlaySettings overlayListSettings;
 
   ///Function to check if the item added is valid or not.
   final bool Function(ValueItem<T>)? verifyInputItem;

@@ -6,17 +6,16 @@ class DefaultAddListItem extends StatelessWidget {
     required this.text,
     required this.overlayListSettings,
     required this.itemAdded,
-    super.key, 
+    super.key,
   });
 
   ///Function to be executed after the item was added.
   final void Function(String value) itemAdded;
 
   ///The overlay list of items settings.
-  final SimpleOverlaySettings? overlayListSettings;
-  
-  final String text;
+  final SimpleOverlaySettings overlayListSettings;
 
+  final String text;
 
   @override
   Widget build(BuildContext context) {
@@ -29,8 +28,8 @@ class DefaultAddListItem extends StatelessWidget {
           TextButton(
             onPressed: () => itemAdded(text),
             child: Text(
-              overlayListSettings?.addItemHint ?? 'Criar',
-              style: overlayListSettings?.addItemHintStyle,
+              overlayListSettings.addItemHint,
+              style: overlayListSettings.addItemHintStyle,
             ),
           ),
         ],
