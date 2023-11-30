@@ -314,7 +314,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                     child: Text(
                                       listaFiltrada[index].label,
                                       style: (widget.selectedItens
-                                        .contains(listaFiltrada[index])
+                                              .contains(listaFiltrada[index])
                                           ? widget.selectedItemsTextStyle ??
                                               const TextStyle(
                                                   color: Colors.black)

@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown_example/custom.dart';
+import 'package:simple_search_dropdown_example/listitems.dart';
 
 void main() {
   runApp(const MyApp());
@@ -35,20 +36,6 @@ class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
   final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
   final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
-  final List<ValueItem> listitems = [
-    const ValueItem(
-      label: 'Lorenzo',
-    ),
-    const ValueItem(label: 'Teste', value: 'Teste'),
-    const ValueItem(label: '3', value: '3'),
-    const ValueItem(label: 'one more', value: 'one more2')
-  ];
-  final List<ValueItem<Custom>> customListitems = [
-    ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134)),
-    ValueItem(label: 'Peter', value: Custom('Peter', 1)),
-    ValueItem(label: 'Lucas', value: Custom('Lucas', 3)),
-    ValueItem(label: 'Gian', value: Custom('Gian', 70)),
-  ];
   ValueItem<Custom>? selectedSingleCustom;
 
   List<ValueItem> selectedMultipleItems = [];
@@ -117,6 +104,12 @@ class _MyHomePageState extends State<MyHomePage> {
               selectedItem: listitems[0],
               verifyInputItem: verifyInput,
               newValueItem: (input) => ValueItem(label: input, value: input),
+              overlayListSettings: SimpleOverlaySettings(
+                itemWidgetBuilder: (item) => Container(
+                  child: Text(item.label),
+                  color: Colors.blue,
+                ),
+              ),
             ),
             const SizedBox(
               height: 20,

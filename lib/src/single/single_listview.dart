@@ -8,29 +8,15 @@ class SingleListView<T> extends StatelessWidget {
     required this.addMode,
     required this.onAddItem,
     required this.newValueItem,
-    required this.animationDuration,
     required this.backgroundColor,
     required this.controllerBar,
-    required this.addItemHint,
-    required this.addItemHintStyle,
     required this.deleteMode,
-    required this.dialogActionIcon,
-    required this.dialogActionWidget,
-    required this.dialogBackgroundColor,
-    required this.dialogHeight,
     required this.elevation,
     required this.listaFiltrada,
-    required this.onClear,
+    required this.onDelete,
     required this.onPressed,
-    required this.itemsPadding,
-    required this.selectedItemBackgroundColor,
-    required this.selectedItemTextStyle,
-    required this.selectedItemHoverColor,
-    required this.separatorHeight,
     required this.sortType,
-    required this.unselectedItemHoverColor,
-    required this.unselectedItemTextStyle,
-    required this.widgetBuilder,
+    required this.overlayListSettings,
     required this.dropdownwidth,
     required this.selectedItem,
     super.key,
@@ -44,29 +30,17 @@ class SingleListView<T> extends StatelessWidget {
 
   ///Function that defines how the user input transforms into a new ValueItem on the list.
   final ValueItem<T> Function(String input)? newValueItem;
-  final Duration? animationDuration;
+
+  ///The overlay list of items settings.
+  final SimpleOverlaySettings? overlayListSettings;
   final Color? backgroundColor;
   final TextEditingController controllerBar;
-  final String? addItemHint;
-  final TextStyle? addItemHintStyle;
   final bool deleteMode;
-  final Icon? dialogActionIcon;
-  final Widget? dialogActionWidget;
-  final Color? dialogBackgroundColor;
-  final double dialogHeight;
   final double elevation;
   final List<ValueItem<T>> listaFiltrada;
-  final Function(ValueItem<T> value) onClear;
+  final Function(ValueItem<T> value) onDelete;
   final Function(ValueItem<T> value) onPressed;
-  final EdgeInsets? itemsPadding;
-  final Color? selectedItemBackgroundColor;
-  final TextStyle? selectedItemTextStyle;
-  final Color? selectedItemHoverColor;
-  final double? separatorHeight;
   final int sortType;
-  final Color? unselectedItemHoverColor;
-  final TextStyle? unselectedItemTextStyle;
-  final Widget? widgetBuilder;
   final double dropdownwidth;
   final ValueItem<T>? selectedItem;
 
@@ -93,44 +67,52 @@ class SingleListView<T> extends StatelessWidget {
   }
 
   ///Function to scroll the list to the selected item
-  void goToSelectedItem(ScrollController controller, ValueItem<T> item) {
+  ///only works if the size of all tiles is equal.
+  void goToSelectedItem(
+      ScrollController controller, ValueItem<T> item, GlobalKey key) {
     final index = listaFiltrada.indexOf(item);
-    if (index > 0) {
-      final contentSize = controller.position.viewportDimension +
-          controller.position.maxScrollExtent;
-
-      final target = contentSize * index / listaFiltrada.length;
+    final double separator = overlayListSettings?.separatorHeight ?? 1;
+    final context = key.currentContext;
+    if (index > 1 && context != null) {
       controller.position.animateTo(
-        target,
+        index * (context.size!.height + separator),
         duration: const Duration(milliseconds: 150),
         curve: Curves.easeOut,
       );
     }
   }
 
+  void itemAdded(String text) {
+    final item = newValueItem!(text);
+    onAddItem(item);
+    listaFiltrada.add(item);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = ScrollController();
+    final GlobalKey _itemKey = GlobalKey();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (selectedItem != null) {
-        goToSelectedItem(controller, selectedItem!);
+        goToSelectedItem(controller, selectedItem!, _itemKey);
       }
     });
     return Card(
       surfaceTintColor:
-          dialogBackgroundColor ?? backgroundColor ?? Colors.white,
-      color: dialogBackgroundColor ?? backgroundColor ?? Colors.white,
+          overlayListSettings?.dialogBackgroundColor ?? backgroundColor,
+      color: overlayListSettings?.dialogBackgroundColor ?? backgroundColor,
       elevation: elevation,
       child: AnimatedContainer(
-        duration: animationDuration ?? const Duration(milliseconds: 100),
-        height: dialogHeight,
+        duration: overlayListSettings?.animationDuration ??
+            const Duration(milliseconds: 100),
+        height: overlayListSettings?.dialogHeight ?? 200,
         width: dropdownwidth,
         child: ListView.separated(
           controller: controller,
           padding: EdgeInsets.zero,
           itemCount: listaFiltrada.length + (addMode ? 1 : 0),
           separatorBuilder: (context, index) => SizedBox(
-            height: separatorHeight ?? 1,
+            height: overlayListSettings?.separatorHeight ?? 1,
           ),
           itemBuilder: (context, index) {
             sortFunction();
@@ -145,98 +127,23 @@ class SingleListView<T> extends StatelessWidget {
                     )
                     .toList();
                 if (list.isEmpty) {
-                  return Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 8, 0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(controllerBar.text),
-                        TextButton(
-                          onPressed: () {
-                            final item = newValueItem!(controllerBar.text);
-                            onAddItem(item);
-                            listaFiltrada.add(item);
-                          },
-                          child: Text(
-                            addItemHint ?? 'Criar',
-                            style: addItemHintStyle,
-                          ),
-                        ),
-                      ],
-                    ),
+                  return DefaultAddListItem(
+                    itemAdded: itemAdded,
+                    overlayListSettings: overlayListSettings,
+                    text: controllerBar.text,
                   );
                 }
               }
               return const SizedBox.shrink();
             } else {
-              return Padding(
-                padding:
-                    itemsPadding ?? const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: TextButton(
-                        style: ButtonStyle(
-                          backgroundColor:
-                              MaterialStateProperty.resolveWith<Color>(
-                            (Set<MaterialState> states) {
-                              if (controllerBar.text ==
-                                  listaFiltrada[index].label) {
-                                return selectedItemBackgroundColor ?? Colors.black38;
-                              }
-                              return Colors.transparent;
-                            },
-                          ),
-                          shape: MaterialStateProperty.all<OutlinedBorder>(
-                            RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                          ),
-                          overlayColor:
-                              MaterialStateProperty.resolveWith<Color>(
-                            (Set<MaterialState> states) {
-                              if (controllerBar.text ==
-                                  listaFiltrada[index].label) {
-                                return selectedItemHoverColor ??
-                                    Colors.grey.shade300;
-                              }
-                              return unselectedItemHoverColor ??
-                                  Colors.grey.shade100;
-                            },
-                          ),
-                        ),
-                        onPressed: () => onPressed(listaFiltrada[index]),
-                        child: widgetBuilder ??
-                            Align(
-                              alignment: Alignment.centerLeft,
-                              child: Text(
-                                listaFiltrada[index].label,
-                                style: (controllerBar.text ==
-                                        listaFiltrada[index].label
-                                    ? selectedItemTextStyle ??
-                                        const TextStyle(color: Colors.black)
-                                    : unselectedItemTextStyle ??
-                                        const TextStyle(color: Colors.black45)),
-                              ),
-                            ),
-                      ),
-                    ),
-                    deleteMode
-                        ? dialogActionWidget ??
-                            IconButton(
-                              onPressed: () {
-                                onClear(listaFiltrada[index]);
-                              },
-                              icon: dialogActionIcon ??
-                                  Icon(
-                                    Icons.delete,
-                                    color: Colors.red.shade900,
-                                    size: 20,
-                                  ),
-                            )
-                        : const SizedBox.shrink()
-                  ],
-                ),
+              return DefaultListTile<T>(
+                deleteMode: deleteMode,
+                item: listaFiltrada[index],
+                onDelete: onDelete,
+                onPressed: onPressed,
+                overlayListSettings: overlayListSettings,
+                selected: controllerBar.text == listaFiltrada[index].label,
+                key: index == 0 ? _itemKey : null,
               );
             }
           },

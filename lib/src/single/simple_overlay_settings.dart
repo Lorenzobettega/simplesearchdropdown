@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 ///Class to hold all the customizations of the simple search overlay list.
 class SimpleOverlaySettings {
   SimpleOverlaySettings({
     this.dialogHeight,
+    this.dialogBackgroundColor,
     this.itemsPadding,
     this.selectedItemBackgroundColor,
     this.selectedItemHoverColor,
@@ -14,10 +16,16 @@ class SimpleOverlaySettings {
     this.dialogActionWidget,
     this.separatorHeight,
     this.animationDuration,
+    this.addItemHint,
+    this.addItemHintStyle,
+    this.itemWidgetBuilder,
   });
 
   ///Dropdown Container height
   final double? dialogHeight;
+
+  ///Dropdown Container color
+  final Color? dialogBackgroundColor;
 
   ///The padding for the items of the list.
   ///
@@ -50,4 +58,14 @@ class SimpleOverlaySettings {
 
   ///The duration of the dropdown opening animation.
   final Duration? animationDuration;
+
+  ///The text of the add button when user is allowed to add items in the list.
+  final String? addItemHint;
+
+  ///The style of the add button when user is allowed to add items in the list.
+  final TextStyle? addItemHintStyle;
+
+  ///Custom droplist item widget.
+  final Widget Function(ValueItem)? itemWidgetBuilder;
 }
+//TODO add a default overlay settings instead of being nullable.

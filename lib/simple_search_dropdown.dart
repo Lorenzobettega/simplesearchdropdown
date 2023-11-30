@@ -16,3 +16,5 @@ export './src/helpers/dialog_button.dart';
 export './src/dialogs/warning_dialog.dart';
 export './src/single/simple_searchbar_settings.dart';
 export './src/single/simple_overlay_settings.dart';
+export './src/helpers/default_list_tile.dart';
+export './src/helpers/default_add_list_item.dart';

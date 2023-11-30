@@ -3,26 +3,34 @@ import 'package:flutter/material.dart';
 ///Class to hold all the customizations of the simple search bar.
 class SimpleSearchbarSettings {
   const SimpleSearchbarSettings({
-    this.dropdownwidth,
-    this.dropdownHeight,
+    this.dropdownwidth = 300,
+    this.dropdownHeight = 50,
+    this.elevation = 2,
+    this.backgroundColor = Colors.white,
     this.border,
     this.clearIconColor,
     this.actions,
     this.hint,
     this.hintStyle,
     this.hoverColor,
-    this.dropdownClosedArrowIcon,
-    this.dropdownOpenedArrowIcon,
+    this.dropdownClosedArrowIcon = Icons.arrow_drop_down,
+    this.dropdownOpenedArrowIcon = Icons.arrow_drop_up,
     this.outsideIconColor,
-    this.outsideIconSize,
-    this.clearOnClose,
+    this.outsideIconSize = 20,
+    this.clearOnClose = false,
   });
 
   ///Main/outside Container height(default:50)
-  final double? dropdownHeight;
+  final double dropdownHeight;
 
   ///Main/outside Container width(default:300)
-  final double? dropdownwidth;
+  final double dropdownwidth;
+
+  ///The background color of the searchbar and overlay.
+  final Color backgroundColor;
+
+  ///The elevation of the searchbar and overlay (default:2).
+  final double elevation;
 
   ///The border of the searchbar.
   final OutlinedBorder? border;
@@ -43,17 +51,29 @@ class SimpleSearchbarSettings {
   final Color? hoverColor;
 
   ///Action Icon showed when dropdown is closed
-  final IconData? dropdownClosedArrowIcon;
+  final IconData dropdownClosedArrowIcon;
 
   ///Action Icon showed when dropdown is opened
-  final IconData? dropdownOpenedArrowIcon;
+  final IconData dropdownOpenedArrowIcon;
 
   ///Action dropdown Icon color
   final Color? outsideIconColor;
 
   ///Action dropdown Icon size(default:20)
-  final double? outsideIconSize;
+  final double outsideIconSize;
 
   ///If true, the value on the Searchbar will be cleared if nothing was selected(default:false).
-  final bool? clearOnClose;
+  final bool clearOnClose;
 }
+
+///The default settings for the SimpleSearchbar.
+const defaultSearchBarSettings = SimpleSearchbarSettings(
+  hintStyle: const TextStyle(fontSize: 14),
+  hoverColor: const Color.fromRGBO(245, 245, 245, 1),
+  border: const RoundedRectangleBorder(
+    borderRadius: BorderRadius.all(
+      Radius.circular(10),
+    ),
+  ),
+  hint: 'Selecione',
+);
