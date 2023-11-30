@@ -219,7 +219,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     onAddItem: (val) => handleAddItem(
                       val,
                     ),
-                    onClear: (val) => handleDeleteItem(
+                    onDelete: (val) => handleDeleteItem(
                       val,
                       context,
                     ),
@@ -240,9 +240,6 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   }
 
   void hideOverlay(ValueItem<T>? val) {
-    setState(() {
-      aberto = !aberto;
-    });
     if (val != null) {
       selectedValue = val;
       widget.updateSelectedItem(val);
@@ -260,6 +257,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       }
     }
     overlayScreen.closeAll();
+    setState(() {
+      aberto = !aberto;
+    });
   }
 
   @override

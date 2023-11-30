@@ -72,7 +72,7 @@ const defaultSearchBarSettings = SimpleSearchbarSettings(
   hoverColor: const Color.fromRGBO(245, 245, 245, 1),
   border: const RoundedRectangleBorder(
     borderRadius: BorderRadius.all(
-      Radius.circular(10.0),
+      Radius.circular(10),
     ),
   ),
   hint: 'Selecione',
