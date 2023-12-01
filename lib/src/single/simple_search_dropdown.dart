@@ -93,6 +93,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   List<ValueItem<T>> listafiltrada = [];
   final LayerLink _layerLink = LayerLink();
   bool aberto = false;
+  bool shouldScroll = true;
   ValueItem<T>? selectedValue;
 
   final TextEditingController controllerBar = TextEditingController();
@@ -125,6 +126,10 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         listafiltrada = widget.listItems;
       }
     }
+  }
+
+  void updateShouldScroll({bool reset = false}) {
+    shouldScroll = reset;
   }
 
   void handleAddItem(ValueItem<T> item) {
@@ -212,7 +217,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   child: SingleListView(
                     addMode: widget.addMode,
                     backgroundColor: widget.searchBarSettings.backgroundColor,
-                    controllerBar: controllerBar,
+                    searchbarText: controllerBar.text,
                     deleteMode: widget.deleteMode,
                     elevation: widget.searchBarSettings.elevation,
                     listaFiltrada: listafiltrada,
@@ -229,6 +234,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     newValueItem: widget.newValueItem,
                     selectedItem: selectedValue,
                     overlayListSettings: widget.overlayListSettings,
+                    shouldScroll: shouldScroll,
+                    updateShouldScroll: updateShouldScroll,
                   ),
                 ),
               ),
@@ -240,6 +247,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   }
 
   void hideOverlay(ValueItem<T>? val) {
+    setState(() {
+      aberto = !aberto;
+    });
     if (val != null) {
       selectedValue = val;
       widget.updateSelectedItem(val);
@@ -256,10 +266,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         }
       }
     }
+    updateShouldScroll(reset: true);
     overlayScreen.closeAll();
-    setState(() {
-      aberto = !aberto;
-    });
   }
 
   @override
