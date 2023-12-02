@@ -14,10 +14,6 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     required this.updateSelectedItems,
     this.sortType = 0,
     this.confirmDelete = false,
-    this.dialogActionIcon,
-    this.dialogActionWidget,
-    this.dialogSearchBarBorder,
-    this.dialogSearchBarColor,
     required this.selectedItems,
     this.deleteDialogSettings,
     this.verifyInputItem,
@@ -79,18 +75,6 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   ///
   ///If `3`, the selected item will be put on first position.
   final int sortType;
-
-  ///Custom droplist action icon.
-  final Icon? dialogActionIcon;
-
-  ///Custom droplist action Widget.
-  final Widget? dialogActionWidget;
-
-  ///Searchbar border
-  final OutlinedBorder? dialogSearchBarBorder;
-
-  ///Searchbar color
-  final Color? dialogSearchBarColor;
 
   ///Function to check if the item added is valid or not.
   final bool Function(ValueItem<T>)? verifyInputItem;
