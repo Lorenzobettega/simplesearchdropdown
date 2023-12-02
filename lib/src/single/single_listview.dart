@@ -33,7 +33,7 @@ class SingleListView<T> extends StatelessWidget {
   ///Function that defines how the user input transforms into a new ValueItem on the list.
   final ValueItem<T> Function(String input)? newValueItem;
 
-  ///The overlay list of items settings.
+  ///The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
   final Color? backgroundColor;
   final String searchbarText;

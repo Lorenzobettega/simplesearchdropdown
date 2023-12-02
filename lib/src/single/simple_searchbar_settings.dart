@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 ///Class to hold all the customizations of the simple search bar.
 class SimpleSearchbarSettings {
   const SimpleSearchbarSettings({
-    this.dropdownwidth = 300,
+    this.dropdownWidth = 300,
     this.dropdownHeight = 50,
     this.elevation = 2,
     this.backgroundColor = Colors.white,
@@ -14,7 +15,7 @@ class SimpleSearchbarSettings {
     ),
     this.clearIconColor,
     this.actions,
-    this.hint = 'Selecione',
+    this.hint = 'Pesquisar',
     this.hintStyle = const TextStyle(fontSize: 14),
     this.hoverColor = const Color.fromRGBO(245, 245, 245, 1),
     this.dropdownClosedArrowIcon = Icons.arrow_drop_down,
@@ -22,13 +23,19 @@ class SimpleSearchbarSettings {
     this.outsideIconColor,
     this.outsideIconSize = 20,
     this.clearOnClose = false,
+    this.boxMultiSelectedClearIconSize = 20,
+    this.boxMultiSelectedClearIconColor,
+    this.boxMultiItemWidgetBuilder,
+    this.boxMultiSelectedBackgroundColor =
+        const Color.fromRGBO(224, 224, 224, 1),
+    this.boxMultiSelectedTextStyle,
   });
 
   ///Main/outside Container height(default:50)
   final double dropdownHeight;
 
   ///Main/outside Container width(default:300)
-  final double dropdownwidth;
+  final double dropdownWidth;
 
   ///The background color of the searchbar and overlay.
   final Color backgroundColor;
@@ -46,7 +53,7 @@ class SimpleSearchbarSettings {
   final List<Widget>? actions;
 
   ///The text to be presented on the hint of the searchbar.
-  final String? hint;
+  final String hint;
 
   ///The style of the hint of the searchbar.
   final TextStyle? hintStyle;
@@ -68,6 +75,21 @@ class SimpleSearchbarSettings {
 
   ///If true, the value on the Searchbar will be cleared if nothing was selected(default:false).
   final bool clearOnClose;
+
+  ///Outside/horizontal list of selected items clear icon size(default:20)
+  final double boxMultiSelectedClearIconSize;
+
+  ///Outside/horizontal list of selected items clear icon color
+  final Color? boxMultiSelectedClearIconColor;
+
+  ///Outside/horizontal list of selected items Background color
+  final Color boxMultiSelectedBackgroundColor;
+
+  ///Outside/horizontal list of selected items Background color
+  final TextStyle? boxMultiSelectedTextStyle;
+
+  ///Outside/horizontal list of selected items custom widget
+  final Widget Function(ValueItem)? boxMultiItemWidgetBuilder;
 }
 
 ///The default settings for the SimpleSearchbar.

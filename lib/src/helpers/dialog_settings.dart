@@ -69,7 +69,7 @@ const defaultDeleteButtonSettings = DialogButtonSettings(
 );
 
 ///Default settings for Cancel button.
-const  defaultCancelButtonSettings = DialogButtonSettings(
+const defaultCancelButtonSettings = DialogButtonSettings(
   'Cancelar',
   backgroundColor: Colors.white,
   textColor: const Color.fromARGB(255, 66, 70, 76),

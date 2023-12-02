@@ -58,7 +58,7 @@ class SearchDropDown<T> extends StatefulWidget {
   ///The SearchBarSettings.
   final SimpleSearchbarSettings searchBarSettings;
 
-  ///The overlay list of items settings.
+  ///The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
 
   ///Function to check if the item added is valid or not.
@@ -230,7 +230,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     ),
                     onPressed: (val) => hideOverlay(val),
                     sortType: widget.sortType,
-                    dropdownwidth: widget.searchBarSettings.dropdownwidth,
+                    dropdownwidth: widget.searchBarSettings.dropdownWidth,
                     newValueItem: widget.newValueItem,
                     selectedItem: selectedValue,
                     overlayListSettings: widget.overlayListSettings,
@@ -275,7 +275,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     return CompositedTransformTarget(
       link: _layerLink,
       child: SizedBox(
-        width: widget.searchBarSettings.dropdownwidth,
+        width: widget.searchBarSettings.dropdownWidth,
         height: widget.searchBarSettings.dropdownHeight,
         child: SearchBar(
           trailing: widget.searchBarSettings.actions ??
