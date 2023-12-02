@@ -9,7 +9,7 @@ class SingleListView<T> extends StatelessWidget {
     required this.onAddItem,
     required this.newValueItem,
     required this.backgroundColor,
-    required this.controllerBar,
+    required this.searchbarText,
     required this.deleteMode,
     required this.elevation,
     required this.listaFiltrada,
@@ -19,6 +19,8 @@ class SingleListView<T> extends StatelessWidget {
     required this.overlayListSettings,
     required this.dropdownwidth,
     required this.selectedItem,
+    required this.shouldScroll,
+    required this.updateShouldScroll,
     super.key,
   });
 
@@ -31,10 +33,10 @@ class SingleListView<T> extends StatelessWidget {
   ///Function that defines how the user input transforms into a new ValueItem on the list.
   final ValueItem<T> Function(String input)? newValueItem;
 
-  ///The overlay list of items settings.
+  ///The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
   final Color? backgroundColor;
-  final TextEditingController controllerBar;
+  final String searchbarText;
   final bool deleteMode;
   final double elevation;
   final List<ValueItem<T>> listaFiltrada;
@@ -43,6 +45,8 @@ class SingleListView<T> extends StatelessWidget {
   final int sortType;
   final double dropdownwidth;
   final ValueItem<T>? selectedItem;
+  final bool shouldScroll;
+  final VoidCallback updateShouldScroll;
 
   void sortFunction() {
     switch (sortType) {
@@ -93,8 +97,9 @@ class SingleListView<T> extends StatelessWidget {
     final controller = ScrollController();
     final GlobalKey _itemKey = GlobalKey();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (selectedItem != null) {
+      if (selectedItem != null && shouldScroll) {
         goToSelectedItem(controller, selectedItem!, _itemKey);
+        updateShouldScroll();
       }
     });
     return Card(
@@ -116,12 +121,12 @@ class SingleListView<T> extends StatelessWidget {
           itemBuilder: (context, index) {
             sortFunction();
             if (index == listaFiltrada.length && addMode) {
-              if (controllerBar.text != '') {
+              if (searchbarText != '') {
                 final list = listaFiltrada
                     .where(
                       (element) =>
                           element.label.toLowerCase().latinize().contains(
-                                controllerBar.text.toLowerCase().latinize(),
+                                searchbarText.toLowerCase().latinize(),
                               ),
                     )
                     .toList();
@@ -129,7 +134,7 @@ class SingleListView<T> extends StatelessWidget {
                   return DefaultAddListItem(
                     itemAdded: itemAdded,
                     overlayListSettings: overlayListSettings,
-                    text: controllerBar.text,
+                    text: searchbarText,
                   );
                 }
               }
@@ -141,7 +146,7 @@ class SingleListView<T> extends StatelessWidget {
                 onDelete: onDelete,
                 onPressed: onPressed,
                 overlayListSettings: overlayListSettings,
-                selected: controllerBar.text == listaFiltrada[index].label,
+                selected: searchbarText == listaFiltrada[index].label,
                 key: index == 0 ? _itemKey : null,
               );
             }

@@ -1,3 +1,13 @@
+## [4.0.0] - 2023-12-01.
+-   [Breaking] many visual parameters are now inside `SimpleOverlaySettings` and `SimpleSearchbarSettings`. Some of them received a new name to better represent what they do. 
+- `onDeleteItem` and `onAddItem` are not required anymore. 
+- Added `sortType` parameter to allow defining how the list of items should be sorted. 
+- The drop list now scrolls to the selected item (if there is one). 
+- Improved code documentation: many files and variables now have a text explaining a little more about them. Still some are missing and will be added on the future.
+- Code cleanup and organization.
+- Improved sample.
+- Improved consistency between single and multiple search dropdowns.
+
 ## [3.1.1] - 2023-10-19.
 -   Fixed a issue where an incomplete selection in `SearchDropDown` after a search, passed the impression that the selected value changed + added `clearOnClose` parameter to `SearchDropDown`. If it's true or `addMode` = `false`, after the user closes the overlay without selecting an option and nothing was previously selected, the textfield will be cleared.  [18](https://github.com/Lorenzobettega/simplesearchdropdown/issues/18)
 -   Fixed an older incorrect implementation of `SearchDropDown`.
