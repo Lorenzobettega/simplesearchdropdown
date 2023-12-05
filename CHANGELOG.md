@@ -1,3 +1,7 @@
+## [4.0.2] - 2023-12-04.
+-   Fixed `MultipleSearchDropDown` selection.
+-   Fixed `SearchDropDown` ordering.
+
 ## [4.0.0] - 2023-12-01.
 -   [Breaking] many visual parameters are now inside `SimpleOverlaySettings` and `SimpleSearchbarSettings`. Some of them received a new name to better represent what they do. 
 - `onDeleteItem` and `onAddItem` are not required anymore. 
