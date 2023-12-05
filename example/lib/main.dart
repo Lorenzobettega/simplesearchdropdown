@@ -110,6 +110,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   color: Colors.blue,
                 ),
               ),
+              sortType: 3,
             ),
             const SizedBox(
               height: 20,
