@@ -46,7 +46,6 @@ class SingleListView<T> extends StatelessWidget {
   final bool shouldScroll;
   final VoidCallback updateShouldScroll;
 
-
   ///Function to scroll the list to the selected item
   ///only works if the size of all tiles is equal.
   void goToSelectedItem(
