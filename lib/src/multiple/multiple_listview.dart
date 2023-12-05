@@ -114,7 +114,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
         ? setState(() {
             sortFunction();
           })
-        : null;
+        : setState(() {});
   }
 
   ///Function to scroll the list to the selected item
