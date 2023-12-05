@@ -90,7 +90,7 @@ class SearchDropDown<T> extends StatefulWidget {
 
 class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   late OverlayScreen overlayScreen;
-  List<ValueItem<T>> listafiltrada = [];
+  List<ValueItem<T>> listaFiltrada = [];
   final LayerLink _layerLink = LayerLink();
   bool aberto = false;
   bool shouldScroll = true;
@@ -111,19 +111,41 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     overlayScreen = OverlayScreen.of(context);
   }
 
+  void sortFunction() {
+    switch (widget.sortType) {
+      case 0:
+        break;
+      case 1:
+        listaFiltrada.sort((a, b) => a.label.compareTo(b.label));
+        break;
+      case 2:
+        listaFiltrada.sort((a, b) => b.label.compareTo(a.label));
+        break;
+      case 3:
+        if (selectedValue != null) {
+          final indx = listaFiltrada.indexOf(selectedValue!);
+          if (indx != -1) {
+            listaFiltrada.removeAt(indx);
+            listaFiltrada.insert(0, selectedValue!);
+          }
+        }
+        break;
+    }
+  }
+
   void _filtrarLista(String? text, {bool start = false}) {
     if (start) {
-      listafiltrada = widget.listItems;
+      listaFiltrada = widget.listItems;
     } else {
       if (text != null && text != '') {
-        listafiltrada = widget.listItems
+        listaFiltrada = widget.listItems
             .where((element) => element.label
                 .toLowerCase()
                 .latinize()
                 .contains(text.toLowerCase()))
             .toList();
       } else {
-        listafiltrada = widget.listItems;
+        listaFiltrada = widget.listItems;
       }
     }
   }
@@ -194,6 +216,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   ) {
     final RenderBox renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
+    sortFunction();
     overlayScreen.show(
       OverlayEntry(
         builder: (context) => Stack(
@@ -220,7 +243,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     searchbarText: controllerBar.text,
                     deleteMode: widget.deleteMode,
                     elevation: widget.searchBarSettings.elevation,
-                    listaFiltrada: listafiltrada,
+                    listaFiltrada: listaFiltrada,
                     onAddItem: (val) => handleAddItem(
                       val,
                     ),
@@ -229,7 +252,6 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       context,
                     ),
                     onPressed: (val) => hideOverlay(val),
-                    sortType: widget.sortType,
                     dropdownwidth: widget.searchBarSettings.dropdownWidth,
                     newValueItem: widget.newValueItem,
                     selectedItem: selectedValue,

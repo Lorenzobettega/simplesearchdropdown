@@ -15,7 +15,6 @@ class SingleListView<T> extends StatelessWidget {
     required this.listaFiltrada,
     required this.onDelete,
     required this.onPressed,
-    required this.sortType,
     required this.overlayListSettings,
     required this.dropdownwidth,
     required this.selectedItem,
@@ -42,33 +41,10 @@ class SingleListView<T> extends StatelessWidget {
   final List<ValueItem<T>> listaFiltrada;
   final Function(ValueItem<T> value) onDelete;
   final Function(ValueItem<T> value) onPressed;
-  final int sortType;
   final double dropdownwidth;
   final ValueItem<T>? selectedItem;
   final bool shouldScroll;
   final VoidCallback updateShouldScroll;
-
-  void sortFunction() {
-    switch (sortType) {
-      case 0:
-        break;
-      case 1:
-        listaFiltrada.sort((a, b) => a.label.compareTo(b.label));
-        break;
-      case 2:
-        listaFiltrada.sort((a, b) => b.label.compareTo(a.label));
-        break;
-      case 3:
-        if (selectedItem != null) {
-          final indx = listaFiltrada.indexOf(selectedItem!);
-          if (indx != -1) {
-            listaFiltrada.removeAt(indx);
-            listaFiltrada.insert(0, selectedItem!);
-          }
-        }
-        break;
-    }
-  }
 
   ///Function to scroll the list to the selected item
   ///only works if the size of all tiles is equal.
@@ -119,7 +95,6 @@ class SingleListView<T> extends StatelessWidget {
             height: overlayListSettings.separatorHeight,
           ),
           itemBuilder: (context, index) {
-            sortFunction();
             if (index == listaFiltrada.length && addMode) {
               if (searchbarText != '') {
                 final list = listaFiltrada
