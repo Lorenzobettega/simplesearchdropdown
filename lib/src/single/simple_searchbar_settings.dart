@@ -53,7 +53,7 @@ class SimpleSearchbarSettings {
   ///List of widgets that will go on the end of the search bar.
   final List<Widget>? actions;
 
-  ///The style of searchbar.
+  ///The style of searchbar text when something is typed (default:hintStyle)
   final TextStyle? searchBarTextStyle;
 
   ///The text to be presented on the hint of the searchbar.
@@ -74,13 +74,13 @@ class SimpleSearchbarSettings {
   ///Action dropdown Icon color
   final Color? outsideIconColor;
 
-  ///Action dropdown Icon size(default:20)
+  ///Action dropdown Icon size (default:20)
   final double outsideIconSize;
 
-  ///If true, the value on the Searchbar will be cleared if nothing was selected(default:false).
+  ///If true, the value on the Searchbar will be cleared if nothing was selected (default:false).
   final bool clearOnClose;
 
-  ///Outside/horizontal list of selected items clear icon size(default:20)
+  ///Outside/horizontal list of selected items clear icon size (default:20)
   final double boxMultiSelectedClearIconSize;
 
   ///Outside/horizontal list of selected items clear icon color
