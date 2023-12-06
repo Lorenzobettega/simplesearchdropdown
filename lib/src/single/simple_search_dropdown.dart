@@ -294,77 +294,82 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: SizedBox(
-        width: widget.searchBarSettings.dropdownWidth,
-        height: widget.searchBarSettings.dropdownHeight,
-        child: SearchBar(
-          trailing: widget.searchBarSettings.actions ??
-              [
-                aberto
-                    ? Icon(
-                        widget.searchBarSettings.dropdownOpenedArrowIcon,
-                        color: widget.searchBarSettings.outsideIconColor,
-                        size: widget.searchBarSettings.outsideIconSize,
-                      )
-                    : Icon(
-                        widget.searchBarSettings.dropdownClosedArrowIcon,
-                        color: widget.searchBarSettings.outsideIconColor,
-                        size: widget.searchBarSettings.outsideIconSize,
+    return Stack(
+      children: [
+        CompositedTransformTarget(
+          link: _layerLink,
+          child: SizedBox(
+            width: widget.searchBarSettings.dropdownWidth,
+            height: widget.searchBarSettings.dropdownHeight,
+            child: SearchBar(
+              trailing: widget.searchBarSettings.actions ??
+                  [
+                    aberto
+                        ? Icon(
+                            widget.searchBarSettings.dropdownOpenedArrowIcon,
+                            color: widget.searchBarSettings.outsideIconColor,
+                            size: widget.searchBarSettings.outsideIconSize,
+                          )
+                        : Icon(
+                            widget.searchBarSettings.dropdownClosedArrowIcon,
+                            color: widget.searchBarSettings.outsideIconColor,
+                            size: widget.searchBarSettings.outsideIconSize,
+                          ),
+                    Visibility(
+                      visible: controllerBar.text != '',
+                      child: Row(
+                        children: [
+                          const SizedBox(
+                            width: 5,
+                          ),
+                          IconButton(
+                            onPressed: resetSelection,
+                            icon: Icon(
+                              Icons.clear,
+                              color: widget.searchBarSettings.clearIconColor,
+                              size: widget.searchBarSettings.outsideIconSize,
+                            ),
+                          ),
+                        ],
                       ),
-                Visibility(
-                  visible: controllerBar.text != '',
-                  child: Row(
-                    children: [
-                      const SizedBox(
-                        width: 5,
-                      ),
-                      IconButton(
-                        onPressed: resetSelection,
-                        icon: Icon(
-                          Icons.clear,
-                          color: widget.searchBarSettings.clearIconColor,
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
+              controller: controllerBar,
+              backgroundColor: MaterialStatePropertyAll(
+                  widget.searchBarSettings.backgroundColor),
+              hintStyle:
+                  MaterialStatePropertyAll(widget.searchBarSettings.hintStyle),
+              overlayColor:
+                  MaterialStatePropertyAll(widget.searchBarSettings.hoverColor),
+              surfaceTintColor: MaterialStatePropertyAll(
+                  widget.searchBarSettings.backgroundColor),
+              shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
+              hintText: widget.searchBarSettings.hint,
+              side: MaterialStateProperty.all<BorderSide>(
+                const BorderSide(
+                  style: BorderStyle.none,
                 ),
-              ],
-          controller: controllerBar,
-          backgroundColor: MaterialStatePropertyAll(
-              widget.searchBarSettings.backgroundColor),
-          hintStyle:
-              MaterialStatePropertyAll(widget.searchBarSettings.hintStyle),
-          overlayColor:
-              MaterialStatePropertyAll(widget.searchBarSettings.hoverColor),
-          surfaceTintColor: MaterialStatePropertyAll(
-              widget.searchBarSettings.backgroundColor),
-          shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
-          hintText: widget.searchBarSettings.hint,
-          side: MaterialStateProperty.all<BorderSide>(
-            const BorderSide(
-              style: BorderStyle.none,
+              ),
+              onTap: () {
+                if (overlayScreen.overlayEntrys.isEmpty) {
+                  setState(() {
+                    aberto = !aberto;
+                  });
+                  _showOverlay(context);
+                } else {
+                  hideOverlay(null);
+                }
+              },
+              onChanged: (a) {
+                _filtrarLista(a);
+                overlayScreen.updateLast();
+              },
+              elevation: MaterialStateProperty.all<double>(
+                  widget.searchBarSettings.elevation),
             ),
           ),
-          onTap: () {
-            if (overlayScreen.overlayEntrys.isEmpty) {
-              setState(() {
-                aberto = !aberto;
-              });
-              _showOverlay(context);
-            } else {
-              hideOverlay(null);
-            }
-          },
-          onChanged: (a) {
-            _filtrarLista(a);
-            overlayScreen.updateLast();
-          },
-          elevation: MaterialStateProperty.all<double>(
-              widget.searchBarSettings.elevation),
         ),
-      ),
+      ],
     );
   }
 }
