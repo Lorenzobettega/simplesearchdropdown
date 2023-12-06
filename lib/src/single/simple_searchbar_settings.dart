@@ -14,6 +14,7 @@ class SimpleSearchbarSettings {
       ),
     ),
     this.clearIconColor,
+    this.searchBarTextStyle,
     this.actions,
     this.hint = 'Pesquisar',
     this.hintStyle = const TextStyle(fontSize: 14),
@@ -51,6 +52,9 @@ class SimpleSearchbarSettings {
 
   ///List of widgets that will go on the end of the search bar.
   final List<Widget>? actions;
+
+  ///The style of searchbar.
+  final TextStyle? searchBarTextStyle;
 
   ///The text to be presented on the hint of the searchbar.
   final String hint;
