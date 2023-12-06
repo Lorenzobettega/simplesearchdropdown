@@ -342,7 +342,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           surfaceTintColor: MaterialStatePropertyAll(
               widget.searchBarSettings.backgroundColor),
           shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
-          textStyle: MaterialStatePropertyAll(widget.searchBarSettings.searchBarTextStyle),
+          textStyle: MaterialStatePropertyAll(
+              widget.searchBarSettings.searchBarTextStyle ??
+                  widget.searchBarSettings.hintStyle),
           hintText: widget.searchBarSettings.hint,
           side: MaterialStateProperty.all<BorderSide>(
             const BorderSide(

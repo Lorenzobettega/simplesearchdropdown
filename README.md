@@ -3,7 +3,7 @@ Search DropDown is a dropdown that offers a search bar, multiple and single sele
 
 ## Import
 ```dart
-import 'package:searchdropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 ```
 
 ## Getting Started

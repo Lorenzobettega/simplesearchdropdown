@@ -161,9 +161,9 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
               hintStyle: MaterialStateProperty.all<TextStyle?>(
                 widget.searchBarSettings.hintStyle,
               ),
-              textStyle: MaterialStateProperty.all<TextStyle?>(
-                widget.searchBarSettings.searchBarTextStyle,
-              ),
+              textStyle: MaterialStatePropertyAll(
+                  widget.searchBarSettings.searchBarTextStyle ??
+                      widget.searchBarSettings.hintStyle),
               side: MaterialStateProperty.all<BorderSide>(
                 const BorderSide(
                   style: BorderStyle.none,

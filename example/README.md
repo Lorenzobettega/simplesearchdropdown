@@ -1,3 +1,3 @@
-# currency_textfield_example
+# simple_search_dropdown_example
 
-Demonstrates how to use the currency_textfield package.
+Demonstrates how to use the simple_search_dropdown package.

@@ -1,3 +1,7 @@
+## [4.0.3] - 2023-12-04.
+-   Added `searchBarSettings.searchBarTextStyle` parameter. It allows you to define the style of the text the user typed on the searchbar. Defaults to `searchBarSettings.hintStyle`.
+- Fix readme.
+
 ## [4.0.2] - 2023-12-04.
 -   Fixed `MultipleSearchDropDown` selection.
 -   Fixed `SearchDropDown` ordering.
