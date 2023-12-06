@@ -133,104 +133,100 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return Stack(
-      children: [
-        Card(
-          surfaceTintColor: widget.overlayListSettings.dialogBackgroundColor ??
-              widget.searchBarSettings.backgroundColor,
-          color: widget.overlayListSettings.dialogBackgroundColor ??
-              widget.searchBarSettings.backgroundColor,
-          elevation: widget.searchBarSettings.elevation,
-          child: AnimatedContainer(
-            duration: widget.overlayListSettings.animationDuration,
-            height: widget.overlayListSettings.dialogHeight,
-            width: widget.searchBarSettings.dropdownWidth,
-            child: Column(
-              children: [
-                SearchBar(
-                  controller: controllerBar,
-                  backgroundColor: MaterialStatePropertyAll(
-                      widget.searchBarSettings.backgroundColor),
-                  overlayColor: MaterialStatePropertyAll(
-                      widget.overlayListSettings.unselectedItemHoverColor),
-                  constraints: BoxConstraints(
-                      minHeight: widget.searchBarSettings.dropdownHeight,
-                      maxWidth: widget.searchBarSettings.dropdownWidth),
-                  surfaceTintColor: MaterialStatePropertyAll(
-                      widget.searchBarSettings.backgroundColor),
-                  shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
-                  hintText: widget.searchBarSettings.hint,
-                  hintStyle: MaterialStateProperty.all<TextStyle?>(
-                    widget.searchBarSettings.hintStyle,
-                  ),
-                  textStyle: MaterialStateProperty.all<TextStyle?>(
-                    widget.searchBarSettings.searchBarTextStyle,
-                  ),
-                  side: MaterialStateProperty.all<BorderSide>(
-                    const BorderSide(
-                      style: BorderStyle.none,
-                    ),
-                  ),
-                  onChanged: (a) {
-                    filtrarLista(a);
-                  },
-                  elevation: MaterialStateProperty.all<double>(
-                      widget.searchBarSettings.elevation),
+    return Card(
+      surfaceTintColor: widget.overlayListSettings.dialogBackgroundColor ??
+          widget.searchBarSettings.backgroundColor,
+      color: widget.overlayListSettings.dialogBackgroundColor ??
+          widget.searchBarSettings.backgroundColor,
+      elevation: widget.searchBarSettings.elevation,
+      child: AnimatedContainer(
+        duration: widget.overlayListSettings.animationDuration,
+        height: widget.overlayListSettings.dialogHeight,
+        width: widget.searchBarSettings.dropdownWidth,
+        child: Column(
+          children: [
+            SearchBar(
+              controller: controllerBar,
+              backgroundColor: MaterialStatePropertyAll(
+                  widget.searchBarSettings.backgroundColor),
+              overlayColor: MaterialStatePropertyAll(
+                  widget.overlayListSettings.unselectedItemHoverColor),
+              constraints: BoxConstraints(
+                  minHeight: widget.searchBarSettings.dropdownHeight,
+                  maxWidth: widget.searchBarSettings.dropdownWidth),
+              surfaceTintColor: MaterialStatePropertyAll(
+                  widget.searchBarSettings.backgroundColor),
+              shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
+              hintText: widget.searchBarSettings.hint,
+              hintStyle: MaterialStateProperty.all<TextStyle?>(
+                widget.searchBarSettings.hintStyle,
+              ),
+              textStyle: MaterialStateProperty.all<TextStyle?>(
+                widget.searchBarSettings.searchBarTextStyle,
+              ),
+              side: MaterialStateProperty.all<BorderSide>(
+                const BorderSide(
+                  style: BorderStyle.none,
                 ),
-                const SizedBox(
-                  height: 5,
+              ),
+              onChanged: (a) {
+                filtrarLista(a);
+              },
+              elevation: MaterialStateProperty.all<double>(
+                  widget.searchBarSettings.elevation),
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            Expanded(
+              child: ListView.separated(
+                controller: controller,
+                padding: EdgeInsets.zero,
+                scrollDirection: Axis.vertical,
+                itemCount: listaFiltrada.length + (widget.addMode ? 1 : 0),
+                separatorBuilder: (context, index) => SizedBox(
+                  height: widget.overlayListSettings.separatorHeight,
                 ),
-                Expanded(
-                  child: ListView.separated(
-                    controller: controller,
-                    padding: EdgeInsets.zero,
-                    scrollDirection: Axis.vertical,
-                    itemCount: listaFiltrada.length + (widget.addMode ? 1 : 0),
-                    separatorBuilder: (context, index) => SizedBox(
-                      height: widget.overlayListSettings.separatorHeight,
-                    ),
-                    itemBuilder: (context, index) {
-                      if (index == listaFiltrada.length && widget.addMode) {
-                        if (controllerBar.text != '') {
-                          final list = listaFiltrada
-                              .where(
-                                (element) => element.label
-                                    .toLowerCase()
-                                    .latinize()
-                                    .contains(
-                                      controllerBar.text.toLowerCase().latinize(),
-                                    ),
-                              )
-                              .toList();
-                          if (list.isEmpty) {
-                            return DefaultAddListItem(
-                              itemAdded: itemAdded,
-                              overlayListSettings: widget.overlayListSettings,
-                              text: controllerBar.text,
-                            );
-                          }
-                        }
-                        return const SizedBox.shrink();
-                      } else {
-                        return DefaultListTile<T>(
-                          deleteMode: widget.deleteMode,
-                          item: listaFiltrada[index],
-                          onDelete: widget.onDeleteItem,
-                          onPressed: addItem,
+                itemBuilder: (context, index) {
+                  if (index == listaFiltrada.length && widget.addMode) {
+                    if (controllerBar.text != '') {
+                      final list = listaFiltrada
+                          .where(
+                            (element) => element.label
+                                .toLowerCase()
+                                .latinize()
+                                .contains(
+                                  controllerBar.text.toLowerCase().latinize(),
+                                ),
+                          )
+                          .toList();
+                      if (list.isEmpty) {
+                        return DefaultAddListItem(
+                          itemAdded: itemAdded,
                           overlayListSettings: widget.overlayListSettings,
-                          selected:
-                              widget.selectedItens.contains(listaFiltrada[index]),
-                          key: index == 0 ? _itemKey : null,
+                          text: controllerBar.text,
                         );
                       }
-                    },
-                  ),
-                ),
-              ],
+                    }
+                    return const SizedBox.shrink();
+                  } else {
+                    return DefaultListTile<T>(
+                      deleteMode: widget.deleteMode,
+                      item: listaFiltrada[index],
+                      onDelete: widget.onDeleteItem,
+                      onPressed: addItem,
+                      overlayListSettings: widget.overlayListSettings,
+                      selected:
+                          widget.selectedItens.contains(listaFiltrada[index]),
+                      key: index == 0 ? _itemKey : null,
+                    );
+                  }
+                },
+              ),
             ),
-          ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }
