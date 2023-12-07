@@ -59,6 +59,8 @@ class DefaultListTile<T> extends StatelessWidget {
                       alignment: Alignment.centerLeft,
                       child: Text(
                         item.label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: (selected
                             ? overlayListSettings.selectedItemTextStyle
                             : overlayListSettings.unselectedItemTextStyle),
