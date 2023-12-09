@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
@@ -40,9 +41,9 @@ class MultipleListView<T> extends StatefulWidget {
 
 class _MultipleListViewState<T> extends State<MultipleListView<T>> {
   List<ValueItem<T>> listaFiltrada = [];
-  final GlobalKey _itemKey = GlobalKey();
   final TextEditingController controllerBar = TextEditingController();
-  final controller = ScrollController();
+  final ItemScrollController scrollController = ItemScrollController();
+  final PageStorageBucket pageStorageBucket = PageStorageBucket();
 
   @override
   void initState() {
@@ -120,111 +121,111 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
   ///Function to scroll the list to the selected item
   void goToSelectedItem(ValueItem<T> item) {
     final index = listaFiltrada.indexOf(item);
-    final double separator = widget.overlayListSettings.separatorHeight;
-    final context = _itemKey.currentContext;
-    if (index > 1 && context != null) {
-      controller.position.animateTo(
-        index * (context.size!.height + separator),
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
+    if (index > 1) {
+      scrollController.scrollTo(
+        index: index,
+        duration: widget.overlayListSettings.reOpenedScrollDuration,
+        curve: Curves.ease,
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Card(
-      surfaceTintColor: widget.overlayListSettings.dialogBackgroundColor ??
-          widget.searchBarSettings.backgroundColor,
-      color: widget.overlayListSettings.dialogBackgroundColor ??
-          widget.searchBarSettings.backgroundColor,
-      elevation: widget.searchBarSettings.elevation,
-      child: AnimatedContainer(
-        duration: widget.overlayListSettings.animationDuration,
-        height: widget.overlayListSettings.dialogHeight,
-        width: widget.searchBarSettings.dropdownWidth,
-        child: Column(
-          children: [
-            SearchBar(
-              controller: controllerBar,
-              backgroundColor: MaterialStatePropertyAll(
-                  widget.searchBarSettings.backgroundColor),
-              overlayColor: MaterialStatePropertyAll(
-                  widget.overlayListSettings.unselectedItemHoverColor),
-              constraints: BoxConstraints(
-                  minHeight: widget.searchBarSettings.dropdownHeight,
-                  maxWidth: widget.searchBarSettings.dropdownWidth),
-              surfaceTintColor: MaterialStatePropertyAll(
-                  widget.searchBarSettings.backgroundColor),
-              shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
-              hintText: widget.searchBarSettings.hint,
-              hintStyle: MaterialStateProperty.all<TextStyle?>(
-                widget.searchBarSettings.hintStyle,
-              ),
-              textStyle: MaterialStatePropertyAll(
-                  widget.searchBarSettings.searchBarTextStyle ??
-                      widget.searchBarSettings.hintStyle),
-              side: MaterialStateProperty.all<BorderSide>(
-                const BorderSide(
-                  style: BorderStyle.none,
+    return PageStorage(
+      bucket: pageStorageBucket,
+      child: Card(
+        surfaceTintColor: widget.overlayListSettings.dialogBackgroundColor ??
+            widget.searchBarSettings.backgroundColor,
+        color: widget.overlayListSettings.dialogBackgroundColor ??
+            widget.searchBarSettings.backgroundColor,
+        elevation: widget.searchBarSettings.elevation,
+        child: AnimatedContainer(
+          duration: widget.overlayListSettings.animationDuration,
+          height: widget.overlayListSettings.dialogHeight,
+          width: widget.searchBarSettings.dropdownWidth,
+          child: Column(
+            children: [
+              SearchBar(
+                controller: controllerBar,
+                backgroundColor: MaterialStatePropertyAll(
+                    widget.searchBarSettings.backgroundColor),
+                overlayColor: MaterialStatePropertyAll(
+                    widget.overlayListSettings.unselectedItemHoverColor),
+                constraints: BoxConstraints(
+                    minHeight: widget.searchBarSettings.dropdownHeight,
+                    maxWidth: widget.searchBarSettings.dropdownWidth),
+                surfaceTintColor: MaterialStatePropertyAll(
+                    widget.searchBarSettings.backgroundColor),
+                shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
+                hintText: widget.searchBarSettings.hint,
+                hintStyle: MaterialStateProperty.all<TextStyle?>(
+                  widget.searchBarSettings.hintStyle,
                 ),
-              ),
-              onChanged: (a) {
-                filtrarLista(a);
-              },
-              elevation: MaterialStateProperty.all<double>(
-                  widget.searchBarSettings.elevation),
-            ),
-            const SizedBox(
-              height: 5,
-            ),
-            Expanded(
-              child: ListView.separated(
-                controller: controller,
-                padding: EdgeInsets.zero,
-                scrollDirection: Axis.vertical,
-                itemCount: listaFiltrada.length + (widget.addMode ? 1 : 0),
-                separatorBuilder: (context, index) => SizedBox(
-                  height: widget.overlayListSettings.separatorHeight,
+                textStyle: MaterialStatePropertyAll(
+                    widget.searchBarSettings.searchBarTextStyle ??
+                        widget.searchBarSettings.hintStyle),
+                side: MaterialStateProperty.all<BorderSide>(
+                  const BorderSide(
+                    style: BorderStyle.none,
+                  ),
                 ),
-                itemBuilder: (context, index) {
-                  if (index == listaFiltrada.length && widget.addMode) {
-                    if (controllerBar.text != '') {
-                      final list = listaFiltrada
-                          .where(
-                            (element) => element.label
-                                .toLowerCase()
-                                .latinize()
-                                .contains(
-                                  controllerBar.text.toLowerCase().latinize(),
-                                ),
-                          )
-                          .toList();
-                      if (list.isEmpty) {
-                        return DefaultAddListItem(
-                          itemAdded: itemAdded,
-                          overlayListSettings: widget.overlayListSettings,
-                          text: controllerBar.text,
-                        );
-                      }
-                    }
-                    return const SizedBox.shrink();
-                  } else {
-                    return DefaultListTile<T>(
-                      deleteMode: widget.deleteMode,
-                      item: listaFiltrada[index],
-                      onDelete: widget.onDeleteItem,
-                      onPressed: addItem,
-                      overlayListSettings: widget.overlayListSettings,
-                      selected:
-                          widget.selectedItens.contains(listaFiltrada[index]),
-                      key: index == 0 ? _itemKey : null,
-                    );
-                  }
+                onChanged: (a) {
+                  filtrarLista(a);
                 },
+                elevation: MaterialStateProperty.all<double>(
+                    widget.searchBarSettings.elevation),
               ),
-            ),
-          ],
+              const SizedBox(
+                height: 5,
+              ),
+              Expanded(
+                child: ScrollablePositionedList.separated(
+                  itemScrollController: scrollController,
+                  padding: EdgeInsets.zero,
+                  scrollDirection: Axis.vertical,
+                  itemCount: listaFiltrada.length + (widget.addMode ? 1 : 0),
+                  separatorBuilder: (context, index) => SizedBox(
+                    height: widget.overlayListSettings.separatorHeight,
+                  ),
+                  itemBuilder: (context, index) {
+                    if (index == listaFiltrada.length && widget.addMode) {
+                      if (controllerBar.text != '') {
+                        final list = listaFiltrada
+                            .where(
+                              (element) => element.label
+                                  .toLowerCase()
+                                  .latinize()
+                                  .contains(
+                                    controllerBar.text.toLowerCase().latinize(),
+                                  ),
+                            )
+                            .toList();
+                        if (list.isEmpty) {
+                          return DefaultAddListItem(
+                            itemAdded: itemAdded,
+                            overlayListSettings: widget.overlayListSettings,
+                            text: controllerBar.text,
+                          );
+                        }
+                      }
+                      return const SizedBox.shrink();
+                    } else {
+                      return DefaultListTile<T>(
+                        deleteMode: widget.deleteMode,
+                        item: listaFiltrada[index],
+                        onDelete: widget.onDeleteItem,
+                        onPressed: addItem,
+                        overlayListSettings: widget.overlayListSettings,
+                        selected:
+                            widget.selectedItens.contains(listaFiltrada[index]),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

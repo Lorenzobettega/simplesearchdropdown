@@ -23,6 +23,7 @@ class SimpleOverlaySettings {
     this.addItemHint = 'Criar',
     this.addItemHintStyle,
     this.itemWidgetBuilder,
+    this.reOpenedScrollDuration = const Duration(seconds: 1),
   });
 
   ///Dropdown Container height
@@ -71,6 +72,9 @@ class SimpleOverlaySettings {
 
   ///Custom droplist item widget.
   final Widget Function(ValueItem)? itemWidgetBuilder;
+
+  ///Duration to scroll down when the drop is reopened
+  final Duration reOpenedScrollDuration;
 }
 
 ///The default settings for the OverlayList.

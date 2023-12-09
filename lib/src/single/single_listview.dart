@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
 
 ///This creates the list that contains the items to be selected.
 class SingleListView<T> extends StatelessWidget {
-  const SingleListView({
+  SingleListView({
     required this.addMode,
     required this.onAddItem,
     required this.newValueItem,
@@ -45,19 +46,18 @@ class SingleListView<T> extends StatelessWidget {
   final ValueItem<T>? selectedItem;
   final bool shouldScroll;
   final VoidCallback updateShouldScroll;
+  final ItemScrollController scrollController = ItemScrollController();
 
   ///Function to scroll the list to the selected item
   ///only works if the size of all tiles is equal.
-  void goToSelectedItem(
-      ScrollController controller, ValueItem<T> item, GlobalKey key) {
+  ///
+  void goToSelectedItem(ValueItem<T> item) {
     final index = listaFiltrada.indexOf(item);
-    final double separator = overlayListSettings.separatorHeight;
-    final context = key.currentContext;
-    if (index > 1 && context != null) {
-      controller.position.animateTo(
-        index * (context.size!.height + separator),
-        duration: const Duration(milliseconds: 150),
-        curve: Curves.easeOut,
+    if (index > 1) {
+      scrollController.scrollTo(
+        index: index,
+        duration: overlayListSettings.reOpenedScrollDuration,
+        curve: Curves.ease,
       );
     }
   }
@@ -70,62 +70,63 @@ class SingleListView<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final controller = ScrollController();
-    final GlobalKey _itemKey = GlobalKey();
+    final PageStorageBucket pageStorageBucket = PageStorageBucket();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (selectedItem != null && shouldScroll) {
-        goToSelectedItem(controller, selectedItem!, _itemKey);
+        goToSelectedItem(selectedItem!);
         updateShouldScroll();
       }
     });
-    return Card(
-      surfaceTintColor:
-          overlayListSettings.dialogBackgroundColor ?? backgroundColor,
-      color: overlayListSettings.dialogBackgroundColor ?? backgroundColor,
-      elevation: elevation,
-      child: AnimatedContainer(
-        duration: overlayListSettings.animationDuration,
-        height: overlayListSettings.dialogHeight,
-        width: dropdownwidth,
-        child: ListView.separated(
-          controller: controller,
-          padding: EdgeInsets.zero,
-          itemCount: listaFiltrada.length + (addMode ? 1 : 0),
-          separatorBuilder: (context, index) => SizedBox(
-            height: overlayListSettings.separatorHeight,
-          ),
-          itemBuilder: (context, index) {
-            if (index == listaFiltrada.length && addMode) {
-              if (searchbarText != '') {
-                final list = listaFiltrada
-                    .where(
-                      (element) =>
-                          element.label.toLowerCase().latinize().contains(
-                                searchbarText.toLowerCase().latinize(),
-                              ),
-                    )
-                    .toList();
-                if (list.isEmpty) {
-                  return DefaultAddListItem(
-                    itemAdded: itemAdded,
-                    overlayListSettings: overlayListSettings,
-                    text: searchbarText,
-                  );
+    return PageStorage(
+      bucket: pageStorageBucket,
+      child: Card(
+        surfaceTintColor:
+            overlayListSettings.dialogBackgroundColor ?? backgroundColor,
+        color: overlayListSettings.dialogBackgroundColor ?? backgroundColor,
+        elevation: elevation,
+        child: AnimatedContainer(
+          duration: overlayListSettings.animationDuration,
+          height: overlayListSettings.dialogHeight,
+          width: dropdownwidth,
+          child: ScrollablePositionedList.separated(
+            itemScrollController: scrollController,
+            padding: EdgeInsets.zero,
+            itemCount: listaFiltrada.length + (addMode ? 1 : 0),
+            separatorBuilder: (context, index) => SizedBox(
+              height: overlayListSettings.separatorHeight,
+            ),
+            itemBuilder: (context, index) {
+              if (index == listaFiltrada.length && addMode) {
+                if (searchbarText != '') {
+                  final list = listaFiltrada
+                      .where(
+                        (element) =>
+                            element.label.toLowerCase().latinize().contains(
+                                  searchbarText.toLowerCase().latinize(),
+                                ),
+                      )
+                      .toList();
+                  if (list.isEmpty) {
+                    return DefaultAddListItem(
+                      itemAdded: itemAdded,
+                      overlayListSettings: overlayListSettings,
+                      text: searchbarText,
+                    );
+                  }
                 }
+                return const SizedBox.shrink();
+              } else {
+                return DefaultListTile<T>(
+                  deleteMode: deleteMode,
+                  item: listaFiltrada[index],
+                  onDelete: onDelete,
+                  onPressed: onPressed,
+                  overlayListSettings: overlayListSettings,
+                  selected: searchbarText == listaFiltrada[index].label,
+                );
               }
-              return const SizedBox.shrink();
-            } else {
-              return DefaultListTile<T>(
-                deleteMode: deleteMode,
-                item: listaFiltrada[index],
-                onDelete: onDelete,
-                onPressed: onPressed,
-                overlayListSettings: overlayListSettings,
-                selected: searchbarText == listaFiltrada[index].label,
-                key: index == 0 ? _itemKey : null,
-              );
-            }
-          },
+            },
+          ),
         ),
       ),
     );

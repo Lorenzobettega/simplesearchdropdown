@@ -11,6 +11,7 @@ dependencies:
   flutter:
     sdk: flutter
   stringr: ^1.0.0
+  scrollable_positioned_list: ^0.3.8
 
 dev_dependencies:
   flutter_test:
