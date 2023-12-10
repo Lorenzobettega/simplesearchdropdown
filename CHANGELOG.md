@@ -1,5 +1,6 @@
 ## [4.1.0] - 2023-12-10.
 -   Fixed TextOverflow inside the list and on create item.
+-   Fixed Single warning.
 -   Fixed ScrollController that was bug the first item selection
 -   Added `overlayListSettings.reOpenedScrollDuration ` parameter. It allows you to define the Duration of scroll down to selected item when list are reopened. Defaults to 1 second.
 
