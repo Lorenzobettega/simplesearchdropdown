@@ -77,17 +77,17 @@ class SingleListView<T> extends StatelessWidget {
         updateShouldScroll();
       }
     });
-    return PageStorage(
-      bucket: pageStorageBucket,
-      child: Card(
-        surfaceTintColor:
-            overlayListSettings.dialogBackgroundColor ?? backgroundColor,
-        color: overlayListSettings.dialogBackgroundColor ?? backgroundColor,
-        elevation: elevation,
-        child: AnimatedContainer(
-          duration: overlayListSettings.animationDuration,
-          height: overlayListSettings.dialogHeight,
-          width: dropdownwidth,
+    return Card(
+      surfaceTintColor:
+          overlayListSettings.dialogBackgroundColor ?? backgroundColor,
+      color: overlayListSettings.dialogBackgroundColor ?? backgroundColor,
+      elevation: elevation,
+      child: AnimatedContainer(
+        duration: overlayListSettings.animationDuration,
+        height: overlayListSettings.dialogHeight,
+        width: dropdownwidth,
+        child: PageStorage(
+          bucket: pageStorageBucket,
           child: ScrollablePositionedList.separated(
             itemScrollController: scrollController,
             padding: EdgeInsets.zero,

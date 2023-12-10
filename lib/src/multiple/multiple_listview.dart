@@ -132,54 +132,54 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return PageStorage(
-      bucket: pageStorageBucket,
-      child: Card(
-        surfaceTintColor: widget.overlayListSettings.dialogBackgroundColor ??
-            widget.searchBarSettings.backgroundColor,
-        color: widget.overlayListSettings.dialogBackgroundColor ??
-            widget.searchBarSettings.backgroundColor,
-        elevation: widget.searchBarSettings.elevation,
-        child: AnimatedContainer(
-          duration: widget.overlayListSettings.animationDuration,
-          height: widget.overlayListSettings.dialogHeight,
-          width: widget.searchBarSettings.dropdownWidth,
-          child: Column(
-            children: [
-              SearchBar(
-                controller: controllerBar,
-                backgroundColor: MaterialStatePropertyAll(
-                    widget.searchBarSettings.backgroundColor),
-                overlayColor: MaterialStatePropertyAll(
-                    widget.overlayListSettings.unselectedItemHoverColor),
-                constraints: BoxConstraints(
-                    minHeight: widget.searchBarSettings.dropdownHeight,
-                    maxWidth: widget.searchBarSettings.dropdownWidth),
-                surfaceTintColor: MaterialStatePropertyAll(
-                    widget.searchBarSettings.backgroundColor),
-                shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
-                hintText: widget.searchBarSettings.hint,
-                hintStyle: MaterialStateProperty.all<TextStyle?>(
-                  widget.searchBarSettings.hintStyle,
-                ),
-                textStyle: MaterialStatePropertyAll(
-                    widget.searchBarSettings.searchBarTextStyle ??
-                        widget.searchBarSettings.hintStyle),
-                side: MaterialStateProperty.all<BorderSide>(
-                  const BorderSide(
-                    style: BorderStyle.none,
-                  ),
-                ),
-                onChanged: (a) {
-                  filtrarLista(a);
-                },
-                elevation: MaterialStateProperty.all<double>(
-                    widget.searchBarSettings.elevation),
+    return Card(
+      surfaceTintColor: widget.overlayListSettings.dialogBackgroundColor ??
+          widget.searchBarSettings.backgroundColor,
+      color: widget.overlayListSettings.dialogBackgroundColor ??
+          widget.searchBarSettings.backgroundColor,
+      elevation: widget.searchBarSettings.elevation,
+      child: AnimatedContainer(
+        duration: widget.overlayListSettings.animationDuration,
+        height: widget.overlayListSettings.dialogHeight,
+        width: widget.searchBarSettings.dropdownWidth,
+        child: Column(
+          children: [
+            SearchBar(
+              controller: controllerBar,
+              backgroundColor: MaterialStatePropertyAll(
+                  widget.searchBarSettings.backgroundColor),
+              overlayColor: MaterialStatePropertyAll(
+                  widget.overlayListSettings.unselectedItemHoverColor),
+              constraints: BoxConstraints(
+                  minHeight: widget.searchBarSettings.dropdownHeight,
+                  maxWidth: widget.searchBarSettings.dropdownWidth),
+              surfaceTintColor: MaterialStatePropertyAll(
+                  widget.searchBarSettings.backgroundColor),
+              shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
+              hintText: widget.searchBarSettings.hint,
+              hintStyle: MaterialStateProperty.all<TextStyle?>(
+                widget.searchBarSettings.hintStyle,
               ),
-              const SizedBox(
-                height: 5,
+              textStyle: MaterialStatePropertyAll(
+                  widget.searchBarSettings.searchBarTextStyle ??
+                      widget.searchBarSettings.hintStyle),
+              side: MaterialStateProperty.all<BorderSide>(
+                const BorderSide(
+                  style: BorderStyle.none,
+                ),
               ),
-              Expanded(
+              onChanged: (a) {
+                filtrarLista(a);
+              },
+              elevation: MaterialStateProperty.all<double>(
+                  widget.searchBarSettings.elevation),
+            ),
+            const SizedBox(
+              height: 5,
+            ),
+            Expanded(
+              child: PageStorage(
+                bucket: pageStorageBucket,
                 child: ScrollablePositionedList.separated(
                   itemScrollController: scrollController,
                   padding: EdgeInsets.zero,
@@ -224,8 +224,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                   },
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
