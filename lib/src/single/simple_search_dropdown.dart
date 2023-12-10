@@ -158,7 +158,6 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     if (widget.addMode) {
       if (widget.verifyInputItem != null) {
         if (!widget.verifyInputItem!(item)) {
-          //TODO na pratica o item é visualmente adicionado e depois removido. Ajustar pra nem adicionar.
           controllerBar.clear();
           _filtrarLista(null);
           return overlayScreen.show(
@@ -174,6 +173,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           );
         }
       }
+      listaFiltrada.add(item);
       hideOverlay(item);
       widget.onAddItem!(item);
       _filtrarLista(null);

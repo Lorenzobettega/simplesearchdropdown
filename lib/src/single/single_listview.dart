@@ -65,7 +65,6 @@ class SingleListView<T> extends StatelessWidget {
   void itemAdded(String text) {
     final item = newValueItem!(text);
     onAddItem(item);
-    listaFiltrada.add(item);
   }
 
   @override
