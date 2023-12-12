@@ -1,3 +1,6 @@
+## [4.1.1] - 2023-12-12.
+-   Make searchbar lose focus after closing the overlay.[35] (https://github.com/Lorenzobettega/simplesearchdropdown/issues/35)
+
 ## [4.1.0] - 2023-12-10.
 -   Fixed TextOverflow inside the list and on create item.
 -   Fixed Single warning.

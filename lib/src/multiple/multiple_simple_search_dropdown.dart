@@ -220,6 +220,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
       aberto = !aberto;
     });
     overlayScreen.closeAll();
+    FocusScope.of(context).unfocus();
   }
 
   @override
