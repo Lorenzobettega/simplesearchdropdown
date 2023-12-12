@@ -24,7 +24,13 @@ class DefaultAddListItem extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Flexible(flex: 3,child: Text(text,overflow: TextOverflow.ellipsis,maxLines: 2,)),
+          Flexible(
+              flex: 3,
+              child: Text(
+                text,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 2,
+              )),
           Flexible(
             flex: 1,
             child: TextButton(

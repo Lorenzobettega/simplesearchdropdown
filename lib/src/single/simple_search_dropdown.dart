@@ -290,6 +290,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     }
     updateShouldScroll(reset: true);
     overlayScreen.closeAll();
+    FocusScope.of(context).unfocus();
   }
 
   @override
