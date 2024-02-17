@@ -187,6 +187,16 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     widget.updateSelectedItem(null);
   }
 
+  void forceSelection(String label) {
+    final ValueItem<T>? val =
+        widget.listItems.where((element) => element.label == label).firstOrNull;
+    if (val != null) {
+      selectedValue = val;
+      widget.updateSelectedItem(val);
+      controllerBar.text = val.label;
+    }
+  }
+
   void handleDeleteItem(ValueItem<T> item, BuildContext context) {
     if (widget.deleteMode) {
       if (widget.confirmDelete) {
@@ -207,6 +217,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       } else {
         widget.onDeleteItem!(item);
         resetSelection();
+        overlayScreen.updateLast();
       }
     }
   }

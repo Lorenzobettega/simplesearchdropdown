@@ -1,3 +1,7 @@
+## [4.3.0] - 2024-02-16.
+-   Added `forceSelection()` function to multiple and single selection. It alows you to force the selected value from outside the widget. Nothing happens if there isn't a value with that label on the list. 
+-   Fixed list refresh when item is deleted without a confirmation dialog.
+
 ## [4.2.0] - 2024-02-16.
 -   Added `overlayListSettings.offsetWidth` and `.offsetHeight` to change the distance between the dropdown and the list of items.
 -   Bumped flutter_lints to 3.0.1

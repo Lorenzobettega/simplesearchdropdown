@@ -81,6 +81,14 @@ class _MyHomePageState extends State<MyHomePage> {
     customSearchKey.currentState?.resetSelection();
   }
 
+  void force() {
+    singleSearchKey.currentState?.forceSelection('one more');
+  }
+
+  void forceMultiple() {
+    multipleSearchKey.currentState?.forceSelection('one more');
+  }
+
   bool verifyInput(ValueItem item) {
     return item.label != 'name';
   }
@@ -106,6 +114,7 @@ class _MyHomePageState extends State<MyHomePage> {
               newValueItem: (input) => ValueItem(label: input, value: input),
               overlayListSettings: SimpleOverlaySettings(
                 itemWidgetBuilder: (item) => Container(
+                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   child: Text(item.label),
                   color: Colors.blue,
                 ),
@@ -210,6 +219,25 @@ class _MyHomePageState extends State<MyHomePage> {
                 TextButton(
                   onPressed: clearCustomSelection,
                   child: const Text('Clear Custom Selection'),
+                ),
+              ],
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: force,
+                  child: const Text('Force Single Selection'),
+                ),
+                const SizedBox(
+                  width: 10,
+                ),
+                TextButton(
+                  onPressed: forceMultiple,
+                  child: const Text('Force Multiple Selection'),
                 ),
               ],
             ),

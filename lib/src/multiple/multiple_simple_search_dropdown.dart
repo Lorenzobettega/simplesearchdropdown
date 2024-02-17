@@ -98,10 +98,12 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     overlayScreen = OverlayScreen.of(context);
   }
 
-  void onItemSelected(ValueItem<T> val) {
+  void onItemSelected(ValueItem<T> val, {bool forced = false}) {
     setState(() {
       if (widget.selectedItems.contains(val)) {
-        widget.selectedItems.remove(val);
+        if (!forced) {
+          widget.selectedItems.remove(val);
+        }
       } else {
         widget.selectedItems.add(val);
       }
@@ -113,6 +115,14 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     setState(() {
       widget.selectedItems.clear();
     });
+  }
+
+  void forceSelection(String label) {
+    final ValueItem<T>? val =
+        widget.listItems.where((element) => element.label == label).firstOrNull;
+    if (val != null) {
+      onItemSelected(val, forced: true);
+    }
   }
 
   void handleAddItem(ValueItem<T> item, BuildContext context) {
@@ -136,14 +146,13 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
       }
       widget.onAddItem!(item);
       onItemSelected(item);
-      setState(() {});
     }
   }
 
   void handleDeleteItem(ValueItem<T> item, BuildContext context) {
     if (widget.deleteMode) {
       if (widget.confirmDelete) {
-        overlayScreen.show(
+        return overlayScreen.show(
           OverlayEntry(
             builder: (context) => WarningDialog(
               returnFunction: (result) {
@@ -158,11 +167,9 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
           ),
         );
       } else {
-        setState(() {
-          widget.onDeleteItem!(item);
-          hideOverlay();
-          _showOverlay(context);
-        });
+        widget.onDeleteItem!(item);
+        resetSelection();
+        overlayScreen.updateLast();
       }
     }
   }
