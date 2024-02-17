@@ -1,3 +1,7 @@
+## [4.2.0] - 2024-02-16.
+-   Added `overlayListSettings.offsetWidth` and `.offsetHeight` to change the distance between the dropdown and the list of items.
+-   Bumped flutter_lints to 3.0.1
+
 ## [4.1.1] - 2023-12-12.
 -   Make searchbar lose focus after closing the overlay.[35] (https://github.com/Lorenzobettega/simplesearchdropdown/issues/35)
 

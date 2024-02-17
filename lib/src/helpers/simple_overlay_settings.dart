@@ -24,9 +24,11 @@ class SimpleOverlaySettings {
     this.addItemHintStyle,
     this.itemWidgetBuilder,
     this.reOpenedScrollDuration = const Duration(seconds: 1),
+    this.offsetHeight = 3,
+    this.offsetWidth = 0,
   });
 
-  ///Dropdown Container height
+  ///Dropdown Container height (default:`200`).
   final double dialogHeight;
 
   ///Dropdown Container color
@@ -58,13 +60,13 @@ class SimpleOverlaySettings {
   ///The delete Widget in dropdown listview (default:IconButton). It replaces the `dialogActionIcon`
   final Widget? dialogActionWidget;
 
-  ///Separator between two items inside the droplist
+  ///Separator between two items inside the droplist (default:`1`).
   final double separatorHeight;
 
-  ///The duration of the dropdown opening animation (default:100 milliseconds).
+  ///The duration of the dropdown opening animation (default:`Duration(milliseconds: 100)`).
   final Duration animationDuration;
 
-  ///The text of the add button when user is allowed to add items in the list.
+  ///The text of the add button when user is allowed to add items in the list (default: `'Criar'`).
   final String addItemHint;
 
   ///The style of the add button when user is allowed to add items in the list.
@@ -73,8 +75,14 @@ class SimpleOverlaySettings {
   ///Custom droplist item widget.
   final Widget Function(ValueItem)? itemWidgetBuilder;
 
-  ///Duration to scroll down when the drop is reopened
+  ///Duration to scroll down when the drop is reopened (default: `Duration(seconds: 1)`)
   final Duration reOpenedScrollDuration;
+
+  ///The height of the offset from the bottom of the search bar (default:`3`).
+  final double offsetHeight;
+
+  ///The width of the offset from the left of the search bar (default:`0`).
+  final double offsetWidth;
 }
 
 ///The default settings for the OverlayList.

@@ -234,7 +234,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
               child: CompositedTransformFollower(
                 link: _layerLink,
                 showWhenUnlinked: false,
-                offset: Offset(0.0, size.height + 3.0),
+                offset: Offset(widget.overlayListSettings.offsetWidth,
+                    size.height + widget.overlayListSettings.offsetHeight),
                 child: Material(
                   color: Colors.transparent,
                   child: SingleListView(
