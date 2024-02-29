@@ -17,6 +17,8 @@ class MultipleListView<T> extends StatefulWidget {
     required this.sortType,
     required this.newValueItem,
     required this.searchBarSettings,
+    required this.addAditionalWidget,
+    required this.defaultAditionalWidget,
   });
 
   final bool addMode;
@@ -27,6 +29,8 @@ class MultipleListView<T> extends StatefulWidget {
   final List<ValueItem<T>> listItens;
   final List<ValueItem<T>> selectedItens;
   final int sortType;
+  final Widget? addAditionalWidget;
+  final Widget? defaultAditionalWidget;
 
   ///The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
@@ -206,6 +210,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                             itemAdded: itemAdded,
                             overlayListSettings: widget.overlayListSettings,
                             text: controllerBar.text,
+                            addAditionalWidget: widget.addAditionalWidget,
                           );
                         }
                       }
@@ -219,6 +224,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                         overlayListSettings: widget.overlayListSettings,
                         selected:
                             widget.selectedItens.contains(listaFiltrada[index]),
+                        defaultAditionalWidget: widget.defaultAditionalWidget,
                       );
                     }
                   },

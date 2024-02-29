@@ -21,6 +21,8 @@ class SingleListView<T> extends StatelessWidget {
     required this.selectedItem,
     required this.shouldScroll,
     required this.updateShouldScroll,
+    required this.addAditionalWidget,
+    required this.defaultAditionalWidget,
     super.key,
   });
 
@@ -47,6 +49,8 @@ class SingleListView<T> extends StatelessWidget {
   final bool shouldScroll;
   final VoidCallback updateShouldScroll;
   final ItemScrollController scrollController = ItemScrollController();
+  final Widget? addAditionalWidget;
+  final Widget? defaultAditionalWidget;
 
   ///Function to scroll the list to the selected item
   ///only works if the size of all tiles is equal.
@@ -110,6 +114,7 @@ class SingleListView<T> extends StatelessWidget {
                       itemAdded: itemAdded,
                       overlayListSettings: overlayListSettings,
                       text: searchbarText,
+                      addAditionalWidget: addAditionalWidget,
                     );
                   }
                 }
@@ -122,6 +127,7 @@ class SingleListView<T> extends StatelessWidget {
                   onPressed: onPressed,
                   overlayListSettings: overlayListSettings,
                   selected: searchbarText == listaFiltrada[index].label,
+                  defaultAditionalWidget: defaultAditionalWidget,
                 );
               }
             },

@@ -1,3 +1,8 @@
+## [4.4.0] - 2024-02-28.
+-   Added `addAditionalWidget` parameter to multiple and single selection. It alows you to put a widget between the text and the create button on the add item cell.
+-   Added `defaultAditionalWidget` parameter to multiple and single selection. It alows you to put a widget between the text and the delete button on the default item cell.
+-   Added `overlayListSettings.aditionalWidgetSpacing` to change the distance between the `defaultAditionalWidget` and the delete button on the default item cell.
+
 ## [4.3.0] - 2024-02-16.
 -   Added `forceSelection()` function to multiple and single selection. It alows you to force the selected value from outside the widget. Nothing happens if there isn't a value with that label on the list. 
 -   Fixed list refresh when item is deleted without a confirmation dialog.

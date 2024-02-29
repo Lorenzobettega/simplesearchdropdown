@@ -26,6 +26,7 @@ class SimpleOverlaySettings {
     this.reOpenedScrollDuration = const Duration(seconds: 1),
     this.offsetHeight = 3,
     this.offsetWidth = 0,
+    this.aditionalWidgetSpacing = 5,
   });
 
   ///Dropdown Container height (default:`200`).
@@ -83,6 +84,9 @@ class SimpleOverlaySettings {
 
   ///The width of the offset from the left of the search bar (default:`0`).
   final double offsetWidth;
+
+  ///The width of the space between the aditional widget and the delete one (default:`5`).
+  final double aditionalWidgetSpacing;
 }
 
 ///The default settings for the OverlayList.

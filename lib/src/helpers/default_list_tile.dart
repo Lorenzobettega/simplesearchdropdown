@@ -10,6 +10,7 @@ class DefaultListTile<T> extends StatelessWidget {
     required this.onPressed,
     required this.overlayListSettings,
     required this.selected,
+    required this.defaultAditionalWidget,
     super.key,
   });
 
@@ -20,6 +21,7 @@ class DefaultListTile<T> extends StatelessWidget {
   final Function(ValueItem<T> value) onDelete;
   final Function(ValueItem<T> value) onPressed;
   final bool selected;
+  final Widget? defaultAditionalWidget;
 
   @override
   Widget build(BuildContext context) {
@@ -68,6 +70,10 @@ class DefaultListTile<T> extends StatelessWidget {
                     ),
             ),
           ),
+          if (defaultAditionalWidget != null) ...[
+            defaultAditionalWidget!,
+            SizedBox(width: overlayListSettings.aditionalWidgetSpacing)
+          ],
           deleteMode
               ? overlayListSettings.dialogActionWidget ??
                   IconButton(

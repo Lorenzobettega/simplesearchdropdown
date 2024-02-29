@@ -6,6 +6,7 @@ class DefaultAddListItem extends StatelessWidget {
     required this.text,
     required this.overlayListSettings,
     required this.itemAdded,
+    required this.addAditionalWidget,
     super.key,
   });
 
@@ -17,6 +18,8 @@ class DefaultAddListItem extends StatelessWidget {
 
   final String text;
 
+  final Widget? addAditionalWidget;
+
   @override
   Widget build(BuildContext context) {
     return Padding(
@@ -25,14 +28,18 @@ class DefaultAddListItem extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Flexible(
-              flex: 3,
-              child: Text(
-                text,
-                overflow: TextOverflow.ellipsis,
-                maxLines: 2,
-              )),
+            flex: 2,
+            child: Text(
+              text,
+              overflow: TextOverflow.ellipsis,
+              maxLines: 3,
+            ),
+          ),
+          if (addAditionalWidget != null)
+            Flexible(
+              child: addAditionalWidget!,
+            ),
           Flexible(
-            flex: 1,
             child: TextButton(
               onPressed: () => itemAdded(text),
               child: Text(
@@ -40,7 +47,7 @@ class DefaultAddListItem extends StatelessWidget {
                 style: overlayListSettings.addItemHintStyle,
               ),
             ),
-          )
+          ),
         ],
       ),
     );

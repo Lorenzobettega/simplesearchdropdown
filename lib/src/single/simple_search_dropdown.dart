@@ -22,6 +22,8 @@ class SearchDropDown<T> extends StatefulWidget {
     this.deleteDialogSettings,
     this.verifyInputItem,
     this.verifyDialogSettings,
+    this.addAditionalWidget,
+    this.defaultAditionalWidget,
   })  : assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
@@ -83,6 +85,12 @@ class SearchDropDown<T> extends StatefulWidget {
   ///
   ///If `3`, the selected item will be put on first position.
   final int sortType;
+
+  ///A custom aditional widget to be inserted on the add item cell between the text and the create button.
+  final Widget? addAditionalWidget;
+
+  ///A custom aditional widget to be inserted on the default item cell between the text and the delete button.
+  final Widget? defaultAditionalWidget;
 
   @override
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
@@ -270,6 +278,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     overlayListSettings: widget.overlayListSettings,
                     shouldScroll: shouldScroll,
                     updateShouldScroll: updateShouldScroll,
+                    addAditionalWidget: widget.addAditionalWidget,
+                    defaultAditionalWidget: widget.defaultAditionalWidget,
                   ),
                 ),
               ),

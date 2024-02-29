@@ -20,6 +20,8 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.verifyDialogSettings,
     this.searchBarSettings = defaultSearchBarSettings,
     this.overlayListSettings = defaultOverlaySettings,
+    this.addAditionalWidget,
+    this.defaultAditionalWidget,
   })  : assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
@@ -81,6 +83,12 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
 
   ///Visual verify dialog settings
   final DialogSettings? verifyDialogSettings;
+
+  ///A custom aditional widget to be inserted on the add item cell.
+  final Widget? addAditionalWidget;
+
+  ///A custom aditional widget to be inserted on the default item cell.
+  final Widget? defaultAditionalWidget;
 
   @override
   State<MultipleSearchDropDown<T>> createState() =>
@@ -213,6 +221,8 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     newValueItem: widget.newValueItem,
                     overlayListSettings: widget.overlayListSettings,
                     searchBarSettings: widget.searchBarSettings,
+                    addAditionalWidget: widget.addAditionalWidget,
+                    defaultAditionalWidget: widget.defaultAditionalWidget,
                   ),
                 ),
               ),
