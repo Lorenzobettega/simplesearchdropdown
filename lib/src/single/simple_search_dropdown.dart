@@ -217,6 +217,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   resetSelection();
                 }
                 overlayScreen.closeLast();
+                overlayScreen.updateLast();
               },
               settings: widget.deleteDialogSettings,
             ),

@@ -1,3 +1,6 @@
+## [4.4.1] - 2024-03-21.
+-   Fixed deleting items in single search.
+
 ## [4.4.0] - 2024-02-28.
 -   Added `addAditionalWidget` parameter to multiple and single selection. It alows you to put a widget between the text and the create button on the add item cell.
 -   Added `defaultAditionalWidget` parameter to multiple and single selection. It alows you to put a widget between the text and the delete button on the default item cell.
