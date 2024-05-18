@@ -75,8 +75,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
           final first = widget.selectedItens.first;
           final indx = listaFiltrada.indexOf(first);
           if (indx != -1) {
-            listaFiltrada.removeAt(indx);
-            listaFiltrada.insert(0, first);
+            listaFiltrada..removeAt(indx)
+            ..insert(0, first);
           }
         }
         break;
@@ -97,9 +97,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
       listaFiltrada = widget.listItens;
     }
     widget.sortType > 0
-        ? setState(() {
-            sortFunction();
-          })
+        ? setState(sortFunction)
         : setState(() {});
   }
 
@@ -116,9 +114,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
   void addItem(ValueItem<T> value) {
     widget.onItemSelected.call(value);
     widget.sortType > 0
-        ? setState(() {
-            sortFunction();
-          })
+        ? setState(sortFunction)
         : setState(() {});
   }
 
@@ -150,32 +146,30 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
           children: [
             SearchBar(
               controller: controllerBar,
-              backgroundColor: MaterialStatePropertyAll(
+              backgroundColor: WidgetStatePropertyAll(
                   widget.searchBarSettings.backgroundColor),
-              overlayColor: MaterialStatePropertyAll(
+              overlayColor: WidgetStatePropertyAll(
                   widget.overlayListSettings.unselectedItemHoverColor),
               constraints: BoxConstraints(
                   minHeight: widget.searchBarSettings.dropdownHeight,
                   maxWidth: widget.searchBarSettings.dropdownWidth),
-              surfaceTintColor: MaterialStatePropertyAll(
+              surfaceTintColor: WidgetStatePropertyAll(
                   widget.searchBarSettings.backgroundColor),
-              shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
+              shape: WidgetStatePropertyAll(widget.searchBarSettings.border),
               hintText: widget.searchBarSettings.hint,
-              hintStyle: MaterialStateProperty.all<TextStyle?>(
+              hintStyle: WidgetStateProperty.all<TextStyle?>(
                 widget.searchBarSettings.hintStyle,
               ),
-              textStyle: MaterialStatePropertyAll(
+              textStyle: WidgetStatePropertyAll(
                   widget.searchBarSettings.searchBarTextStyle ??
                       widget.searchBarSettings.hintStyle),
-              side: MaterialStateProperty.all<BorderSide>(
+              side: WidgetStateProperty.all<BorderSide>(
                 const BorderSide(
                   style: BorderStyle.none,
                 ),
               ),
-              onChanged: (a) {
-                filtrarLista(a);
-              },
-              elevation: MaterialStateProperty.all<double>(
+              onChanged: filtrarLista,
+              elevation: WidgetStateProperty.all<double>(
                   widget.searchBarSettings.elevation),
             ),
             const SizedBox(
@@ -187,7 +181,6 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                 child: ScrollablePositionedList.separated(
                   itemScrollController: scrollController,
                   padding: EdgeInsets.zero,
-                  scrollDirection: Axis.vertical,
                   itemCount: listaFiltrada.length + (widget.addMode ? 1 : 0),
                   separatorBuilder: (context, index) => SizedBox(
                     height: widget.overlayListSettings.separatorHeight,

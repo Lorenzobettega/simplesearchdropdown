@@ -313,8 +313,6 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                                   mainAxisAlignment:
                                                       MainAxisAlignment
                                                           .spaceBetween,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
                                                   children: [
                                                     Text(
                                                         widget

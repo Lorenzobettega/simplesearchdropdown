@@ -16,8 +16,8 @@ class DialogSettings {
     this.customDeleteButtonSettings = defaultDeleteButtonSettings,
     this.customVerifyButtonSettings = defaultVerifyButtonSettings,
     this.insetPadding = const EdgeInsets.symmetric(
-      horizontal: 40.0,
-      vertical: 24.0,
+      horizontal: 40,
+      vertical: 24,
     ),
   });
 
@@ -64,7 +64,7 @@ class DialogButtonSettings {
 ///Default settings for Delete button.
 const defaultDeleteButtonSettings = DialogButtonSettings(
   'Apagar',
-  backgroundColor: const Color.fromARGB(255, 198, 0, 0),
+  backgroundColor: Color.fromARGB(255, 198, 0, 0),
   customWidth: 160,
 );
 
@@ -72,7 +72,7 @@ const defaultDeleteButtonSettings = DialogButtonSettings(
 const defaultCancelButtonSettings = DialogButtonSettings(
   'Cancelar',
   backgroundColor: Colors.white,
-  textColor: const Color.fromARGB(255, 66, 70, 76),
+  textColor: Color.fromARGB(255, 66, 70, 76),
   customWidth: 160,
   activeBorder: true,
 );

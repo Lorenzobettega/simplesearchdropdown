@@ -32,21 +32,21 @@ class DefaultListTile<T> extends StatelessWidget {
           Expanded(
             child: TextButton(
               style: ButtonStyle(
-                backgroundColor: MaterialStateProperty.resolveWith<Color>(
-                  (Set<MaterialState> states) {
+                backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                  (Set<WidgetState> states) {
                     if (selected) {
                       return overlayListSettings.selectedItemBackgroundColor;
                     }
                     return Colors.transparent;
                   },
                 ),
-                shape: MaterialStateProperty.all<OutlinedBorder>(
+                shape: WidgetStateProperty.all<OutlinedBorder>(
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                overlayColor: MaterialStateProperty.resolveWith<Color>(
-                  (Set<MaterialState> states) {
+                overlayColor: WidgetStateProperty.resolveWith<Color>(
+                  (Set<WidgetState> states) {
                     if (selected) {
                       return overlayListSettings.selectedItemHoverColor;
                     }
@@ -74,15 +74,13 @@ class DefaultListTile<T> extends StatelessWidget {
             defaultAditionalWidget!,
             SizedBox(width: overlayListSettings.aditionalWidgetSpacing)
           ],
-          deleteMode
-              ? overlayListSettings.dialogActionWidget ??
+          if (deleteMode) overlayListSettings.dialogActionWidget ??
                   IconButton(
                     onPressed: () {
                       onDelete(item);
                     },
                     icon: overlayListSettings.dialogDeleteIcon,
-                  )
-              : const SizedBox.shrink()
+                  ) else const SizedBox.shrink()
         ],
       ),
     );

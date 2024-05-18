@@ -27,7 +27,7 @@ class DialogButton extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(buttonSettings.radius),
         border: buttonSettings.activeBorder
-            ? Border.all(color: buttonSettings.textColor, width: 1)
+            ? Border.all(color: buttonSettings.textColor)
             : null,
       ),
       child: TextButton(

@@ -8,17 +8,35 @@ import 'dart:convert';
 /// ```
 
 class ValueItem<T> {
-  /// The label of the value item
-  final String label;
 
-  /// The value of the value item
-  final T? value;
+  /// fromJson method for [ValueItem]
+  ///
+  /// [customValueFromMap] is an optional fromMap function to use if value is a custom class.
+  factory ValueItem.fromJson(String source,
+          dynamic Function(Map<String, dynamic>)? customValueFromMap) =>
+      ValueItem<T>._fromMap(json.decode(source), customValueFromMap);
 
   /// Default constructor for [ValueItem]
   const ValueItem({
     required this.label,
     this.value,
   });
+
+  /// fromMap method for [ValueItem]
+  factory ValueItem._fromMap(Map<String, dynamic> map,
+      dynamic Function(Map<String, dynamic>)? customValueFromMap) {
+    return ValueItem<T>(
+      label: map['label'] ?? '',
+      value: customValueFromMap != null
+          ? customValueFromMap(map['value'])
+          : map['value'],
+    );
+  }
+  /// The label of the value item
+  final String label;
+
+  /// The value of the value item
+  final T? value;
 
   /// toString method for [ValueItem]
   @override
@@ -35,29 +53,11 @@ class ValueItem<T> {
     };
   }
 
-  /// fromMap method for [ValueItem]
-  factory ValueItem._fromMap(Map<String, dynamic> map,
-      dynamic Function(Map<String, dynamic>)? customValueFromMap) {
-    return ValueItem<T>(
-      label: map['label'] ?? '',
-      value: customValueFromMap != null
-          ? customValueFromMap(map['value'])
-          : map['value'],
-    );
-  }
-
   /// toJson method for [ValueItem]
   ///
   /// [customValueToMap] is an optional toMap function to use if value is a custom class.
   String toJson(Map<String, dynamic> Function(T? value)? customValueToMap) =>
       json.encode(_toMap(customValueToMap));
-
-  /// fromJson method for [ValueItem]
-  ///
-  /// [customValueFromMap] is an optional fromMap function to use if value is a custom class.
-  factory ValueItem.fromJson(String source,
-          dynamic Function(Map<String, dynamic>)? customValueFromMap) =>
-      ValueItem<T>._fromMap(json.decode(source), customValueFromMap);
 
   /// Equality operator for [ValueItem]
   @override

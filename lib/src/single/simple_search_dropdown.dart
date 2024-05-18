@@ -133,8 +133,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         if (selectedValue != null) {
           final indx = listaFiltrada.indexOf(selectedValue!);
           if (indx != -1) {
-            listaFiltrada.removeAt(indx);
-            listaFiltrada.insert(0, selectedValue!);
+            listaFiltrada..removeAt(indx)
+            ..insert(0, selectedValue!);
           }
         }
         break;
@@ -216,8 +216,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   widget.onDeleteItem!(item);
                   resetSelection();
                 }
-                overlayScreen.closeLast();
-                overlayScreen.updateLast();
+                overlayScreen..closeLast()
+                ..updateLast();
               },
               settings: widget.deleteDialogSettings,
             ),
@@ -265,14 +265,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     deleteMode: widget.deleteMode,
                     elevation: widget.searchBarSettings.elevation,
                     listaFiltrada: listaFiltrada,
-                    onAddItem: (val) => handleAddItem(
-                      val,
-                    ),
+                    onAddItem: handleAddItem,
                     onDelete: (val) => handleDeleteItem(
                       val,
                       context,
                     ),
-                    onPressed: (val) => hideOverlay(val),
+                    onPressed: hideOverlay,
                     dropdownwidth: widget.searchBarSettings.dropdownWidth,
                     newValueItem: widget.newValueItem,
                     selectedItem: selectedValue,
@@ -326,13 +324,11 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         child: SearchBar(
           trailing: widget.searchBarSettings.actions ??
               [
-                aberto
-                    ? Icon(
+                if (aberto) Icon(
                         widget.searchBarSettings.dropdownOpenedArrowIcon,
                         color: widget.searchBarSettings.outsideIconColor,
                         size: widget.searchBarSettings.outsideIconSize,
-                      )
-                    : Icon(
+                      ) else Icon(
                         widget.searchBarSettings.dropdownClosedArrowIcon,
                         color: widget.searchBarSettings.outsideIconColor,
                         size: widget.searchBarSettings.outsideIconSize,
@@ -357,20 +353,20 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                 ),
               ],
           controller: controllerBar,
-          backgroundColor: MaterialStatePropertyAll(
+          backgroundColor: WidgetStatePropertyAll(
               widget.searchBarSettings.backgroundColor),
           hintStyle:
-              MaterialStatePropertyAll(widget.searchBarSettings.hintStyle),
+              WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
           overlayColor:
-              MaterialStatePropertyAll(widget.searchBarSettings.hoverColor),
-          surfaceTintColor: MaterialStatePropertyAll(
+              WidgetStatePropertyAll(widget.searchBarSettings.hoverColor),
+          surfaceTintColor: WidgetStatePropertyAll(
               widget.searchBarSettings.backgroundColor),
-          shape: MaterialStatePropertyAll(widget.searchBarSettings.border),
-          textStyle: MaterialStatePropertyAll(
+          shape: WidgetStatePropertyAll(widget.searchBarSettings.border),
+          textStyle: WidgetStatePropertyAll(
               widget.searchBarSettings.searchBarTextStyle ??
                   widget.searchBarSettings.hintStyle),
           hintText: widget.searchBarSettings.hint,
-          side: MaterialStateProperty.all<BorderSide>(
+          side: WidgetStateProperty.all<BorderSide>(
             const BorderSide(
               style: BorderStyle.none,
             ),
@@ -389,7 +385,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             _filtrarLista(a);
             overlayScreen.updateLast();
           },
-          elevation: MaterialStateProperty.all<double>(
+          elevation: WidgetStateProperty.all<double>(
               widget.searchBarSettings.elevation),
         ),
       ),

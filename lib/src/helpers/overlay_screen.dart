@@ -2,6 +2,16 @@ import 'package:flutter/material.dart';
 
 /// Controls the overlays on the screen.
 class OverlayScreen {
+
+  ///local init function.
+  OverlayScreen._create(this._context) {
+    overlayState = Overlay.of(_context);
+  }
+
+  ///exposed init function.
+  factory OverlayScreen.of(BuildContext context) {
+    return OverlayScreen._create(context);
+  }
   /// The context of the dropdown.
   BuildContext _context;
 
@@ -35,15 +45,5 @@ class OverlayScreen {
     overlayEntrys.add(entry);
 
     overlayState.insert(overlayEntrys.last);
-  }
-
-  ///local init function.
-  OverlayScreen._create(this._context) {
-    overlayState = Overlay.of(_context);
-  }
-
-  ///exposed init function.
-  factory OverlayScreen.of(BuildContext context) {
-    return OverlayScreen._create(context);
   }
 }
