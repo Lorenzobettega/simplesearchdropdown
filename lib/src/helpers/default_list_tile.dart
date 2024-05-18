@@ -74,13 +74,16 @@ class DefaultListTile<T> extends StatelessWidget {
             defaultAditionalWidget!,
             SizedBox(width: overlayListSettings.aditionalWidgetSpacing)
           ],
-          if (deleteMode) overlayListSettings.dialogActionWidget ??
-                  IconButton(
-                    onPressed: () {
-                      onDelete(item);
-                    },
-                    icon: overlayListSettings.dialogDeleteIcon,
-                  ) else const SizedBox.shrink()
+          if (deleteMode)
+            overlayListSettings.dialogActionWidget ??
+                IconButton(
+                  onPressed: () {
+                    onDelete(item);
+                  },
+                  icon: overlayListSettings.dialogDeleteIcon,
+                )
+          else
+            const SizedBox.shrink()
         ],
       ),
     );

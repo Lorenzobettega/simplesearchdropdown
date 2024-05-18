@@ -89,6 +89,11 @@ class _MyHomePageState extends State<MyHomePage> {
     multipleSearchKey.currentState?.forceSelection('one more');
   }
 
+  void enableSingle() {
+    singleSearchKey.currentState?.enableDisable();
+    print(singleSearchKey.currentState?.enabled);
+  }
+
   bool verifyInput(ValueItem item) {
     return item.label != 'name';
   }
@@ -118,6 +123,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
               sortType: 3,
+              enabled: false,
             ),
             const SizedBox(
               height: 20,
@@ -234,6 +240,13 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: const Text('Force Multiple Selection'),
                 ),
               ],
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            TextButton(
+              onPressed: enableSingle,
+              child: const Text('Enable/Disable Single Selection'),
             ),
           ],
         ),

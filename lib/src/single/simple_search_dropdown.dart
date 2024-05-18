@@ -24,6 +24,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.verifyDialogSettings,
     this.addAditionalWidget,
     this.defaultAditionalWidget,
+    this.enabled = true,
   })  : assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
@@ -92,6 +93,9 @@ class SearchDropDown<T> extends StatefulWidget {
   ///A custom aditional widget to be inserted on the default item cell between the text and the delete button.
   final Widget? defaultAditionalWidget;
 
+  ///A parameter to define if the widget is enabled or disabled (default: `true`).
+  final bool enabled;
+
   @override
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
 }
@@ -102,6 +106,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   final LayerLink _layerLink = LayerLink();
   bool aberto = false;
   bool shouldScroll = true;
+  late bool enabled;
   ValueItem<T>? selectedValue;
 
   final TextEditingController controllerBar = TextEditingController();
@@ -116,6 +121,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         selectedValue = widget.selectedItem!;
       }
     }
+    enabled = widget.enabled;
     overlayScreen = OverlayScreen.of(context);
   }
 
@@ -133,8 +139,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         if (selectedValue != null) {
           final indx = listaFiltrada.indexOf(selectedValue!);
           if (indx != -1) {
-            listaFiltrada..removeAt(indx)
-            ..insert(0, selectedValue!);
+            listaFiltrada
+              ..removeAt(indx)
+              ..insert(0, selectedValue!);
           }
         }
         break;
@@ -195,6 +202,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     widget.updateSelectedItem(null);
   }
 
+  void enableDisable() {
+    setState(() {
+      enabled = !enabled;
+    });
+  }
+
   void forceSelection(String label) {
     final ValueItem<T>? val =
         widget.listItems.where((element) => element.label == label).firstOrNull;
@@ -216,8 +229,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   widget.onDeleteItem!(item);
                   resetSelection();
                 }
-                overlayScreen..closeLast()
-                ..updateLast();
+                overlayScreen
+                  ..closeLast()
+                  ..updateLast();
               },
               settings: widget.deleteDialogSettings,
             ),
@@ -322,17 +336,21 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         width: widget.searchBarSettings.dropdownWidth,
         height: widget.searchBarSettings.dropdownHeight,
         child: SearchBar(
+          enabled: enabled,
           trailing: widget.searchBarSettings.actions ??
               [
-                if (aberto) Icon(
-                        widget.searchBarSettings.dropdownOpenedArrowIcon,
-                        color: widget.searchBarSettings.outsideIconColor,
-                        size: widget.searchBarSettings.outsideIconSize,
-                      ) else Icon(
-                        widget.searchBarSettings.dropdownClosedArrowIcon,
-                        color: widget.searchBarSettings.outsideIconColor,
-                        size: widget.searchBarSettings.outsideIconSize,
-                      ),
+                if (aberto)
+                  Icon(
+                    widget.searchBarSettings.dropdownOpenedArrowIcon,
+                    color: widget.searchBarSettings.outsideIconColor,
+                    size: widget.searchBarSettings.outsideIconSize,
+                  )
+                else
+                  Icon(
+                    widget.searchBarSettings.dropdownClosedArrowIcon,
+                    color: widget.searchBarSettings.outsideIconColor,
+                    size: widget.searchBarSettings.outsideIconSize,
+                  ),
                 Visibility(
                   visible: controllerBar.text != '',
                   child: Row(
@@ -353,14 +371,13 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                 ),
               ],
           controller: controllerBar,
-          backgroundColor: WidgetStatePropertyAll(
-              widget.searchBarSettings.backgroundColor),
-          hintStyle:
-              WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
+          backgroundColor:
+              WidgetStatePropertyAll(widget.searchBarSettings.backgroundColor),
+          hintStyle: WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
           overlayColor:
               WidgetStatePropertyAll(widget.searchBarSettings.hoverColor),
-          surfaceTintColor: WidgetStatePropertyAll(
-              widget.searchBarSettings.backgroundColor),
+          surfaceTintColor:
+              WidgetStatePropertyAll(widget.searchBarSettings.backgroundColor),
           shape: WidgetStatePropertyAll(widget.searchBarSettings.border),
           textStyle: WidgetStatePropertyAll(
               widget.searchBarSettings.searchBarTextStyle ??

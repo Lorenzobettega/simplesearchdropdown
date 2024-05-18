@@ -1,3 +1,8 @@
+## [5.0.0] - 2024-05-18.
+-  Now it is possible to enable/disable the search bar.
+-  [Breaking] `enabled` property requires flutter 3.22.
+-  Updated web sample.
+
 ## [4.4.1] - 2024-03-21.
 -   Fixed deleting items in single search.
 

@@ -8,7 +8,6 @@ import 'dart:convert';
 /// ```
 
 class ValueItem<T> {
-
   /// fromJson method for [ValueItem]
   ///
   /// [customValueFromMap] is an optional fromMap function to use if value is a custom class.
@@ -32,6 +31,7 @@ class ValueItem<T> {
           : map['value'],
     );
   }
+
   /// The label of the value item
   final String label;
 

@@ -75,8 +75,9 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
           final first = widget.selectedItens.first;
           final indx = listaFiltrada.indexOf(first);
           if (indx != -1) {
-            listaFiltrada..removeAt(indx)
-            ..insert(0, first);
+            listaFiltrada
+              ..removeAt(indx)
+              ..insert(0, first);
           }
         }
         break;
@@ -96,9 +97,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     } else {
       listaFiltrada = widget.listItens;
     }
-    widget.sortType > 0
-        ? setState(sortFunction)
-        : setState(() {});
+    widget.sortType > 0 ? setState(sortFunction) : setState(() {});
   }
 
   void itemAdded(String text) {
@@ -113,9 +112,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
 
   void addItem(ValueItem<T> value) {
     widget.onItemSelected.call(value);
-    widget.sortType > 0
-        ? setState(sortFunction)
-        : setState(() {});
+    widget.sortType > 0 ? setState(sortFunction) : setState(() {});
   }
 
   ///Function to scroll the list to the selected item

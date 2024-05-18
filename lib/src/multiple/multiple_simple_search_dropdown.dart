@@ -22,6 +22,7 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.overlayListSettings = defaultOverlaySettings,
     this.addAditionalWidget,
     this.defaultAditionalWidget,
+    this.enabled = true,
   })  : assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
@@ -90,6 +91,9 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   ///A custom aditional widget to be inserted on the default item cell.
   final Widget? defaultAditionalWidget;
 
+  ///A parameter to define if the widget is enabled or disabled (default: `true`).
+  final bool enabled;
+
   @override
   State<MultipleSearchDropDown<T>> createState() =>
       MultipleSearchDropDownState<T>();
@@ -97,12 +101,14 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
 
 class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   bool aberto = false;
+  late bool enabled;
   late OverlayScreen overlayScreen;
   final LayerLink _layerLink = LayerLink();
 
   @override
   void initState() {
     super.initState();
+    enabled = widget.enabled;
     overlayScreen = OverlayScreen.of(context);
   }
 
@@ -131,6 +137,12 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     if (val != null) {
       onItemSelected(val, forced: true);
     }
+  }
+
+  void enableDisable() {
+    setState(() {
+      enabled = !enabled;
+    });
   }
 
   void handleAddItem(ValueItem<T> item, BuildContext context) {
@@ -243,151 +255,166 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return CompositedTransformTarget(
-      link: _layerLink,
-      child: SizedBox(
-        height: widget.searchBarSettings.dropdownHeight,
-        width: widget.searchBarSettings.dropdownWidth,
-        child: InkWell(
-          onTap: () {
-            if (overlayScreen.overlayEntrys.isEmpty) {
-              setState(() {
-                aberto = !aberto;
-              });
-              _showOverlay(context);
-            } else {
-              hideOverlay();
-            }
-          },
-          child: Stack(
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: const BorderRadius.all(Radius.circular(10)),
-                  color: widget.searchBarSettings.backgroundColor,
-                  border: Border.all(style: BorderStyle.none),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.grey.withOpacity(
-                          widget.searchBarSettings.elevation != 0 ? 0.5 : 0),
-                      spreadRadius: 0.5,
-                      blurRadius: widget.searchBarSettings.elevation,
-                      offset:
-                          Offset(0, 0.5 * widget.searchBarSettings.elevation),
+    return Opacity(
+      opacity: enabled ? 1 : 0.38,
+      child: IgnorePointer(
+        ignoring: !enabled,
+        child: CompositedTransformTarget(
+          link: _layerLink,
+          child: SizedBox(
+            height: widget.searchBarSettings.dropdownHeight,
+            width: widget.searchBarSettings.dropdownWidth,
+            child: InkWell(
+              onTap: () {
+                if (overlayScreen.overlayEntrys.isEmpty) {
+                  setState(() {
+                    aberto = !aberto;
+                  });
+                  _showOverlay(context);
+                } else {
+                  hideOverlay();
+                }
+              },
+              child: Stack(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      borderRadius: const BorderRadius.all(Radius.circular(10)),
+                      color: widget.searchBarSettings.backgroundColor,
+                      border: Border.all(style: BorderStyle.none),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.grey.withOpacity(
+                              widget.searchBarSettings.elevation != 0
+                                  ? 0.5
+                                  : 0),
+                          spreadRadius: 0.5,
+                          blurRadius: widget.searchBarSettings.elevation,
+                          offset: Offset(
+                              0, 0.5 * widget.searchBarSettings.elevation),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 10),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: widget.selectedItems.isNotEmpty
-                            ? ScrollConfiguration(
-                                behavior: MyCustomScrollBehavior(),
-                                child: ListView.separated(
-                                  scrollDirection: Axis.horizontal,
-                                  separatorBuilder: (context, index) =>
-                                      const SizedBox(width: 5),
-                                  itemCount: widget.selectedItems.length,
-                                  itemBuilder: (context, index) {
-                                    return widget.searchBarSettings
-                                                .boxMultiItemWidgetBuilder !=
-                                            null
-                                        ? widget.searchBarSettings
-                                                .boxMultiItemWidgetBuilder!(
-                                            widget.selectedItems[index])
-                                        : Padding(
-                                            padding: const EdgeInsets.symmetric(
-                                                vertical: 5),
-                                            child: Card(
-                                              color: widget.searchBarSettings
-                                                  .boxMultiSelectedBackgroundColor,
-                                              elevation: widget
-                                                  .searchBarSettings.elevation,
-                                              child: Padding(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: widget.selectedItems.isNotEmpty
+                                ? ScrollConfiguration(
+                                    behavior: MyCustomScrollBehavior(),
+                                    child: ListView.separated(
+                                      scrollDirection: Axis.horizontal,
+                                      separatorBuilder: (context, index) =>
+                                          const SizedBox(width: 5),
+                                      itemCount: widget.selectedItems.length,
+                                      itemBuilder: (context, index) {
+                                        return widget.searchBarSettings
+                                                    .boxMultiItemWidgetBuilder !=
+                                                null
+                                            ? widget.searchBarSettings
+                                                    .boxMultiItemWidgetBuilder!(
+                                                widget.selectedItems[index])
+                                            : Padding(
                                                 padding:
                                                     const EdgeInsets.symmetric(
+                                                        vertical: 5),
+                                                child: Card(
+                                                  color: widget
+                                                      .searchBarSettings
+                                                      .boxMultiSelectedBackgroundColor,
+                                                  elevation: widget
+                                                      .searchBarSettings
+                                                      .elevation,
+                                                  child: Padding(
+                                                    padding: const EdgeInsets
+                                                        .symmetric(
                                                         horizontal: 8),
-                                                child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  children: [
-                                                    Text(
-                                                        widget
-                                                            .selectedItems[
-                                                                index]
-                                                            .label,
-                                                        style: widget
-                                                            .searchBarSettings
-                                                            .boxMultiSelectedTextStyle),
-                                                    InkWell(
-                                                      onTap: () =>
-                                                          onItemSelected(widget
-                                                                  .selectedItems[
-                                                              index]),
-                                                      child: Icon(
-                                                        Icons.close,
-                                                        size: widget
-                                                            .searchBarSettings
-                                                            .boxMultiSelectedClearIconSize,
-                                                        color: widget
-                                                            .searchBarSettings
-                                                            .boxMultiSelectedClearIconColor,
-                                                      ),
+                                                    child: Row(
+                                                      mainAxisAlignment:
+                                                          MainAxisAlignment
+                                                              .spaceBetween,
+                                                      children: [
+                                                        Text(
+                                                            widget
+                                                                .selectedItems[
+                                                                    index]
+                                                                .label,
+                                                            style: widget
+                                                                .searchBarSettings
+                                                                .boxMultiSelectedTextStyle),
+                                                        InkWell(
+                                                          onTap: () =>
+                                                              onItemSelected(
+                                                                  widget.selectedItems[
+                                                                      index]),
+                                                          child: Icon(
+                                                            Icons.close,
+                                                            size: widget
+                                                                .searchBarSettings
+                                                                .boxMultiSelectedClearIconSize,
+                                                            color: widget
+                                                                .searchBarSettings
+                                                                .boxMultiSelectedClearIconColor,
+                                                          ),
+                                                        ),
+                                                      ],
                                                     ),
-                                                  ],
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                          );
-                                  },
-                                ),
-                              )
-                            : Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    widget.searchBarSettings.hint,
-                                    textAlign: TextAlign.start,
-                                    style: widget.searchBarSettings.hintStyle,
+                                              );
+                                      },
+                                    ),
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        widget.searchBarSettings.hint,
+                                        textAlign: TextAlign.start,
+                                        style:
+                                            widget.searchBarSettings.hintStyle,
+                                      ),
+                                    ],
                                   ),
-                                ],
+                          ),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              const SizedBox(width: 5),
+                              InkWell(
+                                onTap: () {
+                                  setState(() {
+                                    widget.selectedItems.clear();
+                                    widget.updateSelectedItems(
+                                        widget.selectedItems);
+                                  });
+                                },
+                                child: Icon(
+                                  widget.selectedItems.isNotEmpty
+                                      ? Icons.clear
+                                      : aberto
+                                          ? widget.searchBarSettings
+                                              .dropdownOpenedArrowIcon
+                                          : widget.searchBarSettings
+                                              .dropdownClosedArrowIcon,
+                                  size:
+                                      widget.searchBarSettings.outsideIconSize,
+                                  color:
+                                      widget.searchBarSettings.outsideIconColor,
+                                ),
                               ),
-                      ),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const SizedBox(width: 5),
-                          InkWell(
-                            onTap: () {
-                              setState(() {
-                                widget.selectedItems.clear();
-                                widget
-                                    .updateSelectedItems(widget.selectedItems);
-                              });
-                            },
-                            child: Icon(
-                              widget.selectedItems.isNotEmpty
-                                  ? Icons.clear
-                                  : aberto
-                                      ? widget.searchBarSettings
-                                          .dropdownOpenedArrowIcon
-                                      : widget.searchBarSettings
-                                          .dropdownClosedArrowIcon,
-                              size: widget.searchBarSettings.outsideIconSize,
-                              color: widget.searchBarSettings.outsideIconColor,
-                            ),
+                            ],
                           ),
                         ],
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
-            ],
+            ),
           ),
         ),
       ),
