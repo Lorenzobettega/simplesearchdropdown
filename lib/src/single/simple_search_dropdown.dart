@@ -11,6 +11,8 @@ class SearchDropDown<T> extends StatefulWidget {
     this.addMode = true,
     this.onAddItem,
     this.newValueItem,
+    this.editMode = false,
+    this.onEditItem,
     this.deleteMode = true,
     this.onDeleteItem,
     required this.updateSelectedItem,
@@ -30,7 +32,9 @@ class SearchDropDown<T> extends StatefulWidget {
                 !addMode,
             'addMode can only be used with newValueItem != null && onAddItem != null'),
         assert((deleteMode && onDeleteItem != null) || !deleteMode,
-            'deleteMode can only be used with onDeleteItem != null');
+            'deleteMode can only be used with onDeleteItem != null'),
+        assert((editMode && onEditItem != null) || !editMode,
+            'ediMode can only be used with onEditItem != null');
 
   ///List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
@@ -51,6 +55,12 @@ class SearchDropDown<T> extends StatefulWidget {
 
   ///Function to be executed after the item was deleted.
   final Function(ValueItem<T>)? onDeleteItem;
+
+  ///Allow the user to edit items of the list.
+  final bool editMode;
+
+  ///Function to be executed after the item was edit.
+  final Function(ValueItem<T>)? onEditItem;
 
   ///Force the user to confirm delete
   final bool confirmDelete;
@@ -245,6 +255,15 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     }
   }
 
+  // TODO ver como vai ser feito
+  // void handleEditItem(ValueItem<T> item, BuildContext context) {
+  //   if (widget.editMode) {
+  //     widget.onEditItem!(item);
+  //     resetSelection();
+  //     overlayScreen.updateLast();
+  //   }
+  // }
+
   void _showOverlay(
     BuildContext context,
   ) {
@@ -284,6 +303,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       val,
                       context,
                     ),
+                    editMode: widget.editMode,
+                    onEdit: (val) => (), // TODO colocar função
                     onPressed: hideOverlay,
                     dropdownwidth: widget.searchBarSettings.dropdownWidth,
                     newValueItem: widget.newValueItem,

@@ -14,6 +14,8 @@ class SingleListView<T> extends StatelessWidget {
     required this.deleteMode,
     required this.elevation,
     required this.listaFiltrada,
+    required this.editMode,
+    required this.onEdit,
     required this.onDelete,
     required this.onPressed,
     required this.overlayListSettings,
@@ -39,9 +41,11 @@ class SingleListView<T> extends StatelessWidget {
   final SimpleOverlaySettings overlayListSettings;
   final Color? backgroundColor;
   final String searchbarText;
+  final bool editMode;
   final bool deleteMode;
   final double elevation;
   final List<ValueItem<T>> listaFiltrada;
+  final Function(ValueItem<T> value) onEdit;
   final Function(ValueItem<T> value) onDelete;
   final Function(ValueItem<T> value) onPressed;
   final double dropdownwidth;
@@ -122,8 +126,10 @@ class SingleListView<T> extends StatelessWidget {
               } else {
                 return DefaultListTile<T>(
                   deleteMode: deleteMode,
+                  editMode: editMode,
                   item: listaFiltrada[index],
                   onDelete: onDelete,
+                  onEdit: onEdit,
                   onPressed: onPressed,
                   overlayListSettings: overlayListSettings,
                   selected: searchbarText == listaFiltrada[index].label,
