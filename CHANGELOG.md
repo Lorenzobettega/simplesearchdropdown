@@ -1,3 +1,6 @@
+## [5.0.1] - 2024-07-15.
+-  Fixed latin characters search.
+
 ## [5.0.0] - 2024-05-18.
 -  Now it is possible to enable/disable the search bar.
 -  [Breaking] `enabled` property requires flutter 3.22.

@@ -157,7 +157,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             .where((element) => element.label
                 .toLowerCase()
                 .latinize()
-                .contains(text.toLowerCase()))
+                .contains(text.latinize().toLowerCase()))
             .toList();
       } else {
         listaFiltrada = widget.listItems;

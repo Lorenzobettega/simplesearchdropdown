@@ -92,7 +92,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
           .where((element) => element.label
               .toLowerCase()
               .latinize()
-              .contains(text.toLowerCase()))
+              .contains(text.latinize().toLowerCase()))
           .toList();
     } else {
       listaFiltrada = widget.listItens;
@@ -191,7 +191,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                   .toLowerCase()
                                   .latinize()
                                   .contains(
-                                    controllerBar.text.toLowerCase().latinize(),
+                                    controllerBar.text.latinize().toLowerCase(),
                                   ),
                             )
                             .toList();

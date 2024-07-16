@@ -6,6 +6,8 @@ final List<ValueItem<Custom>> customListitems = [
   ValueItem(label: 'Peter', value: Custom('Peter', 1)),
   ValueItem(label: 'Lucas', value: Custom('Lucas', 3)),
   ValueItem(label: 'Gian', value: Custom('Gian', 70)),
+  ValueItem(label: 'Lança', value: Custom('Lança', 70)),
+  ValueItem(label: 'Não', value: Custom('Não', 70)),
 ];
 
 final List<ValueItem> listitems = [

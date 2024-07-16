@@ -104,8 +104,8 @@ class SingleListView<T> extends StatelessWidget {
                   final list = listaFiltrada
                       .where(
                         (element) =>
-                            element.label.toLowerCase().latinize().contains(
-                                  searchbarText.toLowerCase().latinize(),
+                            element.label.latinize().toLowerCase().contains(
+                                  searchbarText.latinize().toLowerCase(),
                                 ),
                       )
                       .toList();
