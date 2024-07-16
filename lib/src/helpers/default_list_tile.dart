@@ -5,8 +5,10 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 class DefaultListTile<T> extends StatelessWidget {
   const DefaultListTile({
     required this.deleteMode,
+    required this.editMode,
     required this.item,
     required this.onDelete,
+    required this.onEdit,
     required this.onPressed,
     required this.overlayListSettings,
     required this.selected,
@@ -17,7 +19,9 @@ class DefaultListTile<T> extends StatelessWidget {
   ///The overlay list of items settings.
   final SimpleOverlaySettings overlayListSettings;
   final bool deleteMode;
+  final bool editMode;
   final ValueItem<T> item;
+  final Function(ValueItem<T> value) onEdit;
   final Function(ValueItem<T> value) onDelete;
   final Function(ValueItem<T> value) onPressed;
   final bool selected;
@@ -74,6 +78,13 @@ class DefaultListTile<T> extends StatelessWidget {
             defaultAditionalWidget!,
             SizedBox(width: overlayListSettings.aditionalWidgetSpacing)
           ],
+          if (editMode)
+            IconButton(
+              onPressed: () {
+                onEdit(item);
+              },
+              icon: overlayListSettings.dialogEditIcon,
+            ),
           if (deleteMode)
             overlayListSettings.dialogActionWidget ??
                 IconButton(

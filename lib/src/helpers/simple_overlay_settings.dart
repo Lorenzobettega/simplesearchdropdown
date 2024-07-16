@@ -17,6 +17,11 @@ class SimpleOverlaySettings {
       color: Color.fromRGBO(183, 28, 28, 1),
       size: 20,
     ),
+    this.dialogEditIcon = const Icon(
+      Icons.edit,
+      color: Colors.black,
+      size: 20,
+    ),
     this.dialogActionWidget,
     this.separatorHeight = 1,
     this.animationDuration = const Duration(milliseconds: 100),
@@ -57,6 +62,9 @@ class SimpleOverlaySettings {
 
   ///The delete Icon in dropdown listview (default:red trash)
   final Icon dialogDeleteIcon;
+
+  ///The delete Icon in dropdown listview (default:red trash)
+  final Icon dialogEditIcon;
 
   ///The delete Widget in dropdown listview (default:IconButton). It replaces the `dialogActionIcon`
   final Widget? dialogActionWidget;

@@ -11,6 +11,8 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.newValueItem,
     this.deleteMode = true,
     this.onDeleteItem,
+    this.editMode = false,
+    this.onEditItem,
     required this.updateSelectedItems,
     this.sortType = 0,
     this.confirmDelete = false,
@@ -28,7 +30,9 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
                 !addMode,
             'addMode can only be used with newValueItem != null && onAddItem != null'),
         assert((deleteMode && onDeleteItem != null) || !deleteMode,
-            'deleteMode can only be used with onDeleteItem != null');
+            'deleteMode can only be used with onDeleteItem != null'),
+        assert((editMode && onEditItem != null) || !editMode,
+            'editMode can only be used with onEditItem != null');
 
   ///List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
@@ -55,6 +59,12 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
 
   ///Function to be executed after the item was deleted.
   final Function(ValueItem<T>)? onDeleteItem;
+
+  ///Allow the user to edit items to the list.
+  final bool editMode;
+
+  ///Function to be executed after the item was added.
+  final Function(ValueItem<T>)? onEditItem;
 
   ///Force the user to confirm delete
   final bool confirmDelete;
@@ -194,6 +204,15 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     }
   }
 
+  // TODO verificar como vai ser feito 
+  // void handleEditItem(ValueItem<T> item, BuildContext context) {
+  //   if (widget.editMode) {
+  //     widget.onEditItem!(item);
+  //     resetSelection();
+  //     overlayScreen.updateLast();
+  //   }
+  // }
+
   void _showOverlay(
     BuildContext context,
   ) {
@@ -224,9 +243,11 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                   child: MultipleListView(
                     addMode: widget.addMode,
                     deleteMode: widget.deleteMode,
+                    editMode: widget.editMode,
                     listItens: widget.listItems,
                     onAddItem: (val) => handleAddItem(val, context),
                     onDeleteItem: (val) => handleDeleteItem(val, context),
+                    onEditItem: (val)=> (),// TODO colocar função
                     onItemSelected: (val) => onItemSelected(val),
                     selectedItens: widget.selectedItems,
                     sortType: widget.sortType,

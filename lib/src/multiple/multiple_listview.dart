@@ -7,11 +7,13 @@ class MultipleListView<T> extends StatefulWidget {
   const MultipleListView({
     super.key,
     required this.addMode,
+    required this.editMode,
     required this.overlayListSettings,
     required this.deleteMode,
     required this.listItens,
     required this.onAddItem,
     required this.onDeleteItem,
+    required this.onEditItem,
     required this.onItemSelected,
     required this.selectedItens,
     required this.sortType,
@@ -23,8 +25,10 @@ class MultipleListView<T> extends StatefulWidget {
 
   final bool addMode;
   final bool deleteMode;
+  final bool editMode;
   final Function(ValueItem<T> value) onAddItem;
   final Function(ValueItem<T> value) onDeleteItem;
+  final Function(ValueItem<T> value) onEditItem;
   final Function(ValueItem<T> value) onItemSelected;
   final List<ValueItem<T>> listItens;
   final List<ValueItem<T>> selectedItens;
@@ -215,6 +219,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                         selected:
                             widget.selectedItens.contains(listaFiltrada[index]),
                         defaultAditionalWidget: widget.defaultAditionalWidget,
+                        editMode: widget.editMode,
+                        onEdit: widget.onEditItem,
                       );
                     }
                   },
