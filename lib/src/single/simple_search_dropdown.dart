@@ -116,6 +116,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   final LayerLink _layerLink = LayerLink();
   bool aberto = false;
   bool shouldScroll = true;
+  bool clearVisible = false;
   late bool enabled;
   ValueItem<T>? selectedValue;
 
@@ -129,6 +130,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       if (widget.selectedItem != null) {
         controllerBar.text = widget.selectedItem!.label;
         selectedValue = widget.selectedItem!;
+        clearVisible = true;
       }
     }
     enabled = widget.enabled;
@@ -210,6 +212,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     _filtrarLista(null);
     selectedValue = null;
     widget.updateSelectedItem(null);
+    setState(() {
+      clearVisible = false;
+    });
   }
 
   void enableDisable() {
@@ -225,6 +230,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       selectedValue = val;
       widget.updateSelectedItem(val);
       controllerBar.text = val.label;
+      setState(() {
+        clearVisible = true;
+      });
     }
   }
 
@@ -325,25 +333,28 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   }
 
   void hideOverlay(ValueItem<T>? val) {
-    setState(() {
-      aberto = !aberto;
-    });
     if (val != null) {
       selectedValue = val;
       widget.updateSelectedItem(val);
       controllerBar.text = val.label;
+      clearVisible = true;
     } else {
       if (selectedValue != null) {
         final label = selectedValue!.label;
         if (controllerBar.text != label) {
           controllerBar.text = label;
         }
+        clearVisible = true;
       } else {
         if ((widget.searchBarSettings.clearOnClose) || !widget.addMode) {
           controllerBar.clear();
         }
+        clearVisible = false;
       }
     }
+    setState(() {
+      aberto = !aberto;
+    });
     updateShouldScroll(reset: true);
     overlayScreen.closeAll();
     FocusScope.of(context).unfocus();
@@ -360,20 +371,21 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           enabled: enabled,
           trailing: widget.searchBarSettings.actions ??
               [
-                if (aberto)
-                  Icon(
-                    widget.searchBarSettings.dropdownOpenedArrowIcon,
-                    color: widget.searchBarSettings.outsideIconColor,
-                    size: widget.searchBarSettings.outsideIconSize,
-                  )
-                else
-                  Icon(
-                    widget.searchBarSettings.dropdownClosedArrowIcon,
-                    color: widget.searchBarSettings.outsideIconColor,
-                    size: widget.searchBarSettings.outsideIconSize,
-                  ),
+                if (widget.searchBarSettings.showArrow)
+                  if (aberto)
+                    Icon(
+                      widget.searchBarSettings.dropdownOpenedArrowIcon,
+                      color: widget.searchBarSettings.outsideIconColor,
+                      size: widget.searchBarSettings.outsideIconSize,
+                    )
+                  else
+                    Icon(
+                      widget.searchBarSettings.dropdownClosedArrowIcon,
+                      color: widget.searchBarSettings.outsideIconColor,
+                      size: widget.searchBarSettings.outsideIconSize,
+                    ),
                 Visibility(
-                  visible: controllerBar.text != '',
+                  visible: clearVisible,
                   child: Row(
                     children: [
                       const SizedBox(

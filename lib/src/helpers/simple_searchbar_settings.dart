@@ -19,6 +19,7 @@ class SimpleSearchbarSettings {
     this.hint = 'Pesquisar',
     this.hintStyle = const TextStyle(fontSize: 14),
     this.hoverColor = const Color.fromRGBO(245, 245, 245, 1),
+    this.showArrow = true,
     this.dropdownClosedArrowIcon = Icons.arrow_drop_down,
     this.dropdownOpenedArrowIcon = Icons.arrow_drop_up,
     this.outsideIconColor,
@@ -64,6 +65,9 @@ class SimpleSearchbarSettings {
 
   ///The hover color of the searchbar.
   final Color hoverColor;
+
+  ///If true, the arrow icon will appear on the end of the searchbar (default:true).
+  final bool showArrow;
 
   ///Action Icon showed when dropdown is closed
   final IconData dropdownClosedArrowIcon;

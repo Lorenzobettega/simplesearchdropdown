@@ -36,7 +36,8 @@ class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
   final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
   final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
-  ValueItem<Custom>? selectedSingleCustom;
+  ValueItem<Custom>? selectedSingleCustom =
+      ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134));
 
   List<ValueItem> selectedMultipleItems = [];
   ValueItem? selectedSingleItem;
@@ -105,7 +106,9 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 70,),
+            const SizedBox(
+              height: 70,
+            ),
             SearchDropDown(
               key: singleSearchKey,
               listItems: listitems,
@@ -138,18 +141,21 @@ class _MyHomePageState extends State<MyHomePage> {
               selectedItems: selectedMultipleItems,
               updateSelectedItems: updateSelectedItems,
               newValueItem: (input) => ValueItem(label: input, value: input),
+              searchBarSettings: SimpleSearchbarSettings(showArrow: true),
             ),
             const SizedBox(
               height: 20,
             ),
             SearchDropDown<Custom>(
               key: customSearchKey,
+              selectedItem: selectedSingleCustom,
               listItems: customListitems,
               confirmDelete: true,
               onDeleteItem: removeCustom,
               onAddItem: addCustom,
               updateSelectedItem: updateSelectedCustom,
               verifyInputItem: verifyInput,
+              searchBarSettings: SimpleSearchbarSettings(showArrow: false),
               newValueItem: (input) => ValueItem(
                 label: input,
                 value: Custom(input, getRandomInt(4)),

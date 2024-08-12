@@ -1,3 +1,7 @@
+## [5.1.0] - 2024-02-28.
+-  Added `showArrow` parameter to multiple and single selection. It alows you to hide the searchbar arrow.
+-  Fixed clear button visibility.
+
 ## [5.0.1] - 2024-07-15.
 -  Fixed latin characters search.
 
@@ -7,7 +11,7 @@
 -  Updated web sample.
 
 ## [4.4.1] - 2024-03-21.
--   Fixed deleting items in single search.
+-  Fixed deleting items in single search.
 
 ## [4.4.0] - 2024-02-28.
 -   Added `addAditionalWidget` parameter to multiple and single selection. It alows you to put a widget between the text and the create button on the add item cell.

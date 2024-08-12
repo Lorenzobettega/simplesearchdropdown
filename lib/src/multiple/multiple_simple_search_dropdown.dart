@@ -204,7 +204,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     }
   }
 
-  // TODO verificar como vai ser feito 
+  // TODO verificar como vai ser feito
   // void handleEditItem(ValueItem<T> item, BuildContext context) {
   //   if (widget.editMode) {
   //     widget.onEditItem!(item);
@@ -247,7 +247,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     listItens: widget.listItems,
                     onAddItem: (val) => handleAddItem(val, context),
                     onDeleteItem: (val) => handleDeleteItem(val, context),
-                    onEditItem: (val)=> (),// TODO colocar função
+                    onEditItem: (val) => (), // TODO colocar função
                     onItemSelected: (val) => onItemSelected(val),
                     selectedItens: widget.selectedItems,
                     sortType: widget.sortType,
@@ -416,11 +416,13 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                 child: Icon(
                                   widget.selectedItems.isNotEmpty
                                       ? Icons.clear
-                                      : aberto
-                                          ? widget.searchBarSettings
-                                              .dropdownOpenedArrowIcon
-                                          : widget.searchBarSettings
-                                              .dropdownClosedArrowIcon,
+                                      : widget.searchBarSettings.showArrow
+                                          ? aberto
+                                              ? widget.searchBarSettings
+                                                  .dropdownOpenedArrowIcon
+                                              : widget.searchBarSettings
+                                                  .dropdownClosedArrowIcon
+                                          : null,
                                   size:
                                       widget.searchBarSettings.outsideIconSize,
                                   color:
