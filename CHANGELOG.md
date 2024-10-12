@@ -1,4 +1,9 @@
-## [5.1.0] - 2024-02-28.
+## [5.2.0] - 2024-10-12.
+-  Added missing docs.
+-  Bumped flutter_lints to 5.0.0
+-  Added `showClearIcon` parameter to single selection. It alows you to hide the searchbar clear Icon.
+
+## [5.1.0] - 2024-08-11.
 -  Added `showArrow` parameter to multiple and single selection. It alows you to hide the searchbar arrow.
 -  Fixed clear button visibility.
 

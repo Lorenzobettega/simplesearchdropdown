@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
+///ListItem to be shown when a item will be added.
 class DefaultAddListItem extends StatelessWidget {
   const DefaultAddListItem({
     required this.text,

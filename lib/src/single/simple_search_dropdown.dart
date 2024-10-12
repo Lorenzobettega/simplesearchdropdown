@@ -130,7 +130,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       if (widget.selectedItem != null) {
         controllerBar.text = widget.selectedItem!.label;
         selectedValue = widget.selectedItem!;
-        clearVisible = true;
+        if (widget.searchBarSettings.showClearIcon) {
+          clearVisible = true;
+        }
       }
     }
     enabled = widget.enabled;
@@ -230,9 +232,11 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       selectedValue = val;
       widget.updateSelectedItem(val);
       controllerBar.text = val.label;
-      setState(() {
-        clearVisible = true;
-      });
+      if (widget.searchBarSettings.showClearIcon) {
+        setState(() {
+          clearVisible = true;
+        });
+      }
     }
   }
 
@@ -337,14 +341,18 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       selectedValue = val;
       widget.updateSelectedItem(val);
       controllerBar.text = val.label;
-      clearVisible = true;
+      if (widget.searchBarSettings.showClearIcon) {
+        clearVisible = true;
+      }
     } else {
       if (selectedValue != null) {
         final label = selectedValue!.label;
         if (controllerBar.text != label) {
           controllerBar.text = label;
         }
-        clearVisible = true;
+        if (widget.searchBarSettings.showClearIcon) {
+          clearVisible = true;
+        }
       } else {
         if ((widget.searchBarSettings.clearOnClose) || !widget.addMode) {
           controllerBar.clear();

@@ -20,6 +20,7 @@ class SimpleSearchbarSettings {
     this.hintStyle = const TextStyle(fontSize: 14),
     this.hoverColor = const Color.fromRGBO(245, 245, 245, 1),
     this.showArrow = true,
+    this.showClearIcon = true,
     this.dropdownClosedArrowIcon = Icons.arrow_drop_down,
     this.dropdownOpenedArrowIcon = Icons.arrow_drop_up,
     this.outsideIconColor,
@@ -47,6 +48,9 @@ class SimpleSearchbarSettings {
 
   ///The border of the searchbar.
   final OutlinedBorder? border;
+
+  ///If true, the "x" icon will appear on the end of the searchbar (default:true).
+  final bool showClearIcon;
 
   ///The color of "x" clear icon on the end of the searchbar.
   final Color? clearIconColor;
