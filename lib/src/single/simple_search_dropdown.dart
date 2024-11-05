@@ -396,9 +396,10 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   visible: clearVisible,
                   child: Row(
                     children: [
-                      if (widget.searchBarSettings.showArrow) const SizedBox(
-                        width: 5,
-                      ),
+                      if (widget.searchBarSettings.showArrow)
+                        const SizedBox(
+                          width: 5,
+                        ),
                       IconButton(
                         onPressed: resetSelection,
                         icon: Icon(
