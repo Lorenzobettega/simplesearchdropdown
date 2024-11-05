@@ -1,3 +1,7 @@
+## [5.2.1] - 2024-11-05.
+-  Added `searchBarPadding` parameter to allow changing the internal padding of the single searchBar.
+- Mini fix to search bar actions spacing.
+
 ## [5.2.0] - 2024-10-12.
 -  Added missing docs.
 -  Bumped flutter_lints to 5.0.0

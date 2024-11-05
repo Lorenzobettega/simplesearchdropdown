@@ -396,7 +396,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   visible: clearVisible,
                   child: Row(
                     children: [
-                      const SizedBox(
+                      if (widget.searchBarSettings.showArrow) const SizedBox(
                         width: 5,
                       ),
                       IconButton(
@@ -445,6 +445,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           },
           elevation: WidgetStateProperty.all<double>(
               widget.searchBarSettings.elevation),
+          padding: WidgetStateProperty.all<EdgeInsetsGeometry?>(
+              widget.searchBarSettings.searchBarPadding),
         ),
       ),
     );

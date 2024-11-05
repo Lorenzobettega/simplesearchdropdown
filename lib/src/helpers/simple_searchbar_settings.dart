@@ -32,6 +32,7 @@ class SimpleSearchbarSettings {
     this.boxMultiSelectedBackgroundColor =
         const Color.fromRGBO(224, 224, 224, 1),
     this.boxMultiSelectedTextStyle,
+    this.searchBarPadding,
   });
 
   ///Main/outside Container height(default:50)
@@ -102,6 +103,9 @@ class SimpleSearchbarSettings {
 
   ///Outside/horizontal list of selected items custom widget
   final Widget Function(ValueItem)? boxMultiItemWidgetBuilder;
+
+  ///The internal padding of the searchBar
+  final EdgeInsetsGeometry? searchBarPadding;
 }
 
 ///The default settings for the SimpleSearchbar.
