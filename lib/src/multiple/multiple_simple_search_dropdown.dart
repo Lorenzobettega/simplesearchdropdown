@@ -323,7 +323,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                           Expanded(
                             child: widget.selectedItems.isNotEmpty
                                 ? ScrollConfiguration(
-                                    behavior: MyCustomScrollBehavior(),
+                                    behavior: CustomScrollBehavior(),
                                     child: ListView.separated(
                                       scrollDirection: Axis.horizontal,
                                       separatorBuilder: (context, index) =>
