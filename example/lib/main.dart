@@ -128,6 +128,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               sortType: 3,
               enabled: false,
+              searchBarSettings: SimpleSearchbarSettings(showKeyboardOnTap: false),
             ),
             const SizedBox(
               height: 20,

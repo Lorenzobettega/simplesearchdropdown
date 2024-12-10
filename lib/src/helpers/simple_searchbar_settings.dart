@@ -33,6 +33,7 @@ class SimpleSearchbarSettings {
         const Color.fromRGBO(224, 224, 224, 1),
     this.boxMultiSelectedTextStyle,
     this.searchBarPadding,
+    this.showKeyboardOnTap = true,
   });
 
   ///Main/outside Container height(default:50)
@@ -106,6 +107,9 @@ class SimpleSearchbarSettings {
 
   ///The internal padding of the searchBar
   final EdgeInsetsGeometry? searchBarPadding;
+
+  ///If true, the keyboard will appear when you tap the searchbar (default:true).
+  final bool showKeyboardOnTap;
 }
 
 ///The default settings for the SimpleSearchbar.
