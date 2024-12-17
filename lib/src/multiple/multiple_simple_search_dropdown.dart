@@ -305,8 +305,8 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                       border: Border.all(style: BorderStyle.none),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withOpacity(
-                              widget.searchBarSettings.elevation != 0
+                          color: Colors.grey.withValues(
+                              alpha: widget.searchBarSettings.elevation != 0
                                   ? 0.5
                                   : 0),
                           spreadRadius: 0.5,

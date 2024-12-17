@@ -2,10 +2,10 @@ name: simple_search_dropdown
 description: A dropdown that offers a search bar, multiple and single selections.
 homepage: https://github.com/Lorenzobettega/searchdropdown
 
-version: 5.2.2
+version: 5.3.0
 
 environment:
-  sdk: '>=3.4.0 < 4.0.0'
+  sdk: '>=3.0.0 < 4.0.0'
 
 dependencies:
   flutter:

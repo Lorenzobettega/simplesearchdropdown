@@ -1,3 +1,7 @@
+## [5.3.0] - 2024-12-16.
+- Fixed deprecation warning from flutter 3.27.
+- Lowered dart constraint to 3.0.
+
 ## [5.2.1] - 2024-11-05.
 -  Added `searchBarPadding` parameter to allow changing the internal padding of the single searchBar.
 - Mini fix to search bar actions spacing.

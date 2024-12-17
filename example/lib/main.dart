@@ -41,6 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<ValueItem> selectedMultipleItems = [];
   ValueItem? selectedSingleItem;
+  final SearchController controller = SearchController();
 
   void removeItem(ValueItem item) {
     listitems.remove(item);
@@ -106,6 +107,14 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            // const SizedBox(
+            //   height: 70,
+            // ),
+            // Simple(
+            //   listItems: listitems,
+            //   updateSelectedItem: updateSelectedItem,
+            //   controller: controller,
+            // ),
             const SizedBox(
               height: 70,
             ),
@@ -128,7 +137,8 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
               sortType: 3,
               enabled: false,
-              searchBarSettings: SimpleSearchbarSettings(showKeyboardOnTap: false),
+              searchBarSettings:
+                  SimpleSearchbarSettings(showKeyboardOnTap: false),
             ),
             const SizedBox(
               height: 20,
