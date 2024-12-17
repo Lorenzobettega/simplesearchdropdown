@@ -13,6 +13,8 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.onDeleteItem,
     this.editMode = false,
     this.onEditItem,
+    this.onClearItem,
+    this.onClearList,
     required this.updateSelectedItems,
     this.sortType = 0,
     this.confirmDelete = false,
@@ -65,6 +67,12 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
 
   ///Function to be executed after the item was added.
   final Function(ValueItem<T>)? onEditItem;
+
+  ///Function to be executed after clear list.
+  final Function()? onClearList;
+
+  ///Function to be executed after clear an item.
+  final Function(ValueItem<T>)? onClearItem;
 
   ///Force the user to confirm delete
   final bool confirmDelete;
@@ -127,6 +135,9 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
       if (widget.selectedItems.contains(val)) {
         if (!forced) {
           widget.selectedItems.remove(val);
+          if (widget.onClearItem != null) {
+            widget.onClearItem!(val);
+          }
         }
       } else {
         widget.selectedItems.add(val);
@@ -274,6 +285,16 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     FocusScope.of(context).unfocus();
   }
 
+  void onClear() {
+    setState(() {
+      widget.selectedItems.clear();
+      widget.updateSelectedItems(widget.selectedItems);
+    });
+    if (widget.onClearList != null) {
+      widget.onClearList!();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Opacity(
@@ -305,9 +326,9 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                       border: Border.all(style: BorderStyle.none),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.grey.withValues(
-                              alpha: widget.searchBarSettings.elevation != 0
-                                  ? 0.5
+                          color: Colors.grey.withAlpha(
+                              widget.searchBarSettings.elevation != 0
+                                  ? 125
                                   : 0),
                           spreadRadius: 0.5,
                           blurRadius: widget.searchBarSettings.elevation,
@@ -406,13 +427,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                             children: [
                               const SizedBox(width: 5),
                               InkWell(
-                                onTap: () {
-                                  setState(() {
-                                    widget.selectedItems.clear();
-                                    widget.updateSelectedItems(
-                                        widget.selectedItems);
-                                  });
-                                },
+                                onTap: onClear,
                                 child: Icon(
                                   widget.selectedItems.isNotEmpty
                                       ? Icons.clear

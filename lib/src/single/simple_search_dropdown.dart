@@ -15,6 +15,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.onEditItem,
     this.deleteMode = true,
     this.onDeleteItem,
+    this.onClear,
     required this.updateSelectedItem,
     this.sortType = 0,
     this.confirmDelete = false,
@@ -61,6 +62,9 @@ class SearchDropDown<T> extends StatefulWidget {
 
   ///Function to be executed after the item was edit.
   final Function(ValueItem<T>)? onEditItem;
+
+  ///Function to be executed after the clear tabBar.
+  final Function()? onClear;
 
   ///Force the user to confirm delete
   final bool confirmDelete;
@@ -368,6 +372,13 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     FocusScope.of(context).unfocus();
   }
 
+  void onClear(){
+    resetSelection();
+    if(widget.onClear != null){
+      widget.onClear!();
+    } 
+  }
+
   @override
   Widget build(BuildContext context) {
     return CompositedTransformTarget(
@@ -401,7 +412,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                           width: 5,
                         ),
                       IconButton(
-                        onPressed: resetSelection,
+                        onPressed: onClear,
                         icon: Icon(
                           Icons.clear,
                           color: widget.searchBarSettings.clearIconColor,

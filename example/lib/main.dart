@@ -59,12 +59,24 @@ class _MyHomePageState extends State<MyHomePage> {
     singleSearchKey.currentState?.resetSelection();
   }
 
+  void onClearSingleSelection() {
+    print('clear');
+  }
+
   void updateSelectedItems(List<ValueItem> newSelectedItems) {
     selectedMultipleItems = newSelectedItems;
   }
 
   void clearMultipleSelection() {
     multipleSearchKey.currentState?.resetSelection();
+  }
+
+  void onClearMultipleSelection() {
+    print('clear');
+  }
+
+  void onClearItemMultipleSelection(ValueItem<dynamic> item) {
+    print('item clear');
   }
 
   void removeCustom(ValueItem<Custom> item) {
@@ -125,6 +137,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onDeleteItem: removeItem,
               onAddItem: addItem,
               updateSelectedItem: updateSelectedItem,
+              onClear: onClearSingleSelection,
               selectedItem: listitems[0],
               verifyInputItem: verifyInput,
               newValueItem: (input) => ValueItem(label: input, value: input),
@@ -149,6 +162,8 @@ class _MyHomePageState extends State<MyHomePage> {
               confirmDelete: true,
               onDeleteItem: removeItem,
               onAddItem: addItem,
+              onClearList: onClearMultipleSelection,
+              onClearItem: onClearItemMultipleSelection,
               selectedItems: selectedMultipleItems,
               updateSelectedItems: updateSelectedItems,
               newValueItem: (input) => ValueItem(label: input, value: input),
