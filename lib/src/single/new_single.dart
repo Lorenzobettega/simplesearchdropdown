@@ -317,6 +317,8 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
         viewHintText: widget.searchBarSettings.hint,
         viewHeaderHintStyle: widget.searchBarSettings.hintStyle,
         viewHeaderTextStyle: widget.searchBarSettings.searchBarTextStyle,
+        keyboardType: widget.searchBarSettings.showKeyboardOnTap ? TextInputType.none : widget.searchBarSettings.keyboardType,
+        textInputAction: widget.searchBarSettings.textInputAction,
         suggestionsBuilder:
             (BuildContext context, SearchController controller) {
           return List<Widget>.generate(listaFiltrada.length + (widget.addMode ? 1 : 0), (int index) {

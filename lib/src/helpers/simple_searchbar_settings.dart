@@ -34,6 +34,8 @@ class SimpleSearchbarSettings {
     this.boxMultiSelectedTextStyle,
     this.searchBarPadding,
     this.showKeyboardOnTap = true,
+    this.keyboardType,
+    this.textInputAction,
   });
 
   ///Main/outside Container height(default:50)
@@ -110,6 +112,12 @@ class SimpleSearchbarSettings {
 
   ///If true, the keyboard will appear when you tap the searchbar (default:true).
   final bool showKeyboardOnTap;
+
+  //The keyboard type of search bar
+  final TextInputType? keyboardType;
+
+  //The keyboard reaction on enter and input
+  final TextInputAction? textInputAction;
 }
 
 ///The default settings for the SimpleSearchbar.
