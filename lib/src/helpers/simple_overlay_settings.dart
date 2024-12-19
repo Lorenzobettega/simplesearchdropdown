@@ -32,6 +32,7 @@ class SimpleOverlaySettings {
     this.offsetHeight = 3,
     this.offsetWidth = 0,
     this.aditionalWidgetSpacing = 5,
+    this.openFullScreen = false,
   });
 
   ///Dropdown Container height (default:`200`).
@@ -95,6 +96,9 @@ class SimpleOverlaySettings {
 
   ///The width of the space between the aditional widget and the delete one (default:`5`).
   final double aditionalWidgetSpacing;
+
+  //The drop widget will open full screen in true condition
+  final bool openFullScreen;
 }
 
 ///The default settings for the OverlayList.

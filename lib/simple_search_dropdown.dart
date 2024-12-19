@@ -18,4 +18,5 @@ export './src/multiple/multiple_listview.dart';
 export './src/multiple/multiple_simple_search_dropdown.dart';
 export './src/single/simple_search_dropdown.dart';
 export './src/single/single_listview.dart';
+export './src/single/new_single.dart';
 // export './src/single/new_single.dart';
