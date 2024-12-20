@@ -235,6 +235,19 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final Widget clearButton = Visibility(
+      visible: clearVisible && widget.searchBarSettings.showArrow,
+      child: IconButton(
+        onPressed: () {
+          resetSelection();
+        },
+        icon: Icon(
+          Icons.clear,
+          color: widget.searchBarSettings.clearIconColor,
+          size: widget.searchBarSettings.outsideIconSize,
+        ),
+      ),
+    );
     return SizedBox(
       width: widget.searchBarSettings.dropdownWidth,
       height: widget.searchBarSettings.dropdownHeight,
@@ -248,21 +261,8 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
         // altura textinputfield drop down aberto
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
         //o que vai de widget no final do drop fechado
-        barTrailing: [
-          Visibility(
-            visible: clearVisible && widget.searchBarSettings.showArrow,
-            child: IconButton(
-              onPressed: () {
-                resetSelection();
-              },
-              icon: Icon(
-                Icons.clear,
-                color: widget.searchBarSettings.clearIconColor,
-                size: widget.searchBarSettings.outsideIconSize,
-              ),
-            ),
-          ),
-        ],
+        barTrailing: [clearButton],
+        viewTrailing: [clearButton],
         barElevation:
             WidgetStatePropertyAll(widget.searchBarSettings.elevation),
         // Borda drop fechado
