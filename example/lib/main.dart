@@ -181,6 +181,7 @@ class _MyHomePageState extends State<MyHomePage> {
               onAddItem: addCustom,
               updateSelectedItem: updateSelectedCustom,
               verifyInputItem: verifyInput,
+              sortType: 3,
               searchBarSettings: SimpleSearchbarSettings(showArrow: false),
               newValueItem: (input) => ValueItem(
                 label: input,
@@ -193,7 +194,9 @@ class _MyHomePageState extends State<MyHomePage> {
             NewSingle(
               listItems: listitems, 
               updateSelectedItem: updateSelectedItem, 
-              controller: controller
+              controller: controller,
+              onAddItem: addItem,
+              newValueItem: (input) => ValueItem(value: input,label: input),
             ),
             const SizedBox(
               height: 20,

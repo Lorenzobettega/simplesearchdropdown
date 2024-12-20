@@ -13,6 +13,7 @@ class NewSingle<T> extends StatefulWidget {
     this.onEditItem,
     this.deleteMode = true,
     this.onDeleteItem,
+    this.onClear,
     required this.updateSelectedItem,
     this.sortType = 0,
     this.confirmDelete = false,
@@ -53,6 +54,9 @@ class NewSingle<T> extends StatefulWidget {
 
   ///Function to be executed after the item was edit.
   final Function(ValueItem<T>)? onEditItem;
+
+  ///Function to be executed after clear item.
+  final Function()? onClear;
 
   ///Force the user to confirm delete
   final bool confirmDelete;
@@ -115,11 +119,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     if (widget.listItems.isNotEmpty) {
       _filtrarLista(null, start: true);
       if (widget.selectedItem != null) {
-        widget.controller.text = widget.selectedItem!.label;
-        selectedValue = widget.selectedItem!;
-        if (widget.searchBarSettings.showClearIcon) {
-          clearVisible = true;
-        }
+        selectedItem(widget.selectedItem!);
       }
     }
   }
@@ -159,23 +159,22 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
                 .contains(text.latinize().toLowerCase()))
             .toList();
       } else {
-        listaFiltrada = widget.listItems;
+        listaFiltrada = widget.listItems; // TODO entender pq n ta dando certo
       }
     }
   }
 
-  void handleAddItem(ValueItem<T> item) {
+  void handleAddItem(String text) {
     if (widget.addMode) {
+      final item = widget.newValueItem!(text);
       if (widget.verifyInputItem != null) {
         if (!widget.verifyInputItem!(item)) {
           widget.controller.clear();
-          _filtrarLista(null);
         }
       }
       listaFiltrada.add(item);
-      widget.controller.closeView(item.label);
       widget.onAddItem!(item);
-      _filtrarLista(null);
+      selectedItem(item);
     }
   }
 
@@ -187,20 +186,28 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     setState(() {
       clearVisible = false;
     });
+    if (widget.onClear != null) {
+      widget.onClear!();
+    }
+  }
+
+  void selectedItem(ValueItem<T> item) {
+    widget.controller.closeView(item.label);
+    selectedValue = item;
+    widget.updateSelectedItem(item);
+    _filtrarLista(null);
+    if (widget.searchBarSettings.showClearIcon) {
+      setState(() {
+        clearVisible = true;
+      });
+    }
   }
 
   void forceSelection(String label) {
     final ValueItem<T>? val =
         widget.listItems.where((element) => element.label == label).firstOrNull;
     if (val != null) {
-      selectedValue = val;
-      widget.updateSelectedItem(val);
-      widget.controller.text = val.label;
-      if (widget.searchBarSettings.showClearIcon) {
-        setState(() {
-          clearVisible = true;
-        });
-      }
+      selectedItem(val);
     }
   }
 
@@ -215,22 +222,16 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     }
   }
 
-  void goToSelectedItem(ValueItem<T> item) {
-    final index = listaFiltrada.indexOf(item);
-    if (index > 1) {
-      // scrollController.scrollTo(
-      //   index: index,
-      //   duration: overlayListSettings.reOpenedScrollDuration,
-      //   curve: Curves.ease,
-      // );
-    }
-  }
-
-  void itemAdded(String text) {
-    final item = widget.newValueItem!(text);
-    widget.onAddItem!(item);
-  }
-
+  // void goToSelectedItem(ValueItem<T> item) {
+  //   final index = listaFiltrada.indexOf(item);
+  //   if (index > 1) {
+  // scrollController.scrollTo(
+  //   index: index,
+  //   duration: overlayListSettings.reOpenedScrollDuration,
+  //   curve: Curves.ease,
+  // );
+  //   }
+  // } TODO ver como vai ser feito
 
   @override
   Widget build(BuildContext context) {
@@ -249,25 +250,16 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
         //o que vai de widget no final do drop fechado
         barTrailing: [
           Visibility(
-            visible: clearVisible,
-            child: Row(
-              children: [
-                if (widget.searchBarSettings.showArrow)
-                  const SizedBox(
-                    width: 5,
-                  ),
-                IconButton(
-                  onPressed: () {
-                    widget.controller.clear();
-                    clearVisible = false;
-                  },
-                  icon: Icon(
-                    Icons.clear,
-                    color: widget.searchBarSettings.clearIconColor,
-                    size: widget.searchBarSettings.outsideIconSize,
-                  ),
-                ),
-              ],
+            visible: clearVisible && widget.searchBarSettings.showArrow,
+            child: IconButton(
+              onPressed: () {
+                resetSelection();
+              },
+              icon: Icon(
+                Icons.clear,
+                color: widget.searchBarSettings.clearIconColor,
+                size: widget.searchBarSettings.outsideIconSize,
+              ),
             ),
           ),
         ],
@@ -317,11 +309,14 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
         viewHintText: widget.searchBarSettings.hint,
         viewHeaderHintStyle: widget.searchBarSettings.hintStyle,
         viewHeaderTextStyle: widget.searchBarSettings.searchBarTextStyle,
-        keyboardType: widget.searchBarSettings.showKeyboardOnTap ? TextInputType.none : widget.searchBarSettings.keyboardType,
+        keyboardType: widget.searchBarSettings.showKeyboardOnTap
+            ? TextInputType.none
+            : widget.searchBarSettings.keyboardType,
         textInputAction: widget.searchBarSettings.textInputAction,
         suggestionsBuilder:
             (BuildContext context, SearchController controller) {
-          return List<Widget>.generate(listaFiltrada.length + (widget.addMode ? 1 : 0), (int index) {
+          return List<Widget>.generate(
+              listaFiltrada.length + (widget.addMode ? 1 : 0), (int index) {
             if (index == listaFiltrada.length && widget.addMode) {
               if (controller.text != '') {
                 final list = listaFiltrada
@@ -334,7 +329,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
                     .toList();
                 if (list.isEmpty) {
                   return DefaultAddListItem(
-                    itemAdded: itemAdded,
+                    itemAdded: handleAddItem,
                     overlayListSettings: widget.overlayListSettings,
                     text: controller.text,
                     addAditionalWidget: widget.addAditionalWidget,
@@ -347,11 +342,12 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
                 deleteMode: widget.deleteMode,
                 editMode: widget.editMode,
                 item: listaFiltrada[index],
-                onDelete: (val) => handleDeleteItem(val,context,),
-                onEdit: (val){},
-                onPressed: (_) {
-                  controller.closeView(_.label);
-                },
+                onDelete: (val) => handleDeleteItem(
+                  val,
+                  context,
+                ),
+                onEdit: (val) {},
+                onPressed: selectedItem,
                 overlayListSettings: widget.overlayListSettings,
                 selected: controller.text == listaFiltrada[index].label,
                 defaultAditionalWidget: widget.defaultAditionalWidget,
