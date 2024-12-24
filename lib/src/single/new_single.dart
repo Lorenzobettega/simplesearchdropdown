@@ -29,77 +29,77 @@ class NewSingle<T> extends StatefulWidget {
     required this.controller,
   });
 
-  ///List of the items to be presented on the dropdown.
+  /// List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
 
-  ///Allow the user to add items to the list.
+  /// Allow the user to add items to the list.
   final bool addMode;
 
-  ///Function to be executed after the item was added.
+  /// Function to be executed after the item was added.
   final Function(ValueItem<T>)? onAddItem;
 
-  ///Function that defines how the user input transforms into a new ValueItem on the list.
+  /// Function that defines how the user input transforms into a new ValueItem on the list.
   ///
-  ///Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
+  /// Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
   final ValueItem<T> Function(String input)? newValueItem;
 
-  ///Allow the user to delete items of the list.
+  /// Allow the user to delete items of the list.
   final bool deleteMode;
 
-  ///Function to be executed after the item was deleted.
+  /// Function to be executed after the item was deleted.
   final Function(ValueItem<T>)? onDeleteItem;
 
-  ///Allow the user to edit items of the list.
+  /// Allow the user to edit items of the list.
   final bool editMode;
 
-  ///Function to be executed after the item was edit.
+  /// Function to be executed after the item was edit.
   final Function(ValueItem<T>)? onEditItem;
 
-  ///Function to be executed after clear item.
+  /// Function to be executed after clear item.
   final Function()? onClear;
 
-  ///Force the user to confirm delete
+  /// Force the user to confirm delete.
   final bool confirmDelete;
 
-  ///Visual delete dialog settings
+  /// Visual delete dialog settings.
   final DialogSettings? deleteDialogSettings;
 
-  ///The SearchBarSettings.
+  /// The SearchBarSettings.
   final SimpleSearchbarSettings searchBarSettings;
 
-  ///The settings for the overlay list of items.
+  /// The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
 
-  ///Function to check if the item added is valid or not.
+  /// Function to check if the item added is valid or not.
   final bool Function(ValueItem<T>)? verifyInputItem;
 
-  ///Visual verify dialog settings
+  /// Visual verify dialog settings.
   final DialogSettings? verifyDialogSettings;
 
-  ///The initial selected value of the dropdown.
+  /// The initial selected value of the dropdown.
   final ValueItem<T>? selectedItem;
 
-  ///The function to be executed after the user selects a value.
+  /// The function to be executed after the user selects a value.
   final Function(ValueItem<T>?) updateSelectedItem;
 
-  ///The way the items should be sorted.
+  /// The way the items should be sorted.
   ///
-  ///If `0`(default), no sort will be applied
+  /// If `0`(default), no sort will be applied.
   ///
-  ///If `1`, the items will be sorted on alphabetical order.
+  /// If `1`, the items will be sorted on alphabetical order.
   ///
-  ///If `2`, the items will be sorted on reverse alphabetical order.
+  /// If `2`, the items will be sorted on reverse alphabetical order.
   ///
-  ///If `3`, the selected item will be put on first position.
+  /// If `3`, the selected item will be put on first position.
   final int sortType;
 
-  ///A custom aditional widget to be inserted on the add item cell between the text and the create button.
+  /// A custom additional widget to be inserted on the add item cell between the text and the create button.
   final Widget? addAditionalWidget;
 
-  ///A custom aditional widget to be inserted on the default item cell between the text and the delete button.
+  /// A custom additional widget to be inserted on the default item cell between the text and the delete button.
   final Widget? defaultAditionalWidget;
 
-  ///A parameter to define if the widget is enabled or disabled (default: `true`).
+  /// A parameter to define if the widget is enabled or disabled (default: `true`).
   final bool enabled;
 
   final SearchController controller;
@@ -124,6 +124,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     }
   }
 
+  /// Sorts the list based on the sortType defined in the widget.
   void sortFunction() {
     switch (widget.sortType) {
       case 0:
@@ -147,37 +148,41 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     }
   }
 
+  /// Filters the list based on the text input.
   void _filtrarLista(String? text, {bool start = false}) {
-    if (start) {
-      listaFiltrada = widget.listItems;
-    } else {
-      if (text != null && text != '') {
-        listaFiltrada = widget.listItems
-            .where((element) => element.label
-                .toLowerCase()
-                .latinize()
-                .contains(text.latinize().toLowerCase()))
-            .toList();
+    setState(() {
+      if (start) {
+        listaFiltrada = List<ValueItem<T>>.from(widget.listItems);
       } else {
-        listaFiltrada = widget.listItems; // TODO entender pq n ta dando certo
-      }
-    }
-  }
-
-  void handleAddItem(String text) {
-    if (widget.addMode) {
-      final item = widget.newValueItem!(text);
-      if (widget.verifyInputItem != null) {
-        if (!widget.verifyInputItem!(item)) {
-          widget.controller.clear();
+        if (text != null && text.isNotEmpty) {
+          listaFiltrada = widget.listItems
+              .where((element) => element.label
+                  .toLowerCase()
+                  .latinize()
+                  .contains(text.latinize().toLowerCase()))
+              .toList();
+        } else {
+          listaFiltrada = List<ValueItem<T>>.from(widget.listItems);
         }
       }
+    });
+  }
+
+  /// Handles adding a new item to the list.
+  void handleAddItem(String text) {
+    if (widget.addMode && widget.newValueItem != null) {
+      final item = widget.newValueItem!(text);
+      if (widget.verifyInputItem != null && !widget.verifyInputItem!(item)) {
+        widget.controller.clear();
+        return;
+      }
       listaFiltrada.add(item);
-      widget.onAddItem!(item);
+      widget.onAddItem?.call(item);
       selectedItem(item);
     }
   }
 
+  /// Resets the selection to its default state.
   void resetSelection() {
     widget.controller.clear();
     _filtrarLista(null);
@@ -186,11 +191,10 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     setState(() {
       clearVisible = false;
     });
-    if (widget.onClear != null) {
-      widget.onClear!();
-    }
+    widget.onClear?.call();
   }
 
+  /// Selects a specific item.
   void selectedItem(ValueItem<T> item) {
     widget.controller.closeView(item.label);
     selectedValue = item;
@@ -203,6 +207,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     }
   }
 
+  /// Forces the selection of an item based on its label.
   void forceSelection(String label) {
     final ValueItem<T>? val =
         widget.listItems.where((element) => element.label == label).firstOrNull;
@@ -211,12 +216,13 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     }
   }
 
+  /// Handles deleting an item from the list.
   void handleDeleteItem(ValueItem<T> item, BuildContext context) {
     if (widget.deleteMode) {
       if (widget.confirmDelete) {
         widget.controller.openView();
       } else {
-        widget.onDeleteItem!(item);
+        widget.onDeleteItem?.call(item);
         resetSelection();
       }
     }
@@ -231,16 +237,14 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
   //   curve: Curves.ease,
   // );
   //   }
-  // } TODO ver como vai ser feito
+  // }
 
   @override
   Widget build(BuildContext context) {
     final Widget clearButton = Visibility(
       visible: clearVisible && widget.searchBarSettings.showArrow,
       child: IconButton(
-        onPressed: () {
-          resetSelection();
-        },
+        onPressed: resetSelection,
         icon: Icon(
           Icons.clear,
           color: widget.searchBarSettings.clearIconColor,
@@ -252,27 +256,22 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
       width: widget.searchBarSettings.dropdownWidth,
       height: widget.searchBarSettings.dropdownHeight,
       child: SearchAnchor.bar(
-        // Dialog box
         viewConstraints: BoxConstraints(
           maxWidth: widget.searchBarSettings.dropdownWidth,
           maxHeight: widget.overlayListSettings.dialogHeight,
         ),
         searchController: widget.controller,
-        // altura textinputfield drop down aberto
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
-        //o que vai de widget no final do drop fechado
         barTrailing: [clearButton],
         viewTrailing: [clearButton],
         barElevation:
             WidgetStatePropertyAll(widget.searchBarSettings.elevation),
-        // Borda drop fechado
         barShape: WidgetStatePropertyAll(
           widget.searchBarSettings.border ??
               RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
         ),
-        // Borda quando abre o drop
         viewShape: RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
@@ -280,7 +279,6 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
             WidgetStatePropertyAll(widget.searchBarSettings.backgroundColor),
         viewBackgroundColor: widget.overlayListSettings.dialogBackgroundColor ??
             widget.searchBarSettings.backgroundColor,
-        // abrir full screen no drop
         isFullScreen: widget.overlayListSettings.openFullScreen,
         barHintStyle:
             WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
@@ -300,10 +298,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
         viewSide: const BorderSide(
           style: BorderStyle.none,
         ),
-        onChanged: (a) {
-          _filtrarLista(a);
-        },
-        // Tirar ou colocar seta para voltar do drop
+        onChanged: _filtrarLista,
         viewLeading: null,
         viewElevation: widget.searchBarSettings.elevation,
         viewHintText: widget.searchBarSettings.hint,
@@ -318,7 +313,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
           return List<Widget>.generate(
               listaFiltrada.length + (widget.addMode ? 1 : 0), (int index) {
             if (index == listaFiltrada.length && widget.addMode) {
-              if (controller.text != '') {
+              if (controller.text.isNotEmpty) {
                 final list = listaFiltrada
                     .where(
                       (element) =>

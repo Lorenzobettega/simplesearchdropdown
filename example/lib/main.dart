@@ -119,14 +119,6 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // const SizedBox(
-            //   height: 70,
-            // ),
-            // Simple(
-            //   listItems: listitems,
-            //   updateSelectedItem: updateSelectedItem,
-            //   controller: controller,
-            // ),
             const SizedBox(
               height: 70,
             ),
