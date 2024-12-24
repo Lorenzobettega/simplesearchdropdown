@@ -216,6 +216,7 @@ class NewSingleState<T> extends State<NewSingle<T>> {
 
   /// Selects a specific item.
   void selectedItem(ValueItem<T> item) {
+    suppressFiltering = true;
     _searchController.closeView(item.label);
     selectedValue = item;
     widget.updateSelectedItem(item);
