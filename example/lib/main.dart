@@ -109,7 +109,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void printNewSingleSelection() {
-    print(singleSearchKey.currentState?.selectedValue?.label);
+    print(newsingleSearchKey.currentState?.selectedValue!.label);
   }
 
   bool verifyInput(ValueItem item) {
@@ -188,6 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 20,
             ),
             NewSingle(
+              key: newsingleSearchKey,
               listItems: listitems,
               updateSelectedItem: updateSelectedItem,
               onAddItem: addItem,

@@ -117,7 +117,6 @@ class NewSingleState<T> extends State<NewSingle<T>> {
   bool clearVisible = false;
   late bool enabled;
   ValueItem<T>? selectedValue;
-  late final List<ValueItem<T>> widgetList;
   List<ValueItem<T>> listaFiltrada = [];
   String previousText = '';
   bool suppressFiltering = true;
@@ -125,19 +124,19 @@ class NewSingleState<T> extends State<NewSingle<T>> {
   @override
   void initState() {
     super.initState();
-    widgetList = List<ValueItem<T>>.from(widget.listItems);
     sortFunction();
-    if (widgetList.isNotEmpty) {
+    if (widget.listItems.isNotEmpty) {
       if (widget.selectedItem != null) {
         selectedValue = widget.selectedItem;
         _searchController.text = selectedValue!.label;
+        previousText = selectedValue!.label;
         if (widget.searchBarSettings.showClearIcon) {
           clearVisible = true;
         }
       }
     }
     enabled = widget.enabled;
-    listaFiltrada.addAll(widgetList);
+    listaFiltrada.addAll(widget.listItems);
     _searchController.addListener(() {
       if (!suppressFiltering && _searchController.text != previousText) {
         previousText = _searchController.text;
@@ -158,16 +157,16 @@ class NewSingleState<T> extends State<NewSingle<T>> {
       case 0:
         break;
       case 1:
-        widgetList.sort((a, b) => a.label.compareTo(b.label));
+        widget.listItems.sort((a, b) => a.label.compareTo(b.label));
         break;
       case 2:
-        widgetList.sort((a, b) => b.label.compareTo(a.label));
+        widget.listItems.sort((a, b) => b.label.compareTo(a.label));
         break;
       case 3:
         if (selectedValue != null) {
-          final indx = widgetList.indexOf(selectedValue!);
+          final indx = widget.listItems.indexOf(selectedValue!);
           if (indx != -1) {
-            widgetList
+            widget.listItems
               ..removeAt(indx)
               ..insert(0, selectedValue!);
           }
@@ -179,14 +178,14 @@ class NewSingleState<T> extends State<NewSingle<T>> {
   /// Filters the list based on the text input.
   void _filtrarLista(String text) {
     if (text.isNotEmpty) {
-      listaFiltrada = widgetList
+      listaFiltrada = widget.listItems
           .where((element) => element.label
               .toLowerCase()
               .latinize()
               .contains(text.latinize().toLowerCase()))
           .toList();
     } else {
-      listaFiltrada = List<ValueItem<T>>.from(widgetList);
+      listaFiltrada = List<ValueItem<T>>.from(widget.listItems);
     }
   }
 
@@ -277,6 +276,10 @@ class NewSingleState<T> extends State<NewSingle<T>> {
           maxWidth: widget.searchBarSettings.dropdownWidth,
           maxHeight: widget.overlayListSettings.dialogHeight,
         ),
+        onTap: () {
+          listaFiltrada = widget.listItems;
+          suppressFiltering = false;
+        },
         searchController: _searchController,
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
         viewTrailing: [clearButton],
