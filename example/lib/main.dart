@@ -41,7 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<ValueItem> selectedMultipleItems = [];
   ValueItem? selectedSingleItem;
-  final SearchController controller = SearchController();
+  final GlobalKey<NewSingleState> newsingleSearchKey = GlobalKey();
 
   void removeItem(ValueItem item) {
     listitems.remove(item);
@@ -106,6 +106,10 @@ class _MyHomePageState extends State<MyHomePage> {
   void enableSingle() {
     singleSearchKey.currentState?.enableDisable();
     print(singleSearchKey.currentState?.enabled);
+  }
+
+  void printNewSingleSelection() {
+    print(singleSearchKey.currentState?.selectedValue?.label);
   }
 
   bool verifyInput(ValueItem item) {
@@ -184,11 +188,14 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 20,
             ),
             NewSingle(
-              listItems: listitems, 
-              updateSelectedItem: updateSelectedItem, 
-              controller: controller,
+              listItems: listitems,
+              updateSelectedItem: updateSelectedItem,
               onAddItem: addItem,
-              newValueItem: (input) => ValueItem(value: input,label: input),
+              newValueItem: (input) => ValueItem(value: input, label: input),
+              selectedItem: const ValueItem(
+                label: 'Lorenzo',
+              ),
+              sortType: 2,
             ),
             const SizedBox(
               height: 20,
@@ -283,6 +290,18 @@ class _MyHomePageState extends State<MyHomePage> {
             TextButton(
               onPressed: enableSingle,
               child: const Text('Enable/Disable Single Selection'),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                TextButton(
+                  onPressed: printNewSingleSelection,
+                  child: const Text('Print new Single Selection'),
+                ),
+              ],
             ),
           ],
         ),

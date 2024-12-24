@@ -26,7 +26,6 @@ class NewSingle<T> extends StatefulWidget {
     this.addAditionalWidget,
     this.defaultAditionalWidget,
     this.enabled = true,
-    required this.controller,
   });
 
   /// List of the items to be presented on the dropdown.
@@ -102,13 +101,14 @@ class NewSingle<T> extends StatefulWidget {
   /// A parameter to define if the widget is enabled or disabled (default: `true`).
   final bool enabled;
 
-  final SearchController controller;
-
   @override
-  State<NewSingle<T>> createState() => _NewSingleState<T>();
+  State<NewSingle<T>> createState() => NewSingleState<T>();
 }
 
-class _NewSingleState<T> extends State<NewSingle<T>> {
+class NewSingleState<T> extends State<NewSingle<T>> {
+  final SearchController controller = SearchController();
+  late final List<ValueItem<T>> widgetList;
+  bool start = true;
   bool clearVisible = false;
   ValueItem<T>? selectedValue;
   List<ValueItem<T>> listaFiltrada = [];
@@ -116,12 +116,24 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
   @override
   void initState() {
     super.initState();
+    widgetList = List<ValueItem<T>>.from(widget.listItems);
     if (widget.listItems.isNotEmpty) {
-      _filtrarLista(null, start: true);
       if (widget.selectedItem != null) {
-        selectedItem(widget.selectedItem!);
+        selectedValue = widget.selectedItem;
+        controller.text = selectedValue!.label;
       }
     }
+    sortFunction();
+    controller.addListener(() {
+      _filtrarLista(controller.text);
+    });
+    start = false;
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
   }
 
   /// Sorts the list based on the sortType defined in the widget.
@@ -130,16 +142,16 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
       case 0:
         break;
       case 1:
-        listaFiltrada.sort((a, b) => a.label.compareTo(b.label));
+        widgetList.sort((a, b) => a.label.compareTo(b.label));
         break;
       case 2:
-        listaFiltrada.sort((a, b) => b.label.compareTo(a.label));
+        widgetList.sort((a, b) => b.label.compareTo(a.label));
         break;
       case 3:
         if (selectedValue != null) {
-          final indx = listaFiltrada.indexOf(selectedValue!);
+          final indx = widgetList.indexOf(selectedValue!);
           if (indx != -1) {
-            listaFiltrada
+            widgetList
               ..removeAt(indx)
               ..insert(0, selectedValue!);
           }
@@ -149,23 +161,21 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
   }
 
   /// Filters the list based on the text input.
-  void _filtrarLista(String? text, {bool start = false}) {
-    setState(() {
-      if (start) {
-        listaFiltrada = List<ValueItem<T>>.from(widget.listItems);
+  void _filtrarLista(String? text) {
+    if (start) {
+      listaFiltrada = List<ValueItem<T>>.from(widgetList);
+    } else {
+      if (text != null && text.isNotEmpty) {
+        listaFiltrada = widgetList
+            .where((element) => element.label
+                .toLowerCase()
+                .latinize()
+                .contains(text.latinize().toLowerCase()))
+            .toList();
       } else {
-        if (text != null && text.isNotEmpty) {
-          listaFiltrada = widget.listItems
-              .where((element) => element.label
-                  .toLowerCase()
-                  .latinize()
-                  .contains(text.latinize().toLowerCase()))
-              .toList();
-        } else {
-          listaFiltrada = List<ValueItem<T>>.from(widget.listItems);
-        }
+        listaFiltrada = List<ValueItem<T>>.from(widgetList);
       }
-    });
+    }
   }
 
   /// Handles adding a new item to the list.
@@ -173,7 +183,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
     if (widget.addMode && widget.newValueItem != null) {
       final item = widget.newValueItem!(text);
       if (widget.verifyInputItem != null && !widget.verifyInputItem!(item)) {
-        widget.controller.clear();
+        controller.clear();
         return;
       }
       listaFiltrada.add(item);
@@ -184,7 +194,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
 
   /// Resets the selection to its default state.
   void resetSelection() {
-    widget.controller.clear();
+    controller.clear();
     _filtrarLista(null);
     selectedValue = null;
     widget.updateSelectedItem(null);
@@ -196,7 +206,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
 
   /// Selects a specific item.
   void selectedItem(ValueItem<T> item) {
-    widget.controller.closeView(item.label);
+    controller.closeView(item.label);
     selectedValue = item;
     widget.updateSelectedItem(item);
     _filtrarLista(null);
@@ -220,7 +230,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
   void handleDeleteItem(ValueItem<T> item, BuildContext context) {
     if (widget.deleteMode) {
       if (widget.confirmDelete) {
-        widget.controller.openView();
+        controller.openView();
       } else {
         widget.onDeleteItem?.call(item);
         resetSelection();
@@ -260,7 +270,7 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
           maxWidth: widget.searchBarSettings.dropdownWidth,
           maxHeight: widget.overlayListSettings.dialogHeight,
         ),
-        searchController: widget.controller,
+        searchController: controller,
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
         barTrailing: [clearButton],
         viewTrailing: [clearButton],
@@ -298,7 +308,6 @@ class _NewSingleState<T> extends State<NewSingle<T>> {
         viewSide: const BorderSide(
           style: BorderStyle.none,
         ),
-        onChanged: _filtrarLista,
         viewLeading: null,
         viewElevation: widget.searchBarSettings.elevation,
         viewHintText: widget.searchBarSettings.hint,
