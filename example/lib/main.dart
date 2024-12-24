@@ -196,6 +196,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 label: 'Lorenzo',
               ),
               sortType: 2,
+              deleteMode: false,
             ),
             const SizedBox(
               height: 20,

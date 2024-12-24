@@ -26,7 +26,14 @@ class NewSingle<T> extends StatefulWidget {
     this.addAditionalWidget,
     this.defaultAditionalWidget,
     this.enabled = true,
-  });
+  })  : assert(
+            (addMode && (newValueItem != null && onAddItem != null)) ||
+                !addMode,
+            'addMode can only be used with newValueItem != null && onAddItem != null'),
+        assert((deleteMode && onDeleteItem != null) || !deleteMode,
+            'deleteMode can only be used with onDeleteItem != null'),
+        assert((editMode && onEditItem != null) || !editMode,
+            'ediMode can only be used with onEditItem != null');
 
   /// List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
@@ -107,10 +114,11 @@ class NewSingle<T> extends StatefulWidget {
 
 class NewSingleState<T> extends State<NewSingle<T>> {
   final SearchController controller = SearchController();
-  late final List<ValueItem<T>> widgetList;
   bool start = true;
   bool clearVisible = false;
+  late bool enabled;
   ValueItem<T>? selectedValue;
+  late final List<ValueItem<T>> widgetList;
   List<ValueItem<T>> listaFiltrada = [];
 
   @override
@@ -121,8 +129,12 @@ class NewSingleState<T> extends State<NewSingle<T>> {
       if (widget.selectedItem != null) {
         selectedValue = widget.selectedItem;
         controller.text = selectedValue!.label;
+        if (widget.searchBarSettings.showClearIcon) {
+          clearVisible = true;
+        }
       }
     }
+    enabled = widget.enabled;
     sortFunction();
     controller.addListener(() {
       _filtrarLista(controller.text);
@@ -238,16 +250,12 @@ class NewSingleState<T> extends State<NewSingle<T>> {
     }
   }
 
-  // void goToSelectedItem(ValueItem<T> item) {
-  //   final index = listaFiltrada.indexOf(item);
-  //   if (index > 1) {
-  // scrollController.scrollTo(
-  //   index: index,
-  //   duration: overlayListSettings.reOpenedScrollDuration,
-  //   curve: Curves.ease,
-  // );
-  //   }
-  // }
+  void onClear() {
+    resetSelection();
+    if (widget.onClear != null) {
+      widget.onClear!();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -272,8 +280,8 @@ class NewSingleState<T> extends State<NewSingle<T>> {
         ),
         searchController: controller,
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
-        barTrailing: [clearButton],
         viewTrailing: [clearButton],
+        barTrailing: [clearButton],
         barElevation:
             WidgetStatePropertyAll(widget.searchBarSettings.elevation),
         barShape: WidgetStatePropertyAll(
@@ -287,19 +295,20 @@ class NewSingleState<T> extends State<NewSingle<T>> {
         ),
         barBackgroundColor:
             WidgetStatePropertyAll(widget.searchBarSettings.backgroundColor),
-        viewBackgroundColor: widget.overlayListSettings.dialogBackgroundColor ??
-            widget.searchBarSettings.backgroundColor,
+        viewBackgroundColor:
+            widget.overlayListSettings.dialogBackgroundColor ??
+                widget.searchBarSettings.backgroundColor,
         isFullScreen: widget.overlayListSettings.openFullScreen,
         barHintStyle:
             WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
         barHintText: widget.searchBarSettings.hint,
         barOverlayColor:
             WidgetStatePropertyAll(widget.searchBarSettings.hoverColor),
-        barTextStyle:
-            WidgetStatePropertyAll(widget.searchBarSettings.searchBarTextStyle),
+        barTextStyle: WidgetStatePropertyAll(
+            widget.searchBarSettings.searchBarTextStyle),
         barPadding:
             WidgetStatePropertyAll(widget.searchBarSettings.searchBarPadding),
-        barLeading: SizedBox.shrink(),
+        barLeading: const SizedBox.shrink(),
         barSide: WidgetStateProperty.all<BorderSide>(
           const BorderSide(
             style: BorderStyle.none,
@@ -308,14 +317,12 @@ class NewSingleState<T> extends State<NewSingle<T>> {
         viewSide: const BorderSide(
           style: BorderStyle.none,
         ),
-        viewLeading: null,
+        viewLeading: const SizedBox.shrink(),
         viewElevation: widget.searchBarSettings.elevation,
         viewHintText: widget.searchBarSettings.hint,
         viewHeaderHintStyle: widget.searchBarSettings.hintStyle,
         viewHeaderTextStyle: widget.searchBarSettings.searchBarTextStyle,
-        keyboardType: widget.searchBarSettings.showKeyboardOnTap
-            ? TextInputType.none
-            : widget.searchBarSettings.keyboardType,
+        keyboardType: widget.searchBarSettings.showKeyboardOnTap ? widget.searchBarSettings.keyboardType : TextInputType.none,
         textInputAction: widget.searchBarSettings.textInputAction,
         suggestionsBuilder:
             (BuildContext context, SearchController controller) {
