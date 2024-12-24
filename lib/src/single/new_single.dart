@@ -113,38 +113,42 @@ class NewSingle<T> extends StatefulWidget {
 }
 
 class NewSingleState<T> extends State<NewSingle<T>> {
-  final SearchController controller = SearchController();
-  bool start = true;
+  final SearchController _searchController = SearchController();
   bool clearVisible = false;
   late bool enabled;
   ValueItem<T>? selectedValue;
   late final List<ValueItem<T>> widgetList;
   List<ValueItem<T>> listaFiltrada = [];
+  String previousText = '';
+  bool suppressFiltering = true;
 
   @override
   void initState() {
     super.initState();
     widgetList = List<ValueItem<T>>.from(widget.listItems);
-    if (widget.listItems.isNotEmpty) {
+    sortFunction();
+    if (widgetList.isNotEmpty) {
       if (widget.selectedItem != null) {
         selectedValue = widget.selectedItem;
-        controller.text = selectedValue!.label;
+        _searchController.text = selectedValue!.label;
         if (widget.searchBarSettings.showClearIcon) {
           clearVisible = true;
         }
       }
     }
     enabled = widget.enabled;
-    sortFunction();
-    controller.addListener(() {
-      _filtrarLista(controller.text);
+    listaFiltrada.addAll(widgetList);
+    _searchController.addListener(() {
+      if (!suppressFiltering && _searchController.text != previousText) {
+        previousText = _searchController.text;
+        _filtrarLista(_searchController.text);
+      }
     });
-    start = false;
   }
 
   @override
   void dispose() {
-    controller.dispose();
+    _searchController.dispose();
     super.dispose();
   }
 
@@ -173,20 +177,16 @@ class NewSingleState<T> extends State<NewSingle<T>> {
   }
 
   /// Filters the list based on the text input.
-  void _filtrarLista(String? text) {
-    if (start) {
-      listaFiltrada = List<ValueItem<T>>.from(widgetList);
+  void _filtrarLista(String text) {
+    if (text.isNotEmpty) {
+      listaFiltrada = widgetList
+          .where((element) => element.label
+              .toLowerCase()
+              .latinize()
+              .contains(text.latinize().toLowerCase()))
+          .toList();
     } else {
-      if (text != null && text.isNotEmpty) {
-        listaFiltrada = widgetList
-            .where((element) => element.label
-                .toLowerCase()
-                .latinize()
-                .contains(text.latinize().toLowerCase()))
-            .toList();
-      } else {
-        listaFiltrada = List<ValueItem<T>>.from(widgetList);
-      }
+      listaFiltrada = List<ValueItem<T>>.from(widgetList);
     }
   }
 
@@ -195,7 +195,7 @@ class NewSingleState<T> extends State<NewSingle<T>> {
     if (widget.addMode && widget.newValueItem != null) {
       final item = widget.newValueItem!(text);
       if (widget.verifyInputItem != null && !widget.verifyInputItem!(item)) {
-        controller.clear();
+        _searchController.clear();
         return;
       }
       listaFiltrada.add(item);
@@ -206,8 +206,7 @@ class NewSingleState<T> extends State<NewSingle<T>> {
 
   /// Resets the selection to its default state.
   void resetSelection() {
-    controller.clear();
-    _filtrarLista(null);
+    _searchController.clear();
     selectedValue = null;
     widget.updateSelectedItem(null);
     setState(() {
@@ -218,15 +217,15 @@ class NewSingleState<T> extends State<NewSingle<T>> {
 
   /// Selects a specific item.
   void selectedItem(ValueItem<T> item) {
-    controller.closeView(item.label);
+    _searchController.closeView(item.label);
     selectedValue = item;
     widget.updateSelectedItem(item);
-    _filtrarLista(null);
     if (widget.searchBarSettings.showClearIcon) {
       setState(() {
         clearVisible = true;
       });
     }
+    previousText = _searchController.text;
   }
 
   /// Forces the selection of an item based on its label.
@@ -242,7 +241,7 @@ class NewSingleState<T> extends State<NewSingle<T>> {
   void handleDeleteItem(ValueItem<T> item, BuildContext context) {
     if (widget.deleteMode) {
       if (widget.confirmDelete) {
-        controller.openView();
+        _searchController.openView();
       } else {
         widget.onDeleteItem?.call(item);
         resetSelection();
@@ -278,7 +277,7 @@ class NewSingleState<T> extends State<NewSingle<T>> {
           maxWidth: widget.searchBarSettings.dropdownWidth,
           maxHeight: widget.overlayListSettings.dialogHeight,
         ),
-        searchController: controller,
+        searchController: _searchController,
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
         viewTrailing: [clearButton],
         barTrailing: [clearButton],
@@ -295,17 +294,16 @@ class NewSingleState<T> extends State<NewSingle<T>> {
         ),
         barBackgroundColor:
             WidgetStatePropertyAll(widget.searchBarSettings.backgroundColor),
-        viewBackgroundColor:
-            widget.overlayListSettings.dialogBackgroundColor ??
-                widget.searchBarSettings.backgroundColor,
+        viewBackgroundColor: widget.overlayListSettings.dialogBackgroundColor ??
+            widget.searchBarSettings.backgroundColor,
         isFullScreen: widget.overlayListSettings.openFullScreen,
         barHintStyle:
             WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
         barHintText: widget.searchBarSettings.hint,
         barOverlayColor:
             WidgetStatePropertyAll(widget.searchBarSettings.hoverColor),
-        barTextStyle: WidgetStatePropertyAll(
-            widget.searchBarSettings.searchBarTextStyle),
+        barTextStyle:
+            WidgetStatePropertyAll(widget.searchBarSettings.searchBarTextStyle),
         barPadding:
             WidgetStatePropertyAll(widget.searchBarSettings.searchBarPadding),
         barLeading: const SizedBox.shrink(),
@@ -322,7 +320,9 @@ class NewSingleState<T> extends State<NewSingle<T>> {
         viewHintText: widget.searchBarSettings.hint,
         viewHeaderHintStyle: widget.searchBarSettings.hintStyle,
         viewHeaderTextStyle: widget.searchBarSettings.searchBarTextStyle,
-        keyboardType: widget.searchBarSettings.showKeyboardOnTap ? widget.searchBarSettings.keyboardType : TextInputType.none,
+        keyboardType: widget.searchBarSettings.showKeyboardOnTap
+            ? widget.searchBarSettings.keyboardType
+            : TextInputType.none,
         textInputAction: widget.searchBarSettings.textInputAction,
         suggestionsBuilder:
             (BuildContext context, SearchController controller) {
