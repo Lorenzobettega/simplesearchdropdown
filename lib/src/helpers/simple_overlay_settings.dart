@@ -64,7 +64,7 @@ class SimpleOverlaySettings {
   ///The delete Icon in dropdown listview (default:red trash)
   final Icon dialogDeleteIcon;
 
-  ///The delete Icon in dropdown listview (default:red trash)
+  ///The edit Icon in dropdown listview (default:black edit)
   final Icon dialogEditIcon;
 
   ///The delete Widget in dropdown listview (default:IconButton). It replaces the `dialogActionIcon`

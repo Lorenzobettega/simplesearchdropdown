@@ -81,6 +81,8 @@ const defaultCancelButtonSettings = DialogButtonSettings(
 const defaultVerifyButtonSettings = DialogButtonSettings(
   'OK',
   customWidth: 160,
+  backgroundColor: Colors.white,
+  textColor: Color.fromARGB(255, 66, 70, 76),
 );
 
 ///Default title for the dialog.

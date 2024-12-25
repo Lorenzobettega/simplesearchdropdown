@@ -14,6 +14,7 @@ export './src/helpers/overlay_screen.dart';
 export './src/helpers/simple_overlay_settings.dart';
 export './src/helpers/simple_searchbar_settings.dart';
 export './src/helpers/value_item.dart';
+export './src/helpers/dialog_service.dart';
 export './src/multiple/multiple_listview.dart';
 export './src/multiple/multiple_simple_search_dropdown.dart';
 export './src/single/simple_search_dropdown.dart';

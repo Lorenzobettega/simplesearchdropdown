@@ -124,7 +124,7 @@ class NewSingleState<T> extends State<NewSingle<T>> {
   @override
   void initState() {
     super.initState();
-    sortFunction();
+    _sortFunction();
     if (widget.listItems.isNotEmpty) {
       if (widget.selectedItem != null) {
         selectedValue = widget.selectedItem;
@@ -151,8 +151,15 @@ class NewSingleState<T> extends State<NewSingle<T>> {
     super.dispose();
   }
 
+  /// enables/disables the widget.
+  void enableDisable() {
+    setState(() {
+      enabled = !enabled;
+    });
+  }
+
   /// Sorts the list based on the sortType defined in the widget.
-  void sortFunction() {
+  void _sortFunction() {
     switch (widget.sortType) {
       case 0:
         break;
@@ -189,43 +196,33 @@ class NewSingleState<T> extends State<NewSingle<T>> {
     }
   }
 
-  /// Handles adding a new item to the list.
-  void handleAddItem(String text) {
-    if (widget.addMode && widget.newValueItem != null) {
-      final item = widget.newValueItem!(text);
-      if (widget.verifyInputItem != null && !widget.verifyInputItem!(item)) {
-        _searchController.clear();
-        return;
-      }
-      listaFiltrada.add(item);
-      widget.onAddItem?.call(item);
-      selectedItem(item);
-    }
-  }
-
   /// Resets the selection to its default state.
   void resetSelection() {
-    _searchController.clear();
     selectedValue = null;
+    _searchController.clear();
     widget.updateSelectedItem(null);
+    widget.onClear?.call();
     setState(() {
       clearVisible = false;
     });
-    widget.onClear?.call();
   }
 
   /// Selects a specific item.
-  void selectedItem(ValueItem<T> item) {
+  void _selectedItem(ValueItem<T> item) {
     suppressFiltering = true;
-    _searchController.closeView(item.label);
     selectedValue = item;
+    if (_searchController.isOpen) {
+      _searchController.closeView(item.label);
+    } else {
+      _searchController.text = item.label;
+    }
+    previousText = _searchController.text;
     widget.updateSelectedItem(item);
     if (widget.searchBarSettings.showClearIcon) {
       setState(() {
         clearVisible = true;
       });
     }
-    previousText = _searchController.text;
   }
 
   /// Forces the selection of an item based on its label.
@@ -233,15 +230,51 @@ class NewSingleState<T> extends State<NewSingle<T>> {
     final ValueItem<T>? val =
         widget.listItems.where((element) => element.label == label).firstOrNull;
     if (val != null) {
-      selectedItem(val);
+      _selectedItem(val);
+    }
+  }
+
+  /// Handles adding a new item to the list.
+  Future<void> handleAddItem(String text) async {
+    if (widget.addMode && widget.newValueItem != null) {
+      final item = widget.newValueItem!(text);
+      if (widget.verifyInputItem != null && !widget.verifyInputItem!(item)) {
+        await sendDialog(
+          context,
+          WarningDialog(
+            confirmDialog: false,
+            returnFunction: (_) {
+              Navigator.of(context).pop();
+            },
+            settings: widget.verifyDialogSettings,
+          ),
+        );
+        _searchController.clear();
+        return;
+      }
+      listaFiltrada.add(item);
+      widget.onAddItem?.call(item);
+      _selectedItem(item);
     }
   }
 
   /// Handles deleting an item from the list.
-  void handleDeleteItem(ValueItem<T> item, BuildContext context) {
+  Future<void> handleDeleteItem(ValueItem<T> item, BuildContext context) async {
     if (widget.deleteMode) {
       if (widget.confirmDelete) {
-        _searchController.openView();
+        await sendDialog(
+          context,
+          WarningDialog(
+            returnFunction: (result) {
+              if (result) {
+                widget.onDeleteItem?.call(item);
+                resetSelection();
+              }
+              Navigator.of(context).pop();
+            },
+            settings: widget.deleteDialogSettings,
+          ),
+        );
       } else {
         widget.onDeleteItem?.call(item);
         resetSelection();
@@ -249,17 +282,22 @@ class NewSingleState<T> extends State<NewSingle<T>> {
     }
   }
 
-  void onClear() {
-    resetSelection();
-    if (widget.onClear != null) {
-      widget.onClear!();
-    }
+  //TODO add scroll to item.
+
+  /// Handles editing an item from the list.
+  void _handleEditItem(ValueItem<T> item) {
+    //TODO add.
+
+    // if (widget.editMode) {
+    //   widget.onEditItem!(item);
+    //   resetSelection();
+    // }
   }
 
   @override
   Widget build(BuildContext context) {
     final Widget clearButton = Visibility(
-      visible: clearVisible && widget.searchBarSettings.showArrow,
+      visible: clearVisible,
       child: IconButton(
         onPressed: resetSelection,
         icon: Icon(
@@ -284,7 +322,7 @@ class NewSingleState<T> extends State<NewSingle<T>> {
         searchController: _searchController,
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
         viewTrailing: [clearButton],
-        barTrailing: [clearButton],
+        barTrailing: widget.searchBarSettings.actions ?? [clearButton],
         barElevation:
             WidgetStatePropertyAll(widget.searchBarSettings.elevation),
         barShape: WidgetStatePropertyAll(
@@ -361,8 +399,8 @@ class NewSingleState<T> extends State<NewSingle<T>> {
                   val,
                   context,
                 ),
-                onEdit: (val) {},
-                onPressed: selectedItem,
+                onEdit: _handleEditItem,
+                onPressed: _selectedItem,
                 overlayListSettings: widget.overlayListSettings,
                 selected: controller.text == listaFiltrada[index].label,
                 defaultAditionalWidget: widget.defaultAditionalWidget,
