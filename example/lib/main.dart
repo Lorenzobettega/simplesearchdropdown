@@ -41,7 +41,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   List<ValueItem> selectedMultipleItems = [];
   ValueItem? selectedSingleItem;
-  final GlobalKey<NewSingleState> newsingleSearchKey = GlobalKey();
+  final GlobalKey<SearchDropDownState> newsingleSearchKey = GlobalKey();
 
   void removeItem(ValueItem item) {
     listitems.remove(item);
@@ -49,6 +49,13 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void addItem(ValueItem item) {
     listitems.add(item);
+  }
+
+  void editItem(ValueItem item, ValueItem newvalue) {
+    final indx = listitems.indexOf(item);
+    if (indx != -1) {
+      listitems[indx] = newvalue;
+    }
   }
 
   void updateSelectedItem(ValueItem? newSelectedItem) {
@@ -187,7 +194,7 @@ class _MyHomePageState extends State<MyHomePage> {
             const SizedBox(
               height: 20,
             ),
-            NewSingle(
+            SearchDropDown(
               key: newsingleSearchKey,
               listItems: listitems,
               updateSelectedItem: updateSelectedItem,
@@ -200,7 +207,11 @@ class _MyHomePageState extends State<MyHomePage> {
               confirmDelete: true,
               onDeleteItem: removeItem,
               verifyInputItem: verifyInput,
-              searchBarSettings: SimpleSearchbarSettings(actions: [Icon(Icons.abc)]),
+              searchBarSettings: SimpleSearchbarSettings(
+                actions: [Icon(Icons.abc)],
+              ),
+              editMode: true,
+              onEditItem: editItem,
             ),
             const SizedBox(
               height: 20,

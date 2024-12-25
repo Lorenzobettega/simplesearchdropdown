@@ -14,24 +14,28 @@ class DialogSettings {
     this.shape,
     this.customCancelButtonSettings = defaultCancelButtonSettings,
     this.customDeleteButtonSettings = defaultDeleteButtonSettings,
-    this.customVerifyButtonSettings = defaultVerifyButtonSettings,
+    this.customOkButtonSettings = defaultOKButtonSettings,
+    this.customEditButtonSettings = defaultEditButtonSettings,
     this.insetPadding = const EdgeInsets.symmetric(
       horizontal: 40,
       vertical: 24,
     ),
+    this.editHint = 'Novo valor',
   });
 
   final Widget? title;
   final Widget? content;
   final DialogButtonSettings customCancelButtonSettings;
   final DialogButtonSettings customDeleteButtonSettings;
-  final DialogButtonSettings customVerifyButtonSettings;
+  final DialogButtonSettings customOkButtonSettings;
+  final DialogButtonSettings customEditButtonSettings;
   final EdgeInsetsGeometry? contentPadding, titlePadding, actionsPadding;
   final EdgeInsets insetPadding;
   final MainAxisAlignment? actionsAlignment;
   final Color? backgroundColor;
   final double? elevation;
   final ShapeBorder? shape;
+  final String editHint;
 }
 
 ///Class to hold all the customizations of the buttons in the dialog.
@@ -78,11 +82,15 @@ const defaultCancelButtonSettings = DialogButtonSettings(
 );
 
 ///Default settings for OK button.
-const defaultVerifyButtonSettings = DialogButtonSettings(
+const defaultOKButtonSettings = DialogButtonSettings(
   'OK',
   customWidth: 160,
-  backgroundColor: Colors.white,
-  textColor: Color.fromARGB(255, 66, 70, 76),
+);
+
+///Default settings for edit button.
+const defaultEditButtonSettings = DialogButtonSettings(
+  'Editar',
+  customWidth: 160,
 );
 
 ///Default title for the dialog.

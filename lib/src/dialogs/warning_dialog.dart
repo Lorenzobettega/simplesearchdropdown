@@ -42,7 +42,7 @@ class WarningDialog extends StatelessWidget {
           : [
               DialogButton(
                 function: () => returnFunction(true),
-                buttonSettings: dialogSettings.customVerifyButtonSettings,
+                buttonSettings: dialogSettings.customOkButtonSettings,
               ),
             ],
     );
