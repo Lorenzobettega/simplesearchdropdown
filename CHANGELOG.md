@@ -1,3 +1,8 @@
+## [6.0.0] - 2024-12-25.
+- Complete remake of `SearchDropDown` (still missing multiple search).
+- Added edit function to `SearchDropDown`.
+- Added the possibility to block keyboard from appearing with `searchBarSettings.showKeyboardOnTap`.
+
 ## [5.3.0] - 2024-12-16.
 - Fixed deprecation warning from flutter 3.27.
 - Lowered dart constraint to 3.0.

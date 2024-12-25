@@ -309,7 +309,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       );
     }
   }
-
+  //TODO fix trailing icon + add divider settings
   @override
   Widget build(BuildContext context) {
     final Widget clearButton = Visibility(
