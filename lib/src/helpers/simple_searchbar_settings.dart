@@ -36,6 +36,7 @@ class SimpleSearchbarSettings {
     this.showKeyboardOnTap = true,
     this.keyboardType,
     this.textInputAction,
+    this.showDivider = false,
   });
 
   ///Main/outside Container height(default:50)
@@ -118,6 +119,9 @@ class SimpleSearchbarSettings {
 
   //The keyboard reaction on enter and input
   final TextInputAction? textInputAction;
+
+  ///If true, a divider between the searchbar and the list of items will appear (default:false).
+  final bool showDivider;
 }
 
 ///The default settings for the SimpleSearchbar.

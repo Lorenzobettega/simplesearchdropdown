@@ -309,7 +309,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       );
     }
   }
-  //TODO fix trailing icon + add divider settings
+
   @override
   Widget build(BuildContext context) {
     final Widget clearButton = Visibility(
@@ -337,8 +337,29 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         },
         searchController: _searchController,
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
-        viewTrailing: [clearButton],
-        barTrailing: widget.searchBarSettings.actions ?? [clearButton],
+        dividerColor: widget.searchBarSettings.showDivider
+            ? null
+            : (widget.overlayListSettings.dialogBackgroundColor ??
+                widget.searchBarSettings.backgroundColor),
+        viewTrailing: [
+          if (widget.searchBarSettings.showArrow)
+            Icon(
+              widget.searchBarSettings.dropdownOpenedArrowIcon,
+              color: widget.searchBarSettings.outsideIconColor,
+              size: widget.searchBarSettings.outsideIconSize,
+            ),
+          clearButton
+        ],
+        barTrailing: widget.searchBarSettings.actions ??
+            [
+              if (widget.searchBarSettings.showArrow)
+                Icon(
+                  widget.searchBarSettings.dropdownClosedArrowIcon,
+                  color: widget.searchBarSettings.outsideIconColor,
+                  size: widget.searchBarSettings.outsideIconSize,
+                ),
+              clearButton
+            ],
         barElevation:
             WidgetStatePropertyAll(widget.searchBarSettings.elevation),
         barShape: WidgetStatePropertyAll(

@@ -209,6 +209,7 @@ class _MyHomePageState extends State<MyHomePage> {
               verifyInputItem: verifyInput,
               searchBarSettings: SimpleSearchbarSettings(
                 actions: [Icon(Icons.abc)],
+                showDivider: true
               ),
               editMode: true,
               onEditItem: editItem,
