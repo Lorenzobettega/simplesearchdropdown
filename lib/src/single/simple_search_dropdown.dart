@@ -125,6 +125,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   List<ValueItem<T>> listaFiltrada = [];
   String previousText = '';
   bool suppressFiltering = true;
+  bool isOpen = false;
 
   @override
   void initState() {
@@ -405,45 +406,40 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         textInputAction: widget.searchBarSettings.textInputAction,
         suggestionsBuilder:
             (BuildContext context, SearchController controller) {
+          final int length = listaFiltrada.length + (widget.addMode ? 1 : 0);
           return List<Widget>.generate(
-              listaFiltrada.length + (widget.addMode ? 1 : 0), (int index) {
-            if (index == listaFiltrada.length && widget.addMode) {
-              if (controller.text.isNotEmpty) {
-                final list = listaFiltrada
-                    .where(
-                      (element) =>
-                          element.label.latinize().toLowerCase().contains(
-                                controller.text.latinize().toLowerCase(),
-                              ),
-                    )
-                    .toList();
-                if (list.isEmpty) {
-                  return DefaultAddListItem(
-                    itemAdded: handleAddItem,
-                    overlayListSettings: widget.overlayListSettings,
-                    text: controller.text,
-                    addAditionalWidget: widget.addAditionalWidget,
-                  );
+            length,
+            (int index) {
+              if (index == listaFiltrada.length && widget.addMode) {
+                if (controller.text.isNotEmpty) {
+                  if (listaFiltrada.isEmpty) {
+                    return DefaultAddListItem(
+                      itemAdded: handleAddItem,
+                      overlayListSettings: widget.overlayListSettings,
+                      text: controller.text,
+                      addAditionalWidget: widget.addAditionalWidget,
+                    );
+                  }
                 }
+                return const SizedBox.shrink();
+              } else {
+                return DefaultListTile<T>(
+                  deleteMode: widget.deleteMode,
+                  editMode: widget.editMode,
+                  item: listaFiltrada[index],
+                  onDelete: (val) => handleDeleteItem(
+                    val,
+                    context,
+                  ),
+                  onEdit: _handleEditItem,
+                  onPressed: _selectedItem,
+                  overlayListSettings: widget.overlayListSettings,
+                  selected: controller.text == listaFiltrada[index].label,
+                  defaultAditionalWidget: widget.defaultAditionalWidget,
+                );
               }
-              return const SizedBox.shrink();
-            } else {
-              return DefaultListTile<T>(
-                deleteMode: widget.deleteMode,
-                editMode: widget.editMode,
-                item: listaFiltrada[index],
-                onDelete: (val) => handleDeleteItem(
-                  val,
-                  context,
-                ),
-                onEdit: _handleEditItem,
-                onPressed: _selectedItem,
-                overlayListSettings: widget.overlayListSettings,
-                selected: controller.text == listaFiltrada[index].label,
-                defaultAditionalWidget: widget.defaultAditionalWidget,
-              );
-            }
-          });
+            },
+          );
         },
       ),
     );
