@@ -25,6 +25,8 @@ class SimpleSearchbarSettings {
     this.dropdownOpenedArrowIcon = Icons.arrow_drop_up,
     this.outsideIconColor,
     this.outsideIconSize = 20,
+    this.dropdownClosedIconFunction,
+    this.dropdownOpenedIconFunction,
     this.clearOnClose = false,
     this.boxMultiSelectedClearIconSize = 20,
     this.boxMultiSelectedClearIconColor,
@@ -81,8 +83,14 @@ class SimpleSearchbarSettings {
   ///Action Icon showed when dropdown is closed
   final IconData dropdownClosedArrowIcon;
 
+  ///Function of Icon showed when dropdown is closed
+  final Function()? dropdownClosedIconFunction;
+
   ///Action Icon showed when dropdown is opened
   final IconData dropdownOpenedArrowIcon;
+
+  ///Function of Icon showed when dropdown is opened
+  final Function()? dropdownOpenedIconFunction;
 
   ///Action dropdown Icon color
   final Color? outsideIconColor;
