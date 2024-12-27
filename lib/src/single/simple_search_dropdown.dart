@@ -345,7 +345,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         viewTrailing: [
           if (widget.searchBarSettings.showArrow)
             IconButton(
-              onPressed: () => widget.searchBarSettings.dropdownOpenedIconFunction ?? _searchController.closeView(_searchController.text), 
+              onPressed: () =>
+                  widget.searchBarSettings.dropdownOpenedIconFunction ??
+                  _searchController.closeView(_searchController.text),
               icon: Icon(
                 widget.searchBarSettings.dropdownOpenedArrowIcon,
                 color: widget.searchBarSettings.outsideIconColor,
@@ -358,7 +360,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             [
               if (widget.searchBarSettings.showArrow)
                 IconButton(
-                  onPressed: () => widget.searchBarSettings.dropdownClosedIconFunction ?? _searchController.openView(), 
+                  onPressed: () =>
+                      widget.searchBarSettings.dropdownClosedIconFunction ??
+                      _searchController.openView(),
                   icon: Icon(
                     widget.searchBarSettings.dropdownClosedArrowIcon,
                     color: widget.searchBarSettings.outsideIconColor,

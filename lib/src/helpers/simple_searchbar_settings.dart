@@ -83,13 +83,13 @@ class SimpleSearchbarSettings {
   ///Action Icon showed when dropdown is closed
   final IconData dropdownClosedArrowIcon;
 
-  ///Function of Icon showed when dropdown is closed
+  ///Function of the Icon showed when dropdown is closed
   final Function()? dropdownClosedIconFunction;
 
   ///Action Icon showed when dropdown is opened
   final IconData dropdownOpenedArrowIcon;
 
-  ///Function of Icon showed when dropdown is opened
+  ///Function of the Icon showed when dropdown is opened
   final Function()? dropdownOpenedIconFunction;
 
   ///Action dropdown Icon color

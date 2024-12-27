@@ -1,5 +1,5 @@
 ## [6.0.0] - 2024-12-25.
-- Complete remake of `SearchDropDown` (still missing multiple search).
+- [Breaking] Complete remake of `SearchDropDown` (still missing multiple search). Please report any issues/regressions.
 - Added edit function to `SearchDropDown`.
 - Added the possibility to block keyboard from appearing with `searchBarSettings.showKeyboardOnTap`.
 

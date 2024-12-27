@@ -90,7 +90,8 @@ class _InputFieldState extends State<InputField> {
             filled: true,
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(widget.raio),
-              borderSide: const BorderSide(color: Color.fromARGB(255, 0, 67, 0)),
+              borderSide:
+                  const BorderSide(color: Color.fromARGB(255, 0, 67, 0)),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(widget.raio),
