@@ -8,18 +8,18 @@ import 'dart:convert';
 /// ```
 
 class ValueItem<T> {
+  /// Default constructor for [ValueItem]
+  const ValueItem({
+    required this.label,
+    this.value,
+  });
+
   /// fromJson method for [ValueItem]
   ///
   /// [customValueFromMap] is an optional fromMap function to use if value is a custom class.
   factory ValueItem.fromJson(String source,
           dynamic Function(Map<String, dynamic>)? customValueFromMap) =>
       ValueItem<T>._fromMap(json.decode(source), customValueFromMap);
-
-  /// Default constructor for [ValueItem]
-  const ValueItem({
-    required this.label,
-    this.value,
-  });
 
   /// fromMap method for [ValueItem]
   factory ValueItem._fromMap(Map<String, dynamic> map,
@@ -62,7 +62,9 @@ class ValueItem<T> {
   /// Equality operator for [ValueItem]
   @override
   bool operator ==(Object other) {
-    if (identical(this, other)) return true;
+    if (identical(this, other)) {
+      return true;
+    }
 
     return other is ValueItem<T> &&
         other.label == label &&

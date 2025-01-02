@@ -259,7 +259,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     onAddItem: (val) => handleAddItem(val, context),
                     onDeleteItem: (val) => handleDeleteItem(val, context),
                     onEditItem: (val) => (), // TODO colocar função
-                    onItemSelected: (val) => onItemSelected(val),
+                    onItemSelected: onItemSelected,
                     selectedItens: widget.selectedItems,
                     sortType: widget.sortType,
                     newValueItem: widget.newValueItem,

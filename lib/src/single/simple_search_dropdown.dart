@@ -375,11 +375,11 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             WidgetStatePropertyAll(widget.searchBarSettings.elevation),
         barShape: WidgetStatePropertyAll(
           widget.searchBarSettings.border ??
-              RoundedRectangleBorder(
+              const RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(10)),
               ),
         ),
-        viewShape: RoundedRectangleBorder(
+        viewShape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(Radius.circular(10)),
         ),
         barBackgroundColor:

@@ -146,15 +146,15 @@ class _MyHomePageState extends State<MyHomePage> {
               newValueItem: (input) => ValueItem(label: input, value: input),
               overlayListSettings: SimpleOverlaySettings(
                 itemWidgetBuilder: (item) => Container(
-                  padding: EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  child: Text(item.label),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   color: Colors.blue,
+                  child: Text(item.label),
                 ),
               ),
               sortType: 3,
               enabled: false,
               searchBarSettings:
-                  SimpleSearchbarSettings(showKeyboardOnTap: false),
+                  const SimpleSearchbarSettings(showKeyboardOnTap: false),
             ),
             const SizedBox(
               height: 20,
@@ -170,7 +170,6 @@ class _MyHomePageState extends State<MyHomePage> {
               selectedItems: selectedMultipleItems,
               updateSelectedItems: updateSelectedItems,
               newValueItem: (input) => ValueItem(label: input, value: input),
-              searchBarSettings: SimpleSearchbarSettings(showArrow: true),
             ),
             const SizedBox(
               height: 20,
@@ -185,7 +184,7 @@ class _MyHomePageState extends State<MyHomePage> {
               updateSelectedItem: updateSelectedCustom,
               verifyInputItem: verifyInput,
               sortType: 3,
-              searchBarSettings: SimpleSearchbarSettings(showArrow: false),
+              searchBarSettings: const SimpleSearchbarSettings(showArrow: false),
               newValueItem: (input) => ValueItem(
                 label: input,
                 value: Custom(input, getRandomInt(4)),
@@ -207,7 +206,7 @@ class _MyHomePageState extends State<MyHomePage> {
               confirmDelete: true,
               onDeleteItem: removeItem,
               verifyInputItem: verifyInput,
-              searchBarSettings: SimpleSearchbarSettings(
+              searchBarSettings: const SimpleSearchbarSettings(
                   actions: [Icon(Icons.abc)], showDivider: true),
               editMode: true,
               onEditItem: editItem,

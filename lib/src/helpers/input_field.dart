@@ -70,7 +70,7 @@ class _InputFieldState extends State<InputField> {
           style: widget.estilo,
           maxLines: widget.lines,
           obscureText: widget.oculto,
-          cursorColor: Color.fromARGB(255, 0, 67, 0),
+          cursorColor: const Color.fromARGB(255, 0, 67, 0),
           controller: widget.controle,
           inputFormatters: [widget.mascara ?? allValues],
           autocorrect: false,

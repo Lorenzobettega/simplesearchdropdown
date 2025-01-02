@@ -1,10 +1,11 @@
 import 'dart:math';
 
 class Custom {
-  final String name;
-  final int id;
 
   Custom(this.name, this.id);
+  
+  final String name;
+  final int id;
 }
 
 int getRandomInt(int length) {

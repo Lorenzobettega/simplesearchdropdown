@@ -20,9 +20,9 @@ class EditDialog extends StatelessWidget {
 
     return AlertDialog(
       title: dialogSettings.title ??
-          Text(
+          const Text(
             'Editar o item:',
-            style: const TextStyle(
+            style: TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
@@ -40,7 +40,7 @@ class EditDialog extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               InputField(
