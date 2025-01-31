@@ -228,7 +228,8 @@ class _MyHomePageState extends State<MyHomePage> {
                 TextButton(
                   onPressed: () {
                     print(selectedSingleItem);
-                    print(selectedSingleItem.runtimeType);
+                    print(_searchController1.text);
+                    print(singleSearchKey.currentState?.selectedValue);
                   },
                   child: const Text('Print Single Result'),
                 ),

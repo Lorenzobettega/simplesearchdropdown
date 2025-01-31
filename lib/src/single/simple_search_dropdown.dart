@@ -201,8 +201,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   /// Resets the selection to its default state.
   void resetSelection() {
+    widget.searchController.text = '';
     selectedValue = null;
-    widget.searchController.clear();
     widget.updateSelectedItem(null);
     widget.onClear?.call();
     setState(() {

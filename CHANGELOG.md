@@ -1,5 +1,8 @@
-## [6.1.0] - 2024-12-25.
--   Add the necessity to pass the controller to the widget instead of creating it on the dropdown. Attempt to fix [41] (https://github.com/Lorenzobettega/simplesearchdropdown/issues/41)
+## [6.1.1] - 2024-01-31.
+-   Minor code improvements.
+
+## [6.1.0] - 2024-01-31.
+-   Add the necessity to pass the controller to the widget instead of creating it on the dropdown. Attempt to fix [41](https://github.com/Lorenzobettega/simplesearchdropdown/issues/41)
 
 ## [6.0.0] - 2024-12-25.
 - [Breaking] Complete remake of `SearchDropDown` (still missing multiple search). Please report any issues/regressions.
