@@ -6,6 +6,7 @@ import 'package:stringr/stringr.dart';
 class SearchDropDown<T> extends StatefulWidget {
   const SearchDropDown({
     super.key,
+    required this.searchController,
     required this.listItems,
     this.addMode = true,
     this.onAddItem,
@@ -36,6 +37,9 @@ class SearchDropDown<T> extends StatefulWidget {
             'deleteMode can only be used with onDeleteItem != null'),
         assert((editMode && onEditItem != null) || !editMode,
             'ediMode can only be used with onEditItem != null');
+
+  /// The widget.searchController of the dropdown.
+  final SearchController searchController;
 
   /// List of the items to be presented on the dropdown.
   final List<ValueItem<T>> listItems;
@@ -118,7 +122,6 @@ class SearchDropDown<T> extends StatefulWidget {
 }
 
 class SearchDropDownState<T> extends State<SearchDropDown<T>> {
-  final SearchController _searchController = SearchController();
   bool clearVisible = false;
   late bool enabled;
   ValueItem<T>? selectedValue;
@@ -134,7 +137,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     if (widget.listItems.isNotEmpty) {
       if (widget.selectedItem != null) {
         selectedValue = widget.selectedItem;
-        _searchController.text = selectedValue!.label;
+        widget.searchController.text = selectedValue!.label;
         previousText = selectedValue!.label;
         if (widget.searchBarSettings.showClearIcon) {
           clearVisible = true;
@@ -143,18 +146,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     }
     enabled = widget.enabled;
     listaFiltrada.addAll(widget.listItems);
-    _searchController.addListener(() {
-      if (!suppressFiltering && _searchController.text != previousText) {
-        previousText = _searchController.text;
-        _filtrarLista(_searchController.text);
+    widget.searchController.addListener(() {
+      if (!suppressFiltering && widget.searchController.text != previousText) {
+        previousText = widget.searchController.text;
+        _filtrarLista(widget.searchController.text);
       }
     });
-  }
-
-  @override
-  void dispose() {
-    _searchController.dispose();
-    super.dispose();
   }
 
   /// enables/disables the widget.
@@ -205,7 +202,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   /// Resets the selection to its default state.
   void resetSelection() {
     selectedValue = null;
-    _searchController.clear();
+    widget.searchController.clear();
     widget.updateSelectedItem(null);
     widget.onClear?.call();
     setState(() {
@@ -217,12 +214,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   void _selectedItem(ValueItem<T> item) {
     suppressFiltering = true;
     selectedValue = item;
-    if (_searchController.isOpen) {
-      _searchController.closeView(item.label);
+    if (widget.searchController.isOpen) {
+      widget.searchController.closeView(item.label);
     } else {
-      _searchController.text = item.label;
+      widget.searchController.text = item.label;
     }
-    previousText = _searchController.text;
+    previousText = widget.searchController.text;
     widget.updateSelectedItem(item);
     if (widget.searchBarSettings.showClearIcon) {
       setState(() {
@@ -255,7 +252,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             settings: widget.verifyDialogSettings,
           ),
         );
-        _searchController.clear();
+        widget.searchController.clear();
         return;
       }
       listaFiltrada.add(item);
@@ -336,7 +333,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           listaFiltrada = widget.listItems;
           suppressFiltering = false;
         },
-        searchController: _searchController,
+        searchController: widget.searchController,
         viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
         dividerColor: widget.searchBarSettings.showDivider
             ? null
@@ -347,7 +344,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             IconButton(
               onPressed: () =>
                   widget.searchBarSettings.dropdownOpenedIconFunction ??
-                  _searchController.closeView(_searchController.text),
+                  widget.searchController
+                      .closeView(widget.searchController.text),
               icon: Icon(
                 widget.searchBarSettings.dropdownOpenedArrowIcon,
                 color: widget.searchBarSettings.outsideIconColor,
@@ -362,7 +360,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                 IconButton(
                   onPressed: () =>
                       widget.searchBarSettings.dropdownClosedIconFunction ??
-                      _searchController.openView(),
+                      widget.searchController.openView(),
                   icon: Icon(
                     widget.searchBarSettings.dropdownClosedArrowIcon,
                     color: widget.searchBarSettings.outsideIconColor,

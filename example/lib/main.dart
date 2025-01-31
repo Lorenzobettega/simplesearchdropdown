@@ -36,6 +36,9 @@ class _MyHomePageState extends State<MyHomePage> {
   final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
   final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
   final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
+  final SearchController _searchController1 = SearchController();
+  final SearchController _searchController2 = SearchController();
+  final SearchController _searchController3 = SearchController();
   ValueItem<Custom>? selectedSingleCustom =
       ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134));
 
@@ -146,7 +149,8 @@ class _MyHomePageState extends State<MyHomePage> {
               newValueItem: (input) => ValueItem(label: input, value: input),
               overlayListSettings: SimpleOverlaySettings(
                 itemWidgetBuilder: (item) => Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                   color: Colors.blue,
                   child: Text(item.label),
                 ),
@@ -155,6 +159,7 @@ class _MyHomePageState extends State<MyHomePage> {
               enabled: false,
               searchBarSettings:
                   const SimpleSearchbarSettings(showKeyboardOnTap: false),
+              searchController: _searchController1,
             ),
             const SizedBox(
               height: 20,
@@ -175,6 +180,7 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 20,
             ),
             SearchDropDown<Custom>(
+              searchController: _searchController2,
               key: customSearchKey,
               selectedItem: selectedSingleCustom,
               listItems: customListitems,
@@ -184,7 +190,8 @@ class _MyHomePageState extends State<MyHomePage> {
               updateSelectedItem: updateSelectedCustom,
               verifyInputItem: verifyInput,
               sortType: 3,
-              searchBarSettings: const SimpleSearchbarSettings(showArrow: false),
+              searchBarSettings:
+                  const SimpleSearchbarSettings(showArrow: false),
               newValueItem: (input) => ValueItem(
                 label: input,
                 value: Custom(input, getRandomInt(4)),
@@ -194,6 +201,7 @@ class _MyHomePageState extends State<MyHomePage> {
               height: 20,
             ),
             SearchDropDown(
+              searchController: _searchController3,
               key: newsingleSearchKey,
               listItems: listitems,
               updateSelectedItem: updateSelectedItem,

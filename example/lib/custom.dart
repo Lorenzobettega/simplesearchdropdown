@@ -1,9 +1,8 @@
 import 'dart:math';
 
 class Custom {
-
   Custom(this.name, this.id);
-  
+
   final String name;
   final int id;
 }
