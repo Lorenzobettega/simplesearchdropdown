@@ -156,9 +156,11 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   /// enables/disables the widget.
   void enableDisable() {
-    setState(() {
-      enabled = !enabled;
-    });
+    if (mounted) {
+      setState(() {
+        enabled = !enabled;
+      });
+    }
   }
 
   /// Sorts the list based on the sortType defined in the widget.
@@ -205,9 +207,11 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     selectedValue = null;
     widget.updateSelectedItem(null);
     widget.onClear?.call();
-    setState(() {
-      clearVisible = false;
-    });
+    if (mounted) {
+      setState(() {
+        clearVisible = false;
+      });
+    }
   }
 
   /// Selects a specific item.
@@ -222,9 +226,11 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     previousText = widget.searchController.text;
     widget.updateSelectedItem(item);
     if (widget.searchBarSettings.showClearIcon) {
-      setState(() {
-        clearVisible = true;
-      });
+      if (mounted) {
+        setState(() {
+          clearVisible = true;
+        });
+      }
     }
   }
 

@@ -2,8 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import 'package:simple_search_dropdown_example/custom.dart';
-import 'package:simple_search_dropdown_example/listitems.dart';
+import '/custom.dart';
+import '/dialog_test.dart';
+import '/listitems.dart';
 
 void main() {
   runApp(const MyApp());
@@ -135,6 +136,20 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             const SizedBox(
               height: 70,
+            ),
+            TextButton(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  builder: (BuildContext context) {
+                    return const DialogTest();
+                  },
+                );
+              },
+              child: const Text('Open Dialog'),
+            ),
+            const SizedBox(
+              height: 20,
             ),
             SearchDropDown(
               key: singleSearchKey,

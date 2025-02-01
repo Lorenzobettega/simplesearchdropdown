@@ -1,3 +1,6 @@
+## [6.1.2] - 2024-02-01.
+-   Add ios to sample.
+
 ## [6.1.1] - 2024-01-31.
 -   Minor code improvements.
 
