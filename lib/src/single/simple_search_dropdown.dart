@@ -134,24 +134,24 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   void initState() {
     super.initState();
     _sortFunction();
-    if (widget.listItems.isNotEmpty) {
-      if (widget.selectedItem != null) {
-        selectedValue = widget.selectedItem;
-        widget.searchController.text = selectedValue!.label;
-        previousText = selectedValue!.label;
-        if (widget.searchBarSettings.showClearIcon) {
-          clearVisible = true;
-        }
+    if (widget.listItems.isNotEmpty && widget.selectedItem != null) {
+      selectedValue = widget.selectedItem;
+      widget.searchController.text = selectedValue!.label;
+      previousText = selectedValue!.label;
+      if (widget.searchBarSettings.showClearIcon) {
+        clearVisible = true;
       }
     }
     enabled = widget.enabled;
     listaFiltrada.addAll(widget.listItems);
-    widget.searchController.addListener(() {
-      if (!suppressFiltering && widget.searchController.text != previousText) {
-        previousText = widget.searchController.text;
-        _filtrarLista(widget.searchController.text);
-      }
-    });
+    widget.searchController.addListener(_handleSearchTextChanged);
+  }
+
+  void _handleSearchTextChanged() {
+    if (!suppressFiltering && widget.searchController.text != previousText) {
+      previousText = widget.searchController.text;
+      _filtrarLista(widget.searchController.text);
+    }
   }
 
   /// enables/disables the widget.
@@ -308,19 +308,30 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     }
   }
 
+  List<Widget> _buildViewTrailing() {
+    return [
+      if (widget.searchBarSettings.showArrow)
+        IconButton(
+          onPressed: widget.searchBarSettings.dropdownOpenedIconFunction ??
+              () => widget.searchController
+                  .closeView(widget.searchController.text),
+          icon: Icon(
+            widget.searchBarSettings.dropdownOpenedArrowIcon,
+            color: widget.searchBarSettings.outsideIconColor,
+            size: widget.searchBarSettings.outsideIconSize,
+          ),
+        ),
+      ClearButton(
+        visible: clearVisible,
+        onPressed: resetSelection,
+        iconColor: widget.searchBarSettings.clearIconColor,
+        iconSize: widget.searchBarSettings.outsideIconSize,
+      ),
+    ];
+  }
+
   @override
   Widget build(BuildContext context) {
-    final Widget clearButton = Visibility(
-      visible: clearVisible,
-      child: IconButton(
-        onPressed: resetSelection,
-        icon: Icon(
-          Icons.clear,
-          color: widget.searchBarSettings.clearIconColor,
-          size: widget.searchBarSettings.outsideIconSize,
-        ),
-      ),
-    );
     return SizedBox(
       width: widget.searchBarSettings.dropdownWidth,
       height: widget.searchBarSettings.dropdownHeight,
@@ -339,21 +350,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             ? null
             : (widget.overlayListSettings.dialogBackgroundColor ??
                 widget.searchBarSettings.backgroundColor),
-        viewTrailing: [
-          if (widget.searchBarSettings.showArrow)
-            IconButton(
-              onPressed: () =>
-                  widget.searchBarSettings.dropdownOpenedIconFunction ??
-                  widget.searchController
-                      .closeView(widget.searchController.text),
-              icon: Icon(
-                widget.searchBarSettings.dropdownOpenedArrowIcon,
-                color: widget.searchBarSettings.outsideIconColor,
-                size: widget.searchBarSettings.outsideIconSize,
-              ),
-            ),
-          clearButton
-        ],
+        viewTrailing: _buildViewTrailing(),
         barTrailing: widget.searchBarSettings.actions ??
             [
               if (widget.searchBarSettings.showArrow)
@@ -367,7 +364,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     size: widget.searchBarSettings.outsideIconSize,
                   ),
                 ),
-              clearButton
+              ClearButton(
+                visible: clearVisible,
+                onPressed: resetSelection,
+                iconColor: widget.searchBarSettings.clearIconColor,
+                iconSize: widget.searchBarSettings.outsideIconSize,
+              ),
             ],
         barElevation:
             WidgetStatePropertyAll(widget.searchBarSettings.elevation),
