@@ -147,6 +147,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     widget.searchController.addListener(_handleSearchTextChanged);
   }
 
+  @override
+  void dispose() {
+    widget.searchController.dispose();
+    super.dispose();
+  }
+
   void _handleSearchTextChanged() {
     if (!suppressFiltering && widget.searchController.text != previousText) {
       previousText = widget.searchController.text;
