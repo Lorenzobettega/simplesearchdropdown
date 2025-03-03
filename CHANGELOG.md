@@ -1,3 +1,6 @@
+## [6.2.0] - 2024-02-01.
+-   Added `disposeController` to `SearchDropDown`, it defines if the searchController will be disposed after the widget is disposed (default: `true`). If set to true, you should remove `searchController.dispose()` from your controller/widget code.
+
 ## [6.1.2] - 2024-02-01.
 -   Add ios to sample.
 

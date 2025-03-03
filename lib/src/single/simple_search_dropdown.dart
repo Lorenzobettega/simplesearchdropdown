@@ -29,6 +29,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.addAditionalWidget,
     this.defaultAditionalWidget,
     this.enabled = true,
+    this.disposeController = true,
   })  : assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
@@ -117,6 +118,9 @@ class SearchDropDown<T> extends StatefulWidget {
   /// A parameter to define if the widget is enabled or disabled (default: `true`).
   final bool enabled;
 
+  /// If the searchController will be disposed after the widget is disposed (default: `true`).
+  final bool disposeController;
+
   @override
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
 }
@@ -149,7 +153,10 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   @override
   void dispose() {
-    widget.searchController.dispose();
+    if (widget.disposeController) {
+      widget.searchController.dispose();
+    }
+
     super.dispose();
   }
 
