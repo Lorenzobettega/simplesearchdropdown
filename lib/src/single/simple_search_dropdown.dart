@@ -30,6 +30,7 @@ class SearchDropDown<T> extends StatefulWidget {
     this.defaultAditionalWidget,
     this.enabled = true,
     this.disposeController = true,
+    this.removeFocus = true,
   })  : assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
@@ -121,6 +122,9 @@ class SearchDropDown<T> extends StatefulWidget {
   /// If the searchController will be disposed after the widget is disposed (default: `true`).
   final bool disposeController;
 
+  /// If the focus from the text field will be removed after the searchanchor is closed (default: `true`).
+  final bool removeFocus;
+
   @override
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
 }
@@ -133,11 +137,13 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   String previousText = '';
   bool suppressFiltering = true;
   bool isOpen = false;
+  late final FocusScopeNode _focusNode;
 
   @override
   void initState() {
     super.initState();
     _sortFunction();
+    _focusNode = FocusScopeNode();
     if (widget.listItems.isNotEmpty && widget.selectedItem != null) {
       selectedValue = widget.selectedItem;
       widget.searchController.text = selectedValue!.label;
@@ -351,125 +357,134 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.searchBarSettings.dropdownWidth,
-      height: widget.searchBarSettings.dropdownHeight,
-      child: SearchAnchor.bar(
-        viewConstraints: BoxConstraints(
-          maxWidth: widget.searchBarSettings.dropdownWidth,
-          maxHeight: widget.overlayListSettings.dialogHeight,
-        ),
-        onTap: () {
-          listaFiltrada = widget.listItems;
-          suppressFiltering = false;
-        },
-        searchController: widget.searchController,
-        viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
-        dividerColor: widget.searchBarSettings.showDivider
-            ? null
-            : (widget.overlayListSettings.dialogBackgroundColor ??
-                widget.searchBarSettings.backgroundColor),
-        viewTrailing: _buildViewTrailing(),
-        barTrailing: widget.searchBarSettings.actions ??
-            [
-              if (widget.searchBarSettings.showArrow)
-                IconButton(
-                  onPressed: () =>
-                      widget.searchBarSettings.dropdownClosedIconFunction ??
-                      widget.searchController.openView(),
-                  icon: Icon(
-                    widget.searchBarSettings.dropdownClosedArrowIcon,
-                    color: widget.searchBarSettings.outsideIconColor,
-                    size: widget.searchBarSettings.outsideIconSize,
+    return FocusScope(
+      node: _focusNode,
+      onFocusChange: (isFocused) {
+        if (isFocused && widget.removeFocus) {
+          _focusNode.unfocus();
+        }
+      },
+      child: SizedBox(
+        width: widget.searchBarSettings.dropdownWidth,
+        height: widget.searchBarSettings.dropdownHeight,
+        child: SearchAnchor.bar(
+          viewConstraints: BoxConstraints(
+            maxWidth: widget.searchBarSettings.dropdownWidth,
+            maxHeight: widget.overlayListSettings.dialogHeight,
+          ),
+          onTap: () {
+            listaFiltrada = widget.listItems;
+            suppressFiltering = false;
+          },
+          searchController: widget.searchController,
+          viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
+          dividerColor: widget.searchBarSettings.showDivider
+              ? null
+              : (widget.overlayListSettings.dialogBackgroundColor ??
+                  widget.searchBarSettings.backgroundColor),
+          viewTrailing: _buildViewTrailing(),
+          barTrailing: widget.searchBarSettings.actions ??
+              [
+                if (widget.searchBarSettings.showArrow)
+                  IconButton(
+                    onPressed: () =>
+                        widget.searchBarSettings.dropdownClosedIconFunction ??
+                        widget.searchController.openView(),
+                    icon: Icon(
+                      widget.searchBarSettings.dropdownClosedArrowIcon,
+                      color: widget.searchBarSettings.outsideIconColor,
+                      size: widget.searchBarSettings.outsideIconSize,
+                    ),
                   ),
+                ClearButton(
+                  visible: clearVisible,
+                  onPressed: resetSelection,
+                  iconColor: widget.searchBarSettings.clearIconColor,
+                  iconSize: widget.searchBarSettings.outsideIconSize,
                 ),
-              ClearButton(
-                visible: clearVisible,
-                onPressed: resetSelection,
-                iconColor: widget.searchBarSettings.clearIconColor,
-                iconSize: widget.searchBarSettings.outsideIconSize,
-              ),
-            ],
-        barElevation:
-            WidgetStatePropertyAll(widget.searchBarSettings.elevation),
-        barShape: WidgetStatePropertyAll(
-          widget.searchBarSettings.border ??
-              const RoundedRectangleBorder(
-                borderRadius: BorderRadius.all(Radius.circular(10)),
-              ),
-        ),
-        viewShape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-        ),
-        barBackgroundColor:
-            WidgetStatePropertyAll(widget.searchBarSettings.backgroundColor),
-        viewBackgroundColor: widget.overlayListSettings.dialogBackgroundColor ??
-            widget.searchBarSettings.backgroundColor,
-        isFullScreen: widget.overlayListSettings.openFullScreen,
-        barHintStyle:
-            WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
-        barHintText: widget.searchBarSettings.hint,
-        barOverlayColor:
-            WidgetStatePropertyAll(widget.searchBarSettings.hoverColor),
-        barTextStyle:
-            WidgetStatePropertyAll(widget.searchBarSettings.searchBarTextStyle),
-        barPadding:
-            WidgetStatePropertyAll(widget.searchBarSettings.searchBarPadding),
-        barLeading: const SizedBox.shrink(),
-        barSide: WidgetStateProperty.all<BorderSide>(
-          const BorderSide(
+              ],
+          barElevation:
+              WidgetStatePropertyAll(widget.searchBarSettings.elevation),
+          barShape: WidgetStatePropertyAll(
+            widget.searchBarSettings.border ??
+                const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                ),
+          ),
+          viewShape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.all(Radius.circular(10)),
+          ),
+          barBackgroundColor:
+              WidgetStatePropertyAll(widget.searchBarSettings.backgroundColor),
+          viewBackgroundColor:
+              widget.overlayListSettings.dialogBackgroundColor ??
+                  widget.searchBarSettings.backgroundColor,
+          isFullScreen: widget.overlayListSettings.openFullScreen,
+          barHintStyle:
+              WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
+          barHintText: widget.searchBarSettings.hint,
+          barOverlayColor:
+              WidgetStatePropertyAll(widget.searchBarSettings.hoverColor),
+          barTextStyle: WidgetStatePropertyAll(
+              widget.searchBarSettings.searchBarTextStyle),
+          barPadding:
+              WidgetStatePropertyAll(widget.searchBarSettings.searchBarPadding),
+          barLeading: const SizedBox.shrink(),
+          barSide: WidgetStateProperty.all<BorderSide>(
+            const BorderSide(
+              style: BorderStyle.none,
+            ),
+          ),
+          viewSide: const BorderSide(
             style: BorderStyle.none,
           ),
-        ),
-        viewSide: const BorderSide(
-          style: BorderStyle.none,
-        ),
-        viewLeading: const SizedBox.shrink(),
-        viewElevation: widget.searchBarSettings.elevation,
-        viewHintText: widget.searchBarSettings.hint,
-        viewHeaderHintStyle: widget.searchBarSettings.hintStyle,
-        viewHeaderTextStyle: widget.searchBarSettings.searchBarTextStyle,
-        keyboardType: widget.searchBarSettings.showKeyboardOnTap
-            ? widget.searchBarSettings.keyboardType
-            : TextInputType.none,
-        textInputAction: widget.searchBarSettings.textInputAction,
-        suggestionsBuilder:
-            (BuildContext context, SearchController controller) {
-          final int length = listaFiltrada.length + (widget.addMode ? 1 : 0);
-          return List<Widget>.generate(
-            length,
-            (int index) {
-              if (index == listaFiltrada.length && widget.addMode) {
-                if (controller.text.isNotEmpty) {
-                  if (listaFiltrada.isEmpty) {
-                    return DefaultAddListItem(
-                      itemAdded: handleAddItem,
-                      overlayListSettings: widget.overlayListSettings,
-                      text: controller.text,
-                      addAditionalWidget: widget.addAditionalWidget,
-                    );
+          viewLeading: const SizedBox.shrink(),
+          viewElevation: widget.searchBarSettings.elevation,
+          viewHintText: widget.searchBarSettings.hint,
+          viewHeaderHintStyle: widget.searchBarSettings.hintStyle,
+          viewHeaderTextStyle: widget.searchBarSettings.searchBarTextStyle,
+          keyboardType: widget.searchBarSettings.showKeyboardOnTap
+              ? widget.searchBarSettings.keyboardType
+              : TextInputType.none,
+          textInputAction: widget.searchBarSettings.textInputAction,
+          suggestionsBuilder:
+              (BuildContext context, SearchController controller) {
+            final int length = listaFiltrada.length + (widget.addMode ? 1 : 0);
+            return List<Widget>.generate(
+              length,
+              (int index) {
+                if (index == listaFiltrada.length && widget.addMode) {
+                  if (controller.text.isNotEmpty) {
+                    if (listaFiltrada.isEmpty) {
+                      return DefaultAddListItem(
+                        itemAdded: handleAddItem,
+                        overlayListSettings: widget.overlayListSettings,
+                        text: controller.text,
+                        addAditionalWidget: widget.addAditionalWidget,
+                      );
+                    }
                   }
+                  return const SizedBox.shrink();
+                } else {
+                  return DefaultListTile<T>(
+                    deleteMode: widget.deleteMode,
+                    editMode: widget.editMode,
+                    item: listaFiltrada[index],
+                    onDelete: (val) => handleDeleteItem(
+                      val,
+                      context,
+                    ),
+                    onEdit: _handleEditItem,
+                    onPressed: _selectedItem,
+                    overlayListSettings: widget.overlayListSettings,
+                    selected: controller.text == listaFiltrada[index].label,
+                    defaultAditionalWidget: widget.defaultAditionalWidget,
+                  );
                 }
-                return const SizedBox.shrink();
-              } else {
-                return DefaultListTile<T>(
-                  deleteMode: widget.deleteMode,
-                  editMode: widget.editMode,
-                  item: listaFiltrada[index],
-                  onDelete: (val) => handleDeleteItem(
-                    val,
-                    context,
-                  ),
-                  onEdit: _handleEditItem,
-                  onPressed: _selectedItem,
-                  overlayListSettings: widget.overlayListSettings,
-                  selected: controller.text == listaFiltrada[index].label,
-                  defaultAditionalWidget: widget.defaultAditionalWidget,
-                );
-              }
-            },
-          );
-        },
+              },
+            );
+          },
+        ),
       ),
     );
   }
