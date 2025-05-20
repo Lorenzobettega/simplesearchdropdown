@@ -1,0 +1,2 @@
+/Users/gian/Desktop/simplesearchdropdown/example/android/app/.cxx/Debug/695ex4o7/armeabi-v7a/CMakeFiles/edit_cache.dir
+/Users/gian/Desktop/simplesearchdropdown/example/android/app/.cxx/Debug/695ex4o7/armeabi-v7a/CMakeFiles/rebuild_cache.dir
