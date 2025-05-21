@@ -1,128 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import 'package:stringr/stringr.dart';
+import 'package:simple_search_dropdown/simple_search_dropdown.dart'; // For ValueItem, settings, etc.
 
-///This creates a single selection dropdown widget.
+/// This creates a single-selection dropdown widget.
+/// The widget UI is defined here, while state management is handled by [SearchDropDownController].
 class SearchDropDown<T> extends StatefulWidget {
   const SearchDropDown({
     super.key,
-    required this.searchController,
-    required this.listItems,
-    this.addMode = true,
-    this.onAddItem,
-    this.newValueItem,
-    this.editMode = false,
-    this.onEditItem,
-    this.editDialogSettings,
-    this.deleteMode = true,
-    this.onDeleteItem,
-    this.onClear,
-    required this.updateSelectedItem,
-    this.sortType = 0,
-    this.confirmDelete = false,
+    required this.controller,
     this.searchBarSettings = defaultSearchBarSettings,
     this.overlayListSettings = defaultOverlaySettings,
-    this.selectedItem,
-    this.deleteDialogSettings,
-    this.verifyInputItem,
-    this.verifyDialogSettings,
     this.addAditionalWidget,
     this.defaultAditionalWidget,
-    this.enabled = true,
     this.disposeController = true,
     this.removeFocus = true,
-  })  : assert(
-            (addMode && (newValueItem != null && onAddItem != null)) ||
-                !addMode,
-            'addMode can only be used with newValueItem != null && onAddItem != null'),
-        assert((deleteMode && onDeleteItem != null) || !deleteMode,
-            'deleteMode can only be used with onDeleteItem != null'),
-        assert((editMode && onEditItem != null) || !editMode,
-            'ediMode can only be used with onEditItem != null');
+  });
 
-  /// The widget.searchController of the dropdown.
-  final SearchController searchController;
+  /// The external controller that manages state (text, selected item, etc.) for this dropdown.
+  final SearchDropDownController<T> controller;
 
-  /// List of the items to be presented on the dropdown.
-  final List<ValueItem<T>> listItems;
-
-  /// Allow the user to add items to the list.
-  final bool addMode;
-
-  /// Function to be executed after the item was added.
-  final Function(ValueItem<T>)? onAddItem;
-
-  /// Function that defines how the user input transforms into a new ValueItem on the list.
-  ///
-  /// Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
-  final ValueItem<T> Function(String input)? newValueItem;
-
-  /// Allow the user to delete items of the list.
-  final bool deleteMode;
-
-  /// Function to be executed after the item was deleted.
-  final Function(ValueItem<T>)? onDeleteItem;
-
-  /// Allow the user to edit items of the list.
-  final bool editMode;
-
-  /// Function to be executed after the item was edit.
-  final Function(ValueItem<T> originalItem, ValueItem<T> newvalue)? onEditItem;
-
-  /// Function to be executed after clear item.
-  final Function()? onClear;
-
-  /// Force the user to confirm delete.
-  final bool confirmDelete;
-
-  /// Delete dialog settings.
-  final DialogSettings? deleteDialogSettings;
-
-  /// Edit dialog settings.
-  final DialogSettings? editDialogSettings;
-
-  /// The SearchBarSettings.
+  /// The SearchBar settings (visual and behavioral configuration for the search bar).
   final SimpleSearchbarSettings searchBarSettings;
 
   /// The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
 
-  /// Function to check if the item added is valid or not.
-  final bool Function(ValueItem<T>)? verifyInputItem;
-
-  /// Verify dialog settings.
-  final DialogSettings? verifyDialogSettings;
-
-  /// The initial selected value of the dropdown.
-  final ValueItem<T>? selectedItem;
-
-  /// The function to be executed after the user selects a value.
-  final Function(ValueItem<T>?) updateSelectedItem;
-
-  /// The way the items should be sorted.
-  ///
-  /// If `0`(default), no sort will be applied.
-  ///
-  /// If `1`, the items will be sorted on alphabetical order.
-  ///
-  /// If `2`, the items will be sorted on reverse alphabetical order.
-  ///
-  /// If `3`, the selected item will be put on first position.
-  final int sortType;
-
-  /// A custom additional widget to be inserted on the add item cell between the text and the create button.
+  /// A custom additional widget to be inserted on the add-item cell between the text and the create button.
   final Widget? addAditionalWidget;
 
   /// A custom additional widget to be inserted on the default item cell between the text and the delete button.
   final Widget? defaultAditionalWidget;
 
-  /// A parameter to define if the widget is enabled or disabled (default: `true`).
-  final bool enabled;
-
-  /// If the searchController will be disposed after the widget is disposed (default: `true`).
+  /// If the controller will be disposed when this widget is disposed (default: `true`).
   final bool disposeController;
 
-  /// If the focus from the text field will be removed after the searchanchor is closed (default: `true`).
+  /// If the focus from the text field will be removed after the search view is closed (default: `true`).
   final bool removeFocus;
 
   @override
@@ -130,216 +41,49 @@ class SearchDropDown<T> extends StatefulWidget {
 }
 
 class SearchDropDownState<T> extends State<SearchDropDown<T>> {
-  bool clearVisible = false;
-  late bool enabled;
-  ValueItem<T>? selectedValue;
-  List<ValueItem<T>> listaFiltrada = [];
-  String previousText = '';
-  bool suppressFiltering = true;
-  bool isOpen = false;
   late final FocusScopeNode _focusNode;
 
   @override
   void initState() {
     super.initState();
-    _sortFunction();
     _focusNode = FocusScopeNode();
-    if (widget.listItems.isNotEmpty && widget.selectedItem != null) {
-      selectedValue = widget.selectedItem;
-      widget.searchController.text = selectedValue!.label;
-      previousText = selectedValue!.label;
-      if (widget.searchBarSettings.showClearIcon) {
-        clearVisible = true;
-      }
-    }
-    enabled = widget.enabled;
-    listaFiltrada.addAll(widget.listItems);
-    widget.searchController.addListener(_handleSearchTextChanged);
   }
 
   @override
   void dispose() {
     if (widget.disposeController) {
-      widget.searchController.dispose();
+      widget.controller.dispose();
     }
-
+    _focusNode.dispose();
     super.dispose();
   }
 
-  void _handleSearchTextChanged() {
-    if (!suppressFiltering && widget.searchController.text != previousText) {
-      previousText = widget.searchController.text;
-      _filtrarLista(widget.searchController.text);
-    }
-  }
-
-  /// enables/disables the widget.
+  /// Toggles the enabled/disabled state of the dropdown.
   void enableDisable() {
     if (mounted) {
       setState(() {
-        enabled = !enabled;
+        widget.controller.toggleEnabled();
       });
     }
   }
 
-  /// Sorts the list based on the sortType defined in the widget.
-  void _sortFunction() {
-    switch (widget.sortType) {
-      case 0:
-        break;
-      case 1:
-        widget.listItems.sort((a, b) => a.label.compareTo(b.label));
-        break;
-      case 2:
-        widget.listItems.sort((a, b) => b.label.compareTo(a.label));
-        break;
-      case 3:
-        if (selectedValue != null) {
-          final indx = widget.listItems.indexOf(selectedValue!);
-          if (indx != -1) {
-            widget.listItems
-              ..removeAt(indx)
-              ..insert(0, selectedValue!);
-          }
-        }
-        break;
-    }
-  }
-
-  /// Filters the list based on the text input.
-  void _filtrarLista(String text) {
-    if (text.isNotEmpty) {
-      listaFiltrada = widget.listItems
-          .where((element) => element.label
-              .toLowerCase()
-              .latinize()
-              .contains(text.latinize().toLowerCase()))
-          .toList();
-    } else {
-      listaFiltrada = List<ValueItem<T>>.from(widget.listItems);
-    }
-  }
-
-  /// Resets the selection to its default state.
+  /// Resets the selection to its default state, clearing the current value.
   void resetSelection() {
-    widget.searchController.text = '';
-    selectedValue = null;
-    widget.updateSelectedItem(null);
-    widget.onClear?.call();
+    widget.controller.resetSelection();
     if (mounted) {
-      setState(() {
-        clearVisible = false;
-      });
+      setState(
+          () {}); // Refresh UI to reflect cleared selection (hide clear icon, etc.)
     }
   }
 
-  /// Selects a specific item.
-  void _selectedItem(ValueItem<T> item) {
-    suppressFiltering = true;
-    selectedValue = item;
-    if (widget.searchController.isOpen) {
-      widget.searchController.closeView(item.label);
-    } else {
-      widget.searchController.text = item.label;
-    }
-    previousText = widget.searchController.text;
-    widget.updateSelectedItem(item);
-    if (widget.searchBarSettings.showClearIcon) {
-      if (mounted) {
-        setState(() {
-          clearVisible = true;
-        });
-      }
-    }
-  }
-
-  /// Forces the selection of an item based on its label.
-  void forceSelection(String label) {
-    final ValueItem<T>? val =
-        widget.listItems.where((element) => element.label == label).firstOrNull;
-    if (val != null) {
-      _selectedItem(val);
-    }
-  }
-
-  /// Handles adding a new item to the list.
-  Future<void> handleAddItem(String text) async {
-    if (widget.addMode && widget.newValueItem != null) {
-      final item = widget.newValueItem!(text);
-      if (widget.verifyInputItem != null && !widget.verifyInputItem!(item)) {
-        await sendDialog(
-          context,
-          WarningDialog(
-            confirmDialog: false,
-            returnFunction: (_) {
-              Navigator.of(context).pop();
-            },
-            settings: widget.verifyDialogSettings,
-          ),
-        );
-        widget.searchController.clear();
-        return;
-      }
-      listaFiltrada.add(item);
-      widget.onAddItem?.call(item);
-      _selectedItem(item);
-    }
-  }
-
-  /// Handles deleting an item from the list.
-  Future<void> handleDeleteItem(ValueItem<T> item, BuildContext context) async {
-    if (widget.deleteMode) {
-      if (widget.confirmDelete) {
-        await sendDialog(
-          context,
-          WarningDialog(
-            returnFunction: (result) {
-              if (result) {
-                widget.onDeleteItem?.call(item);
-                resetSelection();
-              }
-              Navigator.of(context).pop();
-            },
-            settings: widget.deleteDialogSettings,
-          ),
-        );
-      } else {
-        widget.onDeleteItem?.call(item);
-        resetSelection();
-      }
-    }
-  }
-
-  //TODO add scroll to item.
-
-  /// Handles editing an item from the list.
-  Future<void> _handleEditItem(ValueItem<T> item) async {
-    if (widget.editMode) {
-      await sendDialog(
-        context,
-        EditDialog(
-          label: item.label,
-          returnFunction: (ok, text) {
-            if (ok) {
-              final newValue = widget.newValueItem!(text);
-              widget.onEditItem?.call(item, newValue);
-              resetSelection();
-            }
-            Navigator.of(context).pop();
-          },
-          settings: widget.editDialogSettings,
-        ),
-      );
-    }
-  }
-
-  List<Widget> _buildViewTrailing() {
-    return [
+  /// Builds the trailing widgets for the opened overlay view (e.g., clear button and opened dropdown arrow).
+  Widget _buildViewTrailing() {
+    return Row(mainAxisSize: MainAxisSize.min, children: [
       if (widget.searchBarSettings.showArrow)
         IconButton(
           onPressed: widget.searchBarSettings.dropdownOpenedIconFunction ??
-              () => widget.searchController
-                  .closeView(widget.searchController.text),
+              () => widget.controller.localSearchController
+                  .closeView(widget.controller.localSearchController.text),
           icon: Icon(
             widget.searchBarSettings.dropdownOpenedArrowIcon,
             color: widget.searchBarSettings.outsideIconColor,
@@ -347,12 +91,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           ),
         ),
       ClearButton(
-        visible: clearVisible,
+        visible: widget.controller.clearVisible,
         onPressed: resetSelection,
         iconColor: widget.searchBarSettings.clearIconColor,
         iconSize: widget.searchBarSettings.outsideIconSize,
       ),
-    ];
+    ]);
   }
 
   @override
@@ -360,6 +104,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     return FocusScope(
       node: _focusNode,
       onFocusChange: (isFocused) {
+        // Remove focus from text field after the search view is closed, if configured.
         if (isFocused && widget.removeFocus) {
           _focusNode.unfocus();
         }
@@ -373,23 +118,23 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             maxHeight: widget.overlayListSettings.dialogHeight,
           ),
           onTap: () {
-            listaFiltrada = widget.listItems;
-            suppressFiltering = false;
+            // Prepare the list when the search view is opened (reset filter).
+            widget.controller.onSearchOpen();
           },
-          searchController: widget.searchController,
+          searchController: widget.controller.localSearchController,
           viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
           dividerColor: widget.searchBarSettings.showDivider
               ? null
               : (widget.overlayListSettings.dialogBackgroundColor ??
                   widget.searchBarSettings.backgroundColor),
-          viewTrailing: _buildViewTrailing(),
+          viewTrailing: [_buildViewTrailing()],
           barTrailing: widget.searchBarSettings.actions ??
               [
                 if (widget.searchBarSettings.showArrow)
                   IconButton(
                     onPressed: () =>
                         widget.searchBarSettings.dropdownClosedIconFunction ??
-                        widget.searchController.openView(),
+                        widget.controller.localSearchController.openView(),
                     icon: Icon(
                       widget.searchBarSettings.dropdownClosedArrowIcon,
                       color: widget.searchBarSettings.outsideIconColor,
@@ -397,7 +142,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     ),
                   ),
                 ClearButton(
-                  visible: clearVisible,
+                  visible: widget.controller.clearVisible,
                   onPressed: resetSelection,
                   iconColor: widget.searchBarSettings.clearIconColor,
                   iconSize: widget.searchBarSettings.outsideIconSize,
@@ -431,13 +176,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
               WidgetStatePropertyAll(widget.searchBarSettings.searchBarPadding),
           barLeading: const SizedBox.shrink(),
           barSide: WidgetStateProperty.all<BorderSide>(
-            const BorderSide(
-              style: BorderStyle.none,
-            ),
+            const BorderSide(style: BorderStyle.none),
           ),
-          viewSide: const BorderSide(
-            style: BorderStyle.none,
-          ),
+          viewSide: const BorderSide(style: BorderStyle.none),
           viewLeading: const SizedBox.shrink(),
           viewElevation: widget.searchBarSettings.elevation,
           viewHintText: widget.searchBarSettings.hint,
@@ -449,40 +190,63 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           textInputAction: widget.searchBarSettings.textInputAction,
           suggestionsBuilder:
               (BuildContext context, SearchController controller) {
-            final int length = listaFiltrada.length + (widget.addMode ? 1 : 0);
-            return List<Widget>.generate(
-              length,
-              (int index) {
-                if (index == listaFiltrada.length && widget.addMode) {
-                  if (controller.text.isNotEmpty) {
-                    if (listaFiltrada.isEmpty) {
-                      return DefaultAddListItem(
-                        itemAdded: handleAddItem,
-                        overlayListSettings: widget.overlayListSettings,
-                        text: controller.text,
-                        addAditionalWidget: widget.addAditionalWidget,
-                      );
-                    }
+            final int length = widget.controller.filteredItems.length +
+                (widget.controller.addMode ? 1 : 0);
+            return List<Widget>.generate(length, (int index) {
+              // Add-item option at end of list (if enabled).
+              if (index == widget.controller.filteredItems.length &&
+                  widget.controller.addMode) {
+                if (controller.text.isNotEmpty) {
+                  if (widget.controller.filteredItems.isEmpty) {
+                    return DefaultAddListItem(
+                      text: controller.text,
+                      addAditionalWidget: widget.addAditionalWidget,
+                      overlayListSettings: widget.overlayListSettings,
+                      itemAdded: (String input) {
+                        // Add the new item using the controller, then refresh UI.
+                        widget.controller.addItem(input, context).then((_) {
+                          if (mounted) {
+                            setState(() {});
+                          }
+                        });
+                      },
+                    );
                   }
-                  return const SizedBox.shrink();
-                } else {
-                  return DefaultListTile<T>(
-                    deleteMode: widget.deleteMode,
-                    editMode: widget.editMode,
-                    item: listaFiltrada[index],
-                    onDelete: (val) => handleDeleteItem(
-                      val,
-                      context,
-                    ),
-                    onEdit: _handleEditItem,
-                    onPressed: _selectedItem,
-                    overlayListSettings: widget.overlayListSettings,
-                    selected: controller.text == listaFiltrada[index].label,
-                    defaultAditionalWidget: widget.defaultAditionalWidget,
-                  );
                 }
-              },
-            );
+                return const SizedBox.shrink();
+              } else {
+                // Regular list item
+                final item = widget.controller.filteredItems[index];
+                return DefaultListTile<T>(
+                  deleteMode: widget.controller.deleteMode,
+                  editMode: widget.controller.editMode,
+                  item: item,
+                  overlayListSettings: widget.overlayListSettings,
+                  defaultAditionalWidget: widget.defaultAditionalWidget,
+                  onDelete: (ValueItem<T> val) {
+                    widget.controller.deleteItem(val, context).then((_) {
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    });
+                  },
+                  onEdit: (ValueItem<T> val) {
+                    widget.controller.editItem(val, context).then((_) {
+                      if (mounted) {
+                        setState(() {});
+                      }
+                    });
+                  },
+                  onPressed: (ValueItem<T> val) {
+                    widget.controller.selectItem(val);
+                    if (mounted) {
+                      setState(() {});
+                    }
+                  },
+                  selected: controller.text == item.label,
+                );
+              }
+            });
           },
         ),
       ),

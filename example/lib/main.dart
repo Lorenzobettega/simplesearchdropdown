@@ -34,44 +34,46 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
-  final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
+  late final SearchDropDownController singleSearchController;
+  late final SearchDropDownController<Custom> customSearchController;
   final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
-  final SearchController _searchController1 = SearchController();
-  final SearchController _searchController2 = SearchController();
-  final SearchController _searchController3 = SearchController();
   ValueItem<Custom>? selectedSingleCustom =
       ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134));
-
   List<ValueItem> selectedMultipleItems = [];
-  ValueItem? selectedSingleItem;
+  ValueItem? selectedSingleItem = listitems[1];
   final GlobalKey<SearchDropDownState> newsingleSearchKey = GlobalKey();
 
-  void removeItem(ValueItem item) {
-    listitems.remove(item);
-  }
+  @override
+  void initState() {
+    super.initState();
 
-  void addItem(ValueItem item) {
-    listitems.add(item);
-  }
+    singleSearchController = SearchDropDownController(
+      listItems: listitems,
+      initialSelectedItem: listitems[1],
+      confirmDelete: true,
+      onDeleteItem: (item) => listitems.remove(item),
+      onAddItem: (item) => listitems.add(item),
+      updateSelectedItem: (item) => selectedSingleItem = item,
+      onClear: () => print('clear'),
+      verifyInputItem: (item) => item.label != 'name',
+      newValueItem: (input) => ValueItem(label: input, value: input),
+      sortType: 3,
+      enabled: false,
+      showClearIcon: true
+    );
 
-  void editItem(ValueItem item, ValueItem newvalue) {
-    final indx = listitems.indexOf(item);
-    if (indx != -1) {
-      listitems[indx] = newvalue;
-    }
-  }
-
-  void updateSelectedItem(ValueItem? newSelectedItem) {
-    selectedSingleItem = newSelectedItem;
-  }
-
-  void clearSingleSelection() {
-    singleSearchKey.currentState?.resetSelection();
-  }
-
-  void onClearSingleSelection() {
-    print('clear');
+    customSearchController = SearchDropDownController<Custom>(
+      listItems: customListitems,
+      initialSelectedItem: selectedSingleCustom,
+      confirmDelete: true,
+      onDeleteItem: (item) => customListitems.remove(item),
+      onAddItem: (item) => customListitems.add(item),
+      updateSelectedItem: (item) => selectedSingleCustom = item,
+      verifyInputItem: (item) => item.label != 'name',
+      newValueItem: (input) =>
+          ValueItem(label: input, value: Custom(input, getRandomInt(4))),
+      sortType: 3,
+    );
   }
 
   void updateSelectedItems(List<ValueItem> newSelectedItems) {
@@ -90,24 +92,12 @@ class _MyHomePageState extends State<MyHomePage> {
     print('item clear');
   }
 
-  void removeCustom(ValueItem<Custom> item) {
-    customListitems.remove(item);
-  }
-
-  void addCustom(ValueItem<Custom> item) {
-    customListitems.add(item);
-  }
-
-  void updateSelectedCustom(ValueItem<Custom>? newSelectedItem) {
-    selectedSingleCustom = newSelectedItem;
-  }
-
   void clearCustomSelection() {
-    customSearchKey.currentState?.resetSelection();
+    // Implement controller.clearSelection if needed
   }
 
   void force() {
-    singleSearchKey.currentState?.forceSelection('one more');
+    singleSearchController.forceSelection('one more');
   }
 
   void forceMultiple() {
@@ -115,16 +105,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void enableSingle() {
-    singleSearchKey.currentState?.enableDisable();
-    print(singleSearchKey.currentState?.enabled);
+    singleSearchController.toggleEnabled();
+    print(singleSearchController.enabled);
   }
 
   void printNewSingleSelection() {
-    print(newsingleSearchKey.currentState?.selectedValue!.label);
-  }
-
-  bool verifyInput(ValueItem item) {
-    return item.label != 'name';
+    print(singleSearchController.selectedItem?.label);
   }
 
   @override
@@ -134,9 +120,7 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(
-              height: 70,
-            ),
+            const SizedBox(height: 70),
             TextButton(
               onPressed: () {
                 showDialog(
@@ -148,20 +132,14 @@ class _MyHomePageState extends State<MyHomePage> {
               },
               child: const Text('Open Dialog'),
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             SearchDropDown(
-              key: singleSearchKey,
-              listItems: listitems,
-              confirmDelete: true,
-              onDeleteItem: removeItem,
-              onAddItem: addItem,
-              updateSelectedItem: updateSelectedItem,
-              onClear: onClearSingleSelection,
-              selectedItem: listitems[0],
-              verifyInputItem: verifyInput,
-              newValueItem: (input) => ValueItem(label: input, value: input),
+              controller: singleSearchController,
+              searchBarSettings: const SimpleSearchbarSettings(
+                showKeyboardOnTap: false,
+                actions: [Icon(Icons.abc)],
+                showDivider: true,
+              ),
               overlayListSettings: SimpleOverlaySettings(
                 itemWidgetBuilder: (item) => Container(
                   padding:
@@ -170,117 +148,61 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: Text(item.label),
                 ),
               ),
-              sortType: 3,
-              enabled: false,
-              searchBarSettings:
-                  const SimpleSearchbarSettings(showKeyboardOnTap: false),
-              searchController: _searchController1,
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             MultipleSearchDropDown(
               key: multipleSearchKey,
               listItems: listitems,
               confirmDelete: true,
-              onDeleteItem: removeItem,
-              onAddItem: addItem,
+              onDeleteItem: (item) => listitems.remove(item),
+              onAddItem: (item) => listitems.add(item),
               onClearList: onClearMultipleSelection,
               onClearItem: onClearItemMultipleSelection,
               selectedItems: selectedMultipleItems,
               updateSelectedItems: updateSelectedItems,
               newValueItem: (input) => ValueItem(label: input, value: input),
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             SearchDropDown<Custom>(
-              searchController: _searchController2,
-              key: customSearchKey,
-              selectedItem: selectedSingleCustom,
-              listItems: customListitems,
-              confirmDelete: true,
-              onDeleteItem: removeCustom,
-              onAddItem: addCustom,
-              updateSelectedItem: updateSelectedCustom,
-              verifyInputItem: verifyInput,
-              sortType: 3,
+              controller: customSearchController,
               searchBarSettings:
                   const SimpleSearchbarSettings(showArrow: false),
-              newValueItem: (input) => ValueItem(
-                label: input,
-                value: Custom(input, getRandomInt(4)),
-              ),
             ),
-            const SizedBox(
-              height: 20,
-            ),
-            SearchDropDown(
-              searchController: _searchController3,
-              key: newsingleSearchKey,
-              listItems: listitems,
-              updateSelectedItem: updateSelectedItem,
-              onAddItem: addItem,
-              newValueItem: (input) => ValueItem(value: input, label: input),
-              selectedItem: const ValueItem(
-                label: 'Lorenzo',
-              ),
-              sortType: 2,
-              confirmDelete: true,
-              onDeleteItem: removeItem,
-              verifyInputItem: verifyInput,
-              searchBarSettings: const SimpleSearchbarSettings(
-                  actions: [Icon(Icons.abc)], showDivider: true),
-              editMode: true,
-              onEditItem: editItem,
-            ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
                   onPressed: () {
                     print(selectedSingleItem);
-                    print(_searchController1.text);
-                    print(singleSearchKey.currentState?.selectedValue);
+                    print(singleSearchController.localSearchController.text);
+                    print(singleSearchController.selectedItem);
                   },
                   child: const Text('Print Single Result'),
                 ),
-                const SizedBox(
-                  width: 10,
-                ),
+                const SizedBox(width: 10),
                 TextButton(
-                  onPressed: () {
-                    print(selectedMultipleItems);
-                  },
+                  onPressed: () => print(selectedMultipleItems),
                   child: const Text('Print Multiple Result'),
                 ),
               ],
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: clearSingleSelection,
+                  onPressed: () => singleSearchController.resetSelection(),
                   child: const Text('Clear Single Selection'),
                 ),
-                const SizedBox(
-                  width: 10,
-                ),
+                const SizedBox(width: 10),
                 TextButton(
                   onPressed: clearMultipleSelection,
                   child: const Text('Clear Multiple Selection'),
                 ),
               ],
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -294,18 +216,14 @@ class _MyHomePageState extends State<MyHomePage> {
                   },
                   child: const Text('Print Custom Result'),
                 ),
-                const SizedBox(
-                  width: 10,
-                ),
+                const SizedBox(width: 10),
                 TextButton(
                   onPressed: clearCustomSelection,
                   child: const Text('Clear Custom Selection'),
                 ),
               ],
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
@@ -313,25 +231,19 @@ class _MyHomePageState extends State<MyHomePage> {
                   onPressed: force,
                   child: const Text('Force Single Selection'),
                 ),
-                const SizedBox(
-                  width: 10,
-                ),
+                const SizedBox(width: 10),
                 TextButton(
                   onPressed: forceMultiple,
                   child: const Text('Force Multiple Selection'),
                 ),
               ],
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             TextButton(
               onPressed: enableSingle,
               child: const Text('Enable/Disable Single Selection'),
             ),
-            const SizedBox(
-              height: 20,
-            ),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [

@@ -2,23 +2,33 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import '/listitems.dart';
 
-class DialogTest extends StatelessWidget {
+class DialogTest extends StatefulWidget {
   const DialogTest({super.key});
 
   @override
+  State<DialogTest> createState() => _DialogTestState();
+}
+
+class _DialogTestState extends State<DialogTest> {
+  late final SearchDropDownController dialogSearchController;
+  ValueItem? selectedSingleItem;
+
+  @override
+  void initState() {
+    super.initState();
+    dialogSearchController = SearchDropDownController(
+      listItems: listitems,
+      deleteMode: false,
+      addMode: false,
+      initialSelectedItem: selectedSingleItem,
+      updateSelectedItem: (item) => selectedSingleItem = item,
+      verifyInputItem: (item) => item.label != 'name',
+      newValueItem: (input) => ValueItem(label: input, value: input),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final GlobalKey<SearchDropDownState> singleSearchKey = GlobalKey();
-    final SearchController _searchController1 = SearchController();
-    ValueItem? selectedSingleItem;
-
-    void updateSelectedItem(ValueItem? newSelectedItem) {
-      selectedSingleItem = newSelectedItem;
-    }
-
-    bool verifyInput(ValueItem item) {
-      return item.label != 'name';
-    }
-
     return Dialog(
       child: SizedBox(
         height: 250,
@@ -33,19 +43,9 @@ class DialogTest extends StatelessWidget {
               child: Column(
                 children: [
                   const Text('Name:'),
-                  const SizedBox(
-                    height: 20,
-                  ),
+                  const SizedBox(height: 20),
                   SearchDropDown(
-                    key: singleSearchKey,
-                    listItems: listitems,
-                    deleteMode: false,
-                    addMode: false,
-                    updateSelectedItem: updateSelectedItem,
-                    selectedItem: selectedSingleItem,
-                    verifyInputItem: verifyInput,
-                    newValueItem: (input) =>
-                        ValueItem(label: input, value: input),
+                    controller: dialogSearchController,
                     overlayListSettings: SimpleOverlaySettings(
                       itemWidgetBuilder: (item) => Container(
                         padding: const EdgeInsets.symmetric(
@@ -54,9 +54,8 @@ class DialogTest extends StatelessWidget {
                         child: Text(item.label),
                       ),
                     ),
-                    searchBarSettings:
-                        const SimpleSearchbarSettings(showKeyboardOnTap: false),
-                    searchController: _searchController1,
+                    searchBarSettings: const SimpleSearchbarSettings(
+                        showKeyboardOnTap: false),
                   ),
                 ],
               ),

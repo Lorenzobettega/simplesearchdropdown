@@ -20,4 +20,5 @@ export './src/helpers/value_item.dart';
 export './src/multiple/multiple_listview.dart';
 export './src/multiple/multiple_simple_search_dropdown.dart';
 export './src/single/clear_button.dart';
+export './src/single/search_dropdown_controller.dart';
 export './src/single/simple_search_dropdown.dart';
