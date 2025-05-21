@@ -1,3 +1,6 @@
+## [7.0.1] - 2025-03-13.
+- Fixed regression [18](https://github.com/Lorenzobettega/simplesearchdropdown/issues/18)
+
 ## [7.0.0] - 2025-03-13.
 - Updated android sample.
 - [Breaking] Remade `SearchDropDown` to use a controller

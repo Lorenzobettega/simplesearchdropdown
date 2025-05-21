@@ -120,6 +120,21 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             // Prepare the list when the search view is opened (reset filter).
             widget.controller.onSearchOpen();
           },
+          onClose: () {
+            if (widget.controller.localSearchController.text.isNotEmpty) {
+              if (widget.searchBarSettings.clearOnClose) {
+                final item = widget.controller.selectedItem;
+                if (item != null) {
+                  if (widget.controller.localSearchController.text !=
+                      item.label) {
+                    widget.controller.localSearchController.text = item.label;
+                  }
+                } else {
+                  widget.controller.localSearchController.text = '';
+                }
+              }
+            }
+          },
           searchController: widget.controller.localSearchController,
           viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
           dividerColor: widget.searchBarSettings.showDivider
