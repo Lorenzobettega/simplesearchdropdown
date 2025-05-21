@@ -37,6 +37,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late final SearchDropDownController singleSearchController;
   late final SearchDropDownController<Custom> customSearchController;
   final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
+  final GlobalKey<SearchDropDownState> searchKey = GlobalKey();
   ValueItem<Custom>? selectedSingleCustom =
       ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134));
   List<ValueItem> selectedMultipleItems = [];
@@ -105,8 +106,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void enableSingle() {
-    singleSearchController.toggleEnabled();
-    print(singleSearchController.enabled);
+    searchKey.currentState?.enableDisable();
   }
 
   void printNewSingleSelection() {
@@ -134,6 +134,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 20),
             SearchDropDown(
+              key: searchKey,
               controller: singleSearchController,
               searchBarSettings: const SimpleSearchbarSettings(
                 showKeyboardOnTap: false,
@@ -192,7 +193,7 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () => singleSearchController.resetSelection(),
+                  onPressed: () => searchKey.currentState?.resetSelection(),
                   child: const Text('Clear Single Selection'),
                 ),
                 const SizedBox(width: 10),

@@ -61,7 +61,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   /// Toggles the enabled/disabled state of the dropdown.
   void enableDisable() {
     if (mounted) {
-      widget.controller.toggleEnabled();
+      setState(() {
+        widget.controller.toggleEnabled();
+      });
     }
   }
 
