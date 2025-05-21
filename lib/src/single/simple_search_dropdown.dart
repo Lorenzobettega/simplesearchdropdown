@@ -61,18 +61,14 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   /// Toggles the enabled/disabled state of the dropdown.
   void enableDisable() {
     if (mounted) {
-      setState(() {
-        widget.controller.toggleEnabled();
-      });
+      widget.controller.toggleEnabled();
     }
   }
 
   /// Resets the selection to its default state, clearing the current value.
   void resetSelection() {
-    widget.controller.resetSelection();
     if (mounted) {
-      setState(
-          () {}); // Refresh UI to reflect cleared selection (hide clear icon, etc.)
+      widget.controller.resetSelection();
     }
   }
 
@@ -113,6 +109,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         width: widget.searchBarSettings.dropdownWidth,
         height: widget.searchBarSettings.dropdownHeight,
         child: SearchAnchor.bar(
+          enabled: widget.controller.enabled,
           viewConstraints: BoxConstraints(
             maxWidth: widget.searchBarSettings.dropdownWidth,
             maxHeight: widget.overlayListSettings.dialogHeight,
@@ -203,12 +200,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       addAditionalWidget: widget.addAditionalWidget,
                       overlayListSettings: widget.overlayListSettings,
                       itemAdded: (String input) {
-                        // Add the new item using the controller, then refresh UI.
-                        widget.controller.addItem(input, context).then((_) {
-                          if (mounted) {
-                            setState(() {});
-                          }
-                        });
+                        widget.controller.addItem(input, context);
                       },
                     );
                   }
@@ -224,24 +216,13 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   overlayListSettings: widget.overlayListSettings,
                   defaultAditionalWidget: widget.defaultAditionalWidget,
                   onDelete: (ValueItem<T> val) {
-                    widget.controller.deleteItem(val, context).then((_) {
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    });
+                    widget.controller.deleteItem(val, context);
                   },
                   onEdit: (ValueItem<T> val) {
-                    widget.controller.editItem(val, context).then((_) {
-                      if (mounted) {
-                        setState(() {});
-                      }
-                    });
+                    widget.controller.editItem(val, context);
                   },
                   onPressed: (ValueItem<T> val) {
                     widget.controller.selectItem(val);
-                    if (mounted) {
-                      setState(() {});
-                    }
                   },
                   selected: controller.text == item.label,
                 );

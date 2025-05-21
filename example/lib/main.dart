@@ -58,7 +58,7 @@ class _MyHomePageState extends State<MyHomePage> {
       verifyInputItem: (item) => item.label != 'name',
       newValueItem: (input) => ValueItem(label: input, value: input),
       sortType: 3,
-      enabled: false,
+      // enabled: false,
       showClearIcon: true
     );
 
