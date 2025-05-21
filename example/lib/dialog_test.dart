@@ -54,8 +54,8 @@ class _DialogTestState extends State<DialogTest> {
                         child: Text(item.label),
                       ),
                     ),
-                    searchBarSettings: const SimpleSearchbarSettings(
-                        showKeyboardOnTap: false),
+                    searchBarSettings:
+                        const SimpleSearchbarSettings(showKeyboardOnTap: false),
                   ),
                 ],
               ),

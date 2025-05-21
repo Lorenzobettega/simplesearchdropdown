@@ -1,16 +1,22 @@
-## [6.3.0] - 2024-03-13.
+## [7.0.0] - 2025-03-13.
+- Updated android sample.
+- [Breaking] Remade `SearchDropDown` to use a controller
+- Fixed enabled state of `SearchDropDown`
+- This version requires flutter 3.32 to work.
+
+## [6.3.0] - 2025-03-13.
 -   Added `removeFocus` to `SearchDropDown`, it defines if the focus from the text field will be removed after the searchanchor is closed (default: `true`).
 
-## [6.2.0] - 2024-03-03.
+## [6.2.0] - 2025-03-03.
 -   Added `disposeController` to `SearchDropDown`, it defines if the searchController will be disposed after the widget is disposed (default: `true`). If set to true, you should remove `searchController.dispose()` from your controller/widget code.
 
-## [6.1.2] - 2024-02-01.
+## [6.1.2] - 2025-02-01.
 -   Add ios to sample.
 
-## [6.1.1] - 2024-01-31.
+## [6.1.1] - 2025-01-31.
 -   Minor code improvements.
 
-## [6.1.0] - 2024-01-31.
+## [6.1.0] - 2025-01-31.
 -   Add the necessity to pass the controller to the widget instead of creating it on the dropdown. Attempt to fix [41](https://github.com/Lorenzobettega/simplesearchdropdown/issues/41)
 
 ## [6.0.0] - 2024-12-25.

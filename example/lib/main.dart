@@ -49,19 +49,18 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     singleSearchController = SearchDropDownController(
-      listItems: listitems,
-      initialSelectedItem: listitems[1],
-      confirmDelete: true,
-      onDeleteItem: (item) => listitems.remove(item),
-      onAddItem: (item) => listitems.add(item),
-      updateSelectedItem: (item) => selectedSingleItem = item,
-      onClear: () => print('clear'),
-      verifyInputItem: (item) => item.label != 'name',
-      newValueItem: (input) => ValueItem(label: input, value: input),
-      sortType: 3,
-      // enabled: false,
-      showClearIcon: true
-    );
+        listItems: listitems,
+        initialSelectedItem: listitems[1],
+        confirmDelete: true,
+        onDeleteItem: (item) => listitems.remove(item),
+        onAddItem: (item) => listitems.add(item),
+        updateSelectedItem: (item) => selectedSingleItem = item,
+        onClear: () => print('clear'),
+        verifyInputItem: (item) => item.label != 'name',
+        newValueItem: (input) => ValueItem(label: input, value: input),
+        sortType: 3,
+        // enabled: false,
+        showClearIcon: true);
 
     customSearchController = SearchDropDownController<Custom>(
       listItems: customListitems,

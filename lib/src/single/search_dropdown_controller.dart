@@ -27,7 +27,9 @@ class SearchDropDownController<T> {
     this.enabled = true,
     this.onFilterUpdated,
   })  : localSearchController = searchController ?? SearchController(),
-        assert((addMode && (newValueItem != null && onAddItem != null)) || !addMode,
+        assert(
+            (addMode && (newValueItem != null && onAddItem != null)) ||
+                !addMode,
             'addMode can only be used with newValueItem != null && onAddItem != null'),
         assert((deleteMode && onDeleteItem != null) || !deleteMode,
             'deleteMode can only be used with onDeleteItem != null'),
@@ -128,7 +130,7 @@ class SearchDropDownController<T> {
   /// Whether the clear button should be visible (true if there's a selection/text and [showClearIcon] is true).
   bool clearVisible = false;
 
-    /// Optional callback triggered when filteredItems is updated.
+  /// Optional callback triggered when filteredItems is updated.
   final void Function()? onFilterUpdated;
 
 // Internal state for filtering logic:
@@ -137,7 +139,7 @@ class SearchDropDownController<T> {
 
   /// Sorts the [listItems] based on the given sort type.
   ///
-  /// `sortType`: 
+  /// `sortType`:
   /// - 0 = no sorting,
   /// - 1 = alphabetical,
   /// - 2 = reverse alphabetical,
@@ -157,7 +159,9 @@ class SearchDropDownController<T> {
         if (selectedItem != null) {
           final int index = listItems.indexOf(selectedItem!);
           if (index != -1) {
-            listItems..removeAt(index)..insert(0, selectedItem!);
+            listItems
+              ..removeAt(index)
+              ..insert(0, selectedItem!);
           }
         }
         break;
