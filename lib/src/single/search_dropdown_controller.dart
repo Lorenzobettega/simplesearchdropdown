@@ -240,7 +240,9 @@ class SearchDropDownController<T> {
           WarningDialog(
             confirmDialog: false,
             returnFunction: (_) {
-              Navigator.of(context).pop();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
             settings: verifyDialogSettings,
           ),
@@ -272,7 +274,9 @@ class SearchDropDownController<T> {
                 onDeleteItem?.call(item);
                 resetSelection();
               }
-              Navigator.of(context).pop();
+              if (context.mounted) {
+                Navigator.of(context).pop();
+              }
             },
             settings: deleteDialogSettings,
           ),
@@ -299,7 +303,9 @@ class SearchDropDownController<T> {
               onEditItem?.call(item, newValue);
               resetSelection();
             }
-            Navigator.of(context).pop();
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
           },
           settings: editDialogSettings,
         ),

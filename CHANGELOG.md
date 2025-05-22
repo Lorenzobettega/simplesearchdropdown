@@ -1,3 +1,6 @@
+## [7.0.2] - 2025-03-13.
+- Check if context is mounted. Maybe will fix [52](https://github.com/Lorenzobettega/simplesearchdropdown/issues/52) 
+
 ## [7.0.1] - 2025-03-13.
 - Fixed regression [18](https://github.com/Lorenzobettega/simplesearchdropdown/issues/18)
 
