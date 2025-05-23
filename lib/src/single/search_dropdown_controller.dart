@@ -47,7 +47,7 @@ class SearchDropDownController<T> {
     // Set initial selection (if provided)
     if (initialSelectedItem != null && listItems.isNotEmpty) {
       selectedItem = initialSelectedItem;
-      this.localSearchController.text = initialSelectedItem.label;
+      localSearchController.text = initialSelectedItem.label;
       _previousText = initialSelectedItem.label;
       if (showClearIcon) {
         clearVisible = true;
@@ -57,7 +57,7 @@ class SearchDropDownController<T> {
     // Initialize filtered list to full list
     filteredItems = List<ValueItem<T>>.from(listItems);
     // Listen for text changes to update filtering
-    this.localSearchController.addListener(() {
+    localSearchController.addListener(() {
       if (!_suppressFiltering && localSearchController.text != _previousText) {
         _previousText = localSearchController.text;
         filterList(localSearchController.text);
@@ -171,11 +171,12 @@ class SearchDropDownController<T> {
   /// Filters the list items based on the given text query (case-insensitive, ignoring accents).
   void filterList(String text) {
     if (text.isNotEmpty) {
+      final String normalizedQuery = text.latinize().toLowerCase();
       filteredItems = listItems
           .where((element) => element.label
               .toLowerCase()
               .latinize()
-              .contains(text.latinize().toLowerCase()))
+              .contains(normalizedQuery))
           .toList();
     } else {
       filteredItems = List<ValueItem<T>>.from(listItems);
@@ -212,16 +213,16 @@ class SearchDropDownController<T> {
     if (showClearIcon) {
       clearVisible = true;
     }
+    // Re-enable filtering after selection
+    _suppressFiltering = false;
   }
 
   /// Forces the selection of an item by its label, if it exists in the list.
   void forceSelection(String label) {
-    ValueItem<T>? found;
-    try {
-      found = listItems.firstWhere((element) => element.label == label);
-    } catch (_) {
-      found = null;
-    }
+    final ValueItem<T>? found = listItems.cast<ValueItem<T>?>().firstWhere(
+          (element) => element!.label == label,
+          orElse: () => null,
+        );
     if (found != null) {
       selectItem(found);
     }
@@ -321,6 +322,21 @@ class SearchDropDownController<T> {
     // Allow filtering on text changes
     _suppressFiltering = false;
     // TODO: add scroll to item.
+  }
+
+  void onSearchClose(bool clearOnClose) {
+    if (clearOnClose && localSearchController.text.isNotEmpty) {
+      if (selectedItem != null) {
+        // Restore the text to the selected item's label if it was changed during search
+        if (localSearchController.text != selectedItem!.label) {
+          localSearchController.text = selectedItem!.label;
+        }
+      } else {
+        // No item selected, so clear the text field
+        localSearchController.text = '';
+      }
+    }
+    // No need to explicitly set _suppressFiltering here; onSearchOpen will re-enable filtering when reopened
   }
 
   /// Toggles the enabled/disabled state of the dropdown.
