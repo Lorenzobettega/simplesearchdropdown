@@ -70,7 +70,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   /// Resets the selection to its default state, clearing the current value.
   void resetSelection() {
     if (mounted) {
-      widget.controller.resetSelection();
+        widget.controller.resetSelection();
     }
   }
 
@@ -121,19 +121,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             widget.controller.onSearchOpen();
           },
           onClose: () {
-            if (widget.controller.localSearchController.text.isNotEmpty) {
-              if (widget.searchBarSettings.clearOnClose) {
-                final item = widget.controller.selectedItem;
-                if (item != null) {
-                  if (widget.controller.localSearchController.text !=
-                      item.label) {
-                    widget.controller.localSearchController.text = item.label;
-                  }
-                } else {
-                  widget.controller.localSearchController.text = '';
-                }
-              }
-            }
+            // Delega ao controller a lógica ao fechar o dropdown (restaurar/limpar texto conforme necessário)
+            widget.controller.onSearchClose(widget.searchBarSettings.clearOnClose);
           },
           searchController: widget.controller.localSearchController,
           viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
@@ -146,9 +135,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
               [
                 if (widget.searchBarSettings.showArrow)
                   IconButton(
-                    onPressed: () =>
-                        widget.searchBarSettings.dropdownClosedIconFunction ??
-                        widget.controller.localSearchController.openView(),
+                    onPressed: widget.searchBarSettings.dropdownClosedIconFunction ??
+                        widget.controller.localSearchController.openView,
                     icon: Icon(
                       widget.searchBarSettings.dropdownClosedArrowIcon,
                       color: widget.searchBarSettings.outsideIconColor,
@@ -204,25 +192,24 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           textInputAction: widget.searchBarSettings.textInputAction,
           suggestionsBuilder:
               (BuildContext context, SearchController controller) {
+            // Calcula número de itens a exibir (incluindo opção "adicionar" se aplicável)
+            final bool showAddItemOption = widget.controller.addMode &&
+                controller.text.isNotEmpty &&
+                widget.controller.filteredItems.isEmpty;
             final int length = widget.controller.filteredItems.length +
-                (widget.controller.addMode ? 1 : 0);
+                (showAddItemOption ? 1 : 0);
             return List<Widget>.generate(length, (int index) {
-              // Add-item option at end of list (if enabled).
-              if (index == widget.controller.filteredItems.length &&
-                  widget.controller.addMode) {
-                if (controller.text.isNotEmpty) {
-                  if (widget.controller.filteredItems.isEmpty) {
-                    return DefaultAddListItem(
-                      text: controller.text,
-                      addAditionalWidget: widget.addAditionalWidget,
-                      overlayListSettings: widget.overlayListSettings,
-                      itemAdded: (String input) {
-                        widget.controller.addItem(input, context);
-                      },
-                    );
-                  }
-                }
-                return const SizedBox.shrink();
+              if (showAddItemOption &&
+                  index == widget.controller.filteredItems.length) {
+                // Add new item option at the end
+                return DefaultAddListItem(
+                  text: controller.text,
+                  addAditionalWidget: widget.addAditionalWidget,
+                  overlayListSettings: widget.overlayListSettings,
+                  itemAdded: (String input) {
+                    widget.controller.addItem(input, context);
+                  },
+                );
               } else {
                 // Regular list item
                 final item = widget.controller.filteredItems[index];

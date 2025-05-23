@@ -74,6 +74,7 @@ class _MyHomePageState extends State<MyHomePage> {
       newValueItem: (input) =>
           ValueItem(label: input, value: Custom(input, getRandomInt(4))),
       sortType: 3,
+      addMode: false,
     );
   }
 
