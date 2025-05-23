@@ -173,10 +173,8 @@ class SearchDropDownController<T> {
     if (text.isNotEmpty) {
       final String normalizedQuery = text.latinize().toLowerCase();
       filteredItems = listItems
-          .where((element) => element.label
-              .toLowerCase()
-              .latinize()
-              .contains(normalizedQuery))
+          .where((element) =>
+              element.label.toLowerCase().latinize().contains(normalizedQuery))
           .toList();
     } else {
       filteredItems = List<ValueItem<T>>.from(listItems);

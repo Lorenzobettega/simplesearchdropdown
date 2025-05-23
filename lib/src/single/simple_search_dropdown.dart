@@ -70,7 +70,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   /// Resets the selection to its default state, clearing the current value.
   void resetSelection() {
     if (mounted) {
-        widget.controller.resetSelection();
+      widget.controller.resetSelection();
     }
   }
 
@@ -122,7 +122,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           },
           onClose: () {
             // Delega ao controller a lógica ao fechar o dropdown (restaurar/limpar texto conforme necessário)
-            widget.controller.onSearchClose(widget.searchBarSettings.clearOnClose);
+            widget.controller
+                .onSearchClose(widget.searchBarSettings.clearOnClose);
           },
           searchController: widget.controller.localSearchController,
           viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
@@ -135,8 +136,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
               [
                 if (widget.searchBarSettings.showArrow)
                   IconButton(
-                    onPressed: widget.searchBarSettings.dropdownClosedIconFunction ??
-                        widget.controller.localSearchController.openView,
+                    onPressed:
+                        widget.searchBarSettings.dropdownClosedIconFunction ??
+                            widget.controller.localSearchController.openView,
                     icon: Icon(
                       widget.searchBarSettings.dropdownClosedArrowIcon,
                       color: widget.searchBarSettings.outsideIconColor,
