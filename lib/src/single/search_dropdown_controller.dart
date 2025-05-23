@@ -33,8 +33,8 @@ class SearchDropDownController<T> {
             'addMode can only be used with newValueItem != null && onAddItem != null'),
         assert((deleteMode && onDeleteItem != null) || !deleteMode,
             'deleteMode can only be used with onDeleteItem != null'),
-        assert((editMode && onEditItem != null) || !editMode,
-            'editMode can only be used with onEditItem != null') {
+        assert((editMode && onEditItem != null && newValueItem != null) || !editMode,
+            'editMode can only be used with onEditItem != null && newValueItem != null') {
     // Initial state
     _suppressFiltering = true;
     _previousText = '';
