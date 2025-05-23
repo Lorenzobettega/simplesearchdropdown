@@ -1,23 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
-class EditDialog extends StatelessWidget {
+class EditDialog extends StatefulWidget {
   const EditDialog({
-    super.key,
+    Key? key,
     required this.label,
     this.settings,
     required this.returnFunction,
-  });
+  }) : super(key: key);
 
   final String label;
   final DialogSettings? settings;
-  final Function(bool, String retorno) returnFunction;
+  final void Function(bool, String) returnFunction;
+
+  @override
+  State<EditDialog> createState() => _EditDialogState();
+}
+
+class _EditDialogState extends State<EditDialog> {
+  late TextEditingController controller;
+  late final DialogSettings dialogSettings;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = TextEditingController();
+    dialogSettings = widget.settings ?? const DialogSettings();
+  }
+
+  @override
+  void dispose() {
+    controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final dialogSettings = settings ?? const DialogSettings();
-    final TextEditingController controller = TextEditingController();
-
     return AlertDialog(
       title: dialogSettings.title ??
           const Text(
@@ -33,7 +51,7 @@ class EditDialog extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                label,
+                widget.label,
                 style: const TextStyle(
                   fontWeight: FontWeight.w500,
                   fontSize: 16,
@@ -46,7 +64,7 @@ class EditDialog extends StatelessWidget {
               InputField(
                 controle: controller,
                 hint: dialogSettings.editHint,
-              )
+              ),
             ],
           ),
       contentPadding: dialogSettings.contentPadding,
@@ -59,13 +77,13 @@ class EditDialog extends StatelessWidget {
       insetPadding: dialogSettings.insetPadding,
       actions: [
         DialogButton(
-          function: () => returnFunction(false, ''),
+          function: () => widget.returnFunction(false, ''),
           buttonSettings: dialogSettings.customCancelButtonSettings,
         ),
         DialogButton(
           function: () {
             if (controller.text.isNotEmpty) {
-              returnFunction(true, controller.text);
+              widget.returnFunction(true, controller.text);
             }
           },
           buttonSettings: dialogSettings.customEditButtonSettings,

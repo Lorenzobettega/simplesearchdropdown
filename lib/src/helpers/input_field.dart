@@ -4,9 +4,9 @@ import 'package:flutter/services.dart';
 FilteringTextInputFormatter allValues =
     FilteringTextInputFormatter.allow(RegExp('.*'));
 
-class InputField extends StatefulWidget {
+class InputField extends StatelessWidget {
   const InputField({
-    super.key,
+    Key? key,
     required this.controle,
     this.mascara,
     this.textInputButton = TextInputAction.done,
@@ -22,29 +22,36 @@ class InputField extends StatefulWidget {
     this.raio = 10,
     this.elevacao = 0.5,
     this.mudeiTextoFunction,
-    estilo,
+    TextStyle? estilo,
     this.mostrarHint = true,
     this.liberado = true,
     this.alinhamento = TextAlign.start,
     this.disabledColor,
     this.capitalization,
-  }) : estilo = estilo ?? const TextStyle(fontSize: 16);
+  })  : estilo = estilo ?? const TextStyle(fontSize: 16),
+        super(key: key);
+  static const TextStyle _hintLabelStyle =
+      TextStyle(fontSize: 16, color: Colors.grey);
+  static const BorderSide _focusedBorderSide =
+      BorderSide(color: Color.fromARGB(255, 0, 67, 0));
+  static const BorderSide _errorBorderSide = BorderSide(color: Colors.red);
+
   final TextEditingController controle;
-  final dynamic mascara;
+  final TextInputFormatter? mascara;
   final TextInputAction textInputButton;
   final TextInputType tipoTeclado;
   final FormFieldValidator<String>? validator;
   final String? hint;
   final double width;
   final bool oculto;
-  final Function? finishFunction;
+  final VoidCallback? finishFunction;
   final bool clear;
-  final Function? tapFunction;
+  final VoidCallback? tapFunction;
   final int? lines;
   final double raio;
   final double elevacao;
   final TextStyle estilo;
-  final Function(String)? mudeiTextoFunction;
+  final ValueChanged<String>? mudeiTextoFunction;
   final bool mostrarHint;
   final bool liberado;
   final TextAlign alinhamento;
@@ -52,66 +59,59 @@ class InputField extends StatefulWidget {
   final TextCapitalization? capitalization;
 
   @override
-  State<InputField> createState() => _InputFieldState();
-}
-
-class _InputFieldState extends State<InputField> {
-  @override
   Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(raio);
+    final OutlineInputBorder baseBorder = OutlineInputBorder(
+      borderRadius: borderRadius,
+      borderSide: BorderSide(color: Colors.grey[400]!),
+    );
+
     return SizedBox(
-      width: widget.width,
+      width: width,
       child: Material(
-        borderRadius: BorderRadius.circular(widget.raio),
-        elevation: widget.elevacao,
+        borderRadius: BorderRadius.circular(raio),
+        elevation: elevacao,
         child: TextFormField(
-          textCapitalization: widget.capitalization ?? TextCapitalization.none,
-          textAlign: widget.alinhamento,
-          enabled: widget.liberado,
-          style: widget.estilo,
-          maxLines: widget.lines,
-          obscureText: widget.oculto,
+          textCapitalization: capitalization ?? TextCapitalization.none,
+          textAlign: alinhamento,
+          enabled: liberado,
+          style: estilo,
+          maxLines: lines,
+          obscureText: oculto,
           cursorColor: const Color.fromARGB(255, 0, 67, 0),
-          controller: widget.controle,
-          inputFormatters: [widget.mascara ?? allValues],
+          controller: controle,
+          inputFormatters: [mascara ?? allValues],
           autocorrect: false,
-          keyboardType: widget.tipoTeclado,
+          keyboardType: tipoTeclado,
           autovalidateMode: AutovalidateMode.onUserInteraction,
-          validator: widget.validator,
-          onEditingComplete: widget.finishFunction as void Function()?,
-          textInputAction: widget.textInputButton,
-          onTap: widget.tapFunction as void Function()?,
-          onChanged: widget.mudeiTextoFunction,
+          validator: validator,
+          onEditingComplete: finishFunction,
+          textInputAction: textInputButton,
+          onTap: tapFunction,
+          onChanged: mudeiTextoFunction,
           decoration: InputDecoration(
-            labelStyle: const TextStyle(fontSize: 16, color: Colors.grey),
-            labelText: widget.mostrarHint ? widget.hint : null,
-            hintText: widget.hint,
-            hintStyle: const TextStyle(fontSize: 16, color: Colors.grey),
+            labelStyle: _hintLabelStyle,
+            labelText: mostrarHint ? hint : null,
+            hintText: hint,
+            hintStyle: _hintLabelStyle,
             fillColor: Colors.grey[50],
             filled: true,
             focusedBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.raio),
-              borderSide:
-                  const BorderSide(color: Color.fromARGB(255, 0, 67, 0)),
+              borderRadius: borderRadius,
+              borderSide: _focusedBorderSide,
             ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.raio),
-              borderSide: BorderSide(color: Colors.grey[400]!),
-            ),
+            enabledBorder: baseBorder,
             errorBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.raio),
-              borderSide: const BorderSide(color: Colors.red),
+              borderRadius: borderRadius,
+              borderSide: _errorBorderSide,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.raio),
-              borderSide: BorderSide(color: Colors.grey[400]!),
-            ),
+            border: baseBorder,
             disabledBorder: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(widget.raio),
-              borderSide:
-                  BorderSide(color: widget.disabledColor ?? Colors.grey[100]!),
+              borderRadius: borderRadius,
+              borderSide: BorderSide(color: disabledColor ?? Colors.grey[100]!),
             ),
             errorMaxLines: 3,
-            suffixIcon: widget.clear
+            suffixIcon: clear
                 ? Material(
                     type: MaterialType.transparency,
                     child: InkWell(
@@ -120,17 +120,13 @@ class _InputFieldState extends State<InputField> {
                       child:
                           const Icon(Icons.clear, color: Colors.grey, size: 20),
                       onTap: () {
-                        widget.controle.clear();
-                        if (widget.mascara != null) {
-                          if (widget.mascara is FilteringTextInputFormatter ==
-                              false) {
-                            widget.mascara.clear();
-                          }
+                        controle.clear();
+                        if (mascara is! FilteringTextInputFormatter) {
+                          try {
+                            (mascara as dynamic).clear();
+                          } catch (_) {}
                         }
-
-                        if (widget.mudeiTextoFunction != null) {
-                          widget.mudeiTextoFunction!('');
-                        }
+                        mudeiTextoFunction?.call('');
                       },
                     ),
                   )

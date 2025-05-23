@@ -1,10 +1,13 @@
-## [7.0.2] - 2025-03-13.
+## [7.0.3] - 2025-05-22.
+- Mini performance improvements.
+
+## [7.0.2] - 2025-05-21.
 - Check if context is mounted. Maybe will fix [52](https://github.com/Lorenzobettega/simplesearchdropdown/issues/52) 
 
-## [7.0.1] - 2025-03-13.
+## [7.0.1] - 2025-05-21.
 - Fixed regression [18](https://github.com/Lorenzobettega/simplesearchdropdown/issues/18)
 
-## [7.0.0] - 2025-03-13.
+## [7.0.0] - 2025-05-21.
 - Updated android sample.
 - [Breaking] Remade `SearchDropDown` to use a controller
 - Fixed enabled state of `SearchDropDown`
