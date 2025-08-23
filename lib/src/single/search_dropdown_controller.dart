@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:stringr/stringr.dart';
@@ -27,39 +29,42 @@ class SearchDropDownController<T> {
     this.enabled = true,
     this.onFilterUpdated,
   })  : localSearchController = searchController ?? SearchController(),
+        _ownsSearchController = searchController == null,
         assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
             'addMode can only be used with newValueItem != null && onAddItem != null'),
         assert((deleteMode && onDeleteItem != null) || !deleteMode,
             'deleteMode can only be used with onDeleteItem != null'),
-        assert((editMode && onEditItem != null && newValueItem != null) || !editMode,
+        assert(
+            (editMode && onEditItem != null && newValueItem != null) ||
+                !editMode,
             'editMode can only be used with onEditItem != null && newValueItem != null') {
     // Initial state
     _suppressFiltering = true;
-    _previousText = '';
-    filteredItems = <ValueItem<T>>[];
+    String _prevText = '';
+    _filteredItems = <ValueItem<T>>[];
 
-    // Sort the list if needed
-    if (sortType != 0) {
-      sortList(sortType);
-    }
     // Set initial selection (if provided)
     if (initialSelectedItem != null && listItems.isNotEmpty) {
       selectedItem = initialSelectedItem;
       localSearchController.text = initialSelectedItem.label;
-      _previousText = initialSelectedItem.label;
+      _prevText = initialSelectedItem.label;
       if (showClearIcon) {
         clearVisible = true;
       }
       // Update the external selection callback for initial value (passing it here is optional).
     }
+    // Sort the list if needed
+    if (sortType != 0) {
+      sortList(sortType);
+    }
     // Initialize filtered list to full list
-    filteredItems = List<ValueItem<T>>.from(listItems);
+    _filteredItems = List<ValueItem<T>>.from(listItems);
     // Listen for text changes to update filtering
     localSearchController.addListener(() {
-      if (!_suppressFiltering && localSearchController.text != _previousText) {
-        _previousText = localSearchController.text;
+      if (!_suppressFiltering && localSearchController.text != _prevText) {
+        _prevText = localSearchController.text;
         filterList(localSearchController.text);
         onFilterUpdated?.call();
       }
@@ -68,6 +73,7 @@ class SearchDropDownController<T> {
 
   /// The internal search controller for the SearchAnchor/SearchBar.
   final SearchController localSearchController;
+  final bool _ownsSearchController;
 
   /// List of all items to be presented in the dropdown.
   final List<ValueItem<T>> listItems;
@@ -79,13 +85,14 @@ class SearchDropDownController<T> {
   final ValueItem<T> Function(String input)? newValueItem;
 
   /// Function to be executed after a new item is added to the list.
-  final Function(ValueItem<T>)? onAddItem;
+  final void Function(ValueItem<T>)? onAddItem;
 
   /// Allow the user to edit existing items in the list.
   final bool editMode;
 
   /// Function to be executed after an item is edited. Provides the original item and the new item.
-  final Function(ValueItem<T> originalItem, ValueItem<T> newValue)? onEditItem;
+  final void Function(ValueItem<T> originalItem, ValueItem<T> newValue)?
+      onEditItem;
 
   /// Settings for the edit dialog (appearance, text, etc.).
   final DialogSettings? editDialogSettings;
@@ -94,7 +101,7 @@ class SearchDropDownController<T> {
   final bool deleteMode;
 
   /// Function to be executed after an item is deleted.
-  final Function(ValueItem<T>)? onDeleteItem;
+  final void Function(ValueItem<T>)? onDeleteItem;
 
   /// Whether to require confirmation from the user before deleting an item.
   final bool confirmDelete;
@@ -103,10 +110,10 @@ class SearchDropDownController<T> {
   final DialogSettings? deleteDialogSettings;
 
   /// Function to be executed after the selection is cleared.
-  final Function()? onClear;
+  final VoidCallback? onClear;
 
   /// Callback to update the selected item in external state (called whenever an item is selected or cleared).
-  final Function(ValueItem<T>?)? updateSelectedItem;
+  final void Function(ValueItem<T>?)? updateSelectedItem;
 
   /// Function to check if a newly added item is valid. Returns `false` to reject the input.
   final bool Function(ValueItem<T>)? verifyInputItem;
@@ -122,7 +129,9 @@ class SearchDropDownController<T> {
   ValueItem<T>? selectedItem;
 
   /// The current filtered list of items based on the search query.
-  late List<ValueItem<T>> filteredItems;
+  late List<ValueItem<T>> _filteredItems;
+  UnmodifiableListView<ValueItem<T>> get filteredItems =>
+      UnmodifiableListView(_filteredItems);
 
   /// Whether the dropdown is enabled for user interaction.
   bool enabled = true;
@@ -133,8 +142,7 @@ class SearchDropDownController<T> {
   /// Optional callback triggered when filteredItems is updated.
   final void Function()? onFilterUpdated;
 
-// Internal state for filtering logic:
-  String _previousText = '';
+  // Internal state for filtering logic:
   bool _suppressFiltering = true;
 
   /// Sorts the [listItems] based on the given sort type.
@@ -147,7 +155,6 @@ class SearchDropDownController<T> {
   void sortList(int sortType) {
     switch (sortType) {
       case 0:
-        // No sorting
         break;
       case 1:
         listItems.sort((a, b) => a.label.compareTo(b.label));
@@ -168,16 +175,16 @@ class SearchDropDownController<T> {
     }
   }
 
-  /// Filters the list items based on the given text query (case-insensitive, ignoring accents).
+  /// Filters the list based on the provided [text]. Normalizes accents and case.
   void filterList(String text) {
     if (text.isNotEmpty) {
       final String normalizedQuery = text.latinize().toLowerCase();
-      filteredItems = listItems
+      _filteredItems = listItems
           .where((element) =>
               element.label.toLowerCase().latinize().contains(normalizedQuery))
           .toList();
     } else {
-      filteredItems = List<ValueItem<T>>.from(listItems);
+      _filteredItems = List<ValueItem<T>>.from(listItems);
     }
   }
 
@@ -204,7 +211,6 @@ class SearchDropDownController<T> {
     } else {
       localSearchController.text = item.label;
     }
-    _previousText = localSearchController.text;
     // Notify external selection callback
     updateSelectedItem?.call(item);
     // Show the clear icon if enabled
@@ -215,14 +221,35 @@ class SearchDropDownController<T> {
     _suppressFiltering = false;
   }
 
+  /// Clears the current selection and search field text, and notifies external callbacks.
+  void clearSelectionAndNotify() {
+    selectedItem = null;
+    localSearchController.clear();
+    if (showClearIcon) {
+      clearVisible = false;
+    }
+    onClear?.call();
+    updateSelectedItem?.call(null);
+    _suppressFiltering = false;
+  }
+
+  /// Clears the current selection and search field text without notifying external callbacks.
+  void clearSelection() {
+    selectedItem = null;
+    localSearchController.clear();
+    if (showClearIcon) {
+      clearVisible = false;
+    }
+    _suppressFiltering = false;
+  }
+
   /// Forces the selection of an item by its label, if it exists in the list.
   void forceSelection(String label) {
-    final ValueItem<T>? found = listItems.cast<ValueItem<T>?>().firstWhere(
-          (element) => element!.label == label,
-          orElse: () => null,
-        );
-    if (found != null) {
-      selectItem(found);
+    for (final e in listItems) {
+      if (e.label == label) {
+        selectItem(e);
+        return;
+      }
     }
   }
 
@@ -251,7 +278,7 @@ class SearchDropDownController<T> {
         return;
       }
       // Add the new item to the filtered list (so it appears in suggestions immediately)
-      filteredItems.add(item);
+      _filteredItems.add(item);
       // Invoke the external callback for item added
       onAddItem?.call(item);
       // Select the new item (this will update text, close the view, etc.)
@@ -315,10 +342,10 @@ class SearchDropDownController<T> {
   /// Prepares the controller state when the search view is opened.
   /// (Resets the filtered list to show all items and enables filtering.)
   void onSearchOpen() {
-    // Reset filtered list to all items
-    filteredItems = List<ValueItem<T>>.from(listItems);
     // Allow filtering on text changes
     _suppressFiltering = false;
+    // Apply current query so UI reopens consistent with text
+    filterList(localSearchController.text);
     // TODO: add scroll to item.
   }
 
@@ -334,7 +361,6 @@ class SearchDropDownController<T> {
         localSearchController.text = '';
       }
     }
-    // No need to explicitly set _suppressFiltering here; onSearchOpen will re-enable filtering when reopened
   }
 
   /// Toggles the enabled/disabled state of the dropdown.
@@ -345,6 +371,8 @@ class SearchDropDownController<T> {
 
   /// Disposes the internal [SearchController]. Call this if the controller is no longer needed.
   void dispose() {
-    localSearchController.dispose();
+    if (_ownsSearchController) {
+      localSearchController.dispose();
+    }
   }
 }
