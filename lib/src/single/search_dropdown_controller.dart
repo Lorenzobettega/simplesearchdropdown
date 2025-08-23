@@ -42,32 +42,42 @@ class SearchDropDownController<T> {
             'editMode can only be used with onEditItem != null && newValueItem != null') {
     // Initial state
     _suppressFiltering = true;
-    String _prevText = '';
-    _filteredItems = <ValueItem<T>>[];
+    _rebuildCaches();
 
     // Set initial selection (if provided)
     if (initialSelectedItem != null && listItems.isNotEmpty) {
       selectedItem = initialSelectedItem;
       localSearchController.text = initialSelectedItem.label;
-      _prevText = initialSelectedItem.label;
+      _prevQuery = initialSelectedItem.label;
+      _prevQueryPrefix = _prevQuery;
       if (showClearIcon) {
         clearVisible = true;
       }
-      // Update the external selection callback for initial value (passing it here is optional).
     }
     // Sort the list if needed
     if (sortType != 0) {
       sortList(sortType);
+      _currentSortType = sortType;
     }
-    // Initialize filtered list to full list
-    _filteredItems = List<ValueItem<T>>.from(listItems);
-    // Listen for text changes to update filtering
+    // Initialize filtered list to full list (buffer fixo)
+    _setAll();
+
+    // Listener sem debounce (incremental)
     localSearchController.addListener(() {
-      if (!_suppressFiltering && localSearchController.text != _prevText) {
-        _prevText = localSearchController.text;
-        filterList(localSearchController.text);
-        onFilterUpdated?.call();
+      if (_suppressFiltering) {
+        return;
       }
+      final q = localSearchController.text;
+      final oldPrev = _prevQuery;
+      if (q == oldPrev) {
+        return;
+      }
+      final List<ValueItem<T>> source =
+          q.startsWith(oldPrev) ? _filteredItems : listItems;
+
+      _prevQuery = q;
+      _prevQueryPrefix = q;
+      _filterFrom(source, q);
     });
   }
 
@@ -129,9 +139,10 @@ class SearchDropDownController<T> {
   ValueItem<T>? selectedItem;
 
   /// The current filtered list of items based on the search query.
-  late List<ValueItem<T>> _filteredItems;
-  UnmodifiableListView<ValueItem<T>> get filteredItems =>
+  final List<ValueItem<T>> _filteredItems = <ValueItem<T>>[];
+  late final UnmodifiableListView<ValueItem<T>> _filteredView =
       UnmodifiableListView(_filteredItems);
+  UnmodifiableListView<ValueItem<T>> get filteredItems => _filteredView;
 
   /// Whether the dropdown is enabled for user interaction.
   bool enabled = true;
@@ -144,6 +155,22 @@ class SearchDropDownController<T> {
 
   // Internal state for filtering logic:
   bool _suppressFiltering = true;
+
+  // Incremental (sem debounce)
+  String _prevQuery = '';
+  // ignore: unused_field
+  String _prevQueryPrefix = '';
+
+  // Cache: normalização por item
+  final Map<ValueItem<T>, String> _normLabel = <ValueItem<T>, String>{};
+  // Lookup O(1) por label normalizada
+  final Map<String, ValueItem<T>> _byLabel = <String, ValueItem<T>>{};
+  // Cache de posição para evitar indexOf
+  final Map<ValueItem<T>, int> _positionMap = <ValueItem<T>, int>{};
+  // Caches pré‑ordenados e sort atual
+  int _currentSortType = 0;
+  List<ValueItem<T>>? _sortedAsc;
+  List<ValueItem<T>>? _sortedDesc;
 
   /// Sorts the [listItems] based on the given sort type.
   ///
@@ -164,8 +191,8 @@ class SearchDropDownController<T> {
         break;
       case 3:
         if (selectedItem != null) {
-          final int index = listItems.indexOf(selectedItem!);
-          if (index != -1) {
+          final int? index = _positionMap[selectedItem!];
+          if (index != null && index != -1) {
             listItems
               ..removeAt(index)
               ..insert(0, selectedItem!);
@@ -173,18 +200,43 @@ class SearchDropDownController<T> {
         }
         break;
     }
+    _currentSortType = sortType;
+    _rebuildPositions();
   }
 
   /// Filters the list based on the provided [text]. Normalizes accents and case.
   void filterList(String text) {
-    if (text.isNotEmpty) {
-      final String normalizedQuery = text.latinize().toLowerCase();
-      _filteredItems = listItems
-          .where((element) =>
-              element.label.toLowerCase().latinize().contains(normalizedQuery))
-          .toList();
-    } else {
-      _filteredItems = List<ValueItem<T>>.from(listItems);
+    if (text.isEmpty) {
+      _setAll(); // fast‑path
+      return;
+    }
+    _filterFrom(listItems, text);
+  }
+
+  /// Filtro a partir de uma fonte (lista completa ou resultado anterior).
+  /// Notifica a UI apenas quando o resultado muda de fato.
+  void _filterFrom(List<ValueItem<T>> source, String text) {
+    final String q = _normalize(text);
+
+    // Evitar esvaziar o "source" se ele for o próprio buffer _filteredItems.
+    final List<ValueItem<T>> iterable =
+        identical(source, _filteredItems) ? List<ValueItem<T>>.from(_filteredItems) : source;
+
+    final int oldLen = _filteredItems.length;
+    final ValueItem<T>? oldFirst = oldLen > 0 ? _filteredItems.first : null;
+    final ValueItem<T>? oldLast = oldLen > 0 ? _filteredItems.last : null;
+
+    _filteredItems
+      ..clear()
+      ..addAll(iterable.where((e) => (_normLabel[e] ?? _normalize(e.label)).contains(q)));
+
+    final bool changed = _filteredItems.length != oldLen ||
+        (oldLen > 0 &&
+            (_filteredItems.isEmpty ||
+                _filteredItems.first != oldFirst ||
+                _filteredItems.last != oldLast));
+    if (changed) {
+      onFilterUpdated?.call();
     }
   }
 
@@ -219,6 +271,9 @@ class SearchDropDownController<T> {
     }
     // Re-enable filtering after selection
     _suppressFiltering = false;
+    // Mantém coerência do incremental
+    _prevQuery = localSearchController.text;
+    _prevQueryPrefix = _prevQuery;
   }
 
   /// Clears the current selection and search field text, and notifies external callbacks.
@@ -231,6 +286,8 @@ class SearchDropDownController<T> {
     onClear?.call();
     updateSelectedItem?.call(null);
     _suppressFiltering = false;
+    _prevQuery = '';
+    _prevQueryPrefix = '';
   }
 
   /// Clears the current selection and search field text without notifying external callbacks.
@@ -241,15 +298,15 @@ class SearchDropDownController<T> {
       clearVisible = false;
     }
     _suppressFiltering = false;
+    _prevQuery = '';
+    _prevQueryPrefix = '';
   }
 
   /// Forces the selection of an item by its label, if it exists in the list.
   void forceSelection(String label) {
-    for (final e in listItems) {
-      if (e.label == label) {
-        selectItem(e);
-        return;
-      }
+    final item = _byLabel[_normalize(label)];
+    if (item != null) {
+      selectItem(item);
     }
   }
 
@@ -279,6 +336,11 @@ class SearchDropDownController<T> {
       }
       // Add the new item to the filtered list (so it appears in suggestions immediately)
       _filteredItems.add(item);
+
+      // Atualiza caches locais (fonte real é externa)
+      _normLabel[item] = _normalize(item.label);
+      _byLabel[_normLabel[item]!] = item;
+
       // Invoke the external callback for item added
       onAddItem?.call(item);
       // Select the new item (this will update text, close the view, etc.)
@@ -328,6 +390,15 @@ class SearchDropDownController<T> {
               final ValueItem<T> newValue = newValueItem!(newText);
               onEditItem?.call(item, newValue);
               resetSelection();
+
+              // Caches locais coerentes para a sessão
+              final oldKey = _normLabel[item];
+              if (oldKey != null && _byLabel[oldKey] == item) {
+                _byLabel.remove(oldKey);
+              }
+              _normLabel.remove(item);
+              _normLabel[newValue] = _normalize(newValue.label);
+              _byLabel[_normLabel[newValue]!] = newValue;
             }
             if (context.mounted) {
               Navigator.of(context).pop();
@@ -373,6 +444,45 @@ class SearchDropDownController<T> {
   void dispose() {
     if (_ownsSearchController) {
       localSearchController.dispose();
+    }
+  }
+
+  // ===================== helpers de performance =====================
+
+  String _normalize(String s) => s.latinize().toLowerCase();
+
+  void _rebuildCaches() {
+    _normLabel.clear();
+    _byLabel.clear();
+    _positionMap.clear();
+    for (var i = 0; i < listItems.length; i++) {
+      final e = listItems[i];
+      final n = _normalize(e.label);
+      _normLabel[e] = n;
+      _byLabel[n] = e;
+      _positionMap[e] = i;
+    }
+    _sortedAsc = List<ValueItem<T>>.from(listItems)
+      ..sort((a, b) => a.label.compareTo(b.label));
+    _sortedDesc = List<ValueItem<T>>.from(listItems)
+      ..sort((a, b) => b.label.compareTo(a.label));
+  }
+
+  void _rebuildPositions() {
+    _positionMap.clear();
+    for (var i = 0; i < listItems.length; i++) {
+      _positionMap[listItems[i]] = i;
+    }
+  }
+
+  void _setAll() {
+    _filteredItems.clear();
+    if (_currentSortType == 1 && _sortedAsc != null) {
+      _filteredItems.addAll(_sortedAsc!);
+    } else if (_currentSortType == 2 && _sortedDesc != null) {
+      _filteredItems.addAll(_sortedDesc!);
+    } else {
+      _filteredItems.addAll(listItems);
     }
   }
 }
