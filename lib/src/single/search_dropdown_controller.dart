@@ -31,52 +31,45 @@ class SearchDropDownController<T> {
   })  : localSearchController = searchController ?? SearchController(),
         _ownsSearchController = searchController == null,
         assert(
-            (addMode && (newValueItem != null && onAddItem != null)) ||
-                !addMode,
-            'addMode can only be used with newValueItem != null && onAddItem != null'),
-        assert((deleteMode && onDeleteItem != null) || !deleteMode,
-            'deleteMode can only be used with onDeleteItem != null'),
+          (addMode && (newValueItem != null && onAddItem != null)) || !addMode,
+          'addMode can only be used with newValueItem != null && onAddItem != null',
+        ),
         assert(
-            (editMode && onEditItem != null && newValueItem != null) ||
-                !editMode,
-            'editMode can only be used with onEditItem != null && newValueItem != null') {
-    // Initial state
+          (deleteMode && onDeleteItem != null) || !deleteMode,
+          'deleteMode can only be used with onDeleteItem != null',
+        ),
+        assert(
+          (editMode && onEditItem != null && newValueItem != null) || !editMode,
+          'editMode can only be used with onEditItem != null && newValueItem != null',
+        ) {
     _suppressFiltering = true;
+    _prevQuery = '';
     _rebuildCaches();
-
-    // Set initial selection (if provided)
     if (initialSelectedItem != null && listItems.isNotEmpty) {
       selectedItem = initialSelectedItem;
       localSearchController.text = initialSelectedItem.label;
       _prevQuery = initialSelectedItem.label;
-      _prevQueryPrefix = _prevQuery;
       if (showClearIcon) {
         clearVisible = true;
       }
     }
-    // Sort the list if needed
     if (sortType != 0) {
       sortList(sortType);
-      _currentSortType = sortType;
     }
-    // Initialize filtered list to full list (buffer fixo)
     _setAll();
-
-    // Listener sem debounce (incremental)
     localSearchController.addListener(() {
       if (_suppressFiltering) {
         return;
       }
       final q = localSearchController.text;
-      final oldPrev = _prevQuery;
-      if (q == oldPrev) {
+      if (q == _prevQuery) {
         return;
       }
+
       final List<ValueItem<T>> source =
-          q.startsWith(oldPrev) ? _filteredItems : listItems;
+          q.startsWith(_prevQuery) ? _filteredItems : listItems;
 
       _prevQuery = q;
-      _prevQueryPrefix = q;
       _filterFrom(source, q);
     });
   }
@@ -158,19 +151,13 @@ class SearchDropDownController<T> {
 
   // Incremental (sem debounce)
   String _prevQuery = '';
-  // ignore: unused_field
-  String _prevQueryPrefix = '';
 
   // Cache: normalização por item
   final Map<ValueItem<T>, String> _normLabel = <ValueItem<T>, String>{};
   // Lookup O(1) por label normalizada
   final Map<String, ValueItem<T>> _byLabel = <String, ValueItem<T>>{};
-  // Cache de posição para evitar indexOf
-  final Map<ValueItem<T>, int> _positionMap = <ValueItem<T>, int>{};
-  // Caches pré‑ordenados e sort atual
+  // Caches pré‑ordenados e sort atual (lazy)
   int _currentSortType = 0;
-  List<ValueItem<T>>? _sortedAsc;
-  List<ValueItem<T>>? _sortedDesc;
 
   /// Sorts the [listItems] based on the given sort type.
   ///
@@ -191,8 +178,8 @@ class SearchDropDownController<T> {
         break;
       case 3:
         if (selectedItem != null) {
-          final int? index = _positionMap[selectedItem!];
-          if (index != null && index != -1) {
+          final int index = listItems.indexOf(selectedItem!);
+          if (index != -1) {
             listItems
               ..removeAt(index)
               ..insert(0, selectedItem!);
@@ -201,7 +188,6 @@ class SearchDropDownController<T> {
         break;
     }
     _currentSortType = sortType;
-    _rebuildPositions();
   }
 
   /// Filters the list based on the provided [text]. Normalizes accents and case.
@@ -218,17 +204,23 @@ class SearchDropDownController<T> {
   void _filterFrom(List<ValueItem<T>> source, String text) {
     final String q = _normalize(text);
 
-    // Evitar esvaziar o "source" se ele for o próprio buffer _filteredItems.
-    final List<ValueItem<T>> iterable =
-        identical(source, _filteredItems) ? List<ValueItem<T>>.from(_filteredItems) : source;
-
     final int oldLen = _filteredItems.length;
     final ValueItem<T>? oldFirst = oldLen > 0 ? _filteredItems.first : null;
     final ValueItem<T>? oldLast = oldLen > 0 ? _filteredItems.last : null;
 
+    final List<ValueItem<T>> result = <ValueItem<T>>[];
+    final Iterable<ValueItem<T>> iterable =
+        identical(source, _filteredItems) ? _filteredItems : source;
+
+    for (final e in iterable) {
+      if (_normLabel[e]!.contains(q)) {
+        result.add(e);
+      }
+    }
+
     _filteredItems
       ..clear()
-      ..addAll(iterable.where((e) => (_normLabel[e] ?? _normalize(e.label)).contains(q)));
+      ..addAll(result);
 
     final bool changed = _filteredItems.length != oldLen ||
         (oldLen > 0 &&
@@ -242,38 +234,28 @@ class SearchDropDownController<T> {
 
   /// Resets the selection to its default state (clears the current selection and text).
   void resetSelection() {
-    // Clear the search text and selected item
     localSearchController.text = '';
     selectedItem = null;
-    // Notify external listener that selection is cleared
     updateSelectedItem?.call(null);
     onClear?.call();
-    // Hide the clear button
     clearVisible = false;
   }
 
   /// Selects the given item from the list. Updates the search text and notifies listeners.
   void selectItem(ValueItem<T> item) {
-    // Prevent filtering while selecting to avoid interfering with text change
     _suppressFiltering = true;
     selectedItem = item;
     if (localSearchController.isOpen) {
-      // Close the search view and fill the search bar with the selected label
       localSearchController.closeView(item.label);
     } else {
       localSearchController.text = item.label;
     }
-    // Notify external selection callback
     updateSelectedItem?.call(item);
-    // Show the clear icon if enabled
     if (showClearIcon) {
       clearVisible = true;
     }
-    // Re-enable filtering after selection
     _suppressFiltering = false;
-    // Mantém coerência do incremental
     _prevQuery = localSearchController.text;
-    _prevQueryPrefix = _prevQuery;
   }
 
   /// Clears the current selection and search field text, and notifies external callbacks.
@@ -287,7 +269,6 @@ class SearchDropDownController<T> {
     updateSelectedItem?.call(null);
     _suppressFiltering = false;
     _prevQuery = '';
-    _prevQueryPrefix = '';
   }
 
   /// Clears the current selection and search field text without notifying external callbacks.
@@ -299,7 +280,6 @@ class SearchDropDownController<T> {
     }
     _suppressFiltering = false;
     _prevQuery = '';
-    _prevQueryPrefix = '';
   }
 
   /// Forces the selection of an item by its label, if it exists in the list.
@@ -330,20 +310,16 @@ class SearchDropDownController<T> {
             settings: verifyDialogSettings,
           ),
         );
-        // Clear the search text and exit (item not added)
         localSearchController.clear();
         return;
       }
-      // Add the new item to the filtered list (so it appears in suggestions immediately)
       _filteredItems.add(item);
 
       // Atualiza caches locais (fonte real é externa)
       _normLabel[item] = _normalize(item.label);
       _byLabel[_normLabel[item]!] = item;
 
-      // Invoke the external callback for item added
       onAddItem?.call(item);
-      // Select the new item (this will update text, close the view, etc.)
       selectItem(item);
     }
   }
@@ -352,13 +328,11 @@ class SearchDropDownController<T> {
   Future<void> deleteItem(ValueItem<T> item, BuildContext context) async {
     if (deleteMode) {
       if (confirmDelete) {
-        // Ask for delete confirmation
         await sendDialog(
           context,
           WarningDialog(
             returnFunction: (bool result) {
               if (result) {
-                // User confirmed deletion
                 onDeleteItem?.call(item);
                 resetSelection();
               }
@@ -370,7 +344,6 @@ class SearchDropDownController<T> {
           ),
         );
       } else {
-        // Delete without confirmation
         onDeleteItem?.call(item);
         resetSelection();
       }
@@ -413,9 +386,7 @@ class SearchDropDownController<T> {
   /// Prepares the controller state when the search view is opened.
   /// (Resets the filtered list to show all items and enables filtering.)
   void onSearchOpen() {
-    // Allow filtering on text changes
     _suppressFiltering = false;
-    // Apply current query so UI reopens consistent with text
     filterList(localSearchController.text);
     // TODO: add scroll to item.
   }
@@ -423,12 +394,10 @@ class SearchDropDownController<T> {
   void onSearchClose(bool clearOnClose) {
     if (clearOnClose && localSearchController.text.isNotEmpty) {
       if (selectedItem != null) {
-        // Restore the text to the selected item's label if it was changed during search
         if (localSearchController.text != selectedItem!.label) {
           localSearchController.text = selectedItem!.label;
         }
       } else {
-        // No item selected, so clear the text field
         localSearchController.text = '';
       }
     }
@@ -437,7 +406,6 @@ class SearchDropDownController<T> {
   /// Toggles the enabled/disabled state of the dropdown.
   void toggleEnabled() {
     enabled = !enabled;
-    // (UI can read [enabled] to adjust interaction if needed.)
   }
 
   /// Disposes the internal [SearchController]. Call this if the controller is no longer needed.
@@ -454,33 +422,22 @@ class SearchDropDownController<T> {
   void _rebuildCaches() {
     _normLabel.clear();
     _byLabel.clear();
-    _positionMap.clear();
     for (var i = 0; i < listItems.length; i++) {
       final e = listItems[i];
       final n = _normalize(e.label);
       _normLabel[e] = n;
       _byLabel[n] = e;
-      _positionMap[e] = i;
-    }
-    _sortedAsc = List<ValueItem<T>>.from(listItems)
-      ..sort((a, b) => a.label.compareTo(b.label));
-    _sortedDesc = List<ValueItem<T>>.from(listItems)
-      ..sort((a, b) => b.label.compareTo(a.label));
-  }
-
-  void _rebuildPositions() {
-    _positionMap.clear();
-    for (var i = 0; i < listItems.length; i++) {
-      _positionMap[listItems[i]] = i;
     }
   }
 
   void _setAll() {
     _filteredItems.clear();
-    if (_currentSortType == 1 && _sortedAsc != null) {
-      _filteredItems.addAll(_sortedAsc!);
-    } else if (_currentSortType == 2 && _sortedDesc != null) {
-      _filteredItems.addAll(_sortedDesc!);
+    if (_currentSortType == 1) {
+      _filteredItems.addAll(List<ValueItem<T>>.from(listItems)
+        ..sort((a, b) => a.label.compareTo(b.label)));
+    } else if (_currentSortType == 2) {
+      _filteredItems.addAll(List<ValueItem<T>>.from(listItems)
+        ..sort((a, b) => b.label.compareTo(a.label)));
     } else {
       _filteredItems.addAll(listItems);
     }
