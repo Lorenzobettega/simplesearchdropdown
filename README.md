@@ -1,6 +1,8 @@
 # Search Dropdown
 Search DropDown is a dropdown that offers a search bar, multiple and single selections.
 
+[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=flat)](https://buymeacoffee.com/gian.bettega)
+
 ## Import
 ```dart
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';

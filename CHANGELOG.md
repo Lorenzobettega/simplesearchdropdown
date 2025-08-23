@@ -1,3 +1,8 @@
+## [7.1.0] - 2025-08-23.
+- Performance improvements.
+- Added tests to the package.
+- Updated flutter_lints to 6.0.0
+
 ## [7.0.3] - 2025-05-22.
 - Mini performance improvements.
 
