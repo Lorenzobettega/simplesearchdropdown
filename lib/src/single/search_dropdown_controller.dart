@@ -241,6 +241,21 @@ class SearchDropDownController<T> {
     clearVisible = false;
   }
 
+  /// Substitutes the current [listItems] with a new list, rebuilding internal caches and
+  /// updating the filtered list.
+  /// This should be called when the source list items are changed externally.
+  void updateListItems(List<ValueItem<T>> newList) {
+    resetSelection();
+    listItems
+      ..clear()
+      ..addAll(newList);
+    _rebuildCaches();
+    if (_currentSortType != 0) {
+      sortList(_currentSortType);
+    }
+    _setAll();
+  }
+
   /// Selects the given item from the list. Updates the search text and notifies listeners.
   void selectItem(ValueItem<T> item) {
     _suppressFiltering = true;

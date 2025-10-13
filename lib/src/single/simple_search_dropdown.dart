@@ -74,6 +74,13 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     }
   }
 
+  /// updates the current list of the widget
+  void updateList(List<ValueItem<T>> newList) {
+    if (mounted) {
+      widget.controller.updateListItems(newList);
+    }
+  }
+
   /// Builds the trailing widgets for the opened overlay view (e.g., clear button and opened dropdown arrow).
   Widget _buildViewTrailing() {
     return Row(mainAxisSize: MainAxisSize.min, children: [

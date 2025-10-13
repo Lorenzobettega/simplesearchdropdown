@@ -1,3 +1,6 @@
+## [7.2.0] - 2025-10-13.
+- Added `updateList` function to SimpleSearch widget.
+
 ## [7.1.0] - 2025-08-23.
 - Performance improvements.
 - Added tests to the package.

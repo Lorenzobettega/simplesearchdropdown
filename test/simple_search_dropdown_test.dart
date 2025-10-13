@@ -124,4 +124,41 @@ void main() {
       expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
     });
   });
+  group('SearchDropDownController - updateListItems', () {
+    const itemA = ValueItem<String>(label: 'Apple', value: 'a');
+    const itemB = ValueItem<String>(label: 'Banana', value: 'b');
+    const itemC = ValueItem<String>(label: 'Carrot', value: 'c');
+    const itemD = ValueItem<String>(label: 'Dates', value: 'd');
+    const itemE = ValueItem<String>(label: 'Elderberry', value: 'e');
+
+    test('Deve substituir listItems e reconstruir caches corretamente', () {
+      // Setup: Lista inicial (não ordenada)
+      final initialList = [itemC, itemA, itemB];
+      final controller = SearchDropDownController<String>(
+        listItems: initialList,
+        addMode: false,
+        deleteMode: false,
+        sortType: 1, // Ordenação alfabética (A, B, C)
+      );
+
+      expect(controller.listItems.length, 3,
+          reason: 'Após a atualização, a lista deve ter 3 itens.');
+
+      // Verificação de ordenação inicial
+      expect(controller.filteredItems.first.label, 'Apple',
+          reason:
+              'A lista filtrada inicial deve estar ordenada alfabeticamente.');
+
+      // Ação: Nova Lista
+      final newList = [itemE, itemD]; // Elderberry, Dates
+      controller.updateListItems(newList);
+
+      // Verificação: A nova lista deve estar ordenada alfabeticamente (Dates, Elderberry)
+      expect(controller.filteredItems.first.label, 'Dates',
+          reason: 'A nova lista deve ser reordenada alfabeticamente.');
+
+      expect(controller.listItems.length, 2,
+          reason: 'Após a atualização, a lista deve ter 2 itens.');
+    });
+  });
 }
