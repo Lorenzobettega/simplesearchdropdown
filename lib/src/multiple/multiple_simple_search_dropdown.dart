@@ -160,6 +160,14 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     }
   }
 
+  void forceMultipleSelection(List<ValueItem<T>> values) {
+    final Set<ValueItem<T>> referenceSet = widget.listItems.toSet();
+    final List<ValueItem<T>> listaFinal =
+        values.where((item) => referenceSet.contains(item)).toList();
+    widget.selectedItems.clear();
+    widget.selectedItems.addAll(listaFinal);
+  }
+
   void enableDisable() {
     setState(() {
       enabled = !enabled;

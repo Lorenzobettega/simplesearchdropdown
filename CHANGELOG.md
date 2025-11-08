@@ -1,3 +1,6 @@
+## [7.2.1] - 2025-11-08.
+- Added `forceMultipleSelection` function to MultipleSearch widget.
+
 ## [7.2.0] - 2025-10-13.
 - Added `updateList` function to SimpleSearch widget.
 
