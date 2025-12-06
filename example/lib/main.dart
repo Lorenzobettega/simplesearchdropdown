@@ -38,6 +38,7 @@ class _MyHomePageState extends State<MyHomePage> {
   late final SearchDropDownController<Custom> customSearchController;
   final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
   final GlobalKey<SearchDropDownState> searchKey = GlobalKey();
+  final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
   ValueItem<Custom>? selectedSingleCustom =
       ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134));
   List<ValueItem> selectedMultipleItems = [];
@@ -95,7 +96,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void clearCustomSelection() {
-    // Implement controller.clearSelection if needed
+    customSearchKey.currentState?.resetSelection();
   }
 
   void force() {
@@ -167,6 +168,7 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 20),
             SearchDropDown<Custom>(
+              key: customSearchKey,
               controller: customSearchController,
               searchBarSettings:
                   const SimpleSearchbarSettings(showArrow: false),

@@ -132,6 +132,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             widget.controller
                 .onSearchClose(widget.searchBarSettings.clearOnClose);
           },
+          onSubmitted: (String value) {
+            widget.controller.handleEnterKey();
+          },
           searchController: widget.controller.localSearchController,
           viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
           dividerColor: widget.searchBarSettings.showDivider

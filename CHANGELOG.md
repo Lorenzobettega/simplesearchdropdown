@@ -1,3 +1,7 @@
+## [7.3.0] - 2025-12-05.
+- Added the possibility to select the first item of the list after the user presses enter.
+- Mini fix on the sample app.
+
 ## [7.2.1] - 2025-11-08.
 - Added `forceMultipleSelection` function to MultipleSearch widget.
 

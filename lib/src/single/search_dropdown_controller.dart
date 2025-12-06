@@ -273,6 +273,14 @@ class SearchDropDownController<T> {
     _prevQuery = localSearchController.text;
   }
 
+  /// Selects the first item from the list after the users presses enter.
+  void handleEnterKey() {
+    if (_filteredItems.isNotEmpty) {
+      final ValueItem<T> itemToSelect = _filteredItems.first;
+      selectItem(itemToSelect);
+    }
+  }
+
   /// Clears the current selection and search field text, and notifies external callbacks.
   void clearSelectionAndNotify() {
     selectedItem = null;
