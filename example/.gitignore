@@ -44,3 +44,10 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+
+.gradle/
+local.properties
+**/GeneratedPluginRegistrant.java
+gradlew
+gradlew.bat
+gradle/wrapper/gradle-wrapper.jar
