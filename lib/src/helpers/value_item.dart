@@ -32,6 +32,18 @@ class ValueItem<T> {
     );
   }
 
+  /// fromValue method for [ValueItem]
+  factory ValueItem.fromValue(
+    T value, {
+    String Function(T value)? labelBuilder,
+  }) {
+    final builder = labelBuilder ?? (T v) => v.toString();
+    return ValueItem<T>(
+      label: builder(value),
+      value: value,
+    );
+  }
+
   /// The label of the value item
   final String label;
 
@@ -41,7 +53,7 @@ class ValueItem<T> {
   /// toString method for [ValueItem]
   @override
   String toString() {
-    return 'ValueItem(label: $label, value: ${value.toString()})';
+    return 'ValueItem<$T>(label: $label, value: ${value.toString()})';
   }
 
   /// toMap method for [ValueItem]
@@ -65,7 +77,9 @@ class ValueItem<T> {
     if (identical(this, other)) {
       return true;
     }
-
+    if (other.runtimeType != runtimeType) {
+      return false;
+    }
     return other is ValueItem<T> &&
         other.label == label &&
         other.value == value;

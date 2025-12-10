@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart'; // For ValueItem, settings, etc.
 
 /// This creates a single-selection dropdown widget.
@@ -42,11 +43,53 @@ class SearchDropDown<T> extends StatefulWidget {
 
 class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   late final FocusScopeNode _focusNode;
+  late final ValueNotifier<int> _highlightIndexNotifier;
 
   @override
   void initState() {
     super.initState();
     _focusNode = FocusScopeNode();
+    _highlightIndexNotifier = ValueNotifier<int>(-1);
+    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
+  }
+
+  bool _handleKeyEvent(KeyEvent event) {
+    if (!mounted) {
+      return false;
+    }
+    if (event is! KeyDownEvent) {
+      return false;
+    }
+
+    final key = event.logicalKey;
+    final searchController = widget.controller.localSearchController;
+    if (!searchController.isOpen) {
+      return false;
+    }
+
+    if (key == LogicalKeyboardKey.arrowDown) {
+      widget.controller.highlightNext();
+      _highlightIndexNotifier.value = widget.controller.highlightedIndex;
+      return true; // evento tratado
+    }
+
+    if (key == LogicalKeyboardKey.arrowUp) {
+      widget.controller.highlightPrevious();
+      _highlightIndexNotifier.value = widget.controller.highlightedIndex;
+      return true;
+    }
+
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      if (widget.controller.highlightedIndex >= 0) {
+        widget.controller.selectHighlighted();
+      } else {
+        widget.controller.handleEnterKey();
+      }
+      return true;
+    }
+
+    return false;
   }
 
   @override
@@ -54,6 +97,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     if (widget.disposeController) {
       widget.controller.dispose();
     }
+    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
+    _highlightIndexNotifier.dispose();
     _focusNode.dispose();
     super.dispose();
   }
@@ -223,24 +268,44 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   },
                 );
               } else {
-                // Regular list item
                 final item = widget.controller.filteredItems[index];
-                return DefaultListTile<T>(
-                  deleteMode: widget.controller.deleteMode,
-                  editMode: widget.controller.editMode,
-                  item: item,
-                  overlayListSettings: widget.overlayListSettings,
-                  defaultAditionalWidget: widget.defaultAditionalWidget,
-                  onDelete: (ValueItem<T> val) {
-                    widget.controller.deleteItem(val, context);
+                return ValueListenableBuilder<int>(
+                  valueListenable: _highlightIndexNotifier,
+                  builder: (context, highlightedIndex, _) {
+                    final bool isHighlighted = index == highlightedIndex;
+                    final bool isSelected = controller.text == item.label;
+
+                    if (isHighlighted) {
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        final renderObject = context.findRenderObject();
+                        if (renderObject != null && renderObject.attached) {
+                          Scrollable.ensureVisible(
+                            context,
+                            alignment: 0.5,
+                            duration: const Duration(milliseconds: 120),
+                            curve: Curves.easeOut,
+                          );
+                        }
+                      });
+                    }
+                    return DefaultListTile<T>(
+                      deleteMode: widget.controller.deleteMode,
+                      editMode: widget.controller.editMode,
+                      item: item,
+                      overlayListSettings: widget.overlayListSettings,
+                      defaultAditionalWidget: widget.defaultAditionalWidget,
+                      onDelete: (ValueItem<T> val) {
+                        widget.controller.deleteItem(val, context);
+                      },
+                      onEdit: (ValueItem<T> val) {
+                        widget.controller.editItem(val, context);
+                      },
+                      onPressed: (ValueItem<T> val) {
+                        widget.controller.selectItem(val);
+                      },
+                      selected: isHighlighted || isSelected,
+                    );
                   },
-                  onEdit: (ValueItem<T> val) {
-                    widget.controller.editItem(val, context);
-                  },
-                  onPressed: (ValueItem<T> val) {
-                    widget.controller.selectItem(val);
-                  },
-                  selected: controller.text == item.label,
                 );
               }
             });

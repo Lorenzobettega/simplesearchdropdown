@@ -159,6 +159,70 @@ class SearchDropDownController<T> {
   // Caches pré‑ordenados e sort atual (lazy)
   int _currentSortType = 0;
 
+  /// Index of the item currently highlighted for keyboard navigation.
+  /// -1 means “no item highlighted”.
+  int _highlightedIndex = -1;
+
+  int get highlightedIndex => _highlightedIndex;
+
+  /// Reset highlight whenever the filtered list changes.
+  void resetHighlight() {
+    _highlightedIndex = -1;
+  }
+
+  int _selectedIndexInFiltered() {
+    if (selectedItem == null) {
+      return -1;
+    }
+
+    return _filteredItems.indexOf(selectedItem!);
+  }
+
+  /// Move highlight to the next item (Arrow Down).
+  void highlightNext() {
+    if (_filteredItems.isEmpty) {
+      _highlightedIndex = -1;
+      return;
+    }
+    if (_highlightedIndex < 0) {
+      final selectedIndex = _selectedIndexInFiltered();
+      if (selectedIndex != -1) {
+        _highlightedIndex = selectedIndex;
+        return;
+      }
+      _highlightedIndex = 0;
+    } else {
+      _highlightedIndex = (_highlightedIndex + 1) % _filteredItems.length;
+    }
+  }
+
+  /// Move highlight to the previous item (Arrow Up).
+  void highlightPrevious() {
+    if (_filteredItems.isEmpty) {
+      _highlightedIndex = -1;
+      return;
+    }
+    if (_highlightedIndex < 0) {
+      final selectedIndex = _selectedIndexInFiltered();
+      if (selectedIndex != -1) {
+        _highlightedIndex = selectedIndex;
+        return;
+      }
+
+      _highlightedIndex = _filteredItems.length - 1;
+    } else {
+      _highlightedIndex = (_highlightedIndex - 1 + _filteredItems.length) %
+          _filteredItems.length;
+    }
+  }
+
+  /// Select the item currently highlighted.
+  void selectHighlighted() {
+    if (_highlightedIndex >= 0 && _highlightedIndex < _filteredItems.length) {
+      selectItem(_filteredItems[_highlightedIndex]);
+    }
+  }
+
   /// Sorts the [listItems] based on the given sort type.
   ///
   /// `sortType`:
@@ -228,17 +292,21 @@ class SearchDropDownController<T> {
                 _filteredItems.first != oldFirst ||
                 _filteredItems.last != oldLast));
     if (changed) {
+      resetHighlight();
       onFilterUpdated?.call();
     }
   }
 
   /// Resets the selection to its default state (clears the current selection and text).
-  void resetSelection() {
+  void resetSelection({bool highlight = false}) {
     localSearchController.text = '';
     selectedItem = null;
     updateSelectedItem?.call(null);
     onClear?.call();
     clearVisible = false;
+    if (highlight) {
+      resetHighlight();
+    }
   }
 
   /// Substitutes the current [listItems] with a new list, rebuilding internal caches and
@@ -273,7 +341,8 @@ class SearchDropDownController<T> {
     _prevQuery = localSearchController.text;
   }
 
-  /// Selects the first item from the list after the users presses enter.
+  /// Default ENTER behavior when there is no keyboard highlight:
+  /// selects the first item in the filtered list (if any).
   void handleEnterKey() {
     if (_filteredItems.isNotEmpty) {
       final ValueItem<T> itemToSelect = _filteredItems.first;
@@ -357,7 +426,7 @@ class SearchDropDownController<T> {
             returnFunction: (bool result) {
               if (result) {
                 onDeleteItem?.call(item);
-                resetSelection();
+                resetSelection(highlight: true);
               }
               if (context.mounted) {
                 Navigator.of(context).pop();
@@ -368,7 +437,7 @@ class SearchDropDownController<T> {
         );
       } else {
         onDeleteItem?.call(item);
-        resetSelection();
+        resetSelection(highlight: true);
       }
     }
   }
@@ -385,7 +454,7 @@ class SearchDropDownController<T> {
             if (ok) {
               final ValueItem<T> newValue = newValueItem!(newText);
               onEditItem?.call(item, newValue);
-              resetSelection();
+              resetSelection(highlight: true);
 
               // Caches locais coerentes para a sessão
               final oldKey = _normLabel[item];
@@ -464,5 +533,6 @@ class SearchDropDownController<T> {
     } else {
       _filteredItems.addAll(listItems);
     }
+    resetHighlight();
   }
 }

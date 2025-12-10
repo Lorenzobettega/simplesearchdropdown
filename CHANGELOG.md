@@ -1,3 +1,7 @@
+## [7.4.0] - 2025-12-10.
+- Added fromValue method to `ValueItem`.
+- Added arrows control to SimpleSearch widget.
+
 ## [7.3.0] - 2025-12-05.
 - Added the possibility to select the first item of the list after the user presses enter.
 - Mini fix on the sample app.
