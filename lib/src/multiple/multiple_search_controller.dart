@@ -1,7 +1,7 @@
 import 'dart:collection';
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import 'package:stringr/stringr.dart'; 
+import 'package:stringr/stringr.dart';
 
 class MultipleSearchDropDownController<T> extends ChangeNotifier {
   MultipleSearchDropDownController({

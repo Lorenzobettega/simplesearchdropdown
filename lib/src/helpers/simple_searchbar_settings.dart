@@ -54,7 +54,7 @@ class SimpleSearchbarSettings {
   final double elevation;
 
   ///The border of the searchbar.
-  final OutlinedBorder? border;
+  final OutlinedBorder border;
 
   ///If true, the "x" icon will appear on the end of the searchbar (default:true).
   final bool showClearIcon;

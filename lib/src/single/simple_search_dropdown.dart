@@ -209,12 +209,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
               ],
           barElevation:
               WidgetStatePropertyAll(widget.searchBarSettings.elevation),
-          barShape: WidgetStatePropertyAll(
-            widget.searchBarSettings.border ??
-                const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                ),
-          ),
+          barShape: WidgetStatePropertyAll(widget.searchBarSettings.border),
           viewShape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
@@ -234,9 +229,6 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           barPadding:
               WidgetStatePropertyAll(widget.searchBarSettings.searchBarPadding),
           barLeading: const SizedBox.shrink(),
-          barSide: WidgetStateProperty.all<BorderSide>(
-            const BorderSide(style: BorderStyle.none),
-          ),
           viewSide: const BorderSide(style: BorderStyle.none),
           viewLeading: const SizedBox.shrink(),
           viewElevation: widget.searchBarSettings.elevation,

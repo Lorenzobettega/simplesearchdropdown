@@ -1,3 +1,7 @@
+## [7.4.1] - 2025-12-10.
+- Updated `stringr` version.
+- Mini change on `SimpleSearchbarSettings.border`.
+
 ## [7.4.0] - 2025-12-10.
 - Added fromValue method to `ValueItem`.
 - Added arrows control to SimpleSearch widget.
