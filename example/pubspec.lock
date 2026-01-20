@@ -52,7 +52,7 @@ packages:
       path: ".."
       relative: true
     source: path
-    version: "7.4.0"
+    version: "7.4.1"
   sky_engine:
     dependency: transitive
     description: flutter
@@ -62,10 +62,10 @@ packages:
     dependency: transitive
     description:
       name: stringr
-      sha256: "2846b6811c3cbb34c8937a35e623986e3fbf7203b3bb33ffe7f80e496ea3eff2"
+      sha256: bcc6e5cef07142673ff454b0fe7ca153e433646c52edf729636980e8a47bd7b7
       url: "https://pub.dev"
     source: hosted
-    version: "1.0.0"
+    version: "1.2.1"
   vector_math:
     dependency: transitive
     description:

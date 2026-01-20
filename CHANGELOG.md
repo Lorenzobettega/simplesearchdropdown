@@ -1,4 +1,8 @@
-## [7.4.1] - 2025-12-10.
+## [7.5.0] - 2026-01-19.
+- Added `latinize` parameter to the controller. It defines if latin characters should be ignored when filtering the text (default: `true`).
+- `onAddItem`, `onEditItem`, `onDeleteItem` can now be async functions.
+
+## [7.4.1] - 2025-12-24.
 - Updated `stringr` version.
 - Mini change on `SimpleSearchbarSettings.border`.
 

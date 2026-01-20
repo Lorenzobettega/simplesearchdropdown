@@ -28,6 +28,7 @@ class SearchDropDownController<T> {
     int sortType = 0,
     this.enabled = true,
     this.onFilterUpdated,
+    this.latinize = true,
   })  : localSearchController = searchController ?? SearchController(),
         _ownsSearchController = searchController == null,
         assert(
@@ -88,14 +89,13 @@ class SearchDropDownController<T> {
   final ValueItem<T> Function(String input)? newValueItem;
 
   /// Function to be executed after a new item is added to the list.
-  final void Function(ValueItem<T>)? onAddItem;
+  final Function(ValueItem<T>)? onAddItem;
 
   /// Allow the user to edit existing items in the list.
   final bool editMode;
 
   /// Function to be executed after an item is edited. Provides the original item and the new item.
-  final void Function(ValueItem<T> originalItem, ValueItem<T> newValue)?
-      onEditItem;
+  final Function(ValueItem<T> originalItem, ValueItem<T> newValue)? onEditItem;
 
   /// Settings for the edit dialog (appearance, text, etc.).
   final DialogSettings? editDialogSettings;
@@ -104,7 +104,7 @@ class SearchDropDownController<T> {
   final bool deleteMode;
 
   /// Function to be executed after an item is deleted.
-  final void Function(ValueItem<T>)? onDeleteItem;
+  final Function(ValueItem<T>)? onDeleteItem;
 
   /// Whether to require confirmation from the user before deleting an item.
   final bool confirmDelete;
@@ -127,6 +127,9 @@ class SearchDropDownController<T> {
   /// Whether to show the clear ("X") icon when there is text or a selected value.
   /// This should typically match the `searchBarSettings.showClearIcon` in the widget.
   final bool showClearIcon;
+
+  // Whether latin characters should be ignored when filtering the text
+  final bool latinize;
 
   /// The currently selected item (if any).
   ValueItem<T>? selectedItem;
@@ -411,7 +414,7 @@ class SearchDropDownController<T> {
       _normLabel[item] = _normalize(item.label);
       _byLabel[_normLabel[item]!] = item;
 
-      onAddItem?.call(item);
+      await onAddItem?.call(item);
       selectItem(item);
     }
   }
@@ -436,7 +439,7 @@ class SearchDropDownController<T> {
           ),
         );
       } else {
-        onDeleteItem?.call(item);
+        await onDeleteItem?.call(item);
         resetSelection(highlight: true);
       }
     }
@@ -450,10 +453,10 @@ class SearchDropDownController<T> {
         context,
         EditDialog(
           label: item.label,
-          returnFunction: (bool ok, String newText) {
+          returnFunction: (bool ok, String newText) async {
             if (ok) {
               final ValueItem<T> newValue = newValueItem!(newText);
-              onEditItem?.call(item, newValue);
+              await onEditItem?.call(item, newValue);
               resetSelection(highlight: true);
 
               // Caches locais coerentes para a sessão
@@ -509,7 +512,7 @@ class SearchDropDownController<T> {
 
   // ===================== helpers de performance =====================
 
-  String _normalize(String s) => s.latinize().toLowerCase();
+  String _normalize(String s) => (latinize ? s.latinize() : s).toLowerCase();
 
   void _rebuildCaches() {
     _normLabel.clear();

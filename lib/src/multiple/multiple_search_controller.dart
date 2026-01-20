@@ -143,14 +143,14 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       _normLabel[item] = _normalize(item.label);
       _byLabel[_normLabel[item]!] = item;
 
-      onAddItem?.call(item);
+      await onAddItem?.call(item);
       _setAll();
       onItemSelected(item);
     }
   }
 
-  void delete(ValueItem<T> item) {
-    onDeleteItem?.call(item);
+  Future<void> delete(ValueItem<T> item) async {
+    await onDeleteItem?.call(item);
     _allListItems.remove(item);
     _selectedItems.remove(item);
     _normLabel.remove(item);
@@ -179,7 +179,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
           ),
         );
       } else {
-        delete(item);
+        await delete(item);
       }
     }
   }
