@@ -255,9 +255,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   text: controller.text,
                   addAditionalWidget: widget.addAditionalWidget,
                   overlayListSettings: widget.overlayListSettings,
-                  itemAdded: (String input) {
-                    widget.controller.addItem(input, context);
-                  },
+                  itemAdded: (String input) =>
+                      widget.controller.addItem(input, context),
                 );
               } else {
                 final item = widget.controller.filteredItems[index];

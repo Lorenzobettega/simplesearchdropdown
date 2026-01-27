@@ -54,7 +54,10 @@ class _MyHomePageState extends State<MyHomePage> {
       initialSelectedItem: listitems[1],
       confirmDelete: true,
       onDeleteItem: (item) => listitems.remove(item),
-      onAddItem: (item) => listitems.add(item),
+      onAddItem: (item) async {
+        await Future.delayed(const Duration(seconds: 2));
+        listitems.add(item);
+      },
       updateSelectedItem: (item) => selectedSingleItem = item,
       onClear: () => print('clear'),
       verifyInputItem: (item) => item.label != 'name',

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
+///default loading color
+const Color darkGreen = Color.fromARGB(255, 0, 67, 0);
+
 ///Class to hold all the customizations of the simple search overlay list.
 class SimpleOverlaySettings {
   const SimpleOverlaySettings({
@@ -33,6 +36,8 @@ class SimpleOverlaySettings {
     this.offsetWidth = 0,
     this.aditionalWidgetSpacing = 5,
     this.openFullScreen = false,
+    this.loadingColor = darkGreen,
+    this.loadingSize = 28,
   });
 
   ///Dropdown Container height (default:`200`).
@@ -99,6 +104,12 @@ class SimpleOverlaySettings {
 
   //The drop widget will open full screen in true condition
   final bool openFullScreen;
+
+  ///Loading widget default color (default:`Color.fromARGB(255, 0, 67, 0)`)
+  final Color loadingColor;
+
+  ///Loading widget default color (default:`28`)
+  final double loadingSize;
 }
 
 ///The default settings for the OverlayList.

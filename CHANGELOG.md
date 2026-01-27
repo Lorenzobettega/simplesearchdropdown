@@ -1,3 +1,7 @@
+## [7.6.0] - 2026-01-27.
+- Added a loading widget to the list cell. 
+- Added `loadingColor` and `loadingSize` parameters to `SimpleOverlaySettings`.
+
 ## [7.5.0] - 2026-01-19.
 - Added `latinize` parameter to the controller. It defines if latin characters should be ignored when filtering the text (default: `true`).
 - `onAddItem`, `onEditItem`, `onDeleteItem` can now be async functions.

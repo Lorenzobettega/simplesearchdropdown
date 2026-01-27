@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
-///ListItem to be shown when a item will be added.
-class DefaultAddListItem extends StatelessWidget {
+class DefaultAddListItem extends StatefulWidget {
   const DefaultAddListItem({
     required this.text,
     required this.overlayListSettings,
@@ -12,14 +11,31 @@ class DefaultAddListItem extends StatelessWidget {
   });
 
   ///Function to be executed after the item was added.
-  final void Function(String value) itemAdded;
+  final Function(String value) itemAdded;
 
   ///The overlay list of items settings.
   final SimpleOverlaySettings overlayListSettings;
-
   final String text;
-
   final Widget? addAditionalWidget;
+
+  @override
+  State<DefaultAddListItem> createState() => _DefaultAddListItemState();
+}
+
+class _DefaultAddListItemState extends State<DefaultAddListItem> {
+  bool _isLoading = false;
+
+  Future<void> _handleItemAdded() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await widget.itemAdded(widget.text);
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,23 +47,32 @@ class DefaultAddListItem extends StatelessWidget {
           Flexible(
             flex: 2,
             child: Text(
-              text,
+              widget.text,
               overflow: TextOverflow.ellipsis,
               maxLines: 3,
             ),
           ),
-          if (addAditionalWidget != null)
+          if (widget.addAditionalWidget != null)
             Flexible(
-              child: addAditionalWidget!,
+              child: widget.addAditionalWidget!,
             ),
           Flexible(
-            child: TextButton(
-              onPressed: () => itemAdded(text),
-              child: Text(
-                overlayListSettings.addItemHint,
-                style: overlayListSettings.addItemHintStyle,
-              ),
-            ),
+            child: _isLoading
+                ? Padding(
+                    padding: const EdgeInsets.only(top: 4),
+                    child: SizedBox(
+                      height: widget.overlayListSettings.loadingSize,
+                      child:
+                          Loading(cor: widget.overlayListSettings.loadingColor),
+                    ),
+                  )
+                : TextButton(
+                    onPressed: _handleItemAdded,
+                    child: Text(
+                      widget.overlayListSettings.addItemHint,
+                      style: widget.overlayListSettings.addItemHintStyle,
+                    ),
+                  ),
           ),
         ],
       ),
