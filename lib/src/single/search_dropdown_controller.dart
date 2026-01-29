@@ -19,7 +19,6 @@ class SearchDropDownController<T> {
     this.onDeleteItem,
     this.confirmDelete = false,
     this.deleteDialogSettings,
-    this.onClear,
     this.updateSelectedItem,
     this.verifyInputItem,
     this.verifyDialogSettings,
@@ -112,9 +111,6 @@ class SearchDropDownController<T> {
   /// Settings for the delete confirmation dialog.
   final DialogSettings? deleteDialogSettings;
 
-  /// Function to be executed after the selection is cleared.
-  final VoidCallback? onClear;
-
   /// Callback to update the selected item in external state (called whenever an item is selected or cleared).
   final void Function(ValueItem<T>?)? updateSelectedItem;
 
@@ -136,9 +132,8 @@ class SearchDropDownController<T> {
 
   /// The current filtered list of items based on the search query.
   final List<ValueItem<T>> _filteredItems = <ValueItem<T>>[];
-  late final UnmodifiableListView<ValueItem<T>> _filteredView =
+  UnmodifiableListView<ValueItem<T>> get filteredItems =>
       UnmodifiableListView(_filteredItems);
-  UnmodifiableListView<ValueItem<T>> get filteredItems => _filteredView;
 
   /// Whether the dropdown is enabled for user interaction.
   bool enabled = true;
@@ -304,12 +299,11 @@ class SearchDropDownController<T> {
   void resetSelection({bool highlight = false}) {
     localSearchController.text = '';
     selectedItem = null;
-    updateSelectedItem?.call(null);
-    onClear?.call();
     clearVisible = false;
     if (highlight) {
       resetHighlight();
     }
+    updateSelectedItem?.call(null);
   }
 
   /// Substitutes the current [listItems] with a new list, rebuilding internal caches and
@@ -360,7 +354,6 @@ class SearchDropDownController<T> {
     if (showClearIcon) {
       clearVisible = false;
     }
-    onClear?.call();
     updateSelectedItem?.call(null);
     _suppressFiltering = false;
     _prevQuery = '';
@@ -409,14 +402,22 @@ class SearchDropDownController<T> {
         return;
       }
       _filteredItems.add(item);
-
-      // Atualiza caches locais (fonte real é externa)
       _normLabel[item] = _normalize(item.label);
       _byLabel[_normLabel[item]!] = item;
 
       await onAddItem?.call(item);
       selectItem(item);
     }
+  }
+
+  Future<void> _proceedWithDeletion(ValueItem<T> item) async {
+    await onDeleteItem?.call(item);
+    final norm = _normLabel.remove(item);
+    if (norm != null) {
+      _byLabel.remove(norm);
+    }
+    _filteredItems.remove(item);
+    resetSelection(highlight: true);
   }
 
   /// Handles deleting an item from the list. Shows a confirmation dialog if required.
@@ -426,21 +427,19 @@ class SearchDropDownController<T> {
         await sendDialog(
           context,
           WarningDialog(
-            returnFunction: (bool result) {
-              if (result) {
-                onDeleteItem?.call(item);
-                resetSelection(highlight: true);
-              }
+            returnFunction: (bool result) async {
               if (context.mounted) {
                 Navigator.of(context).pop();
+              }
+              if (result) {
+                await _proceedWithDeletion(item);
               }
             },
             settings: deleteDialogSettings,
           ),
         );
       } else {
-        await onDeleteItem?.call(item);
-        resetSelection(highlight: true);
+        await _proceedWithDeletion(item);
       }
     }
   }
@@ -458,8 +457,6 @@ class SearchDropDownController<T> {
               final ValueItem<T> newValue = newValueItem!(newText);
               await onEditItem?.call(item, newValue);
               resetSelection(highlight: true);
-
-              // Caches locais coerentes para a sessão
               final oldKey = _normLabel[item];
               if (oldKey != null && _byLabel[oldKey] == item) {
                 _byLabel.remove(oldKey);

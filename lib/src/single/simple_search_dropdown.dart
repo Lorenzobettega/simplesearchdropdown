@@ -70,7 +70,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     if (key == LogicalKeyboardKey.arrowDown) {
       widget.controller.highlightNext();
       _highlightIndexNotifier.value = widget.controller.highlightedIndex;
-      return true; // evento tratado
+      return true;
     }
 
     if (key == LogicalKeyboardKey.arrowUp) {
@@ -285,15 +285,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       item: item,
                       overlayListSettings: widget.overlayListSettings,
                       defaultAditionalWidget: widget.defaultAditionalWidget,
-                      onDelete: (ValueItem<T> val) {
-                        widget.controller.deleteItem(val, context);
-                      },
-                      onEdit: (ValueItem<T> val) {
-                        widget.controller.editItem(val, context);
-                      },
-                      onPressed: (ValueItem<T> val) {
-                        widget.controller.selectItem(val);
-                      },
+                      onDelete: (ValueItem<T> val) =>
+                          widget.controller.deleteItem(val, context),
+                      onEdit: (ValueItem<T> val) =>
+                          widget.controller.editItem(val, context),
+                      onPressed: (ValueItem<T> val) =>
+                          widget.controller.selectItem(val),
                       selected: isHighlighted || isSelected,
                     );
                   },
