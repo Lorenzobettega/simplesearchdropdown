@@ -268,6 +268,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
                     if (isHighlighted) {
                       WidgetsBinding.instance.addPostFrameCallback((_) {
+                        if (!context.mounted) {
+                          return;
+                        }
                         final renderObject = context.findRenderObject();
                         if (renderObject != null && renderObject.attached) {
                           Scrollable.ensureVisible(
@@ -280,6 +283,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       });
                     }
                     return DefaultListTile<T>(
+                      key: ValueKey(item.label),
                       deleteMode: widget.controller.deleteMode,
                       editMode: widget.controller.editMode,
                       item: item,

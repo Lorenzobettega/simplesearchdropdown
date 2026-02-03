@@ -417,6 +417,7 @@ class SearchDropDownController<T> {
       _byLabel.remove(norm);
     }
     _filteredItems.remove(item);
+    localSearchController.text = ' ';
     resetSelection(highlight: true);
   }
 

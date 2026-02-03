@@ -38,7 +38,7 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
     setState(() => _isLoading = true);
     try {
       await widget.onDelete(widget.item);
-    } finally {
+    } catch (_) {
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -111,7 +111,7 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
           ],
           if (_isLoading)
             Padding(
-              padding: const EdgeInsets.only(left: 6,right: 6),
+              padding: const EdgeInsets.only(left: 6, right: 6),
               child: SizedBox(
                 height: widget.overlayListSettings.loadingSize,
                 child: Loading(cor: widget.overlayListSettings.loadingColor),
