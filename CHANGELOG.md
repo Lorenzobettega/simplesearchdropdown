@@ -1,4 +1,7 @@
-## [7.7.0] - 2026-01-27.
+## [7.7.1] - 2026-02-03.
+- Hide dropdown arrow by default if disabled. 
+
+## [7.7.0] - 2026-02-02.
 - Added also the loading widget to the delete button on the list cell. 
 - Removed `onClear` function from SimpleSearch controller. You can get the similar result by using `updateSelectedItem`.
 

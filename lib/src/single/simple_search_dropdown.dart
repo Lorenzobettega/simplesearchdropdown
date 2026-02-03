@@ -189,7 +189,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           viewTrailing: [_buildViewTrailing()],
           barTrailing: widget.searchBarSettings.actions ??
               [
-                if (widget.searchBarSettings.showArrow)
+                if (widget.searchBarSettings.showArrow &&
+                    widget.controller.enabled)
                   IconButton(
                     onPressed:
                         widget.searchBarSettings.dropdownClosedIconFunction ??

@@ -439,7 +439,8 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                 child: Icon(
                                   widget.selectedItems.isNotEmpty
                                       ? Icons.clear
-                                      : widget.searchBarSettings.showArrow
+                                      : widget.searchBarSettings.showArrow &&
+                                              widget.enabled
                                           ? aberto
                                               ? widget.searchBarSettings
                                                   .dropdownOpenedArrowIcon
