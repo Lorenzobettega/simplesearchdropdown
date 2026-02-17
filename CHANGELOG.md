@@ -1,3 +1,6 @@
+## [7.7.2] - 2026-02-17.
+- Fix hide clear on both Multiple and simple search. 
+
 ## [7.7.1] - 2026-02-03.
 - Hide dropdown arrow by default if disabled. 
 

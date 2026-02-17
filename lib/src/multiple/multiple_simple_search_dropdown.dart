@@ -305,6 +305,19 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final hasSelection = widget.selectedItems.isNotEmpty;
+    IconData? iconToDisplay;
+    if (hasSelection) {
+      if (widget.searchBarSettings.showClearIcon) {
+        iconToDisplay = Icons.clear;
+      }
+    } else {
+      if (widget.searchBarSettings.showArrow && widget.enabled) {
+        iconToDisplay = aberto
+            ? widget.searchBarSettings.dropdownOpenedArrowIcon
+            : widget.searchBarSettings.dropdownClosedArrowIcon;
+      }
+    }
     return Opacity(
       opacity: enabled ? 1 : 0.38,
       child: IgnorePointer(
@@ -350,7 +363,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                       child: Row(
                         children: [
                           Expanded(
-                            child: widget.selectedItems.isNotEmpty
+                            child: hasSelection
                                 ? ScrollConfiguration(
                                     behavior: CustomScrollBehavior(),
                                     child: ListView.separated(
@@ -430,31 +443,25 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                     ],
                                   ),
                           ),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const SizedBox(width: 5),
-                              InkWell(
-                                onTap: onClear,
-                                child: Icon(
-                                  widget.selectedItems.isNotEmpty
-                                      ? Icons.clear
-                                      : widget.searchBarSettings.showArrow &&
-                                              widget.enabled
-                                          ? aberto
-                                              ? widget.searchBarSettings
-                                                  .dropdownOpenedArrowIcon
-                                              : widget.searchBarSettings
-                                                  .dropdownClosedArrowIcon
-                                          : null,
-                                  size:
-                                      widget.searchBarSettings.outsideIconSize,
-                                  color:
-                                      widget.searchBarSettings.outsideIconColor,
+                          if (iconToDisplay == null)
+                            const SizedBox.shrink()
+                          else
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                const SizedBox(width: 5),
+                                InkWell(
+                                  onTap: onClear,
+                                  child: Icon(
+                                    iconToDisplay,
+                                    size: widget
+                                        .searchBarSettings.outsideIconSize,
+                                    color: widget
+                                        .searchBarSettings.outsideIconColor,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
+                              ],
+                            ),
                         ],
                       ),
                     ),

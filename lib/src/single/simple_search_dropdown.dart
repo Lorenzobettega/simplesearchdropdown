@@ -201,12 +201,13 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       size: widget.searchBarSettings.outsideIconSize,
                     ),
                   ),
-                ClearButton(
-                  visible: widget.controller.clearVisible,
-                  onPressed: resetSelection,
-                  iconColor: widget.searchBarSettings.clearIconColor,
-                  iconSize: widget.searchBarSettings.outsideIconSize,
-                ),
+                if (widget.searchBarSettings.showClearIcon)
+                  ClearButton(
+                    visible: widget.controller.clearVisible,
+                    onPressed: resetSelection,
+                    iconColor: widget.searchBarSettings.clearIconColor,
+                    iconSize: widget.searchBarSettings.outsideIconSize,
+                  ),
               ],
           barElevation:
               WidgetStatePropertyAll(widget.searchBarSettings.elevation),
