@@ -309,11 +309,13 @@ class SearchDropDownController<T> {
   /// Substitutes the current [listItems] with a new list, rebuilding internal caches and
   /// updating the filtered list.
   /// This should be called when the source list items are changed externally.
-  void updateListItems(List<ValueItem<T>> newList) {
-    resetSelection();
-    listItems
-      ..clear()
-      ..addAll(newList);
+  /// If selectedItem isn't null, shouldReset parameter will be bypassed.
+  void updateListItems(List<ValueItem<T>> newList, bool shouldReset) {
+    if (shouldReset || selectedItem != null) {
+      resetSelection();
+    }
+    listItems.clear();
+    listItems.addAll(newList);
     _rebuildCaches();
     if (_currentSortType != 0) {
       sortList(_currentSortType);

@@ -2,7 +2,7 @@ name: simple_search_dropdown
 description: A dropdown that offers a search bar, multiple and single selections.
 homepage: https://github.com/Lorenzobettega/searchdropdown
 
-version: 7.7.2
+version: 7.7.3
 
 environment:
   sdk: '>=3.0.0 < 4.0.0'

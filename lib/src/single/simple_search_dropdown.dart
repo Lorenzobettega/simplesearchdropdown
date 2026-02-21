@@ -120,9 +120,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   }
 
   /// updates the current list of the widget
-  void updateList(List<ValueItem<T>> newList) {
+  void updateList(List<ValueItem<T>> newList, {bool shouldreset = true}) {
     if (mounted) {
-      widget.controller.updateListItems(newList);
+      widget.controller.updateListItems(newList, shouldreset);
     }
   }
 

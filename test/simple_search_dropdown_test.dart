@@ -151,7 +151,7 @@ void main() {
 
       // Ação: Nova Lista
       final newList = [itemE, itemD]; // Elderberry, Dates
-      controller.updateListItems(newList);
+      controller.updateListItems(newList, true);
 
       // Verificação: A nova lista deve estar ordenada alfabeticamente (Dates, Elderberry)
       expect(controller.filteredItems.first.label, 'Dates',

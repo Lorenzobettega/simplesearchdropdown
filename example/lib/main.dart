@@ -116,6 +116,13 @@ class _MyHomePageState extends State<MyHomePage> {
     searchKey.currentState?.enableDisable();
   }
 
+  void resetCustom() {
+    customSearchKey.currentState?.updateList(<ValueItem<Custom>>[
+      ValueItem(label: 'Reset 1', value: Custom('Reset 1', 80)),
+      ValueItem(label: 'Reset 2', value: Custom('Reset 2', 90)),
+    ]);
+  }
+
   void printNewSingleSelection() {
     print(singleSearchController.selectedItem?.label);
   }
@@ -262,6 +269,11 @@ class _MyHomePageState extends State<MyHomePage> {
                   child: const Text('Print new Single Selection'),
                 ),
               ],
+            ),
+            const SizedBox(height: 20),
+            TextButton(
+              onPressed: resetCustom,
+              child: const Text('Reset custom list'),
             ),
           ],
         ),

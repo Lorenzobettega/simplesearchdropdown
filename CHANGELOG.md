@@ -1,3 +1,7 @@
+## [7.7.3] - 2026-02-21.
+- Fix `updateListItems` function on simple search.
+- Added sample on how to reset a custom list.
+
 ## [7.7.2] - 2026-02-17.
 - Fix hide clear on both Multiple and simple search. 
 
