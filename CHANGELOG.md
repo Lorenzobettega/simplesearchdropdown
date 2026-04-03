@@ -1,3 +1,8 @@
+## [7.8.0] - 2026-04-03.
+- Added `caseSensitive` parameter to the controller. It defines if the search should be case sensitive (default: `false`).
+- Added `trim` parameter to the controller. It defines if leading and trailing whitespaces should be ignored when filtering the text (default: `true`).
+- Updated stringr to 1.2.2
+
 ## [7.7.3] - 2026-02-21.
 - Fix `updateListItems` function on simple search.
 - Added sample on how to reset a custom list.

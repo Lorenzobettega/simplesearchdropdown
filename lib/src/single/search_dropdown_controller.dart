@@ -28,6 +28,8 @@ class SearchDropDownController<T> {
     this.enabled = true,
     this.onFilterUpdated,
     this.latinize = true,
+    this.caseSensitive = false,
+    this.trim = true,
   })  : localSearchController = searchController ?? SearchController(),
         _ownsSearchController = searchController == null,
         assert(
@@ -127,6 +129,12 @@ class SearchDropDownController<T> {
   // Whether latin characters should be ignored when filtering the text
   final bool latinize;
 
+  // Whether case sensitive should be ignored when filtering the text
+  final bool caseSensitive;
+
+  // Whether leading and trailing whitespaces should be ignored when filtering the text
+  final bool trim;
+
   /// The currently selected item (if any).
   ValueItem<T>? selectedItem;
 
@@ -136,7 +144,7 @@ class SearchDropDownController<T> {
       UnmodifiableListView(_filteredItems);
 
   /// Whether the dropdown is enabled for user interaction.
-  bool enabled = true;
+  bool enabled;
 
   /// Whether the clear button should be visible (true if there's a selection/text and [showClearIcon] is true).
   bool clearVisible = false;
@@ -512,7 +520,19 @@ class SearchDropDownController<T> {
 
   // ===================== helpers de performance =====================
 
-  String _normalize(String s) => (latinize ? s.latinize() : s).toLowerCase();
+  String _normalize(String s) {
+    String resultado = s;
+    if (trim) {
+      resultado = resultado.trim();
+    }
+    if (latinize) {
+      resultado = resultado.latinize();
+    }
+    if (!caseSensitive) {
+      resultado = resultado.toLowerCase();
+    }
+    return resultado;
+  }
 
   void _rebuildCaches() {
     _normLabel.clear();
