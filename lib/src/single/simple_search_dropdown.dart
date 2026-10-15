@@ -74,31 +74,13 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   SearchDropDownController<T> get _controller => widget.controller;
 
-  /// Controllers this widget has shown. A swapped-out controller may still be
-  /// driving a closing view or be swapped back in, so they are all disposed
-  /// together with the widget (when [SearchDropDown.disposeController]).
-  final Set<SearchDropDownController<T>> _seenControllers =
-      <SearchDropDownController<T>>{};
-
-  @override
-  void initState() {
-    super.initState();
-    _seenControllers.add(widget.controller);
-  }
-
-  @override
-  void didUpdateWidget(covariant SearchDropDown<T> oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _seenControllers.add(widget.controller);
-  }
-
   @override
   void dispose() {
     _unfocusWindow?.cancel();
     if (widget.disposeController) {
-      for (final SearchDropDownController<T> c in _seenControllers) {
-        c.dispose();
-      }
+      // As in 7.x: only the current controller; a swapped-out one may still
+      // be used by its owner (or by a view that is closing).
+      _controller.dispose();
     }
     _focusNode.dispose();
     super.dispose();
@@ -359,16 +341,13 @@ class _ViewListState<T> extends State<_ViewList<T>> {
   /// change (e.g. the view's open animation) and keystroke; handing back the
   /// same widget skips rebuilding the row. Cleared when the results change.
   final Map<int, Widget> _rows = <int, Widget>{};
-  late final Listenable _rowInputs = Listenable.merge(<Listenable>[
-    _controller.highlight,
-    _controller,
-  ]);
+  late Listenable _rowInputs;
 
   /// The list depends on the results and, for the add row, on the text.
-  late final Listenable _listInputs = Listenable.merge(<Listenable>[
-    _controller.results,
-    _controller.localSearchController,
-  ]);
+  late Listenable _listInputs;
+
+  /// The controller the listeners below are attached to.
+  late SearchDropDownController<T> _bound;
 
   SearchDropDownController<T> get _controller => widget.controller;
 
@@ -377,24 +356,45 @@ class _ViewListState<T> extends State<_ViewList<T>> {
     super.initState();
     final int selected = _controller.selectedIndex;
     _initialIndex = selected < 0 ? 0 : selected;
-    _controller.highlight.addListener(_revealHighlight);
-    _controller.results.addListener(_rows.clear);
+    _bind(_controller);
     HardwareKeyboard.instance.addHandler(_handleKey);
+  }
+
+  void _bind(SearchDropDownController<T> controller) {
+    _bound = controller;
+    _rowInputs = Listenable.merge(<Listenable>[
+      controller.highlight,
+      controller,
+    ]);
+    _listInputs = Listenable.merge(<Listenable>[
+      controller.results,
+      controller.localSearchController,
+    ]);
+    controller.highlight.addListener(_revealHighlight);
+    controller.results.addListener(_rows.clear);
+  }
+
+  void _unbind() {
+    if (!_bound.isDisposed) {
+      _bound.highlight.removeListener(_revealHighlight);
+      _bound.results.removeListener(_rows.clear);
+    }
   }
 
   @override
   void didUpdateWidget(covariant _ViewList<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     _rows.clear();
+    if (!identical(_bound, widget.controller)) {
+      _unbind();
+      _bind(widget.controller);
+    }
   }
 
   @override
   void dispose() {
     HardwareKeyboard.instance.removeHandler(_handleKey);
-    if (!_controller.isDisposed) {
-      _controller.highlight.removeListener(_revealHighlight);
-      _controller.results.removeListener(_rows.clear);
-    }
+    _unbind();
     super.dispose();
   }
 

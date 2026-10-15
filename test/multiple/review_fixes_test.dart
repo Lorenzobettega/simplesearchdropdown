@@ -118,6 +118,58 @@ void main() {
     });
   });
 
+  group('final review fixes', () {
+    testWidgets('multiple: confirming an unchanged edit keeps the item', (
+      tester,
+    ) async {
+      final List<ValueItem<String>> items = <ValueItem<String>>[
+        const ValueItem(label: 'Apple', value: 'Apple'),
+        const ValueItem(label: 'Banana', value: 'Banana'),
+      ];
+      final c = MultipleSearchDropDownController<String>(
+        listItems: items,
+        selectedItems: <ValueItem<String>>[items.first],
+        addMode: false,
+        deleteMode: false,
+        editMode: true,
+        onEditItem: (_, _) {},
+        newValueItem: (s) => ValueItem(label: s, value: s),
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(
+        host(MultipleSearchDropDown<String>(controller: c)),
+      );
+      await openMultiple(tester);
+      await tester.tap(find.byIcon(Icons.edit).first);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Editar'));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(items.map((e) => e.label), <String>['Apple', 'Banana']);
+      expect(c.selectedItems.map((e) => e.label), <String>['Apple']);
+    });
+
+    testWidgets('single: a swapped-out controller is not disposed (7.x)', (
+      tester,
+    ) async {
+      final a = SearchDropDownController<int>(
+        listItems: fruitItems(),
+        addMode: false,
+        deleteMode: false,
+      );
+      final b = SearchDropDownController<int>(
+        listItems: fruitItems(),
+        addMode: false,
+        deleteMode: false,
+      );
+      addTearDown(a.dispose);
+      await tester.pumpWidget(host(SearchDropDown<int>(controller: a)));
+      await tester.pumpWidget(host(SearchDropDown<int>(controller: b)));
+      await tester.pumpWidget(const SizedBox());
+      expect(a.isDisposed, isFalse);
+      expect(b.isDisposed, isTrue);
+    });
+  });
+
   group('review fixes: 7.x public members keep their types (R11/R13)', () {
     test('settings texts read as non-null defaults', () {
       const SimpleSearchbarSettings bar = SimpleSearchbarSettings();

@@ -19,12 +19,12 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - The multiple list is drawn with `OverlayPortal`: it follows parent rebuilds, is removed with the widget and stays below dialogs (confirm/verify dialogs are now regular modal dialogs).
 - Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) still read as before, but a value you do not set now comes from `SearchDropDownStrings`; `customHint`, `customAddItemHint`, `customEditHint` tell whether one was set explicitly.
 - `SearchDropDownController.dispose()` can be called more than once.
-- Swapping `SearchDropDown.controller` no longer disposes the old controller right away: every controller the widget showed is disposed with the widget (with `disposeController`).
 - A legacy `MultipleSearchDropDown` keeps its search and pending add/delete across parent rebuilds; new list instances or dialog settings are applied in place.
 
 ### Breaking
 - `MultipleListView` (exported helper) takes a `MultipleSearchDropDownController`; use `MultipleSearchDropDown` instead of building it directly.
 - `SearchDropDownController.showClearIcon` is `bool?` (`null` = follow the search bar settings).
+- `MultipleSearchDropDown.listItems`, `selectedItems` and `updateSelectedItems` are nullable (a `controller` can replace them); code reading them from the widget needs `!`.
 
 ### Fixed
 - Crash when filtering after deleting/editing with a callback that does not change the list, or after the shared list grew from outside (e.g. an item added through the multiple dropdown).

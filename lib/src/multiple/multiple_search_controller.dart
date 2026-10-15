@@ -461,7 +461,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   ) {
     final int index = list.indexOf(from);
     final bool hasNew = list.contains(to);
-    if (index != -1 && !hasNew) {
+    if (index != -1 && (!hasNew || to == from)) {
       list[index] = to;
     } else if (index != -1) {
       list.removeAt(index);
