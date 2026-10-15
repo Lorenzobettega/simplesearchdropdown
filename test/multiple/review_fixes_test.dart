@@ -9,10 +9,9 @@ import '../support/harness.dart';
 /// Legacy multiple dropdown whose parent rebuilds on every selection and
 /// passes non-const settings (a new identity each build).
 class _Host extends StatefulWidget {
-  const _Host({required this.items, this.onFilterUpdatedSetState = false});
+  const _Host({required this.items});
 
   final List<ValueItem<int>> items;
-  final bool onFilterUpdatedSetState;
 
   @override
   State<_Host> createState() => _HostState();
@@ -21,6 +20,8 @@ class _Host extends StatefulWidget {
 class _HostState extends State<_Host> {
   final List<ValueItem<int>> selected = <ValueItem<int>>[];
   final GlobalKey<MultipleSearchDropDownState<int>> key = GlobalKey();
+
+  void rebuild() => setState(() {});
 
   @override
   Widget build(BuildContext context) => MultipleSearchDropDown<int>(
@@ -67,7 +68,7 @@ void main() {
       await tester.pump();
       await tester.tap(find.text('Criar'));
       await tester.pump();
-      hostState.setState(() {});
+      hostState.rebuild();
       await tester.pump(const Duration(milliseconds: 200));
       expect(hostState.selected.map((e) => e.label), contains('Kiwi'));
       expect(items.map((e) => e.label), contains('Kiwi'));
