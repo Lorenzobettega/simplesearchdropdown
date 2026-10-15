@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
-import 'package:simple_search_dropdown/src/core/sort_type.dart';
 
 import '../support/harness.dart';
 

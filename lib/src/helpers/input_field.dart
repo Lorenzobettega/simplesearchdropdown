@@ -6,7 +6,7 @@ FilteringTextInputFormatter allValues =
 
 class InputField extends StatelessWidget {
   const InputField({
-    Key? key,
+    super.key,
     required this.controle,
     this.mascara,
     this.textInputButton = TextInputAction.done,
@@ -28,8 +28,7 @@ class InputField extends StatelessWidget {
     this.alinhamento = TextAlign.start,
     this.disabledColor,
     this.capitalization,
-  })  : estilo = estilo ?? const TextStyle(fontSize: 16),
-        super(key: key);
+  }) : estilo = estilo ?? const TextStyle(fontSize: 16);
   static const TextStyle _hintLabelStyle =
       TextStyle(fontSize: 16, color: Colors.grey);
   static const BorderSide _focusedBorderSide =

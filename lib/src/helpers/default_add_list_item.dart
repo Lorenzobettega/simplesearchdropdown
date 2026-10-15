@@ -6,7 +6,8 @@ class DefaultAddListItem extends StatefulWidget {
     required this.text,
     required this.overlayListSettings,
     required this.itemAdded,
-    required this.addAditionalWidget,
+    required this.addAdditionalWidget,
+    this.strings = const SearchDropDownStrings(),
     super.key,
   });
 
@@ -16,7 +17,10 @@ class DefaultAddListItem extends StatefulWidget {
   ///The overlay list of items settings.
   final SimpleOverlaySettings overlayListSettings;
   final String text;
-  final Widget? addAditionalWidget;
+  final Widget? addAdditionalWidget;
+
+  /// Source of the default texts.
+  final SearchDropDownStrings strings;
 
   @override
   State<DefaultAddListItem> createState() => _DefaultAddListItemState();
@@ -52,9 +56,9 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
               maxLines: 3,
             ),
           ),
-          if (widget.addAditionalWidget != null)
+          if (widget.addAdditionalWidget != null)
             Flexible(
-              child: widget.addAditionalWidget!,
+              child: widget.addAdditionalWidget!,
             ),
           Flexible(
             child: _isLoading
@@ -69,7 +73,8 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
                 : TextButton(
                     onPressed: _handleItemAdded,
                     child: Text(
-                      widget.overlayListSettings.addItemHint,
+                      widget.overlayListSettings.addItemHint ??
+                          widget.strings.addItem,
                       style: widget.overlayListSettings.addItemHintStyle,
                     ),
                   ),

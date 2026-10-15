@@ -10,11 +10,18 @@ class SearchDropDown<T> extends StatefulWidget {
     required this.controller,
     this.searchBarSettings = defaultSearchBarSettings,
     this.overlayListSettings = defaultOverlaySettings,
-    this.addAditionalWidget,
-    this.defaultAditionalWidget,
+    Widget? addAdditionalWidget,
+    Widget? defaultAdditionalWidget,
+    @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
+    Widget? addAditionalWidget,
+    @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
+    Widget? defaultAditionalWidget,
     this.disposeController = true,
     this.removeFocus = true,
-  });
+    this.strings,
+  })  : addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
+        defaultAdditionalWidget =
+            defaultAdditionalWidget ?? defaultAditionalWidget;
 
   /// The external controller that manages state (text, selected item, etc.) for this dropdown.
   final SearchDropDownController<T> controller;
@@ -26,10 +33,21 @@ class SearchDropDown<T> extends StatefulWidget {
   final SimpleOverlaySettings overlayListSettings;
 
   /// A custom additional widget to be inserted on the add-item cell between the text and the create button.
-  final Widget? addAditionalWidget;
+  final Widget? addAdditionalWidget;
 
   /// A custom additional widget to be inserted on the default item cell between the text and the delete button.
-  final Widget? defaultAditionalWidget;
+  final Widget? defaultAdditionalWidget;
+
+  /// Deprecated alias of [addAdditionalWidget].
+  @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
+  Widget? get addAditionalWidget => addAdditionalWidget;
+
+  /// Deprecated alias of [defaultAdditionalWidget].
+  @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
+  Widget? get defaultAditionalWidget => defaultAdditionalWidget;
+
+  /// Texts used by this dropdown. Defaults to [SearchDropDownStrings.of].
+  final SearchDropDownStrings? strings;
 
   /// If the controller will be disposed when this widget is disposed (default: `true`).
   final bool disposeController;
@@ -151,6 +169,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final SearchDropDownStrings strings =
+        widget.strings ?? SearchDropDownStrings.of(context);
     return FocusScope(
       node: _focusNode,
       onFocusChange: (isFocused) {
@@ -223,7 +243,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           isFullScreen: widget.overlayListSettings.openFullScreen,
           barHintStyle:
               WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
-          barHintText: widget.searchBarSettings.hint,
+          barHintText: widget.searchBarSettings.hint ?? strings.searchHint,
           barOverlayColor:
               WidgetStatePropertyAll(widget.searchBarSettings.hoverColor),
           barTextStyle: WidgetStatePropertyAll(
@@ -234,7 +254,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           viewSide: const BorderSide(style: BorderStyle.none),
           viewLeading: const SizedBox.shrink(),
           viewElevation: widget.searchBarSettings.elevation,
-          viewHintText: widget.searchBarSettings.hint,
+          viewHintText: widget.searchBarSettings.hint ?? strings.searchHint,
           viewHeaderHintStyle: widget.searchBarSettings.hintStyle,
           viewHeaderTextStyle: widget.searchBarSettings.searchBarTextStyle,
           keyboardType: widget.searchBarSettings.showKeyboardOnTap
@@ -255,10 +275,11 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                 // Add new item option at the end
                 return DefaultAddListItem(
                   text: controller.text,
-                  addAditionalWidget: widget.addAditionalWidget,
+                  addAdditionalWidget: widget.addAdditionalWidget,
+                  strings: strings,
                   overlayListSettings: widget.overlayListSettings,
-                  itemAdded: (String input) =>
-                      widget.controller.addItem(input, context),
+                  itemAdded: (String input) => widget.controller
+                      .addItem(input, context, strings: strings),
                 );
               } else {
                 final item = widget.controller.filteredItems[index];
@@ -290,11 +311,11 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                       editMode: widget.controller.editMode,
                       item: item,
                       overlayListSettings: widget.overlayListSettings,
-                      defaultAditionalWidget: widget.defaultAditionalWidget,
-                      onDelete: (ValueItem<T> val) =>
-                          widget.controller.deleteItem(val, context),
-                      onEdit: (ValueItem<T> val) =>
-                          widget.controller.editItem(val, context),
+                      defaultAdditionalWidget: widget.defaultAdditionalWidget,
+                      onDelete: (ValueItem<T> val) => widget.controller
+                          .deleteItem(val, context, strings: strings),
+                      onEdit: (ValueItem<T> val) => widget.controller
+                          .editItem(val, context, strings: strings),
                       onPressed: (ValueItem<T> val) =>
                           widget.controller.selectItem(val),
                       selected: isHighlighted || isSelected,

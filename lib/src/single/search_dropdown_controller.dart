@@ -391,7 +391,11 @@ class SearchDropDownController<T> {
 
   /// Handles adding a new item to the list from the given input text.
   /// Returns a Future that completes after the operation (and any dialog) is handled.
-  Future<void> addItem(String text, BuildContext context) async {
+  Future<void> addItem(
+    String text,
+    BuildContext context, {
+    SearchDropDownStrings strings = const SearchDropDownStrings(),
+  }) async {
     if (addMode && newValueItem != null) {
       final ValueItem<T> item = newValueItem!(text);
       // Verify the new item if a verifier is provided
@@ -407,6 +411,7 @@ class SearchDropDownController<T> {
               }
             },
             settings: verifyDialogSettings,
+            strings: strings,
           ),
         );
         localSearchController.clear();
@@ -433,7 +438,11 @@ class SearchDropDownController<T> {
   }
 
   /// Handles deleting an item from the list. Shows a confirmation dialog if required.
-  Future<void> deleteItem(ValueItem<T> item, BuildContext context) async {
+  Future<void> deleteItem(
+    ValueItem<T> item,
+    BuildContext context, {
+    SearchDropDownStrings strings = const SearchDropDownStrings(),
+  }) async {
     if (deleteMode) {
       if (confirmDelete) {
         await sendDialog(
@@ -448,6 +457,7 @@ class SearchDropDownController<T> {
               }
             },
             settings: deleteDialogSettings,
+            strings: strings,
           ),
         );
       } else {
@@ -458,7 +468,11 @@ class SearchDropDownController<T> {
 
   /// Handles editing (modifying) an existing item in the list.
   /// Opens an edit dialog and updates the item via the provided callback if confirmed.
-  Future<void> editItem(ValueItem<T> item, BuildContext context) async {
+  Future<void> editItem(
+    ValueItem<T> item,
+    BuildContext context, {
+    SearchDropDownStrings strings = const SearchDropDownStrings(),
+  }) async {
     if (editMode && newValueItem != null) {
       await sendDialog(
         context,
@@ -482,6 +496,7 @@ class SearchDropDownController<T> {
             }
           },
           settings: editDialogSettings,
+          strings: strings,
         ),
       );
     }

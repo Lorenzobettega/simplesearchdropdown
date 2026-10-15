@@ -8,10 +8,10 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  simple_search_dropdown:
+    path: ../
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  simple_search_dropdown:
-    path: ../
 flutter:
   uses-material-design: true

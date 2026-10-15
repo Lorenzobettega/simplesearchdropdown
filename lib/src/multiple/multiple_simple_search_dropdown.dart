@@ -24,10 +24,18 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.verifyDialogSettings,
     this.searchBarSettings = defaultSearchBarSettings,
     this.overlayListSettings = defaultOverlaySettings,
-    this.addAditionalWidget,
-    this.defaultAditionalWidget,
+    Widget? addAdditionalWidget,
+    Widget? defaultAdditionalWidget,
+    @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
+    Widget? addAditionalWidget,
+    @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
+    Widget? defaultAditionalWidget,
     this.enabled = true,
-  })  : assert(
+    this.strings,
+  })  : addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
+        defaultAdditionalWidget =
+            defaultAdditionalWidget ?? defaultAditionalWidget,
+        assert(
             (addMode && (newValueItem != null && onAddItem != null)) ||
                 !addMode,
             'addMode can only be used with newValueItem != null && onAddItem != null'),
@@ -103,11 +111,22 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   ///Visual verify dialog settings
   final DialogSettings? verifyDialogSettings;
 
-  ///A custom aditional widget to be inserted on the add item cell.
-  final Widget? addAditionalWidget;
+  ///A custom additional widget to be inserted on the add item cell.
+  final Widget? addAdditionalWidget;
 
-  ///A custom aditional widget to be inserted on the default item cell.
-  final Widget? defaultAditionalWidget;
+  ///A custom additional widget to be inserted on the default item cell.
+  final Widget? defaultAdditionalWidget;
+
+  /// Deprecated alias of [addAdditionalWidget].
+  @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
+  Widget? get addAditionalWidget => addAdditionalWidget;
+
+  /// Deprecated alias of [defaultAdditionalWidget].
+  @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
+  Widget? get defaultAditionalWidget => defaultAdditionalWidget;
+
+  /// Texts used by this dropdown. Defaults to [SearchDropDownStrings.of].
+  final SearchDropDownStrings? strings;
 
   ///A parameter to define if the widget is enabled or disabled (default: `true`).
   final bool enabled;
@@ -129,6 +148,9 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     enabled = widget.enabled;
     overlayScreen = OverlayScreen.of(context);
   }
+
+  SearchDropDownStrings get _strings =>
+      widget.strings ?? SearchDropDownStrings.of(context);
 
   void onItemSelected(ValueItem<T> val, {bool forced = false}) {
     setState(() {
@@ -188,6 +210,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                   overlayScreen.closeLast();
                 },
                 settings: widget.verifyDialogSettings,
+                strings: _strings,
               ),
             ),
           );
@@ -212,6 +235,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                 overlayScreen.closeLast();
               },
               settings: widget.deleteDialogSettings,
+              strings: _strings,
             ),
           ),
         );
@@ -263,18 +287,19 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                     addMode: widget.addMode,
                     deleteMode: widget.deleteMode,
                     editMode: widget.editMode,
-                    listItens: widget.listItems,
+                    listItems: widget.listItems,
                     onAddItem: (val) => handleAddItem(val, context),
                     onDeleteItem: (val) => handleDeleteItem(val, context),
                     onEditItem: (val) => (), // TODO colocar função
                     onItemSelected: onItemSelected,
-                    selectedItens: widget.selectedItems,
+                    selectedItems: widget.selectedItems,
                     sortType: widget.sortType,
                     newValueItem: widget.newValueItem,
                     overlayListSettings: widget.overlayListSettings,
                     searchBarSettings: widget.searchBarSettings,
-                    addAditionalWidget: widget.addAditionalWidget,
-                    defaultAditionalWidget: widget.defaultAditionalWidget,
+                    addAdditionalWidget: widget.addAdditionalWidget,
+                    defaultAdditionalWidget: widget.defaultAdditionalWidget,
+                    strings: _strings,
                   ),
                 ),
               ),
@@ -435,7 +460,8 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        widget.searchBarSettings.hint,
+                                        widget.searchBarSettings.hint ??
+                                            _strings.searchHint,
                                         textAlign: TextAlign.start,
                                         style:
                                             widget.searchBarSettings.hintStyle,

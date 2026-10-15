@@ -2,8 +2,10 @@
 // Use of this source code is governed by a license that can be
 // found in the LICENSE file.
 
-library simple_search_dropdown;
+library;
 
+export './src/core/search_dropdown_strings.dart';
+export './src/core/sort_type.dart';
 export './src/dialogs/edit_dialog.dart';
 export './src/dialogs/warning_dialog.dart';
 export './src/helpers/default_add_list_item.dart';

@@ -18,7 +18,7 @@ class OverlayScreen {
   /// The overlay state of the dropdown.
   late OverlayState overlayState;
 
-  /// Declared [overlayEntrys] as List<OverlayEntry> because we might have
+  /// Declared [overlayEntrys] as `List<OverlayEntry>` because we might have
   /// more than one Overlay on the screen, so we keep it on a list and remove all at once.
   List<OverlayEntry> overlayEntrys = [];
 

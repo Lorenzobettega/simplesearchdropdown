@@ -16,7 +16,7 @@ class SimpleSearchbarSettings {
     this.clearIconColor,
     this.searchBarTextStyle,
     this.actions,
-    this.hint = 'Pesquisar',
+    this.hint,
     this.hintStyle = const TextStyle(fontSize: 14),
     this.hoverColor = const Color.fromRGBO(245, 245, 245, 1),
     this.showArrow = true,
@@ -68,8 +68,8 @@ class SimpleSearchbarSettings {
   ///The style of searchbar text when something is typed (default:hintStyle)
   final TextStyle? searchBarTextStyle;
 
-  ///The text to be presented on the hint of the searchbar.
-  final String hint;
+  ///The hint of the searchbar. Defaults to [SearchDropDownStrings.searchHint].
+  final String? hint;
 
   ///The style of the hint of the searchbar.
   final TextStyle? hintStyle;

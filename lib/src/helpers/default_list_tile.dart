@@ -12,7 +12,7 @@ class DefaultListTile<T> extends StatefulWidget {
     required this.onPressed,
     required this.overlayListSettings,
     required this.selected,
-    required this.defaultAditionalWidget,
+    required this.defaultAdditionalWidget,
     super.key,
   });
 
@@ -25,7 +25,7 @@ class DefaultListTile<T> extends StatefulWidget {
   final Function(ValueItem<T> value) onDelete;
   final Function(ValueItem<T> value) onPressed;
   final bool selected;
-  final Widget? defaultAditionalWidget;
+  final Widget? defaultAdditionalWidget;
 
   @override
   State<DefaultListTile<T>> createState() => _DefaultListTileState<T>();
@@ -105,9 +105,9 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
                     ),
             ),
           ),
-          if (widget.defaultAditionalWidget != null) ...[
-            widget.defaultAditionalWidget!,
-            SizedBox(width: widget.overlayListSettings.aditionalWidgetSpacing)
+          if (widget.defaultAdditionalWidget != null) ...[
+            widget.defaultAdditionalWidget!,
+            SizedBox(width: widget.overlayListSettings.additionalWidgetSpacing)
           ],
           if (_isLoading)
             Padding(

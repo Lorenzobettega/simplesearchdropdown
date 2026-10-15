@@ -7,19 +7,29 @@ class WarningDialog extends StatelessWidget {
     this.settings,
     required this.returnFunction,
     this.confirmDialog = true,
+    this.strings = const SearchDropDownStrings(),
   });
+
+  /// Visual customisation.
   final DialogSettings? settings;
+
+  /// Called with `true` (confirm/OK) or `false` (cancel).
   final Function(bool) returnFunction;
+
+  /// Delete confirmation when `true`, invalid-item warning otherwise.
   final bool confirmDialog;
+
+  /// Source of the default texts.
+  final SearchDropDownStrings strings;
 
   @override
   Widget build(BuildContext context) {
     final dialogSettings = settings ?? const DialogSettings();
     return AlertDialog(
       title: dialogSettings.title ??
-          DefaultDialogTitle(confirmDialog: confirmDialog),
+          DefaultDialogTitle(confirmDialog: confirmDialog, strings: strings),
       content: dialogSettings.content ??
-          DefaultDialogContent(confirmDialog: confirmDialog),
+          DefaultDialogContent(confirmDialog: confirmDialog, strings: strings),
       contentPadding: dialogSettings.contentPadding,
       titlePadding: dialogSettings.titlePadding,
       actionsPadding: dialogSettings.actionsPadding,
@@ -32,17 +42,17 @@ class WarningDialog extends StatelessWidget {
           ? [
               DialogButton(
                 function: () => returnFunction(false),
-                buttonSettings: dialogSettings.customCancelButtonSettings,
+                buttonSettings: dialogSettings.cancelButton(strings),
               ),
               DialogButton(
                 function: () => returnFunction(true),
-                buttonSettings: dialogSettings.customDeleteButtonSettings,
+                buttonSettings: dialogSettings.deleteButton(strings),
               ),
             ]
           : [
               DialogButton(
                 function: () => returnFunction(true),
-                buttonSettings: dialogSettings.customOkButtonSettings,
+                buttonSettings: dialogSettings.okButton(strings),
               ),
             ],
     );

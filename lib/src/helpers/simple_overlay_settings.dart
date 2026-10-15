@@ -28,17 +28,20 @@ class SimpleOverlaySettings {
     this.dialogActionWidget,
     this.separatorHeight = 1,
     this.animationDuration = const Duration(milliseconds: 100),
-    this.addItemHint = 'Criar',
+    this.addItemHint,
     this.addItemHintStyle,
     this.itemWidgetBuilder,
     this.reOpenedScrollDuration = const Duration(seconds: 1),
     this.offsetHeight = 3,
     this.offsetWidth = 0,
-    this.aditionalWidgetSpacing = 5,
+    double? additionalWidgetSpacing,
+    @Deprecated('Use additionalWidgetSpacing. Will be removed in 9.0.0')
+    double? aditionalWidgetSpacing,
     this.openFullScreen = false,
     this.loadingColor = darkGreen,
     this.loadingSize = 28,
-  });
+  }) : additionalWidgetSpacing =
+            additionalWidgetSpacing ?? aditionalWidgetSpacing ?? 5;
 
   ///Dropdown Container height (default:`200`).
   final double dialogHeight;
@@ -81,8 +84,8 @@ class SimpleOverlaySettings {
   ///The duration of the dropdown opening animation (default:`Duration(milliseconds: 100)`).
   final Duration animationDuration;
 
-  ///The text of the add button when user is allowed to add items in the list (default: `'Criar'`).
-  final String addItemHint;
+  ///The text of the add button. Defaults to [SearchDropDownStrings.addItem].
+  final String? addItemHint;
 
   ///The style of the add button when user is allowed to add items in the list.
   final TextStyle? addItemHintStyle;
@@ -99,8 +102,12 @@ class SimpleOverlaySettings {
   ///The width of the offset from the left of the search bar (default:`0`).
   final double offsetWidth;
 
-  ///The width of the space between the aditional widget and the delete one (default:`5`).
-  final double aditionalWidgetSpacing;
+  ///The width of the space between the additional widget and the delete one (default:`5`).
+  final double additionalWidgetSpacing;
+
+  ///The width of the space between the additional widget and the delete one.
+  @Deprecated('Use additionalWidgetSpacing. Will be removed in 9.0.0')
+  double get aditionalWidgetSpacing => additionalWidgetSpacing;
 
   //The drop widget will open full screen in true condition
   final bool openFullScreen;

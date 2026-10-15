@@ -10,17 +10,18 @@ class MultipleListView<T> extends StatefulWidget {
     required this.editMode,
     required this.overlayListSettings,
     required this.deleteMode,
-    required this.listItens,
+    required this.listItems,
     required this.onAddItem,
     required this.onDeleteItem,
     required this.onEditItem,
     required this.onItemSelected,
-    required this.selectedItens,
+    required this.selectedItems,
     required this.sortType,
     required this.newValueItem,
     required this.searchBarSettings,
-    required this.addAditionalWidget,
-    required this.defaultAditionalWidget,
+    required this.addAdditionalWidget,
+    required this.defaultAdditionalWidget,
+    this.strings = const SearchDropDownStrings(),
   });
 
   final bool addMode;
@@ -30,11 +31,14 @@ class MultipleListView<T> extends StatefulWidget {
   final Function(ValueItem<T> value) onDeleteItem;
   final Function(ValueItem<T> value) onEditItem;
   final Function(ValueItem<T> value) onItemSelected;
-  final List<ValueItem<T>> listItens;
-  final List<ValueItem<T>> selectedItens;
+  final List<ValueItem<T>> listItems;
+  final List<ValueItem<T>> selectedItems;
   final int sortType;
-  final Widget? addAditionalWidget;
-  final Widget? defaultAditionalWidget;
+  final Widget? addAdditionalWidget;
+  final Widget? defaultAdditionalWidget;
+
+  /// Source of the default texts.
+  final SearchDropDownStrings strings;
 
   ///The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
@@ -58,8 +62,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     super.initState();
     filtrarLista(null);
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.selectedItens.isNotEmpty) {
-        goToSelectedItem(widget.selectedItens.first);
+      if (widget.selectedItems.isNotEmpty) {
+        goToSelectedItem(widget.selectedItems.first);
       }
     });
   }
@@ -75,8 +79,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
         listaFiltrada.sort((a, b) => b.label.compareTo(a.label));
         break;
       case 3:
-        if (widget.selectedItens.isNotEmpty) {
-          final first = widget.selectedItens.first;
+        if (widget.selectedItems.isNotEmpty) {
+          final first = widget.selectedItems.first;
           final indx = listaFiltrada.indexOf(first);
           if (indx != -1) {
             listaFiltrada
@@ -92,14 +96,14 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     String? text,
   ) {
     if (text != null && text != '') {
-      listaFiltrada = widget.listItens
+      listaFiltrada = widget.listItems
           .where((element) => element.label
               .toLowerCase()
               .latinize()
               .contains(text.latinize().toLowerCase()))
           .toList();
     } else {
-      listaFiltrada = widget.listItens;
+      listaFiltrada = widget.listItems;
     }
     widget.sortType > 0 ? setState(sortFunction) : setState(() {});
   }
@@ -157,7 +161,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
               surfaceTintColor: WidgetStatePropertyAll(
                   widget.searchBarSettings.backgroundColor),
               shape: WidgetStatePropertyAll(widget.searchBarSettings.border),
-              hintText: widget.searchBarSettings.hint,
+              hintText:
+                  widget.searchBarSettings.hint ?? widget.strings.searchHint,
               hintStyle: WidgetStateProperty.all<TextStyle?>(
                 widget.searchBarSettings.hintStyle,
               ),
@@ -204,7 +209,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                             itemAdded: itemAdded,
                             overlayListSettings: widget.overlayListSettings,
                             text: controllerBar.text,
-                            addAditionalWidget: widget.addAditionalWidget,
+                            addAdditionalWidget: widget.addAdditionalWidget,
+                            strings: widget.strings,
                           );
                         }
                       }
@@ -217,8 +223,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                         onPressed: addItem,
                         overlayListSettings: widget.overlayListSettings,
                         selected:
-                            widget.selectedItens.contains(listaFiltrada[index]),
-                        defaultAditionalWidget: widget.defaultAditionalWidget,
+                            widget.selectedItems.contains(listaFiltrada[index]),
+                        defaultAdditionalWidget: widget.defaultAdditionalWidget,
                         editMode: widget.editMode,
                         onEdit: widget.onEditItem,
                       );

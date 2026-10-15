@@ -124,7 +124,7 @@ packages:
     source: hosted
     version: "0.3.8"
   simple_search_dropdown:
-    dependency: "direct dev"
+    dependency: "direct main"
     description:
       path: ".."
       relative: true

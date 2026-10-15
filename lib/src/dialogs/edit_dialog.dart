@@ -3,15 +3,24 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 class EditDialog extends StatefulWidget {
   const EditDialog({
-    Key? key,
+    super.key,
     required this.label,
     this.settings,
     required this.returnFunction,
-  }) : super(key: key);
+    this.strings = const SearchDropDownStrings(),
+  });
 
+  /// Label of the item being edited.
   final String label;
+
+  /// Visual customisation.
   final DialogSettings? settings;
+
+  /// Called with `(true, newText)` on confirm or `(false, '')` on cancel.
   final void Function(bool, String) returnFunction;
+
+  /// Source of the default texts.
+  final SearchDropDownStrings strings;
 
   @override
   State<EditDialog> createState() => _EditDialogState();
@@ -38,9 +47,9 @@ class _EditDialogState extends State<EditDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: dialogSettings.title ??
-          const Text(
-            'Editar o item:',
-            style: TextStyle(
+          Text(
+            widget.strings.editTitle,
+            style: const TextStyle(
               fontWeight: FontWeight.bold,
               fontSize: 18,
             ),
@@ -63,7 +72,7 @@ class _EditDialogState extends State<EditDialog> {
               ),
               InputField(
                 controle: controller,
-                hint: dialogSettings.editHint,
+                hint: dialogSettings.editHint ?? widget.strings.editHint,
               ),
             ],
           ),
@@ -78,7 +87,7 @@ class _EditDialogState extends State<EditDialog> {
       actions: [
         DialogButton(
           function: () => widget.returnFunction(false, ''),
-          buttonSettings: dialogSettings.customCancelButtonSettings,
+          buttonSettings: dialogSettings.cancelButton(widget.strings),
         ),
         DialogButton(
           function: () {
@@ -86,7 +95,7 @@ class _EditDialogState extends State<EditDialog> {
               widget.returnFunction(true, controller.text);
             }
           },
-          buttonSettings: dialogSettings.customEditButtonSettings,
+          buttonSettings: dialogSettings.editButton(widget.strings),
         ),
       ],
     );
