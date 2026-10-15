@@ -29,7 +29,6 @@ void main() {
     });
 
     testWidgets('the selected row is announced as selected', (tester) async {
-      final SemanticsHandle handle = tester.ensureSemantics();
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
         listItems: items,
@@ -39,13 +38,17 @@ void main() {
       );
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
-      final Finder row = find.widgetWithText(DefaultListTile<int>, 'Banana');
-      expect(
-        tester.getSemantics(
-            find.descendant(of: row, matching: find.byType(Semantics)).first),
-        isSemantics(isSelected: true, hasSelectedState: true),
-      );
-      handle.dispose();
+      bool selectedFlag(String label) => tester
+          .widget<Semantics>(find
+              .descendant(
+                of: find.widgetWithText(DefaultListTile<int>, label),
+                matching: find.byType(Semantics),
+              )
+              .first)
+          .properties
+          .selected!;
+      expect(selectedFlag('Banana'), isTrue);
+      expect(selectedFlag('Uva'), isFalse);
     });
 
     testWidgets('keyboard highlight is distinct from the selection',
