@@ -1157,7 +1157,7 @@ void main() {
       expect(_inBox(find.byType(Card)), findsNothing);
     });
 
-    testWidgets('the tapped tile stays in loading state after delete',
+    testWidgets('no tile is left loading after a delete (8.0, B5 class)',
         (tester) async {
       final items = _items();
       await tester.pumpWidget(_app(_dropdown(
@@ -1170,8 +1170,8 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
 
       expect(_rowLabels(tester), ['apple', 'Banana']);
-      expect(_inList(find.byType(CircularProgressIndicator)), findsOneWidget);
-      expect(_inList(find.byIcon(Icons.delete)), findsOneWidget);
+      expect(_inList(find.byType(CircularProgressIndicator)), findsNothing);
+      expect(_inList(find.byIcon(Icons.delete)), findsNWidgets(2));
     });
 
     testWidgets('M1: deleting one item keeps the other selections',
@@ -1227,8 +1227,8 @@ void main() {
       expect(selected, [items[1]]);
       expect(_list, findsOneWidget);
       expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
-      // The cancelled tile keeps its spinner (no delete icon any more).
-      expect(_inList(find.byType(CircularProgressIndicator)), findsOneWidget);
+      // 8.0 (B5 class): the cancelled tile gets its delete icon back.
+      expect(_inList(find.byType(CircularProgressIndicator)), findsNothing);
     });
 
     testWidgets('Apagar deletes, clears the selection and closes the dialog',

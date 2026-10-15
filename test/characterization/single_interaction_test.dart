@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 import '../support/harness.dart';
@@ -22,7 +23,7 @@ const SimpleOverlaySettings _tallOverlay =
 SearchDropDownController<int> _ctrl(
   List<ValueItem<int>> items, {
   List<ValueItem<int>?>? calls,
-  bool showClearIcon = false,
+  bool? showClearIcon,
   bool enabled = true,
   ValueItem<int>? initial,
   SearchController? searchController,
@@ -70,8 +71,18 @@ List<ValueItem<int>> _anItems() => <ValueItem<int>>[
       const ValueItem(label: 'Can', value: 4),
     ];
 
+/// Rows of the open list in visual (top to bottom) order.
+List<DefaultListTile<int>> _visualRows(WidgetTester tester) {
+  final List<DefaultListTile<int>> rows = tester
+      .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
+      .toList();
+  double top(DefaultListTile<int> row) =>
+      tester.getTopLeft(find.byWidget(row)).dy;
+  return rows..sort((a, b) => top(a).compareTo(top(b)));
+}
+
 Iterable<DefaultListTile<int>> _rows(WidgetTester tester) =>
-    tester.widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>));
+    _visualRows(tester);
 
 List<String> _rowLabels(WidgetTester tester) =>
     _rows(tester).map((r) => r.item.label).toList();
@@ -145,7 +156,7 @@ void main() {
       expect(_selectedRows(tester), isEmpty);
     });
 
-    testWidgets('reopening after a selection pre-filters by the selected label',
+    testWidgets('reopening after a selection lists every item (D1, 8.0)',
         (tester) async {
       final c = _ctrl(numberedItems(4));
       await _pump(tester, _dropdown(c));
@@ -154,8 +165,10 @@ void main() {
 
       await openSingle(tester);
 
-      expect(_rowLabels(tester), <String>['Item 2']);
-      expect(c.filteredItems.map((e) => e.label), <String>['Item 2']);
+      expect(_rowLabels(tester), contains('Item 2'));
+      expect(c.filteredItems.map((e) => e.label),
+          <String>['Item 0', 'Item 1', 'Item 2', 'Item 3']);
+      expect(_selectedRows(tester), <String>['Item 2']);
     });
 
     testWidgets('typing in the open view filters the rows', (tester) async {
@@ -342,7 +355,7 @@ void main() {
 
       expect(c.filteredItems.map((e) => e.label), <String>['Item 1']);
       expect(_rowLabels(tester), <String>['Item 1']);
-    }, skip: true); // B7: fixed in 8.0
+    }); // B7: fixed in 8.0
   });
 
   group('single: clear button', () {
@@ -371,8 +384,8 @@ void main() {
     });
 
     testWidgets(
-        'after selecting through the view the bar clear button only shows '
-        'once SearchDropDown is rebuilt', (tester) async {
+        'after selecting through the view the bar clear button shows '
+        'right away (8.0: controller notifies)', (tester) async {
       final calls = <ValueItem<int>?>[];
       final c = _ctrl(numberedItems(3), calls: calls, showClearIcon: true);
       late StateSetter rebuild;
@@ -391,7 +404,7 @@ void main() {
       await openSingle(tester);
       await _tapRow(tester, 'Item 2');
       expect(c.clearVisible, isTrue);
-      expect(_inBar(find.byIcon(Icons.clear)), findsNothing);
+      expect(_inBar(find.byIcon(Icons.clear)), findsOneWidget);
 
       rebuild(() {});
       await tester.pump();
@@ -409,7 +422,7 @@ void main() {
 
     testWidgets(
         'controller.showClearIcon true + settings.showClearIcon false: no '
-        'clear in the bar, but the open view still shows one', (tester) async {
+        'clear in the bar nor in the open view (8.0)', (tester) async {
       final c = _ctrl(
         numberedItems(3),
         showClearIcon: true,
@@ -425,13 +438,13 @@ void main() {
       expect(find.byIcon(Icons.clear), findsNothing);
 
       await openSingle(tester);
-      expect(find.byIcon(Icons.clear), findsOneWidget);
+      expect(find.byIcon(Icons.clear), findsNothing);
     });
 
     testWidgets(
-        'defaults (controller.showClearIcon false): clear never appears after '
+        'controller.showClearIcon false: clear never appears after '
         'selecting', (tester) async {
-      final c = _ctrl(numberedItems(3));
+      final c = _ctrl(numberedItems(3), showClearIcon: false);
       late StateSetter rebuild;
       await tester.pumpWidget(
         host(
@@ -473,7 +486,7 @@ void main() {
       await tester.pump();
 
       expect(_inBar(find.byIcon(Icons.clear)), findsOneWidget);
-    }, skip: true); // B6: fixed in 8.0
+    }); // B6: fixed in 8.0
   });
 
   group('single: clearOnClose', () {
@@ -696,7 +709,7 @@ void main() {
 
       expect(c.highlightedIndex, -1);
       expect(_selectedRows(tester), isEmpty);
-    }, skip: true); // B4: fixed in 8.0
+    }); // B4: fixed in 8.0
   });
 
   group('single: Enter key / onSubmitted', () {
@@ -798,7 +811,7 @@ void main() {
       expect(_anchor(tester).isFullScreen, isTrue);
       await openSingle(tester);
       expect(_rowLabels(tester), hasLength(3));
-      expect(tester.getSize(find.byType(ListView)).width, 800);
+      expect(tester.getSize(find.byType(ScrollablePositionedList)).width, 800);
     });
   });
 
@@ -813,10 +826,10 @@ void main() {
         const BoxConstraints(maxWidth: 300, maxHeight: 200),
       );
       await openSingle(tester);
-      expect(
-          tester.getSize(find.byType(ListView)).height, lessThanOrEqualTo(200));
-      expect(
-          tester.getSize(find.byType(ListView)).width, lessThanOrEqualTo(300));
+      expect(tester.getSize(find.byType(ScrollablePositionedList)).height,
+          lessThanOrEqualTo(200));
+      expect(tester.getSize(find.byType(ScrollablePositionedList)).width,
+          lessThanOrEqualTo(300));
     });
 
     testWidgets('custom dropdownWidth and dialogHeight', (tester) async {
@@ -1018,7 +1031,7 @@ void main() {
   });
 
   group('single: removeFocus', () {
-    testWidgets('true (default): Tab into the bar is unfocused immediately',
+    testWidgets('true (default): Tab into the bar keeps the focus (B11, 8.0)',
         (tester) async {
       await tester.pumpWidget(
         host(_withLeadingField(_dropdown(_ctrl(numberedItems(2))))),
@@ -1029,7 +1042,7 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.tab);
       await tester.pump();
 
-      expect(_focusInsideDropdown(), isFalse);
+      expect(_focusInsideDropdown(), isTrue);
     });
 
     testWidgets('false: Tab into the bar keeps the focus there',
@@ -1072,7 +1085,7 @@ void main() {
       await tester.pump();
 
       expect(_focusInsideDropdown(), isTrue);
-    }, skip: true); // B11: fixed in 8.0
+    }); // B11: fixed in 8.0
   });
 
   group('single: selected row styling', () {
@@ -1101,8 +1114,8 @@ void main() {
     });
 
     testWidgets(
-        "today 'selected' is computed from text == label (typing an exact "
-        'label marks the row selected without selecting it)', (tester) async {
+        'typing an exact label does not mark the row selected (B10, 8.0)',
+        (tester) async {
       final c = _ctrl(numberedItems(4));
       await _pump(tester, _dropdown(c, overlay: styled));
       await openSingle(tester);
@@ -1110,8 +1123,8 @@ void main() {
       await typeInSingle(tester, 'Item 2');
 
       expect(c.selectedItem, isNull);
-      expect(_selectedRows(tester), <String>['Item 2']);
-      expect(_rowBackground(tester, 'Item 2'), Colors.purple);
+      expect(_selectedRows(tester), isEmpty);
+      expect(_rowBackground(tester, 'Item 2'), isNot(Colors.purple));
     });
 
     testWidgets(
@@ -1126,6 +1139,6 @@ void main() {
       expect(c.selectedItem, isNull);
       expect(_selectedRows(tester), isEmpty);
       expect(_rowBackground(tester, 'Item 2'), Colors.transparent);
-    }, skip: true); // B10: fixed in 8.0
+    }); // B10: fixed in 8.0
   });
 }

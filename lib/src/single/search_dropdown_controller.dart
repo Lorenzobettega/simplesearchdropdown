@@ -1,14 +1,31 @@
 import 'dart:collection';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import 'package:stringr/stringr.dart';
+import 'package:simple_search_dropdown/src/core/filter_engine.dart';
 
-/// Controller for [SearchDropDown] that manages the list data, selection, and search text.
-class SearchDropDownController<T> {
+/// State of a [SearchDropDown]: items, selection, search text and filtering.
+///
+/// It is a [ChangeNotifier]: selection, `enabled` and the item list notify
+/// listeners, so changes made here update the widget without a `GlobalKey`.
+/// Typing only updates [results] and [highlight], so the bar does not rebuild
+/// on every keystroke.
+///
+/// Items come from either:
+/// * [listItems] — your own list, shared by reference. Changes you make to it
+///   show up the next time the list opens.
+/// * `items` — copied once; the controller owns the copy.
+///
+/// Either way add/edit/delete keep the list in sync after your callback
+/// returns: if the callback already changed the list nothing is done twice.
+class SearchDropDownController<T> extends ChangeNotifier {
+  /// Creates a controller. Pass exactly one of [listItems] or `items`.
   SearchDropDownController({
     SearchController? searchController,
-    required this.listItems,
+    List<ValueItem<T>>? listItems,
+    List<ValueItem<T>>? items,
     this.addMode = true,
     this.newValueItem,
     this.onAddItem,
@@ -22,16 +39,19 @@ class SearchDropDownController<T> {
     this.updateSelectedItem,
     this.verifyInputItem,
     this.verifyDialogSettings,
-    this.showClearIcon = false,
+    this.showClearIcon,
     ValueItem<T>? initialSelectedItem,
-    int sortType = 0,
-    this.enabled = true,
+    @Deprecated('Use sort. Will be removed in 9.0.0') int? sortType,
+    SortType sort = SortType.none,
+    bool enabled = true,
     this.onFilterUpdated,
-    this.latinize = true,
-    this.caseSensitive = false,
-    this.trim = true,
-  })  : localSearchController = searchController ?? SearchController(),
-        _ownsSearchController = searchController == null,
+    bool latinize = true,
+    bool caseSensitive = false,
+    bool trim = true,
+  })  : assert(
+          (listItems == null) != (items == null),
+          'Pass exactly one of listItems or items',
+        ),
         assert(
           (addMode && (newValueItem != null && onAddItem != null)) || !addMode,
           'addMode can only be used with newValueItem != null && onAddItem != null',
@@ -43,478 +63,531 @@ class SearchDropDownController<T> {
         assert(
           (editMode && onEditItem != null && newValueItem != null) || !editMode,
           'editMode can only be used with onEditItem != null && newValueItem != null',
+        ),
+        localSearchController = searchController ?? SearchController(),
+        _ownsSearchController = searchController == null,
+        listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
+        _enabled = enabled,
+        _sort = sortType != null ? SortType.fromLegacy(sortType) : sort,
+        _engine = FilterEngine<T>(
+          normalization: SearchNormalization(
+            latinize: latinize,
+            caseSensitive: caseSensitive,
+            trim: trim,
+          ),
         ) {
-    _suppressFiltering = true;
-    _prevQuery = '';
-    _rebuildCaches();
-    if (initialSelectedItem != null && listItems.isNotEmpty) {
-      selectedItem = initialSelectedItem;
+    if (initialSelectedItem != null && this.listItems.isNotEmpty) {
+      _selectedItem = initialSelectedItem;
       localSearchController.text = initialSelectedItem.label;
-      _prevQuery = initialSelectedItem.label;
-      if (showClearIcon) {
-        clearVisible = true;
-      }
+      _clearVisible = showClearIcon ?? true;
     }
-    if (sortType != 0) {
-      sortList(sortType);
-    }
-    _setAll();
-    localSearchController.addListener(() {
-      if (_suppressFiltering) {
-        return;
-      }
-      final q = localSearchController.text;
-      if (q == _prevQuery) {
-        return;
-      }
-
-      final List<ValueItem<T>> source =
-          q.startsWith(_prevQuery) ? _filteredItems : listItems;
-
-      _prevQuery = q;
-      _filterFrom(source, q);
-    });
+    _engine.sortInPlace(this.listItems, _sort, selected: _selectedItem);
+    _rebuildBase();
+    _filtered.addAll(_base);
+    localSearchController.addListener(_onTextChanged);
   }
 
-  /// The internal search controller for the SearchAnchor/SearchBar.
+  /// The [SearchController] of the underlying `SearchAnchor`.
   final SearchController localSearchController;
   final bool _ownsSearchController;
 
-  /// List of all items to be presented in the dropdown.
+  /// The items shown by the dropdown (your list when created with
+  /// `listItems`, the controller's copy when created with `items`).
   final List<ValueItem<T>> listItems;
 
   /// Allow the user to add new items to the list.
   final bool addMode;
 
-  /// Function to create a new `ValueItem<T>` from user input (required if [addMode] is true).
+  /// Creates a `ValueItem<T>` from user input (required by [addMode] and
+  /// [editMode]).
   final ValueItem<T> Function(String input)? newValueItem;
 
-  /// Function to be executed after a new item is added to the list.
+  /// Called (and awaited) after the user creates an item.
   final Function(ValueItem<T>)? onAddItem;
 
-  /// Allow the user to edit existing items in the list.
+  /// Allow the user to edit existing items.
   final bool editMode;
 
-  /// Function to be executed after an item is edited. Provides the original item and the new item.
+  /// Called (and awaited) after the user edits `originalItem` into `newValue`.
   final Function(ValueItem<T> originalItem, ValueItem<T> newValue)? onEditItem;
 
-  /// Settings for the edit dialog (appearance, text, etc.).
+  /// Settings of the edit dialog.
   final DialogSettings? editDialogSettings;
 
-  /// Allow the user to delete items from the list.
+  /// Allow the user to delete items.
   final bool deleteMode;
 
-  /// Function to be executed after an item is deleted.
+  /// Called (and awaited) after the user deletes an item.
   final Function(ValueItem<T>)? onDeleteItem;
 
-  /// Whether to require confirmation from the user before deleting an item.
+  /// Ask for confirmation before deleting.
   final bool confirmDelete;
 
-  /// Settings for the delete confirmation dialog.
+  /// Settings of the delete confirmation dialog.
   final DialogSettings? deleteDialogSettings;
 
-  /// Callback to update the selected item in external state (called whenever an item is selected or cleared).
+  /// Called whenever an item is selected or the selection is cleared.
   final void Function(ValueItem<T>?)? updateSelectedItem;
 
-  /// Function to check if a newly added item is valid. Returns `false` to reject the input.
+  /// Return `false` to reject an item the user is about to create.
   final bool Function(ValueItem<T>)? verifyInputItem;
 
-  /// Settings for the "invalid input" dialog shown when [verifyInputItem] fails.
+  /// Settings of the dialog shown when [verifyInputItem] rejects an item.
   final DialogSettings? verifyDialogSettings;
 
-  /// Whether to show the clear ("X") icon when there is text or a selected value.
-  /// This should typically match the `searchBarSettings.showClearIcon` in the widget.
-  final bool showClearIcon;
+  /// Whether a selection makes the clear ("X") button visible.
+  ///
+  /// `null` (default) follows `SimpleSearchbarSettings.showClearIcon`;
+  /// `false` never shows it.
+  final bool? showClearIcon;
 
-  // Whether latin characters should be ignored when filtering the text
-  final bool latinize;
-
-  // Whether case sensitive should be ignored when filtering the text
-  final bool caseSensitive;
-
-  // Whether leading and trailing whitespaces should be ignored when filtering the text
-  final bool trim;
-
-  /// The currently selected item (if any).
-  ValueItem<T>? selectedItem;
-
-  /// The current filtered list of items based on the search query.
-  final List<ValueItem<T>> _filteredItems = <ValueItem<T>>[];
-  UnmodifiableListView<ValueItem<T>> get filteredItems =>
-      UnmodifiableListView(_filteredItems);
-
-  /// Whether the dropdown is enabled for user interaction.
-  bool enabled;
-
-  /// Whether the clear button should be visible (true if there's a selection/text and [showClearIcon] is true).
-  bool clearVisible = false;
-
-  /// Optional callback triggered when filteredItems is updated.
+  /// Called when [filteredItems] changes.
   final void Function()? onFilterUpdated;
 
-  // Internal state for filtering logic:
-  bool _suppressFiltering = true;
+  final FilterEngine<T> _engine;
+  SortType _sort;
+  bool _disposed = false;
+  bool _viewOpen = false;
 
-  // Incremental (sem debounce)
-  String _prevQuery = '';
+  /// Ignore accents when filtering.
+  bool get latinize => _engine.normalization.latinize;
 
-  // Cache: normalização por item
-  final Map<ValueItem<T>, String> _normLabel = <ValueItem<T>, String>{};
-  // Lookup O(1) por label normalizada
-  final Map<String, ValueItem<T>> _byLabel = <String, ValueItem<T>>{};
-  // Caches pré‑ordenados e sort atual (lazy)
-  int _currentSortType = 0;
+  /// Match case exactly when filtering.
+  bool get caseSensitive => _engine.normalization.caseSensitive;
 
-  /// Index of the item currently highlighted for keyboard navigation.
-  /// -1 means “no item highlighted”.
-  int _highlightedIndex = -1;
+  /// Ignore leading and trailing whitespace when filtering.
+  bool get trim => _engine.normalization.trim;
 
-  int get highlightedIndex => _highlightedIndex;
+  /// How items are ordered.
+  SortType get sort => _sort;
 
-  /// Reset highlight whenever the filtered list changes.
-  void resetHighlight() {
-    _highlightedIndex = -1;
-  }
+  // ----------------------------------------------------------------- state
 
-  int _selectedIndexInFiltered() {
-    if (selectedItem == null) {
-      return -1;
-    }
+  ValueItem<T>? _selectedItem;
 
-    return _filteredItems.indexOf(selectedItem!);
-  }
-
-  /// Move highlight to the next item (Arrow Down).
-  void highlightNext() {
-    if (_filteredItems.isEmpty) {
-      _highlightedIndex = -1;
+  /// The selected item, if any. Setting it does not call [updateSelectedItem];
+  /// use [selectItem] for a user-like selection.
+  ValueItem<T>? get selectedItem => _selectedItem;
+  set selectedItem(ValueItem<T>? value) {
+    if (_selectedItem == value) {
       return;
     }
-    if (_highlightedIndex < 0) {
-      final selectedIndex = _selectedIndexInFiltered();
-      if (selectedIndex != -1) {
-        _highlightedIndex = selectedIndex;
-        return;
-      }
-      _highlightedIndex = 0;
-    } else {
-      _highlightedIndex = (_highlightedIndex + 1) % _filteredItems.length;
-    }
+    _selectedItem = value;
+    _notify();
   }
 
-  /// Move highlight to the previous item (Arrow Up).
-  void highlightPrevious() {
-    if (_filteredItems.isEmpty) {
-      _highlightedIndex = -1;
+  bool _enabled;
+
+  /// Whether the dropdown accepts interaction.
+  bool get enabled => _enabled;
+  set enabled(bool value) {
+    if (_enabled == value) {
       return;
     }
-    if (_highlightedIndex < 0) {
-      final selectedIndex = _selectedIndexInFiltered();
-      if (selectedIndex != -1) {
-        _highlightedIndex = selectedIndex;
-        return;
-      }
-
-      _highlightedIndex = _filteredItems.length - 1;
-    } else {
-      _highlightedIndex = (_highlightedIndex - 1 + _filteredItems.length) %
-          _filteredItems.length;
-    }
+    _enabled = value;
+    _notify();
   }
 
-  /// Select the item currently highlighted.
-  void selectHighlighted() {
-    if (_highlightedIndex >= 0 && _highlightedIndex < _filteredItems.length) {
-      selectItem(_filteredItems[_highlightedIndex]);
-    }
-  }
+  bool _clearVisible = false;
 
-  /// Sorts the [listItems] based on the given sort type.
-  ///
-  /// `sortType`:
-  /// - 0 = no sorting,
-  /// - 1 = alphabetical,
-  /// - 2 = reverse alphabetical,
-  /// - 3 = move the selected item (if any) to the first position.
-  void sortList(int sortType) {
-    switch (sortType) {
-      case 0:
-        break;
-      case 1:
-        listItems.sort((a, b) => a.label.compareTo(b.label));
-        break;
-      case 2:
-        listItems.sort((a, b) => b.label.compareTo(a.label));
-        break;
-      case 3:
-        if (selectedItem != null) {
-          final int index = listItems.indexOf(selectedItem!);
-          if (index != -1) {
-            listItems
-              ..removeAt(index)
-              ..insert(0, selectedItem!);
-          }
-        }
-        break;
-    }
-    _currentSortType = sortType;
-  }
-
-  /// Filters the list based on the provided [text]. Normalizes accents and case.
-  void filterList(String text) {
-    if (text.isEmpty) {
-      _setAll(); // fast‑path
+  /// Whether the clear button is currently shown (a selection exists and
+  /// [showClearIcon] is not `false`).
+  bool get clearVisible => _clearVisible;
+  set clearVisible(bool value) {
+    if (_clearVisible == value) {
       return;
     }
-    _filterFrom(listItems, text);
+    _clearVisible = value;
+    _notify();
   }
 
-  /// Filtro a partir de uma fonte (lista completa ou resultado anterior).
-  /// Notifica a UI apenas quando o resultado muda de fato.
-  void _filterFrom(List<ValueItem<T>> source, String text) {
-    final String q = _normalize(text);
+  final List<ValueItem<T>> _base = <ValueItem<T>>[];
+  final List<ValueItem<T>> _filtered = <ValueItem<T>>[];
+  final _Signal _results = _Signal();
+  final ValueNotifier<int> _highlight = ValueNotifier<int>(-1);
 
-    final int oldLen = _filteredItems.length;
-    final ValueItem<T>? oldFirst = oldLen > 0 ? _filteredItems.first : null;
-    final ValueItem<T>? oldLast = oldLen > 0 ? _filteredItems.last : null;
+  /// The items matching the current search text.
+  UnmodifiableListView<ValueItem<T>> get filteredItems =>
+      UnmodifiableListView<ValueItem<T>>(_filtered);
 
-    final List<ValueItem<T>> result = <ValueItem<T>>[];
-    final Iterable<ValueItem<T>> iterable =
-        identical(source, _filteredItems) ? _filteredItems : source;
+  /// Notifies when [filteredItems] changes.
+  Listenable get results => _results;
 
-    for (final e in iterable) {
-      if (_normLabel[e]!.contains(q)) {
-        result.add(e);
-      }
+  /// The keyboard-highlighted index in [filteredItems] (-1 for none).
+  ValueListenable<int> get highlight => _highlight;
+
+  /// The keyboard-highlighted index in [filteredItems] (-1 for none).
+  int get highlightedIndex => _highlight.value;
+
+  /// Index of [selectedItem] in [filteredItems], or -1.
+  int get selectedIndex {
+    final ValueItem<T>? selected = _selectedItem;
+    return selected == null ? -1 : _filtered.indexOf(selected);
+  }
+
+  // ------------------------------------------------------------- filtering
+
+  void _onTextChanged() {
+    if (_viewOpen) {
+      _applyFilter();
     }
+  }
 
-    _filteredItems
+  /// The text used as query. Only filters while the view is open, and the
+  /// selected label in the field is not a query.
+  String get _query {
+    if (!_viewOpen) {
+      return '';
+    }
+    final String text = localSearchController.text;
+    final ValueItem<T>? selected = _selectedItem;
+    return selected != null && text == selected.label ? '' : text;
+  }
+
+  /// Rebuilds the sorted base from [listItems] and re-applies the filter.
+  void _refresh() {
+    _rebuildBase();
+    _applyFilter();
+  }
+
+  void _rebuildBase() {
+    _base
       ..clear()
-      ..addAll(result);
+      ..addAll(switch (_sort) {
+        SortType.alphabetical ||
+        SortType.reverseAlphabetical =>
+          _engine.sorted(listItems, _sort),
+        _ => listItems,
+      });
+  }
 
-    final bool changed = _filteredItems.length != oldLen ||
-        (oldLen > 0 &&
-            (_filteredItems.isEmpty ||
-                _filteredItems.first != oldFirst ||
-                _filteredItems.last != oldLast));
-    if (changed) {
-      resetHighlight();
-      onFilterUpdated?.call();
+  void _applyFilter() => _show(_engine.filter(_base, _query));
+
+  void _show(List<ValueItem<T>> next) {
+    if (listEquals(next, _filtered)) {
+      return;
+    }
+    _filtered
+      ..clear()
+      ..addAll(next);
+    if (_disposed) {
+      return;
+    }
+    _highlight.value = -1;
+    _results.fire();
+    onFilterUpdated?.call();
+  }
+
+  /// Filters by [text] immediately (ignores whether the view is open).
+  void filterList(String text) => _show(_engine.filter(_base, text));
+
+  /// Sorts [listItems] in place by [sortType] (0 none, 1 A-Z, 2 Z-A,
+  /// 3 selected first) and refreshes the results.
+  void sortList(int sortType) => sortBy(SortType.fromLegacy(sortType));
+
+  /// Sorts [listItems] in place by [type] and refreshes the results.
+  void sortBy(SortType type) {
+    _sort = type;
+    _engine.sortInPlace(listItems, type, selected: _selectedItem);
+    _refresh();
+  }
+
+  // ------------------------------------------------------------- highlight
+
+  /// Clears the keyboard highlight.
+  void resetHighlight() => _highlight.value = -1;
+
+  /// Moves the highlight down (starting at the selected item), wrapping.
+  void highlightNext() => _moveHighlight(1);
+
+  /// Moves the highlight up (starting at the selected item), wrapping.
+  void highlightPrevious() => _moveHighlight(-1);
+
+  void _moveHighlight(int step) {
+    final int length = _filtered.length;
+    if (length == 0) {
+      _highlight.value = -1;
+      return;
+    }
+    final int current = _highlight.value;
+    if (current < 0) {
+      final int selected = selectedIndex;
+      _highlight.value =
+          selected != -1 ? selected : (step > 0 ? 0 : length - 1);
+      return;
+    }
+    _highlight.value = (current + step + length) % length;
+  }
+
+  /// Highlights the first (`last == false`) or the last item.
+  void highlightEdge({required bool last}) {
+    _highlight.value =
+        _filtered.isEmpty ? -1 : (last ? _filtered.length - 1 : 0);
+  }
+
+  /// Selects the highlighted item, if any.
+  void selectHighlighted() {
+    final int index = _highlight.value;
+    if (index >= 0 && index < _filtered.length) {
+      selectItem(_filtered[index]);
     }
   }
 
-  /// Resets the selection to its default state (clears the current selection and text).
+  /// Selects the first filtered item, if any.
+  void handleEnterKey() {
+    if (_filtered.isNotEmpty) {
+      selectItem(_filtered.first);
+    }
+  }
+
+  /// Enter: selects the highlighted item, or the first filtered one.
+  void submit() {
+    if (_highlight.value >= 0) {
+      selectHighlighted();
+    } else {
+      handleEnterKey();
+    }
+  }
+
+  // ------------------------------------------------------------- selection
+
+  /// Selects [item] like a user would: fills the text, closes the view and
+  /// calls [updateSelectedItem].
+  void selectItem(ValueItem<T> item) {
+    _selectedItem = item;
+    if (localSearchController.isAttached && localSearchController.isOpen) {
+      localSearchController.closeView(item.label);
+    } else {
+      localSearchController.text = item.label;
+    }
+    updateSelectedItem?.call(item);
+    _clearVisible = showClearIcon ?? true;
+    _notify();
+  }
+
+  /// Clears the selection and the text, then calls [updateSelectedItem].
   void resetSelection({bool highlight = false}) {
-    localSearchController.text = '';
-    selectedItem = null;
-    clearVisible = false;
+    _clearSelection();
     if (highlight) {
       resetHighlight();
     }
     updateSelectedItem?.call(null);
   }
 
-  /// Substitutes the current [listItems] with a new list, rebuilding internal caches and
-  /// updating the filtered list.
-  /// This should be called when the source list items are changed externally.
-  /// If selectedItem isn't null, shouldReset parameter will be bypassed.
+  /// Clears the selection and the text, then calls [updateSelectedItem].
+  void clearSelectionAndNotify() {
+    _clearSelection();
+    updateSelectedItem?.call(null);
+  }
+
+  /// Clears the selection and the text without calling [updateSelectedItem].
+  void clearSelection() => _clearSelection();
+
+  void _clearSelection() {
+    _selectedItem = null;
+    _clearVisible = false;
+    localSearchController.text = '';
+    _applyFilter();
+    _notify();
+  }
+
+  /// Selects the item whose label matches [label] (exact first, then
+  /// normalized). Does nothing when no item matches.
+  void forceSelection(String label) {
+    ValueItem<T>? match;
+    for (final ValueItem<T> item in listItems) {
+      if (item.label == label) {
+        match = item;
+        break;
+      }
+    }
+    match ??= _engine.findByLabel(listItems, label);
+    if (match != null) {
+      selectItem(match);
+    }
+  }
+
+  /// Replaces the items with [newList] (written into [listItems]).
+  ///
+  /// The selection is reset when [shouldReset] is `true` or an item is
+  /// selected.
   void updateListItems(List<ValueItem<T>> newList, bool shouldReset) {
-    if (shouldReset || selectedItem != null) {
+    if (shouldReset || _selectedItem != null) {
       resetSelection();
     }
+    final List<ValueItem<T>> copy = List<ValueItem<T>>.of(newList);
     listItems
       ..clear()
-      ..addAll(newList);
-    _rebuildCaches();
-    if (_currentSortType != 0) {
-      sortList(_currentSortType);
-    }
-    _setAll();
+      ..addAll(copy);
+    _engine
+      ..clearCache()
+      ..sortInPlace(listItems, _sort, selected: _selectedItem);
+    _refresh();
+    _notify();
   }
 
-  /// Selects the given item from the list. Updates the search text and notifies listeners.
-  void selectItem(ValueItem<T> item) {
-    _suppressFiltering = true;
-    selectedItem = item;
-    if (localSearchController.isOpen) {
-      localSearchController.closeView(item.label);
-    } else {
-      localSearchController.text = item.label;
-    }
-    updateSelectedItem?.call(item);
-    if (showClearIcon) {
-      clearVisible = true;
-    }
-    _suppressFiltering = false;
-    _prevQuery = localSearchController.text;
-  }
+  // ---------------------------------------------------------- add / delete
 
-  /// Default ENTER behavior when there is no keyboard highlight:
-  /// selects the first item in the filtered list (if any).
-  void handleEnterKey() {
-    if (_filteredItems.isNotEmpty) {
-      final ValueItem<T> itemToSelect = _filteredItems.first;
-      selectItem(itemToSelect);
-    }
-  }
-
-  /// Clears the current selection and search field text, and notifies external callbacks.
-  void clearSelectionAndNotify() {
-    selectedItem = null;
-    localSearchController.clear();
-    if (showClearIcon) {
-      clearVisible = false;
-    }
-    updateSelectedItem?.call(null);
-    _suppressFiltering = false;
-    _prevQuery = '';
-  }
-
-  /// Clears the current selection and search field text without notifying external callbacks.
-  void clearSelection() {
-    selectedItem = null;
-    localSearchController.clear();
-    if (showClearIcon) {
-      clearVisible = false;
-    }
-    _suppressFiltering = false;
-    _prevQuery = '';
-  }
-
-  /// Forces the selection of an item by its label, if it exists in the list.
-  void forceSelection(String label) {
-    final item = _byLabel[_normalize(label)];
-    if (item != null) {
-      selectItem(item);
-    }
-  }
-
-  /// Handles adding a new item to the list from the given input text.
-  /// Returns a Future that completes after the operation (and any dialog) is handled.
+  /// Creates an item from [text] (after [verifyInputItem]), awaits
+  /// [onAddItem], adds it to [listItems] if the callback did not, and selects
+  /// it.
   Future<void> addItem(
     String text,
     BuildContext context, {
     SearchDropDownStrings strings = const SearchDropDownStrings(),
   }) async {
-    if (addMode && newValueItem != null) {
-      final ValueItem<T> item = newValueItem!(text);
-      // Verify the new item if a verifier is provided
-      if (verifyInputItem != null && !verifyInputItem!(item)) {
-        // Show warning dialog if the item is not valid
-        await sendDialog(
-          context,
-          WarningDialog(
-            confirmDialog: false,
-            returnFunction: (_) {
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-            },
-            settings: verifyDialogSettings,
-            strings: strings,
-          ),
-        );
-        localSearchController.clear();
-        return;
-      }
-      _filteredItems.add(item);
-      _normLabel[item] = _normalize(item.label);
-      _byLabel[_normLabel[item]!] = item;
-
-      await onAddItem?.call(item);
-      selectItem(item);
+    final ValueItem<T> Function(String)? create = newValueItem;
+    if (!addMode || create == null) {
+      return;
     }
+    final ValueItem<T> item = create(text);
+    final bool Function(ValueItem<T>)? verify = verifyInputItem;
+    if (verify != null && !verify(item)) {
+      await sendDialog<void>(
+        context,
+        WarningDialog(
+          confirmDialog: false,
+          returnFunction: (_) {
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
+          },
+          settings: verifyDialogSettings,
+          strings: strings,
+        ),
+      );
+      localSearchController.clear();
+      return;
+    }
+    await onAddItem?.call(item);
+    if (_disposed) {
+      return;
+    }
+    if (!listItems.contains(item)) {
+      listItems.add(item);
+    }
+    _refresh();
+    selectItem(item);
   }
 
   Future<void> _proceedWithDeletion(ValueItem<T> item) async {
     await onDeleteItem?.call(item);
-    final norm = _normLabel.remove(item);
-    if (norm != null) {
-      _byLabel.remove(norm);
+    if (_disposed) {
+      return;
     }
-    _filteredItems.remove(item);
-    localSearchController.text = ' ';
+    listItems.remove(item);
+    _engine.forget(item);
+    _refresh();
     resetSelection(highlight: true);
   }
 
-  /// Handles deleting an item from the list. Shows a confirmation dialog if required.
+  /// Deletes [item] (after confirmation when [confirmDelete]), awaiting
+  /// [onDeleteItem] and removing the item from [listItems] if the callback
+  /// did not.
   Future<void> deleteItem(
     ValueItem<T> item,
     BuildContext context, {
     SearchDropDownStrings strings = const SearchDropDownStrings(),
   }) async {
-    if (deleteMode) {
-      if (confirmDelete) {
-        await sendDialog(
-          context,
-          WarningDialog(
-            returnFunction: (bool result) async {
-              if (context.mounted) {
-                Navigator.of(context).pop();
-              }
-              if (result) {
-                await _proceedWithDeletion(item);
-              }
-            },
-            settings: deleteDialogSettings,
-            strings: strings,
-          ),
-        );
-      } else {
-        await _proceedWithDeletion(item);
-      }
+    if (!deleteMode) {
+      return;
+    }
+    if (!confirmDelete) {
+      return _proceedWithDeletion(item);
+    }
+    bool confirmed = false;
+    await sendDialog<void>(
+      context,
+      WarningDialog(
+        returnFunction: (bool result) {
+          confirmed = result;
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        },
+        settings: deleteDialogSettings,
+        strings: strings,
+      ),
+    );
+    if (confirmed) {
+      await _proceedWithDeletion(item);
     }
   }
 
-  /// Handles editing (modifying) an existing item in the list.
-  /// Opens an edit dialog and updates the item via the provided callback if confirmed.
+  // ------------------------------------------------------------------ edit
+
+  /// Opens the edit dialog for [item]; on confirm awaits [onEditItem] and
+  /// replaces the item in [listItems] if the callback did not.
   Future<void> editItem(
     ValueItem<T> item,
     BuildContext context, {
     SearchDropDownStrings strings = const SearchDropDownStrings(),
   }) async {
-    if (editMode && newValueItem != null) {
-      await sendDialog(
-        context,
-        EditDialog(
-          label: item.label,
-          returnFunction: (bool ok, String newText) async {
-            if (ok) {
-              final ValueItem<T> newValue = newValueItem!(newText);
-              await onEditItem?.call(item, newValue);
-              resetSelection(highlight: true);
-              final oldKey = _normLabel[item];
-              if (oldKey != null && _byLabel[oldKey] == item) {
-                _byLabel.remove(oldKey);
-              }
-              _normLabel.remove(item);
-              _normLabel[newValue] = _normalize(newValue.label);
-              _byLabel[_normLabel[newValue]!] = newValue;
-            }
-            if (context.mounted) {
-              Navigator.of(context).pop();
-            }
-          },
-          settings: editDialogSettings,
-          strings: strings,
-        ),
-      );
+    final ValueItem<T> Function(String)? create = newValueItem;
+    if (!editMode || create == null) {
+      return;
+    }
+    String? newText;
+    await sendDialog<void>(
+      context,
+      EditDialog(
+        label: item.label,
+        returnFunction: (bool ok, String text) {
+          if (ok) {
+            newText = text;
+          }
+          if (context.mounted) {
+            Navigator.of(context).pop();
+          }
+        },
+        settings: editDialogSettings,
+        strings: strings,
+      ),
+    );
+    final String? text = newText;
+    if (text == null) {
+      return;
+    }
+    final ValueItem<T> newValue = create(text);
+    await onEditItem?.call(item, newValue);
+    if (_disposed) {
+      return;
+    }
+    final int index = listItems.indexOf(item);
+    final bool hasNew = listItems.contains(newValue);
+    if (index != -1 && !hasNew) {
+      listItems[index] = newValue;
+    } else if (index != -1) {
+      listItems.removeAt(index);
+    } else if (!hasNew) {
+      listItems.add(newValue);
+    }
+    _engine.forget(item);
+    final bool wasSelected = _selectedItem == item;
+    _refresh();
+    if (wasSelected) {
+      selectItem(newValue);
     }
   }
 
-  /// Prepares the controller state when the search view is opened.
-  /// (Resets the filtered list to show all items and enables filtering.)
+  // ------------------------------------------------------------ open/close
+
+  /// Prepares the list when the search view opens: refreshes it from
+  /// [listItems] and shows every item (the selected label is not a query).
   void onSearchOpen() {
-    _suppressFiltering = false;
-    filterList(localSearchController.text);
-    // TODO: add scroll to item.
+    _viewOpen = true;
+    _refresh();
   }
 
+  /// Restores or clears the text when the search view closes.
   void onSearchClose(bool clearOnClose) {
-    if (clearOnClose && localSearchController.text.isNotEmpty) {
-      if (selectedItem != null) {
-        if (localSearchController.text != selectedItem!.label) {
-          localSearchController.text = selectedItem!.label;
+    _viewOpen = false;
+    final String text = localSearchController.text;
+    if (clearOnClose && text.isNotEmpty) {
+      final ValueItem<T>? selected = _selectedItem;
+      if (selected != null) {
+        if (text != selected.label) {
+          localSearchController.text = selected.label;
         }
       } else {
         localSearchController.text = '';
@@ -522,56 +595,48 @@ class SearchDropDownController<T> {
     }
   }
 
-  /// Toggles the enabled/disabled state of the dropdown.
-  void toggleEnabled() {
-    enabled = !enabled;
+  /// Toggles [enabled].
+  void toggleEnabled() => enabled = !_enabled;
+
+  // ------------------------------------------------------------- lifecycle
+
+  /// Whether [dispose] was called.
+  bool get isDisposed => _disposed;
+
+  void _notify() {
+    if (_disposed) {
+      return;
+    }
+    final SchedulerBinding binding = SchedulerBinding.instance;
+    if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      binding.addPostFrameCallback((_) {
+        if (!_disposed) {
+          notifyListeners();
+        }
+      });
+    } else {
+      notifyListeners();
+    }
   }
 
-  /// Disposes the internal [SearchController]. Call this if the controller is no longer needed.
+  /// Releases resources. Safe to call more than once.
+  @override
   void dispose() {
+    if (_disposed) {
+      return;
+    }
+    _disposed = true;
+    localSearchController.removeListener(_onTextChanged);
     if (_ownsSearchController) {
       localSearchController.dispose();
     }
+    _highlight.dispose();
+    _results.dispose();
+    super.dispose();
   }
+}
 
-  // ===================== helpers de performance =====================
-
-  String _normalize(String s) {
-    String resultado = s;
-    if (trim) {
-      resultado = resultado.trim();
-    }
-    if (latinize) {
-      resultado = resultado.latinize();
-    }
-    if (!caseSensitive) {
-      resultado = resultado.toLowerCase();
-    }
-    return resultado;
-  }
-
-  void _rebuildCaches() {
-    _normLabel.clear();
-    _byLabel.clear();
-    for (var i = 0; i < listItems.length; i++) {
-      final e = listItems[i];
-      final n = _normalize(e.label);
-      _normLabel[e] = n;
-      _byLabel[n] = e;
-    }
-  }
-
-  void _setAll() {
-    _filteredItems.clear();
-    if (_currentSortType == 1) {
-      _filteredItems.addAll(List<ValueItem<T>>.from(listItems)
-        ..sort((a, b) => a.label.compareTo(b.label)));
-    } else if (_currentSortType == 2) {
-      _filteredItems.addAll(List<ValueItem<T>>.from(listItems)
-        ..sort((a, b) => b.label.compareTo(a.label)));
-    } else {
-      _filteredItems.addAll(listItems);
-    }
-    resetHighlight();
-  }
+/// A [ChangeNotifier] that can be fired from outside.
+class _Signal extends ChangeNotifier {
+  void fire() => notifyListeners();
 }

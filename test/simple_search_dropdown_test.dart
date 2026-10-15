@@ -61,7 +61,12 @@ void main() {
       await tester.pumpAndSettle();
 
 // Digita para reduzir a lista
-      await tester.enterText(find.byType(TextField).first, 'ban');
+      await tester.enterText(
+        find.byWidgetPredicate(
+          (w) => w is EditableText && w.focusNode.hasFocus,
+        ),
+        'ban',
+      );
       await tester.pump(const Duration(milliseconds: 200));
 
 // Toca no item "Banana"

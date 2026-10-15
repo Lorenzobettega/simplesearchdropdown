@@ -97,10 +97,17 @@ class FilterEngine<T> {
     return null;
   }
 
+  /// Orders two items by normalized label (case and accents ignored),
+  /// falling back to the raw label so the order is total.
+  int compare(ValueItem<T> a, ValueItem<T> b) {
+    final int byNormalized = labelOf(a).compareTo(labelOf(b));
+    return byNormalized != 0 ? byNormalized : a.label.compareTo(b.label);
+  }
+
   /// A sorted copy of [source] according to [type].
   ///
   /// [SortType.selectedFirst] moves [selected] (if present) to the front.
-  static List<ValueItem<T>> sorted<T>(
+  List<ValueItem<T>> sorted(
     Iterable<ValueItem<T>> source,
     SortType type, {
     ValueItem<T>? selected,
@@ -110,8 +117,8 @@ class FilterEngine<T> {
     return copy;
   }
 
-  /// Sorts [list] in place according to [type] (7.x semantics).
-  static void sortInPlace<T>(
+  /// Sorts [list] in place according to [type].
+  void sortInPlace(
     List<ValueItem<T>> list,
     SortType type, {
     ValueItem<T>? selected,
@@ -120,9 +127,9 @@ class FilterEngine<T> {
       case SortType.none:
         break;
       case SortType.alphabetical:
-        list.sort((a, b) => a.label.compareTo(b.label));
+        list.sort(compare);
       case SortType.reverseAlphabetical:
-        list.sort((a, b) => b.label.compareTo(a.label));
+        list.sort((a, b) => compare(b, a));
       case SortType.selectedFirst:
         if (selected != null) {
           final int index = list.indexOf(selected);

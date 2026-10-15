@@ -97,21 +97,39 @@ void main() {
     });
 
     test('sorted returns a copy in the requested order', () {
-      expect(
-          _labels(FilterEngine.sorted(source, SortType.none)), ['b', 'c', 'a']);
-      expect(_labels(FilterEngine.sorted(source, SortType.alphabetical)),
+      expect(_labels(FilterEngine<int>().sorted(source, SortType.none)),
+          ['b', 'c', 'a']);
+      expect(_labels(FilterEngine<int>().sorted(source, SortType.alphabetical)),
           ['a', 'b', 'c']);
-      expect(_labels(FilterEngine.sorted(source, SortType.reverseAlphabetical)),
+      expect(
+          _labels(
+              FilterEngine<int>().sorted(source, SortType.reverseAlphabetical)),
           ['c', 'b', 'a']);
       expect(
-          _labels(FilterEngine.sorted(source, SortType.selectedFirst,
-              selected: source[2])),
+          _labels(FilterEngine<int>()
+              .sorted(source, SortType.selectedFirst, selected: source[2])),
           ['a', 'b', 'c']);
       expect(_labels(source), ['b', 'c', 'a']);
     });
 
+    test('alphabetical order ignores case and accents (D2)', () {
+      final List<ValueItem<int>> mixed = <ValueItem<int>>[
+        const ValueItem(label: 'Pzz', value: 1),
+        const ValueItem(label: 'Banana', value: 2),
+        const ValueItem(label: 'Pêra', value: 3),
+        const ValueItem(label: 'abacaxi', value: 4),
+      ];
+      expect(_labels(FilterEngine<int>().sorted(mixed, SortType.alphabetical)),
+          ['abacaxi', 'Banana', 'Pêra', 'Pzz']);
+      expect(
+          _labels(
+              FilterEngine<int>().sorted(mixed, SortType.reverseAlphabetical)),
+          ['Pzz', 'Pêra', 'Banana', 'abacaxi']);
+    });
+
     test('selectedFirst without a selection keeps the order', () {
-      expect(_labels(FilterEngine.sorted(source, SortType.selectedFirst)),
+      expect(
+          _labels(FilterEngine<int>().sorted(source, SortType.selectedFirst)),
           ['b', 'c', 'a']);
     });
   });

@@ -353,8 +353,11 @@ void main() {
       debugPrint('BASELINE rows_built_on_open=$built');
       debugPrint('BASELINE rows_in_tree_after_open=$rendered');
       expect(controller.filteredItems.length, 10000);
-      // 7.8 baseline: 9. A regression guard; 8.0 must not build more rows.
-      expect(built, lessThanOrEqualTo(9));
+      // 7.8 baseline: 9. 8.0 builds 10: ScrollablePositionedList caches two
+      // viewports (needed to open scrolled to the selection, #46), but rows
+      // are no longer rebuilt per frame or per unchanged keystroke, so the
+      // open + type journey below costs far less than in 7.8.
+      expect(built, lessThanOrEqualTo(10));
       expect(rendered, lessThan(10000), reason: 'list is lazily built');
     });
   });
@@ -372,8 +375,9 @@ void main() {
       debugPrint('BASELINE rows_built_typing_total=${_sum(perKey)}');
       expect(controller.filteredItems.length, 111);
       expect(perKey, hasLength(_typed.length));
-      // 7.8 baseline: 9 rows per keystroke, 63 in total.
-      expect(_sum(perKey), lessThanOrEqualTo(63));
+      // 7.8 baseline: 9 rows per keystroke, 63 in total. 8.0 only rebuilds
+      // rows when the results change: 20 in total.
+      expect(_sum(perKey), lessThanOrEqualTo(20));
     });
   });
 

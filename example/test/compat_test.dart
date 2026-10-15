@@ -245,9 +245,9 @@ void main() {
 
       await _openSingleView(tester, _single);
       expect(tester.takeException(), isNull);
-      // The view filters by the current text 'Teste'.
+      // D1 (8.0): the view lists every item, scrolled to the selected 'Teste'.
       expect(_viewItem('Teste'), findsOneWidget);
-      expect(_viewItem('Lorenzo'), findsNothing);
+      expect(_viewItem('Lorenzo'), findsOneWidget);
     });
 
     testWidgets('pressing the button twice disables it again', (tester) async {
@@ -300,9 +300,9 @@ void main() {
       await _pumpApp(tester);
 
       await _openSingleView(tester, _custom);
-      // Opening filters by the current text ('Lorenzo').
+      // D1 (8.0): opening lists every item, scrolled to 'Lorenzo'.
       expect(_viewItem('Lorenzo'), findsOneWidget);
-      expect(_viewItem('Peter'), findsNothing);
+      expect(_viewItem('Peter'), findsOneWidget);
 
       await tester.enterText(_focusedField(), 'Pet');
       await tester.pump();
@@ -526,13 +526,15 @@ void main() {
         await _addThroughMultiple(tester, 'Teste novo');
         await _tapButton(tester, 'Enable/Disable Single Selection');
         await _openSingleView(tester, _single);
+        expect(tester.takeException(), isNull);
+        // D1 (8.0): the view lists everything; narrow it to both matches.
+        await tester.enterText(_focusedField(), 'test');
+        await tester.pump();
 
         expect(tester.takeException(), isNull);
         expect(_viewItem('Teste'), findsOneWidget);
         expect(_viewItem('Teste novo'), findsOneWidget);
-      },
-      skip:
-          true, // compat: single dropdown opened with text after the shared list grew throws (stale _normLabel cache, Null check in _filterFrom)
+      }, // compat: fixed in 8.0 (lazy label cache)
     );
 
     testWidgets(
@@ -551,8 +553,7 @@ void main() {
         expect(_viewItem('Novo item'), findsOneWidget);
         expect(_viewItem('Lorenzo'), findsNothing);
       },
-      skip:
-          true, // compat: typing in the single after the shared list grew throws (stale _normLabel cache, Null check in _filterFrom)
+      // compat: fixed in 8.0 (lazy label cache)
     );
   });
 

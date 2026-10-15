@@ -1,0 +1,11 @@
+# The example doubles as the 7.x compatibility fixture: it keeps using the
+# deprecated API on purpose (see test/compat_test.dart).
+include: ../analysis_options.yaml
+
+analyzer:
+  errors:
+    deprecated_member_use: ignore
+  exclude:
+    - android/**
+    - ios/**
+    - web/**

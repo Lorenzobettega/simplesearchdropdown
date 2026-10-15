@@ -33,7 +33,7 @@ class _EditDialogState extends State<EditDialog> {
   @override
   void initState() {
     super.initState();
-    controller = TextEditingController();
+    controller = TextEditingController(text: widget.label);
     dialogSettings = widget.settings ?? const DialogSettings();
   }
 

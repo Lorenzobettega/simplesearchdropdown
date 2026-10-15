@@ -13,6 +13,7 @@ class DefaultListTile<T> extends StatefulWidget {
     required this.overlayListSettings,
     required this.selected,
     required this.defaultAdditionalWidget,
+    this.strings = const SearchDropDownStrings(),
     super.key,
   });
 
@@ -27,6 +28,9 @@ class DefaultListTile<T> extends StatefulWidget {
   final bool selected;
   final Widget? defaultAdditionalWidget;
 
+  /// Source of tooltips and semantics labels.
+  final SearchDropDownStrings strings;
+
   @override
   State<DefaultListTile<T>> createState() => _DefaultListTileState<T>();
 }
@@ -38,7 +42,7 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
     setState(() => _isLoading = true);
     try {
       await widget.onDelete(widget.item);
-    } catch (_) {
+    } finally {
       if (mounted) {
         setState(() => _isLoading = false);
       }
@@ -120,12 +124,14 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
           else ...[
             if (widget.editMode)
               IconButton(
+                tooltip: widget.strings.editItemTooltip,
                 onPressed: _handleEditItem,
                 icon: widget.overlayListSettings.dialogEditIcon,
               ),
             if (widget.deleteMode)
               widget.overlayListSettings.dialogActionWidget ??
                   IconButton(
+                    tooltip: widget.strings.deleteItemTooltip,
                     onPressed: _handleDeleteItem,
                     icon: widget.overlayListSettings.dialogDeleteIcon,
                   )

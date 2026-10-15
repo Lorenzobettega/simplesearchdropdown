@@ -89,10 +89,18 @@ Finder _inRow(String label, Finder matching) =>
 Finder _spinnerIn(String label) =>
     _inRow(label, find.byType(CircularProgressIndicator));
 
-List<String> _rowLabels(WidgetTester tester) => tester
-    .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
-    .map((r) => r.item.label)
-    .toList();
+/// Rows of the open list in visual (top to bottom) order.
+List<DefaultListTile<int>> _visualRows(WidgetTester tester) {
+  final List<DefaultListTile<int>> rows = tester
+      .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
+      .toList();
+  double top(DefaultListTile<int> row) =>
+      tester.getTopLeft(find.byWidget(row)).dy;
+  return rows..sort((a, b) => top(a).compareTo(top(b)));
+}
+
+List<String> _rowLabels(WidgetTester tester) =>
+    _visualRows(tester).map((r) => r.item.label).toList();
 
 Finder _inAddRow(Finder matching) =>
     find.descendant(of: find.byType(DefaultAddListItem), matching: matching);
@@ -282,7 +290,9 @@ void main() {
       await openSingle(tester);
 
       expect(items.last, _newItem('Kiwi'));
-      expect(_rowLabels(tester), <String>['Kiwi']);
+      // D1 (8.0): reopening lists every item, scrolled to the selection.
+      expect(_rowLabels(tester), contains('Kiwi'));
+      expect(c.filteredItems.last, _newItem('Kiwi'));
     });
 
     testWidgets('a passing verifyInputItem receives the new item; it is added',
@@ -467,7 +477,7 @@ void main() {
       );
       await _pump(tester, c);
       await openSingle(tester);
-      expect(_rowLabels(tester), <String>['Uva']);
+      expect(_rowLabels(tester), contains('Uva'));
 
       await _tapDelete(tester, 'Uva');
       await tester.pumpAndSettle();
@@ -530,7 +540,7 @@ void main() {
         expect(deleted, <ValueItem<int>>[_banana]);
         expect(_rowLabels(tester), isNot(contains('Banana')));
       });
-    }, skip: 'B1: fixed in 8.0');
+    }); // B1: fixed in 8.0
   });
 
   group('delete: confirmDelete dialog', () {
@@ -616,7 +626,7 @@ void main() {
         expect(_spinnerIn('Banana'), findsNothing);
         expect(_inRow('Banana', find.byIcon(Icons.delete)), findsOneWidget);
       });
-    }, skip: 'B5: fixed in 8.0');
+    }); // B5: fixed in 8.0
   });
 
   group('edit: edit icon', () {
@@ -703,7 +713,9 @@ void main() {
 
       expect(find.byType(EditDialog), findsOneWidget);
       expect(_inEditDialog(find.text('Editar o item:')), findsOneWidget);
-      expect(_inEditDialog(find.text('Banana')), findsOneWidget);
+      // The label above the field, plus the field prefilled with it (B2).
+      expect(_inEditDialog(find.text('Banana')), findsNWidgets(2));
+      expect(_editField(tester).controller?.text, 'Banana');
       expect(_editField(tester).decoration?.hintText, 'Novo valor');
       expect(_editField(tester).decoration?.labelText, 'Novo valor');
       expect(_inEditDialog(find.widgetWithText(TextButton, 'Cancelar')),
@@ -740,6 +752,14 @@ void main() {
       await _pump(tester, editing(fruitItems(), edits, inputs: inputs));
       await openSingle(tester);
       await _tapEdit(tester, 'Banana');
+      // The field starts prefilled (B2); empty it first.
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(EditDialog),
+          matching: find.byType(TextField),
+        ),
+        '',
+      );
 
       await tester.tap(_inDialog(find.text('Editar')));
       await _frames(tester);
@@ -852,8 +872,8 @@ void main() {
         );
         await _pump(tester, c);
         await openSingle(tester);
-        // The view pre-filters by the selected label: "ana" also matches Banana.
-        expect(_rowLabels(tester), <String>['Ana', 'Banana']);
+        // D1 (8.0): the view lists every item.
+        expect(_rowLabels(tester), <String>['Ana', 'Banana', 'Uva']);
 
         await _tapEdit(tester, 'Banana');
         await _submitEdit(tester, 'Banana2');
@@ -862,7 +882,7 @@ void main() {
         expect(selections, isEmpty);
         expect(c.localSearchController.text, 'Ana');
       });
-    }, skip: 'B2: fixed in 8.0');
+    }); // B2: fixed in 8.0
   });
 
   group('controller: add/delete/edit mode asserts', () {
@@ -1061,7 +1081,9 @@ void main() {
 
       expect(_inEditDialog(find.text('Rename')), findsOneWidget);
       expect(find.text('Editar o item:'), findsNothing);
-      expect(_inEditDialog(find.text('Banana')), findsOneWidget);
+      // The label above the field, plus the field prefilled with it (B2).
+      expect(_inEditDialog(find.text('Banana')), findsNWidgets(2));
+      expect(_editField(tester).controller?.text, 'Banana');
       expect(_editField(tester).decoration?.hintText, 'New name');
       expect(_inEditDialog(find.widgetWithText(TextButton, 'Back')),
           findsOneWidget);

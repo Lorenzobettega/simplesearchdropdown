@@ -29,19 +29,20 @@ const List<String> _fruitOrder = <String>[
 ];
 
 const List<String> _fruitAZ = <String>[
+  'abacaxi',
   'Banana',
   'Maçã',
   'Pêra',
   'Uva',
-  'abacaxi',
 ];
 
+// D2 (8.0): ordering ignores case and accents.
 const List<String> _fruitZA = <String>[
-  'abacaxi',
   'Uva',
   'Pêra',
   'Maçã',
   'Banana',
+  'abacaxi',
 ];
 
 const ValueItem<int> _banana = ValueItem<int>(label: 'Banana', value: 2);
@@ -91,10 +92,18 @@ Future<void> _type(WidgetTester tester, String text) async {
 }
 
 /// Labels of the item tiles currently built in the open search view.
-List<String> _tileLabels(WidgetTester tester) => tester
-    .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
-    .map((t) => t.item.label)
-    .toList();
+/// Rows of the open list in visual (top to bottom) order.
+List<DefaultListTile<int>> _visualRows(WidgetTester tester) {
+  final List<DefaultListTile<int>> rows = tester
+      .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
+      .toList();
+  double top(DefaultListTile<int> row) =>
+      tester.getTopLeft(find.byWidget(row)).dy;
+  return rows..sort((a, b) => top(a).compareTo(top(b)));
+}
+
+List<String> _tileLabels(WidgetTester tester) =>
+    _visualRows(tester).map((t) => t.item.label).toList();
 
 /// Text currently displayed by the closed search bar.
 String _barText(WidgetTester tester) => tester
@@ -322,7 +331,7 @@ void main() {
       expect(_labels(c.filteredItems), <String>['Banana']);
     });
 
-    test('empty text takes the reset path and does NOT call onFilterUpdated',
+    test('empty text shows everything and reports the change (8.0, B13 class)',
         () {
       var calls = 0;
       final c = _controller(fruitItems(), onFilterUpdated: () => calls++);
@@ -332,7 +341,7 @@ void main() {
       expect(calls, 1);
       c.filterList('');
       expect(_labels(c.filteredItems), _fruitOrder);
-      expect(calls, 1);
+      expect(calls, 2);
     });
   });
 
@@ -453,14 +462,14 @@ void main() {
       expect(calls, 2);
     });
 
-    test('updateListItems (reset path) does not call it', () {
+    test('updateListItems reports the new results (8.0)', () {
       var calls = 0;
       final c = _controller(fruitItems(), onFilterUpdated: () => calls++);
       addTearDown(c.dispose);
 
       c.updateListItems(_newList(), false);
       expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
-      expect(calls, 0);
+      expect(calls, 1);
     });
 
     test(
@@ -487,8 +496,7 @@ void main() {
         _typeViaController(c, 'y');
         expect(_labels(c.filteredItems), <String>['AXY', 'BY', 'CXY']);
         expect(calls, 2);
-      },
-      skip: 'B13: fixed in 8.0',
+      }, // B13: fixed in 8.0
     );
   });
 
@@ -511,18 +519,18 @@ void main() {
   });
 
   group('sort: sortType 1 A-Z', () {
-    test('sorts by raw String.compareTo and mutates the caller list', () {
+    test('sorts naturally (D2) and mutates the caller list', () {
       final items = fruitItems();
       final c = _controller(items, sortType: 1);
       addTearDown(c.dispose);
 
-      // Uppercase sorts before lowercase ('abacaxi' last).
+      // 8.0 (D2): case and accents are ignored ('abacaxi' first).
       expect(_labels(c.filteredItems), _fruitAZ);
       expect(identical(c.listItems, items), isTrue);
       expect(_labels(items), _fruitAZ);
     });
 
-    test('accented characters sort by code unit, not locale', () {
+    test('accented characters sort with their base letter (D2, 8.0)', () {
       final c = _controller(
         <ValueItem<int>>[
           const ValueItem(label: 'Pêra', value: 1),
@@ -533,7 +541,7 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), <String>['Pera', 'Pzz', 'Pêra']);
+      expect(_labels(c.filteredItems), <String>['Pera', 'Pêra', 'Pzz']);
     });
 
     test('filter results keep the sorted order', () {
@@ -544,7 +552,7 @@ void main() {
       _typeViaController(c, 'a');
       expect(_labels(c.filteredItems), _fruitAZ);
       _typeViaController(c, 'ca');
-      expect(_labels(c.filteredItems), <String>['Maçã', 'abacaxi']);
+      expect(_labels(c.filteredItems), <String>['abacaxi', 'Maçã']);
     });
 
     test('throws UnsupportedError for an unmodifiable caller list', () {
@@ -559,7 +567,7 @@ void main() {
   });
 
   group('sort: sortType 2 Z-A', () {
-    test('sorts descending by raw compareTo and mutates the caller list', () {
+    test('sorts descending naturally (D2) and mutates the caller list', () {
       final items = fruitItems();
       final c = _controller(items, sortType: 2);
       addTearDown(c.dispose);
@@ -574,7 +582,7 @@ void main() {
 
       c.onSearchOpen();
       _typeViaController(c, 'ca');
-      expect(_labels(c.filteredItems), <String>['abacaxi', 'Maçã']);
+      expect(_labels(c.filteredItems), <String>['Maçã', 'abacaxi']);
     });
   });
 
@@ -627,17 +635,15 @@ void main() {
   });
 
   group('sort: sortList() public method', () {
-    test('mutates listItems immediately; filteredItems refresh on reset', () {
+    test('mutates listItems and refreshes filteredItems immediately', () {
       final items = fruitItems();
       final c = _controller(items);
       addTearDown(c.dispose);
 
       c.sortList(2);
       expect(_labels(items), _fruitZA);
-      // filteredItems is not refreshed by sortList itself.
-      expect(_labels(c.filteredItems), _fruitOrder);
-
-      // The next reset (open with empty text) picks up the new order.
+      // 8.0: filteredItems follows immediately.
+      expect(_labels(c.filteredItems), _fruitZA);
       c.onSearchOpen();
       expect(_labels(c.filteredItems), _fruitZA);
     });
@@ -714,8 +720,7 @@ void main() {
       expect(_barText(tester), '');
     });
 
-    testWidgets('opening the view filters by the selected label',
-        (tester) async {
+    testWidgets('opening the view lists every item (D1, 8.0)', (tester) async {
       var calls = 0;
       final c = _controller(
         fruitItems(),
@@ -725,9 +730,9 @@ void main() {
       await _pump(tester, c);
       await openSingle(tester);
 
-      expect(_labels(c.filteredItems), <String>['Banana']);
-      expect(_tileLabels(tester), <String>['Banana']);
-      expect(calls, 1);
+      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(_tileLabels(tester), contains('Banana'));
+      expect(calls, 0);
     });
 
     test('ignored when listItems is empty', () {
@@ -816,7 +821,7 @@ void main() {
       expect(c.clearVisible, isTrue);
     });
 
-    testWidgets('duplicate normalized labels: the last item wins',
+    testWidgets('an exact label wins over a normalized duplicate (8.0)',
         (tester) async {
       final c = _controller(<ValueItem<int>>[
         const ValueItem(label: 'Maca', value: 10),
@@ -824,10 +829,14 @@ void main() {
       ]);
       await _pump(tester, c);
 
-      // Even the exact label 'Maca' resolves to the later 'Maçã'.
+      // 7.x picked the later 'Maçã' even for the exact label 'Maca'.
       c.forceSelection('Maca');
-      expect(c.selectedItem?.label, 'Maçã');
+      expect(c.selectedItem?.value, 10);
+      c.forceSelection('Maçã');
       expect(c.selectedItem?.value, 1);
+      // Without an exact match the first normalized match wins.
+      c.forceSelection('MACA');
+      expect(c.selectedItem?.value, 10);
     });
 
     testWidgets('while the view is open it closes the view', (tester) async {
@@ -952,8 +961,7 @@ void main() {
         const expected = <String>[..._fruitOrder, 'Kiwi'];
         expect(_labels(c.listItems), expected);
         expect(_labels(c.filteredItems), expected);
-      },
-      skip: 'B3: fixed in 8.0',
+      }, // B3: fixed in 8.0
     );
   });
 
@@ -1039,8 +1047,7 @@ void main() {
 
         expect(errors, isEmpty);
         expect(_labels(c.filteredItems), <String>['Banana']);
-      },
-      skip: 'B9: fixed in 8.0',
+      }, // B9: fixed in 8.0
     );
   });
 

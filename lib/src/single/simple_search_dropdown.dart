@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:simple_search_dropdown/simple_search_dropdown.dart'; // For ValueItem, settings, etc.
+import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
+import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
-/// This creates a single-selection dropdown widget.
-/// The widget UI is defined here, while state management is handled by [SearchDropDownController].
+/// A single-selection dropdown with a search bar, built on [SearchAnchor].
+///
+/// All state lives in [controller]; this widget rebuilds when it notifies.
 class SearchDropDown<T> extends StatefulWidget {
+  /// Creates a single-selection dropdown driven by [controller].
   const SearchDropDown({
     super.key,
     required this.controller,
@@ -23,19 +28,19 @@ class SearchDropDown<T> extends StatefulWidget {
         defaultAdditionalWidget =
             defaultAdditionalWidget ?? defaultAditionalWidget;
 
-  /// The external controller that manages state (text, selected item, etc.) for this dropdown.
+  /// Holds items, selection and search text.
   final SearchDropDownController<T> controller;
 
-  /// The SearchBar settings (visual and behavioral configuration for the search bar).
+  /// Visual and behavioural settings of the search bar.
   final SimpleSearchbarSettings searchBarSettings;
 
-  /// The settings for the overlay list of items.
+  /// Visual and behavioural settings of the list.
   final SimpleOverlaySettings overlayListSettings;
 
-  /// A custom additional widget to be inserted on the add-item cell between the text and the create button.
+  /// Widget shown on the add-item row, between the text and the create button.
   final Widget? addAdditionalWidget;
 
-  /// A custom additional widget to be inserted on the default item cell between the text and the delete button.
+  /// Widget shown on every item row, between the text and the delete button.
   final Widget? defaultAdditionalWidget;
 
   /// Deprecated alias of [addAdditionalWidget].
@@ -46,126 +51,83 @@ class SearchDropDown<T> extends StatefulWidget {
   @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
   Widget? get defaultAditionalWidget => defaultAdditionalWidget;
 
-  /// Texts used by this dropdown. Defaults to [SearchDropDownStrings.of].
-  final SearchDropDownStrings? strings;
-
-  /// If the controller will be disposed when this widget is disposed (default: `true`).
+  /// Dispose [controller] together with this widget (default: `true`).
   final bool disposeController;
 
-  /// If the focus from the text field will be removed after the search view is closed (default: `true`).
+  /// Remove the focus from the bar after the list closes (default: `true`).
   final bool removeFocus;
+
+  /// Texts used by this dropdown. Defaults to [SearchDropDownStrings.of].
+  final SearchDropDownStrings? strings;
 
   @override
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
 }
 
+/// State of [SearchDropDown].
+///
+/// Prefer the [SearchDropDownController] API; the methods here only forward
+/// to it and remain for `GlobalKey` users.
 class SearchDropDownState<T> extends State<SearchDropDown<T>> {
-  late final FocusScopeNode _focusNode;
-  late final ValueNotifier<int> _highlightIndexNotifier;
+  final FocusScopeNode _focusNode = FocusScopeNode();
+  Timer? _unfocusWindow;
+
+  SearchDropDownController<T> get _controller => widget.controller;
 
   @override
-  void initState() {
-    super.initState();
-    _focusNode = FocusScopeNode();
-    _highlightIndexNotifier = ValueNotifier<int>(-1);
-    HardwareKeyboard.instance.addHandler(_handleKeyEvent);
-  }
-
-  bool _handleKeyEvent(KeyEvent event) {
-    if (!mounted) {
-      return false;
+  void didUpdateWidget(covariant SearchDropDown<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller &&
+        oldWidget.disposeController) {
+      oldWidget.controller.dispose();
     }
-    if (event is! KeyDownEvent) {
-      return false;
-    }
-
-    final key = event.logicalKey;
-    final searchController = widget.controller.localSearchController;
-    if (!searchController.isOpen) {
-      return false;
-    }
-
-    if (key == LogicalKeyboardKey.arrowDown) {
-      widget.controller.highlightNext();
-      _highlightIndexNotifier.value = widget.controller.highlightedIndex;
-      return true;
-    }
-
-    if (key == LogicalKeyboardKey.arrowUp) {
-      widget.controller.highlightPrevious();
-      _highlightIndexNotifier.value = widget.controller.highlightedIndex;
-      return true;
-    }
-
-    if (key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.numpadEnter) {
-      if (widget.controller.highlightedIndex >= 0) {
-        widget.controller.selectHighlighted();
-      } else {
-        widget.controller.handleEnterKey();
-      }
-      return true;
-    }
-
-    return false;
   }
 
   @override
   void dispose() {
+    _unfocusWindow?.cancel();
     if (widget.disposeController) {
-      widget.controller.dispose();
+      _controller.dispose();
     }
-    HardwareKeyboard.instance.removeHandler(_handleKeyEvent);
-    _highlightIndexNotifier.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  /// Toggles the enabled/disabled state of the dropdown.
-  void enableDisable() {
-    if (mounted) {
-      setState(() {
-        widget.controller.toggleEnabled();
-      });
+  /// Toggles enabled/disabled.
+  @Deprecated('Use controller.toggleEnabled(). Will be removed in 9.0.0')
+  void enableDisable() => _controller.toggleEnabled();
+
+  /// Clears the selection.
+  @Deprecated('Use controller.resetSelection(). Will be removed in 9.0.0')
+  void resetSelection() => _controller.resetSelection();
+
+  /// Replaces the items.
+  @Deprecated('Use controller.updateListItems(). Will be removed in 9.0.0')
+  void updateList(List<ValueItem<T>> newList, {bool shouldreset = true}) =>
+      _controller.updateListItems(newList, shouldreset);
+
+  void _onOpen() {
+    _unfocusWindow?.cancel();
+    _controller.onSearchOpen();
+  }
+
+  void _onClose() {
+    _controller.onSearchClose(widget.searchBarSettings.clearOnClose);
+    if (widget.removeFocus) {
+      // Focus returns to the bar when the view's route pops; drop it then.
+      _unfocusWindow?.cancel();
+      _unfocusWindow = Timer(const Duration(milliseconds: 600), () {});
     }
   }
 
-  /// Resets the selection to its default state, clearing the current value.
-  void resetSelection() {
-    if (mounted) {
-      widget.controller.resetSelection();
+  void _onFocusChange(bool focused) {
+    if (focused && (_unfocusWindow?.isActive ?? false)) {
+      _unfocusWindow?.cancel();
+      _focusNode.unfocus();
     }
   }
 
-  /// updates the current list of the widget
-  void updateList(List<ValueItem<T>> newList, {bool shouldreset = true}) {
-    if (mounted) {
-      widget.controller.updateListItems(newList, shouldreset);
-    }
-  }
-
-  /// Builds the trailing widgets for the opened overlay view (e.g., clear button and opened dropdown arrow).
-  Widget _buildViewTrailing() {
-    return Row(mainAxisSize: MainAxisSize.min, children: [
-      if (widget.searchBarSettings.showArrow)
-        IconButton(
-          onPressed: widget.searchBarSettings.dropdownOpenedIconFunction ??
-              () => widget.controller.localSearchController
-                  .closeView(widget.controller.localSearchController.text),
-          icon: Icon(
-            widget.searchBarSettings.dropdownOpenedArrowIcon,
-            color: widget.searchBarSettings.outsideIconColor,
-            size: widget.searchBarSettings.outsideIconSize,
-          ),
-        ),
-      ClearButton(
-        visible: widget.controller.clearVisible,
-        onPressed: resetSelection,
-        iconColor: widget.searchBarSettings.clearIconColor,
-        iconSize: widget.searchBarSettings.outsideIconSize,
-      ),
-    ]);
-  }
+  bool get _clearEnabled => widget.searchBarSettings.showClearIcon;
 
   @override
   Widget build(BuildContext context) {
@@ -173,159 +135,350 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         widget.strings ?? SearchDropDownStrings.of(context);
     return FocusScope(
       node: _focusNode,
-      onFocusChange: (isFocused) {
-        // Remove focus from text field after the search view is closed, if configured.
-        if (isFocused && widget.removeFocus) {
-          _focusNode.unfocus();
-        }
-      },
-      child: SizedBox(
-        width: widget.searchBarSettings.dropdownWidth,
-        height: widget.searchBarSettings.dropdownHeight,
-        child: SearchAnchor.bar(
-          enabled: widget.controller.enabled,
-          viewConstraints: BoxConstraints(
-            maxWidth: widget.searchBarSettings.dropdownWidth,
-            maxHeight: widget.overlayListSettings.dialogHeight,
-          ),
-          onTap: () {
-            // Prepare the list when the search view is opened (reset filter).
-            widget.controller.onSearchOpen();
-          },
-          onClose: () {
-            // Delega ao controller a lógica ao fechar o dropdown (restaurar/limpar texto conforme necessário)
-            widget.controller
-                .onSearchClose(widget.searchBarSettings.clearOnClose);
-          },
-          onSubmitted: (String value) {
-            widget.controller.handleEnterKey();
-          },
-          searchController: widget.controller.localSearchController,
-          viewHeaderHeight: widget.searchBarSettings.dropdownHeight,
-          dividerColor: widget.searchBarSettings.showDivider
-              ? null
-              : (widget.overlayListSettings.dialogBackgroundColor ??
-                  widget.searchBarSettings.backgroundColor),
-          viewTrailing: [_buildViewTrailing()],
-          barTrailing: widget.searchBarSettings.actions ??
-              [
-                if (widget.searchBarSettings.showArrow &&
-                    widget.controller.enabled)
-                  IconButton(
-                    onPressed:
-                        widget.searchBarSettings.dropdownClosedIconFunction ??
-                            widget.controller.localSearchController.openView,
-                    icon: Icon(
-                      widget.searchBarSettings.dropdownClosedArrowIcon,
-                      color: widget.searchBarSettings.outsideIconColor,
-                      size: widget.searchBarSettings.outsideIconSize,
-                    ),
-                  ),
-                if (widget.searchBarSettings.showClearIcon)
-                  ClearButton(
-                    visible: widget.controller.clearVisible,
-                    onPressed: resetSelection,
-                    iconColor: widget.searchBarSettings.clearIconColor,
-                    iconSize: widget.searchBarSettings.outsideIconSize,
-                  ),
-              ],
-          barElevation:
-              WidgetStatePropertyAll(widget.searchBarSettings.elevation),
-          barShape: WidgetStatePropertyAll(widget.searchBarSettings.border),
-          viewShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          barBackgroundColor:
-              WidgetStatePropertyAll(widget.searchBarSettings.backgroundColor),
-          viewBackgroundColor:
-              widget.overlayListSettings.dialogBackgroundColor ??
-                  widget.searchBarSettings.backgroundColor,
-          isFullScreen: widget.overlayListSettings.openFullScreen,
-          barHintStyle:
-              WidgetStatePropertyAll(widget.searchBarSettings.hintStyle),
-          barHintText: widget.searchBarSettings.hint ?? strings.searchHint,
-          barOverlayColor:
-              WidgetStatePropertyAll(widget.searchBarSettings.hoverColor),
-          barTextStyle: WidgetStatePropertyAll(
-              widget.searchBarSettings.searchBarTextStyle),
-          barPadding:
-              WidgetStatePropertyAll(widget.searchBarSettings.searchBarPadding),
-          barLeading: const SizedBox.shrink(),
-          viewSide: const BorderSide(style: BorderStyle.none),
-          viewLeading: const SizedBox.shrink(),
-          viewElevation: widget.searchBarSettings.elevation,
-          viewHintText: widget.searchBarSettings.hint ?? strings.searchHint,
-          viewHeaderHintStyle: widget.searchBarSettings.hintStyle,
-          viewHeaderTextStyle: widget.searchBarSettings.searchBarTextStyle,
-          keyboardType: widget.searchBarSettings.showKeyboardOnTap
-              ? widget.searchBarSettings.keyboardType
-              : TextInputType.none,
-          textInputAction: widget.searchBarSettings.textInputAction,
-          suggestionsBuilder:
-              (BuildContext context, SearchController controller) {
-            // Calcula número de itens a exibir (incluindo opção "adicionar" se aplicável)
-            final bool showAddItemOption = widget.controller.addMode &&
-                controller.text.isNotEmpty &&
-                widget.controller.filteredItems.isEmpty;
-            final int length = widget.controller.filteredItems.length +
-                (showAddItemOption ? 1 : 0);
-            return List<Widget>.generate(length, (int index) {
-              if (showAddItemOption &&
-                  index == widget.controller.filteredItems.length) {
-                // Add new item option at the end
-                return DefaultAddListItem(
-                  text: controller.text,
-                  addAdditionalWidget: widget.addAdditionalWidget,
-                  strings: strings,
-                  overlayListSettings: widget.overlayListSettings,
-                  itemAdded: (String input) => widget.controller
-                      .addItem(input, context, strings: strings),
-                );
-              } else {
-                final item = widget.controller.filteredItems[index];
-                return ValueListenableBuilder<int>(
-                  valueListenable: _highlightIndexNotifier,
-                  builder: (context, highlightedIndex, _) {
-                    final bool isHighlighted = index == highlightedIndex;
-                    final bool isSelected = controller.text == item.label;
+      onFocusChange: _onFocusChange,
+      child: ListenableBuilder(
+        listenable: _controller,
+        builder: (BuildContext context, _) => _buildAnchor(strings),
+      ),
+    );
+  }
 
-                    if (isHighlighted) {
-                      WidgetsBinding.instance.addPostFrameCallback((_) {
-                        if (!context.mounted) {
-                          return;
-                        }
-                        final renderObject = context.findRenderObject();
-                        if (renderObject != null && renderObject.attached) {
-                          Scrollable.ensureVisible(
-                            context,
-                            alignment: 0.5,
-                            duration: const Duration(milliseconds: 120),
-                            curve: Curves.easeOut,
-                          );
-                        }
-                      });
-                    }
-                    return DefaultListTile<T>(
-                      key: ValueKey(item.label),
-                      deleteMode: widget.controller.deleteMode,
-                      editMode: widget.controller.editMode,
-                      item: item,
-                      overlayListSettings: widget.overlayListSettings,
-                      defaultAdditionalWidget: widget.defaultAdditionalWidget,
-                      onDelete: (ValueItem<T> val) => widget.controller
-                          .deleteItem(val, context, strings: strings),
-                      onEdit: (ValueItem<T> val) => widget.controller
-                          .editItem(val, context, strings: strings),
-                      onPressed: (ValueItem<T> val) =>
-                          widget.controller.selectItem(val),
-                      selected: isHighlighted || isSelected,
-                    );
-                  },
-                );
-              }
-            });
-          },
+  Widget _buildAnchor(SearchDropDownStrings strings) {
+    final SimpleSearchbarSettings bar = widget.searchBarSettings;
+    final SimpleOverlaySettings list = widget.overlayListSettings;
+    final SearchController search = _controller.localSearchController;
+    final String hint = bar.hint ?? strings.searchHint;
+    final Color viewBackground =
+        list.dialogBackgroundColor ?? bar.backgroundColor;
+    return SizedBox(
+      width: bar.dropdownWidth,
+      height: bar.dropdownHeight,
+      child: SearchAnchor.bar(
+        enabled: _controller.enabled,
+        searchController: search,
+        viewConstraints: BoxConstraints(
+          maxWidth: bar.dropdownWidth,
+          maxHeight: list.dialogHeight,
         ),
+        onOpen: _onOpen,
+        onClose: _onClose,
+        onSubmitted: (_) => _controller.submit(),
+        viewHeaderHeight: bar.dropdownHeight,
+        dividerColor: bar.showDivider ? null : viewBackground,
+        viewTrailing: <Widget>[
+          _ViewTrailing<T>(
+            controller: _controller,
+            settings: bar,
+            strings: strings,
+            showClear: _clearEnabled,
+          ),
+        ],
+        barTrailing: bar.actions ??
+            <Widget>[
+              if (bar.showArrow && _controller.enabled)
+                IconButton(
+                  tooltip: strings.openTooltip,
+                  onPressed: bar.dropdownClosedIconFunction ?? search.openView,
+                  icon: Icon(
+                    bar.dropdownClosedArrowIcon,
+                    color: bar.outsideIconColor,
+                    size: bar.outsideIconSize,
+                  ),
+                ),
+              if (_clearEnabled)
+                ClearButton(
+                  visible: _controller.clearVisible,
+                  onPressed: _controller.resetSelection,
+                  iconColor: bar.clearIconColor,
+                  iconSize: bar.outsideIconSize,
+                  tooltip: strings.clearTooltip,
+                ),
+            ],
+        barElevation: WidgetStatePropertyAll<double>(bar.elevation),
+        barShape: WidgetStatePropertyAll<OutlinedBorder>(bar.border),
+        viewShape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+        ),
+        barBackgroundColor: WidgetStatePropertyAll<Color>(bar.backgroundColor),
+        viewBackgroundColor: viewBackground,
+        isFullScreen: list.openFullScreen,
+        barHintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
+        barHintText: hint,
+        barOverlayColor: WidgetStatePropertyAll<Color>(bar.hoverColor),
+        barTextStyle:
+            WidgetStatePropertyAll<TextStyle?>(bar.searchBarTextStyle),
+        barPadding:
+            WidgetStatePropertyAll<EdgeInsetsGeometry?>(bar.searchBarPadding),
+        barLeading: const SizedBox.shrink(),
+        viewSide: const BorderSide(style: BorderStyle.none),
+        viewLeading: const SizedBox.shrink(),
+        viewElevation: bar.elevation,
+        viewHintText: hint,
+        viewHeaderHintStyle: bar.hintStyle,
+        viewHeaderTextStyle: bar.searchBarTextStyle,
+        keyboardType:
+            bar.showKeyboardOnTap ? bar.keyboardType : TextInputType.none,
+        textInputAction: bar.textInputAction,
+        // The list is built by viewBuilder from the controller; the
+        // suggestions only tell SearchAnchor whether there is content.
+        suggestionsBuilder: (BuildContext context, SearchController search) =>
+            _controller.filteredItems.isNotEmpty || _showAddRow(search.text)
+                ? const <Widget>[SizedBox.shrink()]
+                : const <Widget>[],
+        // SearchAnchor calls this on every frame of its open animation;
+        // returning the same instance lets Flutter skip rebuilding the rows.
+        viewBuilder: (Iterable<Widget> suggestions) => _viewList(strings),
+      ),
+    );
+  }
+
+  _ViewList<T>? _cachedViewList;
+
+  _ViewList<T> _viewList(SearchDropDownStrings strings) {
+    final _ViewList<T>? cached = _cachedViewList;
+    if (cached != null &&
+        identical(cached.controller, _controller) &&
+        identical(cached.settings, widget.overlayListSettings) &&
+        identical(cached.strings, strings) &&
+        identical(cached.addAdditionalWidget, widget.addAdditionalWidget) &&
+        identical(
+            cached.defaultAdditionalWidget, widget.defaultAdditionalWidget)) {
+      return cached;
+    }
+    return _cachedViewList = _ViewList<T>(
+      controller: _controller,
+      settings: widget.overlayListSettings,
+      strings: strings,
+      showAddRow: _showAddRow,
+      addAdditionalWidget: widget.addAdditionalWidget,
+      defaultAdditionalWidget: widget.defaultAdditionalWidget,
+    );
+  }
+
+  bool _showAddRow(String text) =>
+      _controller.addMode &&
+      text.isNotEmpty &&
+      _controller.filteredItems.isEmpty;
+}
+
+/// Trailing icons of the open view; rebuilt from the controller because
+/// [SearchAnchor] keeps the widgets it was opened with.
+class _ViewTrailing<T> extends StatelessWidget {
+  const _ViewTrailing({
+    required this.controller,
+    required this.settings,
+    required this.strings,
+    required this.showClear,
+  });
+
+  final SearchDropDownController<T> controller;
+  final SimpleSearchbarSettings settings;
+  final SearchDropDownStrings strings;
+  final bool showClear;
+
+  @override
+  Widget build(BuildContext context) {
+    final SearchController search = controller.localSearchController;
+    return ListenableBuilder(
+      listenable: controller,
+      builder: (BuildContext context, _) => Row(
+        mainAxisSize: MainAxisSize.min,
+        children: <Widget>[
+          if (settings.showArrow)
+            IconButton(
+              tooltip: strings.closeTooltip,
+              onPressed: settings.dropdownOpenedIconFunction ??
+                  () => search.closeView(search.text),
+              icon: Icon(
+                settings.dropdownOpenedArrowIcon,
+                color: settings.outsideIconColor,
+                size: settings.outsideIconSize,
+              ),
+            ),
+          if (showClear)
+            ClearButton(
+              visible: controller.clearVisible,
+              onPressed: controller.resetSelection,
+              iconColor: settings.clearIconColor,
+              iconSize: settings.outsideIconSize,
+              tooltip: strings.clearTooltip,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+/// The list inside the open view: lazy, scrolled to the selection on open,
+/// with keyboard navigation while this view is the current route.
+class _ViewList<T> extends StatefulWidget {
+  const _ViewList({
+    required this.controller,
+    required this.settings,
+    required this.strings,
+    required this.showAddRow,
+    required this.addAdditionalWidget,
+    required this.defaultAdditionalWidget,
+  });
+
+  final SearchDropDownController<T> controller;
+  final SimpleOverlaySettings settings;
+  final SearchDropDownStrings strings;
+  final bool Function(String text) showAddRow;
+  final Widget? addAdditionalWidget;
+  final Widget? defaultAdditionalWidget;
+
+  @override
+  State<_ViewList<T>> createState() => _ViewListState<T>();
+}
+
+class _ViewListState<T> extends State<_ViewList<T>> {
+  final ItemScrollController _scroll = ItemScrollController();
+  final ItemPositionsListener _positions = ItemPositionsListener.create();
+  late final int _initialIndex;
+
+  /// Item rows by index. The list re-runs its item builder on every layout
+  /// change (e.g. the view's open animation) and keystroke; handing back the
+  /// same widget skips rebuilding the row. Cleared when the results change.
+  final Map<int, Widget> _rows = <int, Widget>{};
+  late final Listenable _rowInputs =
+      Listenable.merge(<Listenable>[_controller.highlight, _controller]);
+
+  /// The list depends on the results and, for the add row, on the text.
+  late final Listenable _listInputs = Listenable.merge(
+      <Listenable>[_controller.results, _controller.localSearchController]);
+
+  SearchDropDownController<T> get _controller => widget.controller;
+
+  @override
+  void initState() {
+    super.initState();
+    final int selected = _controller.selectedIndex;
+    _initialIndex = selected < 0 ? 0 : selected;
+    _controller.highlight.addListener(_revealHighlight);
+    _controller.results.addListener(_rows.clear);
+    HardwareKeyboard.instance.addHandler(_handleKey);
+  }
+
+  @override
+  void didUpdateWidget(covariant _ViewList<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _rows.clear();
+  }
+
+  @override
+  void dispose() {
+    HardwareKeyboard.instance.removeHandler(_handleKey);
+    if (!_controller.isDisposed) {
+      _controller.highlight.removeListener(_revealHighlight);
+      _controller.results.removeListener(_rows.clear);
+    }
+    super.dispose();
+  }
+
+  bool _handleKey(KeyEvent event) {
+    if (event is! KeyDownEvent || !mounted) {
+      return false;
+    }
+    if (!(ModalRoute.of(context)?.isCurrent ?? false)) {
+      return false;
+    }
+    if (_controller.localSearchController.value.composing.isValid) {
+      return false;
+    }
+    final LogicalKeyboardKey key = event.logicalKey;
+    if (key == LogicalKeyboardKey.arrowDown) {
+      _controller.highlightNext();
+    } else if (key == LogicalKeyboardKey.arrowUp) {
+      _controller.highlightPrevious();
+    } else if (key == LogicalKeyboardKey.pageDown) {
+      _controller.highlightEdge(last: true);
+    } else if (key == LogicalKeyboardKey.pageUp) {
+      _controller.highlightEdge(last: false);
+    } else if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      _controller.submit();
+    } else {
+      return false;
+    }
+    return true;
+  }
+
+  void _revealHighlight() {
+    final int index = _controller.highlightedIndex;
+    if (index < 0 || !_scroll.isAttached) {
+      return;
+    }
+    final bool visible = _positions.itemPositions.value.any(
+      (ItemPosition p) =>
+          p.index == index && p.itemLeadingEdge >= 0 && p.itemTrailingEdge <= 1,
+    );
+    if (!visible) {
+      _scroll.scrollTo(
+        index: index,
+        alignment: 0.5,
+        duration: const Duration(milliseconds: 120),
+        curve: Curves.easeOut,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return MediaQuery.removePadding(
+      context: context,
+      removeTop: true,
+      child: ListenableBuilder(
+        listenable: _listInputs,
+        builder: (BuildContext context, _) {
+          final List<ValueItem<T>> items = _controller.filteredItems;
+          final String text = _controller.localSearchController.text;
+          final bool addRow = widget.showAddRow(text);
+          return ScrollablePositionedList.builder(
+            itemScrollController: _scroll,
+            itemPositionsListener: _positions,
+            initialScrollIndex:
+                _initialIndex < items.length ? _initialIndex : 0,
+            padding: EdgeInsets.only(
+              bottom: MediaQuery.viewInsetsOf(context).bottom,
+            ),
+            itemCount: items.length + (addRow ? 1 : 0),
+            itemBuilder: (BuildContext context, int index) =>
+                index == items.length
+                    ? _buildAddRow(context, text)
+                    : _rows[index] ??= _buildRow(context, items[index], index),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildAddRow(BuildContext context, String text) => DefaultAddListItem(
+        text: text,
+        addAdditionalWidget: widget.addAdditionalWidget,
+        overlayListSettings: widget.settings,
+        strings: widget.strings,
+        itemAdded: (String input) =>
+            _controller.addItem(input, context, strings: widget.strings),
+      );
+
+  Widget _buildRow(BuildContext context, ValueItem<T> item, int index) {
+    return ListenableBuilder(
+      listenable: _rowInputs,
+      builder: (BuildContext context, _) => DefaultListTile<T>(
+        deleteMode: _controller.deleteMode,
+        editMode: _controller.editMode,
+        item: item,
+        overlayListSettings: widget.settings,
+        defaultAdditionalWidget: widget.defaultAdditionalWidget,
+        strings: widget.strings,
+        onDelete: (ValueItem<T> value) =>
+            _controller.deleteItem(value, context, strings: widget.strings),
+        onEdit: (ValueItem<T> value) =>
+            _controller.editItem(value, context, strings: widget.strings),
+        onPressed: _controller.selectItem,
+        selected: index == _controller.highlightedIndex ||
+            item == _controller.selectedItem,
       ),
     );
   }

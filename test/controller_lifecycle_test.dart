@@ -103,8 +103,7 @@ void main() {
   });
 
   group('SearchDropDownController – dispose', () {
-    test('dispose deve ser chamado uma única vez; segunda chamada lança erro',
-        () {
+    test('dispose pode ser chamado mais de uma vez (8.0)', () {
       final c = SearchDropDownController<int>(
         listItems: const [],
         addMode: false,
@@ -112,8 +111,8 @@ void main() {
       );
 
       expect(() => c.dispose(), returnsNormally);
-      expect(() => c.dispose(),
-          throwsA(isA<FlutterError>())); // segunda chamada deve falhar
+      expect(() => c.dispose(), returnsNormally);
+      expect(c.isDisposed, isTrue);
     });
 // ajuste no teste de lifecycle para validar o contrato correto pós-dispose
     testWidgets('SearchDropDown respeita disposeController=true/false',
