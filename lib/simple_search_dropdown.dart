@@ -21,6 +21,7 @@ export './src/helpers/simple_overlay_settings.dart';
 export './src/helpers/simple_searchbar_settings.dart';
 export './src/helpers/value_item.dart';
 export './src/multiple/multiple_listview.dart';
+export './src/multiple/multiple_search_controller.dart';
 export './src/multiple/multiple_simple_search_dropdown.dart';
 export './src/single/clear_button.dart';
 export './src/single/search_dropdown_controller.dart';

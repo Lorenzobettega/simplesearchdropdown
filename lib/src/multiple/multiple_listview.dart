@@ -1,133 +1,72 @@
 import 'package:flutter/material.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import 'package:stringr/stringr.dart';
 
+/// The open list of a [MultipleSearchDropDown]: a search field and the items.
 class MultipleListView<T> extends StatefulWidget {
+  /// Creates the list for [controller].
   const MultipleListView({
     super.key,
-    required this.addMode,
-    required this.editMode,
+    required this.controller,
     required this.overlayListSettings,
-    required this.deleteMode,
-    required this.listItems,
-    required this.onAddItem,
-    required this.onDeleteItem,
-    required this.onEditItem,
-    required this.onItemSelected,
-    required this.selectedItems,
-    required this.sortType,
-    required this.newValueItem,
     required this.searchBarSettings,
-    required this.addAdditionalWidget,
-    required this.defaultAdditionalWidget,
+    this.addAdditionalWidget,
+    this.defaultAdditionalWidget,
     this.strings = const SearchDropDownStrings(),
   });
 
-  final bool addMode;
-  final bool deleteMode;
-  final bool editMode;
-  final Function(ValueItem<T> value) onAddItem;
-  final Function(ValueItem<T> value) onDeleteItem;
-  final Function(ValueItem<T> value) onEditItem;
-  final Function(ValueItem<T> value) onItemSelected;
-  final List<ValueItem<T>> listItems;
-  final List<ValueItem<T>> selectedItems;
-  final int sortType;
+  /// Source of items, selection and filtering.
+  final MultipleSearchDropDownController<T> controller;
+
+  /// The settings for the overlay list of items.
+  final SimpleOverlaySettings overlayListSettings;
+
+  /// The settings of the search bar.
+  final SimpleSearchbarSettings searchBarSettings;
+
+  /// Widget shown on the add-item row.
   final Widget? addAdditionalWidget;
+
+  /// Widget shown on every item row.
   final Widget? defaultAdditionalWidget;
 
   /// Source of the default texts.
   final SearchDropDownStrings strings;
-
-  ///The settings for the overlay list of items.
-  final SimpleOverlaySettings overlayListSettings;
-
-  ///The SearchBarSettings.
-  final SimpleSearchbarSettings searchBarSettings;
-  final ValueItem<T> Function(String input)? newValueItem;
 
   @override
   State<MultipleListView<T>> createState() => _MultipleListViewState<T>();
 }
 
 class _MultipleListViewState<T> extends State<MultipleListView<T>> {
-  List<ValueItem<T>> listaFiltrada = [];
-  final TextEditingController controllerBar = TextEditingController();
-  final ItemScrollController scrollController = ItemScrollController();
-  final PageStorageBucket pageStorageBucket = PageStorageBucket();
+  final TextEditingController _search = TextEditingController();
+  final ItemScrollController _scroll = ItemScrollController();
+  // The overlay lives outside any route, so the list brings its own storage.
+  final PageStorageBucket _bucket = PageStorageBucket();
+
+  MultipleSearchDropDownController<T> get _controller => widget.controller;
 
   @override
   void initState() {
     super.initState();
-    filtrarLista(null);
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (widget.selectedItems.isNotEmpty) {
-        goToSelectedItem(widget.selectedItems.first);
-      }
-    });
+    _controller.refresh();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _goToSelected());
   }
 
-  void sortFunction() {
-    switch (widget.sortType) {
-      case 0:
-        break;
-      case 1:
-        listaFiltrada.sort((a, b) => a.label.compareTo(b.label));
-        break;
-      case 2:
-        listaFiltrada.sort((a, b) => b.label.compareTo(a.label));
-        break;
-      case 3:
-        if (widget.selectedItems.isNotEmpty) {
-          final first = widget.selectedItems.first;
-          final indx = listaFiltrada.indexOf(first);
-          if (indx != -1) {
-            listaFiltrada
-              ..removeAt(indx)
-              ..insert(0, first);
-          }
-        }
-        break;
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  /// Scrolls to the first selected item when the list (re)opens.
+  void _goToSelected() {
+    if (!mounted || _controller.selectedItems.isEmpty || !_scroll.isAttached) {
+      return;
     }
-  }
-
-  void filtrarLista(
-    String? text,
-  ) {
-    if (text != null && text != '') {
-      listaFiltrada = widget.listItems
-          .where((element) => element.label
-              .toLowerCase()
-              .latinize()
-              .contains(text.latinize().toLowerCase()))
-          .toList();
-    } else {
-      listaFiltrada = widget.listItems;
-    }
-    widget.sortType > 0 ? setState(sortFunction) : setState(() {});
-  }
-
-  void itemAdded(String text) {
-    setState(() {
-      final item = widget.newValueItem!(text);
-      widget.onAddItem(item);
-      listaFiltrada.add(item);
-      controllerBar.clear();
-    });
-    filtrarLista(null);
-  }
-
-  void addItem(ValueItem<T> value) {
-    widget.onItemSelected.call(value);
-    widget.sortType > 0 ? setState(sortFunction) : setState(() {});
-  }
-
-  ///Function to scroll the list to the selected item
-  void goToSelectedItem(ValueItem<T> item) {
-    final index = listaFiltrada.indexOf(item);
+    final int index =
+        _controller.filteredItems.indexOf(_controller.selectedItems.first);
     if (index > 1) {
-      scrollController.scrollTo(
+      _scroll.scrollTo(
         index: index,
         duration: widget.overlayListSettings.reOpenedScrollDuration,
         curve: Curves.ease,
@@ -135,100 +74,98 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     }
   }
 
+  Future<void> _add(String text) async {
+    // Clear right away: a rejected item must not linger in the field (#13).
+    _search.clear();
+    await _controller.addItem(text, context, strings: widget.strings);
+  }
+
   @override
   Widget build(BuildContext context) {
+    final SimpleSearchbarSettings bar = widget.searchBarSettings;
+    final SimpleOverlaySettings list = widget.overlayListSettings;
+    final Color background = list.dialogBackgroundColor ?? bar.backgroundColor;
     return Card(
-      surfaceTintColor: widget.overlayListSettings.dialogBackgroundColor ??
-          widget.searchBarSettings.backgroundColor,
-      color: widget.overlayListSettings.dialogBackgroundColor ??
-          widget.searchBarSettings.backgroundColor,
-      elevation: widget.searchBarSettings.elevation,
+      surfaceTintColor: background,
+      color: background,
+      elevation: bar.elevation,
       child: AnimatedContainer(
-        duration: widget.overlayListSettings.animationDuration,
-        height: widget.overlayListSettings.dialogHeight,
-        width: widget.searchBarSettings.dropdownWidth,
+        duration: list.animationDuration,
+        height: list.dialogHeight,
+        width: bar.dropdownWidth,
         child: Column(
-          children: [
+          children: <Widget>[
             SearchBar(
-              controller: controllerBar,
-              backgroundColor: WidgetStatePropertyAll(
-                  widget.searchBarSettings.backgroundColor),
-              overlayColor: WidgetStatePropertyAll(
-                  widget.overlayListSettings.unselectedItemHoverColor),
+              controller: _search,
+              backgroundColor:
+                  WidgetStatePropertyAll<Color>(bar.backgroundColor),
+              overlayColor:
+                  WidgetStatePropertyAll<Color>(list.unselectedItemHoverColor),
               constraints: BoxConstraints(
-                  minHeight: widget.searchBarSettings.dropdownHeight,
-                  maxWidth: widget.searchBarSettings.dropdownWidth),
-              surfaceTintColor: WidgetStatePropertyAll(
-                  widget.searchBarSettings.backgroundColor),
-              shape: WidgetStatePropertyAll(widget.searchBarSettings.border),
-              hintText:
-                  widget.searchBarSettings.hint ?? widget.strings.searchHint,
-              hintStyle: WidgetStateProperty.all<TextStyle?>(
-                widget.searchBarSettings.hintStyle,
+                minHeight: bar.dropdownHeight,
+                maxWidth: bar.dropdownWidth,
               ),
-              textStyle: WidgetStatePropertyAll(
-                  widget.searchBarSettings.searchBarTextStyle ??
-                      widget.searchBarSettings.hintStyle),
-              side: WidgetStateProperty.all<BorderSide>(
-                const BorderSide(
-                  style: BorderStyle.none,
-                ),
+              surfaceTintColor:
+                  WidgetStatePropertyAll<Color>(bar.backgroundColor),
+              shape: WidgetStatePropertyAll<OutlinedBorder>(bar.border),
+              hintText: bar.hint ?? widget.strings.searchHint,
+              hintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
+              textStyle: WidgetStatePropertyAll<TextStyle?>(
+                bar.searchBarTextStyle ?? bar.hintStyle,
               ),
-              onChanged: filtrarLista,
-              elevation: WidgetStateProperty.all<double>(
-                  widget.searchBarSettings.elevation),
+              side: const WidgetStatePropertyAll<BorderSide>(
+                BorderSide(style: BorderStyle.none),
+              ),
+              onChanged: _controller.search,
+              elevation: WidgetStatePropertyAll<double>(bar.elevation),
             ),
-            const SizedBox(
-              height: 5,
-            ),
+            const SizedBox(height: 5),
             Expanded(
               child: PageStorage(
-                bucket: pageStorageBucket,
-                child: ScrollablePositionedList.separated(
-                  itemScrollController: scrollController,
-                  padding: EdgeInsets.zero,
-                  itemCount: listaFiltrada.length + (widget.addMode ? 1 : 0),
-                  separatorBuilder: (context, index) => SizedBox(
-                    height: widget.overlayListSettings.separatorHeight,
-                  ),
-                  itemBuilder: (context, index) {
-                    if (index == listaFiltrada.length && widget.addMode) {
-                      if (controllerBar.text != '') {
-                        final list = listaFiltrada
-                            .where(
-                              (element) => element.label
-                                  .toLowerCase()
-                                  .latinize()
-                                  .contains(
-                                    controllerBar.text.latinize().toLowerCase(),
-                                  ),
-                            )
-                            .toList();
-                        if (list.isEmpty) {
-                          return DefaultAddListItem(
-                            itemAdded: itemAdded,
-                            overlayListSettings: widget.overlayListSettings,
-                            text: controllerBar.text,
-                            addAdditionalWidget: widget.addAdditionalWidget,
-                            strings: widget.strings,
-                          );
+                bucket: _bucket,
+                child: ListenableBuilder(
+                  listenable: _controller,
+                  builder: (BuildContext context, _) {
+                    final List<ValueItem<T>> items = _controller.filteredItems;
+                    return ScrollablePositionedList.separated(
+                      itemScrollController: _scroll,
+                      padding: EdgeInsets.zero,
+                      itemCount: items.length + (_controller.addMode ? 1 : 0),
+                      separatorBuilder: (BuildContext context, int index) =>
+                          SizedBox(height: list.separatorHeight),
+                      itemBuilder: (BuildContext context, int index) {
+                        if (index == items.length) {
+                          return _controller.canAdd
+                              ? DefaultAddListItem(
+                                  itemAdded: _add,
+                                  overlayListSettings: list,
+                                  text: _controller.query,
+                                  addAdditionalWidget:
+                                      widget.addAdditionalWidget,
+                                  strings: widget.strings,
+                                )
+                              : const SizedBox.shrink();
                         }
-                      }
-                      return const SizedBox.shrink();
-                    } else {
-                      return DefaultListTile<T>(
-                        deleteMode: widget.deleteMode,
-                        item: listaFiltrada[index],
-                        onDelete: widget.onDeleteItem,
-                        onPressed: addItem,
-                        overlayListSettings: widget.overlayListSettings,
-                        selected:
-                            widget.selectedItems.contains(listaFiltrada[index]),
-                        defaultAdditionalWidget: widget.defaultAdditionalWidget,
-                        editMode: widget.editMode,
-                        onEdit: widget.onEditItem,
-                      );
-                    }
+                        final ValueItem<T> item = items[index];
+                        return DefaultListTile<T>(
+                          deleteMode: _controller.deleteMode,
+                          editMode: _controller.editMode,
+                          item: item,
+                          onDelete: (ValueItem<T> value) =>
+                              _controller.deleteItem(value, context,
+                                  strings: widget.strings),
+                          onEdit: (ValueItem<T> value) => _controller.editItem(
+                              value, context,
+                              strings: widget.strings),
+                          onPressed: _controller.toggle,
+                          overlayListSettings: list,
+                          selected: _controller.isSelected(item),
+                          defaultAdditionalWidget:
+                              widget.defaultAdditionalWidget,
+                          strings: widget.strings,
+                        );
+                      },
+                    );
                   },
                 ),
               ),

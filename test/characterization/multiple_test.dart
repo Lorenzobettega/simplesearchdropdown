@@ -99,7 +99,14 @@ MultipleSearchDropDown<int> _dropdown({
       defaultAditionalWidget: defaultAditionalWidget,
     );
 
-Finder get _box => find.byType(MultipleSearchDropDown<int>);
+// The closed box only (8.0 draws the open list as an OverlayPortal child,
+// which is part of the widget's subtree).
+Finder get _box => find
+    .descendant(
+      of: find.byType(MultipleSearchDropDown<int>),
+      matching: find.byType(Opacity),
+    )
+    .first;
 Finder get _list => find.byType(MultipleListView<int>);
 Finder get _searchField =>
     find.descendant(of: _list, matching: find.byType(TextField));
@@ -119,8 +126,7 @@ bool _rowSelected(WidgetTester tester, String label) =>
 String _searchText(WidgetTester tester) =>
     tester.widget<TextField>(_searchField).controller!.text;
 
-double _opacity(WidgetTester tester) =>
-    tester.widget<Opacity>(_inBox(find.byType(Opacity)).first).opacity;
+double _opacity(WidgetTester tester) => tester.widget<Opacity>(_box).opacity;
 
 bool _ignoring(WidgetTester tester) => tester
     .widget<IgnorePointer>(_inBox(find.byType(IgnorePointer)).first)
@@ -350,8 +356,7 @@ void main() {
       expect(_inBox(find.byIcon(Icons.close)), findsOneWidget);
     });
 
-    testWidgets(
-        'tapping the arrow (no selection) runs onClear and does not open',
+    testWidgets('tapping the arrow (no selection) opens the list (M5, 8.0)',
         (tester) async {
       final probe = _Probe();
       final List<ValueItem<int>> selected = [];
@@ -361,11 +366,10 @@ void main() {
       await tester.tap(_inBox(find.byIcon(Icons.arrow_drop_down)));
       await tester.pumpAndSettle();
 
-      expect(_list, findsNothing);
-      expect(probe.updates, hasLength(1));
-      expect(probe.updates.single, same(selected));
-      expect(probe.clearList, 1);
-      expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
+      expect(_list, findsOneWidget);
+      expect(probe.updates, isEmpty);
+      expect(probe.clearList, 0);
+      expect(_inBox(find.byIcon(Icons.arrow_drop_up)), findsOneWidget);
     });
 
     testWidgets('M5: tapping the arrow when nothing is selected opens overlay',
@@ -378,7 +382,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(_list, findsOneWidget);
-    }, skip: true); // M5: fixed in 8.0
+    }); // M5: fixed in 8.0
   });
 
   group('overlay: open/close by tapping the box', () {
@@ -516,7 +520,8 @@ void main() {
       await openMultiple(tester);
 
       await _type(tester, 'a');
-      expect(_rowLabels(tester), ['Banana', 'Maçã', 'Pêra', 'Uva', 'abacaxi']);
+      // D2 (8.0): case and accents are ignored when sorting.
+      expect(_rowLabels(tester), ['abacaxi', 'Banana', 'Maçã', 'Pêra', 'Uva']);
     });
 
     testWidgets('selected rows stay highlighted while filtering',
@@ -555,27 +560,26 @@ void main() {
       expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
-    testWidgets('1: String.compareTo order (uppercase before lowercase)',
-        (tester) async {
+    testWidgets('1: natural A-Z order (D2, 8.0)', (tester) async {
       await openWith(tester, 1);
-      expect(_rowLabels(tester), ['Banana', 'Cherry', 'apple']);
+      expect(_rowLabels(tester), ['apple', 'Banana', 'Cherry']);
     });
 
-    testWidgets('1: sorts the caller listItems in place (current behaviour)',
+    testWidgets('1: the caller listItems is not reordered (M7, 8.0)',
         (tester) async {
       final items = await openWith(tester, 1);
-      expect(_labels(items), ['Banana', 'Cherry', 'apple']);
+      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('M7: sortType 1 must not reorder the caller listItems',
         (tester) async {
       final items = await openWith(tester, 1);
       expect(_labels(items), ['Cherry', 'apple', 'Banana']);
-    }, skip: true); // M7: fixed in 8.0
+    }); // M7: fixed in 8.0
 
-    testWidgets('2: reverse String.compareTo order', (tester) async {
+    testWidgets('2: natural Z-A order (D2, 8.0)', (tester) async {
       await openWith(tester, 2);
-      expect(_rowLabels(tester), ['apple', 'Cherry', 'Banana']);
+      expect(_rowLabels(tester), ['Cherry', 'Banana', 'apple']);
     });
 
     testWidgets('3 without selection: original order', (tester) async {
@@ -583,11 +587,12 @@ void main() {
       expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
     });
 
-    testWidgets('3: first selected item moved to the top (caller list too)',
+    testWidgets('3: first selected item moved to the top (not the caller list)',
         (tester) async {
       final items = await openWith(tester, 3, selectedIdx: [2, 1]);
       expect(_rowLabels(tester), ['Banana', 'Cherry', 'apple']);
-      expect(_labels(items), ['Banana', 'Cherry', 'apple']);
+      // M7 (8.0): the caller list keeps its order.
+      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('3: tapping a row re-sorts immediately', (tester) async {
@@ -748,7 +753,8 @@ void main() {
       expect(probe.clearedItems, isEmpty);
     });
 
-    testWidgets('unknown or differently-cased label is ignored',
+    testWidgets(
+        'unknown label is ignored; a differently-cased one matches (8.0)',
         (tester) async {
       final key = GlobalKey<MultipleSearchDropDownState<int>>();
       final probe = _Probe();
@@ -756,20 +762,22 @@ void main() {
       await tester.pumpWidget(_app(_dropdown(
           key: key, items: _items(), selected: selected, probe: probe)));
 
-      key.currentState!
-        ..forceSelection('Kiwi')
-        ..forceSelection('Apple');
+      key.currentState!.forceSelection('Kiwi');
       await tester.pump();
-
       expect(selected, isEmpty);
       expect(probe.updates, isEmpty);
+
+      // Like the single dropdown: exact first, then case/accent-insensitive.
+      key.currentState!.forceSelection('Apple');
+      await tester.pump();
+      expect(_labels(selected), ['apple']);
     });
   });
 
   group('State API: forceMultipleSelection(values)', () {
     testWidgets(
-        'replaces selection in place with values found in listItems, '
-        'without notify and without rebuild', (tester) async {
+        'replaces selection in place with values found in listItems and '
+        'rebuilds (M3, 8.0), without notify', (tester) async {
       final key = GlobalKey<MultipleSearchDropDownState<int>>();
       final probe = _Probe();
       final items = _items();
@@ -787,15 +795,7 @@ void main() {
       expect(_labels(selected), ['Banana', 'apple']);
       expect(probe.updates, isEmpty);
       expect(probe.clearList, 0);
-      // No setState: the box still shows the previous chip.
-      expect(_inBox(find.text('Cherry')), findsOneWidget);
-      expect(_inBox(find.text('Banana')), findsNothing);
-
-      // Any later rebuild reveals the new selection.
-      key.currentState!
-        ..enableDisable()
-        ..enableDisable();
-      await tester.pump();
+      // M3 (8.0): the chips follow right away.
       expect(_inBox(find.text('Cherry')), findsNothing);
       expect(_inBox(find.text('Banana')), findsOneWidget);
       expect(_inBox(find.text('apple')), findsOneWidget);
@@ -813,11 +813,11 @@ void main() {
 
       expect(_inBox(find.text('Cherry')), findsOneWidget);
       expect(_inBox(find.text('Banana')), findsOneWidget);
-    }, skip: true); // M3: fixed in 8.0
+    }); // M3: fixed in 8.0
   });
 
   group('State API: resetSelection()', () {
-    testWidgets('clears in place and rebuilds, without any callback',
+    testWidgets('clears in place, rebuilds and calls updateSelectedItems (M2)',
         (tester) async {
       final key = GlobalKey<MultipleSearchDropDownState<int>>();
       final probe = _Probe();
@@ -830,7 +830,7 @@ void main() {
       await tester.pump();
 
       expect(selected, isEmpty);
-      expect(probe.updates, isEmpty);
+      expect(probe.updates, hasLength(1));
       expect(probe.clearList, 0);
       expect(probe.clearedItems, isEmpty);
       expect(_inBox(find.byType(Card)), findsNothing);
@@ -849,7 +849,7 @@ void main() {
 
       expect(probe.updates, hasLength(1));
       expect(probe.updates.single, isEmpty);
-    }, skip: true); // M2: fixed in 8.0
+    }); // M2: fixed in 8.0
   });
 
   group('State API: enableDisable() (opacity 0.38 + IgnorePointer)', () {
@@ -869,8 +869,8 @@ void main() {
       await tester.tap(_inBox(find.byType(InkWell)).first, warnIfMissed: false);
       await tester.pumpAndSettle();
       expect(_list, findsNothing);
-      // The arrow depends on widget.enabled, not on the toggled state.
-      expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
+      // 8.0: the arrow follows the enabled state.
+      expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsNothing);
 
       key.currentState!.enableDisable();
       await tester.pump();
@@ -898,7 +898,7 @@ void main() {
       expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
     });
 
-    testWidgets('on a closed dropdown it toggles the arrow to "opened"',
+    testWidgets('on a closed dropdown it does nothing (M8, 8.0)',
         (tester) async {
       final key = GlobalKey<MultipleSearchDropDownState<int>>();
       await tester.pumpWidget(_app(
@@ -908,13 +908,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(_list, findsNothing);
-      expect(key.currentState!.aberto, isTrue);
-      expect(_inBox(find.byIcon(Icons.arrow_drop_up)), findsOneWidget);
+      expect(key.currentState!.aberto, isFalse);
+      expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
 
-      // The next tap opens the overlay but flips the arrow back to "closed".
       await openMultiple(tester);
       expect(_list, findsOneWidget);
-      expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
+      expect(_inBox(find.byIcon(Icons.arrow_drop_up)), findsOneWidget);
     });
 
     testWidgets('M8: hideOverlay twice leaves the arrow closed',
@@ -931,7 +930,7 @@ void main() {
 
       expect(_list, findsNothing);
       expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
-    }, skip: true); // M8: fixed in 8.0
+    }); // M8: fixed in 8.0
   });
 
   group('add mode: add row (newValueItem/onAddItem)', () {
@@ -1008,7 +1007,8 @@ void main() {
       expect(_inBox(find.text('Kiwi')), findsOneWidget);
     });
 
-    testWidgets('if onAddItem does not grow listItems, item is only selected',
+    testWidgets(
+        'if onAddItem does not grow listItems, the item is added for it (8.0)',
         (tester) async {
       final probe = _Probe();
       final List<ValueItem<int>> selected = [];
@@ -1026,7 +1026,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(_labels(selected), ['Kiwi']);
-      expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
+      expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
     });
   });
 
@@ -1119,22 +1119,15 @@ void main() {
       await openMultiple(tester);
       expect(_inList(find.byIcon(Icons.delete)), findsNothing);
 
-      // Rebuilding the widget with deleteMode true while open does NOT
-      // update the already-open overlay entry (it is stale)...
+      // 8.0: the open list follows the new parameters right away.
       await tester.pumpWidget(_app(_dropdown(
           items: _items(), selected: [], probe: _Probe(), deleteMode: true)));
       await tester.pumpAndSettle();
-      expect(_inList(find.byIcon(Icons.delete)), findsNothing);
-
-      // ...only closing and reopening picks up the new parameters.
-      await tester.tapAt(const Offset(780, 580));
-      await tester.pumpAndSettle();
-      await openMultiple(tester);
       expect(_inList(find.byIcon(Icons.delete)), findsNWidgets(3));
     });
 
     testWidgets(
-        'no confirm: calls onDeleteItem, clears ALL selections silently, '
+        'no confirm: calls onDeleteItem, deselects only that item (M1), '
         'refreshes the list', (tester) async {
       final probe = _Probe();
       final items = _items();
@@ -1145,16 +1138,16 @@ void main() {
 
       await tester.tap(find.descendant(
           of: _row('Banana'), matching: find.byIcon(Icons.delete)));
-      // The tile shows an endless spinner afterwards, so no pumpAndSettle.
       await tester.pump();
 
       expect(probe.deleted, [const ValueItem<int>(label: 'Banana', value: 2)]);
-      expect(selected, isEmpty);
+      // Banana was not selected: the selection is untouched.
+      expect(_labels(selected), ['Cherry', 'apple']);
       expect(probe.updates, isEmpty);
       expect(probe.clearedItems, isEmpty);
       expect(_rowLabels(tester), ['Cherry', 'apple']);
       expect(_list, findsOneWidget);
-      expect(_inBox(find.byType(Card)), findsNothing);
+      expect(_inBox(find.byType(Card)), findsNWidgets(2));
     });
 
     testWidgets('no tile is left loading after a delete (8.0, B5 class)',
@@ -1190,7 +1183,7 @@ void main() {
       await tester.pump();
 
       expect(_labels(selected), ['apple']);
-    }, skip: true); // M1: fixed in 8.0
+    }); // M1: fixed in 8.0
   });
 
   group('delete mode: confirmDelete shows a WarningDialog in the overlay', () {
@@ -1231,7 +1224,8 @@ void main() {
       expect(_inList(find.byType(CircularProgressIndicator)), findsNothing);
     });
 
-    testWidgets('Apagar deletes, clears the selection and closes the dialog',
+    testWidgets(
+        'Apagar deletes, keeps the other selections (M1) and closes the dialog',
         (tester) async {
       final probe = _Probe();
       final items = _items();
@@ -1253,10 +1247,10 @@ void main() {
 
       expect(find.byType(WarningDialog), findsNothing);
       expect(probe.deleted, [const ValueItem<int>(label: 'Cherry', value: 3)]);
-      expect(selected, isEmpty);
+      expect(_labels(selected), ['apple']);
       expect(probe.updates, isEmpty);
       expect(_list, findsOneWidget);
-      expect(_inBox(find.text('Pesquisar')), findsOneWidget);
+      expect(_inBox(find.text('apple')), findsOneWidget);
     });
 
     testWidgets('custom deleteDialogSettings title is used', (tester) async {
@@ -1283,8 +1277,9 @@ void main() {
   });
 
   group('edit mode: edit icon is a no-op', () {
-    testWidgets('edit icon shown; tapping it never calls onEditItem',
-        (tester) async {
+    testWidgets(
+        'edit icon opens the edit dialog; confirming calls onEditItem '
+        '(8.0)', (tester) async {
       final probe = _Probe();
       await tester.pumpWidget(_app(_dropdown(
           items: _items(), selected: [], probe: probe, editMode: true)));
@@ -1292,12 +1287,20 @@ void main() {
       expect(_inList(find.byIcon(Icons.edit)), findsNWidgets(3));
 
       await tester.tap(_inList(find.byIcon(Icons.edit)).first);
-      await tester.pump();
-      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 400));
+      expect(find.byType(EditDialog), findsOneWidget);
 
-      expect(probe.edited, isEmpty);
+      await tester.enterText(
+        find.descendant(
+            of: find.byType(EditDialog), matching: find.byType(TextField)),
+        'Cherry2',
+      );
+      await tester.tap(find.text('Editar'));
+      await tester.pump(const Duration(milliseconds: 400));
+
       expect(find.byType(EditDialog), findsNothing);
-      expect(_inList(find.byIcon(Icons.edit)), findsNWidgets(3));
+      expect(_labels(probe.edited), ['Cherry2']);
+      expect(_rowLabels(tester), contains('Cherry2'));
     });
   });
 
@@ -1349,7 +1352,7 @@ void main() {
       expect(_inBox(find.text('Cherry')), findsOneWidget);
     });
 
-    testWidgets('enableDisable() re-enables taps but the arrow stays hidden',
+    testWidgets('enableDisable() re-enables taps and shows the arrow (8.0)',
         (tester) async {
       final key = GlobalKey<MultipleSearchDropDownState<int>>();
       await tester.pumpWidget(_app(_dropdown(
@@ -1364,7 +1367,7 @@ void main() {
 
       expect(_opacity(tester), 1);
       expect(_ignoring(tester), isFalse);
-      expect(_inBox(find.byType(Icon)), findsNothing);
+      expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
       await openMultiple(tester);
       expect(_list, findsOneWidget);
     });
@@ -1435,20 +1438,17 @@ void main() {
   });
 
   group('lifecycle: widget removed while the overlay is open', () {
-    testWidgets('the overlay entry is left behind (current behaviour)',
-        (tester) async {
+    testWidgets('the list goes away with the widget (M6, 8.0)', (tester) async {
       await tester.pumpWidget(
           _app(_dropdown(items: _items(), selected: [], probe: _Probe())));
       await openMultiple(tester);
 
       await tester.pumpWidget(_app(const SizedBox()));
 
-      expect(_box, findsNothing);
-      expect(_list, findsOneWidget);
-
-      // Its full-screen barrier calls hideOverlay on the disposed State.
+      expect(find.byType(MultipleSearchDropDown<int>), findsNothing);
+      expect(_list, findsNothing);
       await tester.tapAt(const Offset(780, 580));
-      expect(tester.takeException(), isFlutterError);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('M6: removing the widget removes the overlay entry',
@@ -1460,6 +1460,6 @@ void main() {
       await tester.pumpWidget(_app(const SizedBox()));
 
       expect(_list, findsNothing);
-    }, skip: true); // M6: fixed in 8.0
+    }); // M6: fixed in 8.0
   });
 }
