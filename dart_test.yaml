@@ -1,0 +1,3 @@
+tags:
+  golden:
+    description: Pixel comparisons; run only on the pinned Flutter version (Linux).
