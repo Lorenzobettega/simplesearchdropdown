@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
+/// Delete confirmation (`confirmDialog: true`) or invalid-item warning.
 class WarningDialog extends StatelessWidget {
+  /// Creates a warning dialog.
   const WarningDialog({
     super.key,
     this.settings,

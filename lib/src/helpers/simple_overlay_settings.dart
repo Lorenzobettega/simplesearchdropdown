@@ -6,6 +6,7 @@ const Color darkGreen = Color.fromARGB(255, 0, 67, 0);
 
 ///Class to hold all the customizations of the simple search overlay list.
 class SimpleOverlaySettings {
+  /// Creates list settings; every field has a default.
   const SimpleOverlaySettings({
     this.dialogHeight = 200,
     this.dialogBackgroundColor,
@@ -118,7 +119,7 @@ class SimpleOverlaySettings {
   @Deprecated('Use additionalWidgetSpacing. Will be removed in 9.0.0')
   double get aditionalWidgetSpacing => additionalWidgetSpacing;
 
-  //The drop widget will open full screen in true condition
+  ///Opens the list full screen (default: `false`).
   final bool openFullScreen;
 
   ///Loading widget default color (default:`Color.fromARGB(255, 0, 67, 0)`)

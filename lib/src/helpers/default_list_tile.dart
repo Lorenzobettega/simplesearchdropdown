@@ -3,6 +3,7 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 ///The default widget that will be presented on the list.
 class DefaultListTile<T> extends StatefulWidget {
+  /// Creates a row for [item].
   const DefaultListTile({
     required this.deleteMode,
     required this.editMode,
@@ -20,16 +21,32 @@ class DefaultListTile<T> extends StatefulWidget {
 
   ///The overlay list of items settings.
   final SimpleOverlaySettings overlayListSettings;
+
+  /// Shows the delete button.
   final bool deleteMode;
+
+  /// Shows the edit button.
   final bool editMode;
+
+  /// The item this row displays.
   final ValueItem<T> item;
+
+  /// Called when the edit button is pressed.
   final Function(ValueItem<T> value) onEdit;
+
+  /// Called when the delete button is pressed.
   final Function(ValueItem<T> value) onDelete;
+
+  /// Called when the row is tapped.
   final Function(ValueItem<T> value) onPressed;
+
+  /// Whether [item] is the selected item.
   final bool selected;
 
   /// Whether the row is highlighted by keyboard navigation.
   final bool highlighted;
+
+  /// Widget shown between the label and the action buttons.
   final Widget? defaultAdditionalWidget;
 
   /// Source of tooltips and semantics labels.

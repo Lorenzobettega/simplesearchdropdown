@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
+/// The "create" row shown when the typed text matches no item.
 class DefaultAddListItem extends StatefulWidget {
+  /// Creates the add row for [text].
   const DefaultAddListItem({
     required this.text,
     required this.overlayListSettings,
@@ -16,7 +18,11 @@ class DefaultAddListItem extends StatefulWidget {
 
   ///The overlay list of items settings.
   final SimpleOverlaySettings overlayListSettings;
+
+  /// The typed text that would become the new item.
   final String text;
+
+  /// Widget shown between the text and the create button.
   final Widget? addAdditionalWidget;
 
   /// Source of the default texts.

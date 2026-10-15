@@ -9,3 +9,8 @@ analyzer:
     - android/**
     - ios/**
     - web/**
+
+linter:
+  rules:
+    # An app, not a library: no public API to document.
+    public_member_api_docs: false

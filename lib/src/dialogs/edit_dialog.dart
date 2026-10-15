@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
+/// Dialog that asks for a new label for an item (used by edit mode).
 class EditDialog extends StatefulWidget {
+  /// Creates an edit dialog for [label].
   const EditDialog({
     super.key,
     required this.label,

@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/src/helpers/dialog_settings.dart';
 
+/// A button of the package dialogs, styled by [DialogButtonSettings].
 class DialogButton extends StatelessWidget {
+  /// Creates a dialog button.
   const DialogButton({
     super.key,
     required this.function,
     required this.buttonSettings,
   });
+
+  /// Called when pressed.
   final Function function;
+
+  /// Visual settings and label.
   final DialogButtonSettings buttonSettings;
 
   @override

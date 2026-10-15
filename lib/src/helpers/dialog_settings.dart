@@ -3,6 +3,7 @@ import 'package:simple_search_dropdown/src/core/search_dropdown_strings.dart';
 
 ///Class to hold all the customizations of the confirmation dialog.
 class DialogSettings {
+  /// Creates dialog settings; every field is optional.
   const DialogSettings({
     this.title,
     this.content,
@@ -90,6 +91,7 @@ class DialogSettings {
 
 ///Class to hold all the customizations of the buttons in the dialog.
 class DialogButtonSettings {
+  /// Creates button settings with label [text].
   const DialogButtonSettings(
     this.text, {
     this.padding = const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
@@ -176,6 +178,7 @@ const defaultEditButtonSettings = DialogButtonSettings(
 
 ///Default title for the dialog.
 class DefaultDialogTitle extends StatelessWidget {
+  /// Creates the default title.
   const DefaultDialogTitle({
     super.key,
     required this.confirmDialog,
@@ -203,6 +206,7 @@ class DefaultDialogTitle extends StatelessWidget {
 
 ///Default content for the dialog.
 class DefaultDialogContent extends StatelessWidget {
+  /// Creates the default content.
   const DefaultDialogContent({
     super.key,
     required this.confirmDialog,

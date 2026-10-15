@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+/// Formatter that accepts any input (default of [InputField.mascara]).
 FilteringTextInputFormatter allValues =
     FilteringTextInputFormatter.allow(RegExp('.*'));
 
+/// The text field used by the edit dialog.
 class InputField extends StatelessWidget {
+  /// Creates an input field bound to [controle].
   const InputField({
     super.key,
     required this.controle,
@@ -35,26 +38,67 @@ class InputField extends StatelessWidget {
       BorderSide(color: Color.fromARGB(255, 0, 67, 0));
   static const BorderSide _errorBorderSide = BorderSide(color: Colors.red);
 
+  /// Text controller.
   final TextEditingController controle;
+
+  /// Optional input formatter.
   final TextInputFormatter? mascara;
+
+  /// Keyboard action button.
   final TextInputAction textInputButton;
+
+  /// Keyboard type.
   final TextInputType tipoTeclado;
+
+  /// Form validator.
   final FormFieldValidator<String>? validator;
+
+  /// Hint and label text.
   final String? hint;
+
+  /// Field width.
   final double width;
+
+  /// Obscures the text (passwords).
   final bool oculto;
+
+  /// Called when editing completes.
   final VoidCallback? finishFunction;
+
+  /// Shows a clear button.
   final bool clear;
+
+  /// Called on tap.
   final VoidCallback? tapFunction;
+
+  /// Maximum number of lines.
   final int? lines;
+
+  /// Corner radius.
   final double raio;
+
+  /// Elevation of the surrounding material.
   final double elevacao;
+
+  /// Text style.
   final TextStyle estilo;
+
+  /// Called when the text changes.
   final ValueChanged<String>? mudeiTextoFunction;
+
+  /// Shows the floating label.
   final bool mostrarHint;
+
+  /// Whether the field is enabled.
   final bool liberado;
+
+  /// Text alignment.
   final TextAlign alinhamento;
+
+  /// Border color when disabled.
   final Color? disabledColor;
+
+  /// Text capitalization.
   final TextCapitalization? capitalization;
 
   @override

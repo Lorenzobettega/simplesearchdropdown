@@ -3,6 +3,7 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 ///Class to hold all the customizations of the simple search bar.
 class SimpleSearchbarSettings {
+  /// Creates search bar settings; every field has a default.
   const SimpleSearchbarSettings({
     this.dropdownWidth = 300,
     this.dropdownHeight = 50,
@@ -122,10 +123,10 @@ class SimpleSearchbarSettings {
   ///If true, the keyboard will appear when you tap the searchbar (default:true).
   final bool showKeyboardOnTap;
 
-  //The keyboard type of search bar
+  ///The keyboard type of the search bar.
   final TextInputType? keyboardType;
 
-  //The keyboard reaction on enter and input
+  ///The keyboard action button of the search bar.
   final TextInputAction? textInputAction;
 
   ///If true, a divider between the searchbar and the list of items will appear (default:false).

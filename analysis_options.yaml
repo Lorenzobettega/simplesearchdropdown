@@ -12,6 +12,7 @@ analyzer:
     
 linter:
   rules:
+    - public_member_api_docs
     - always_declare_return_types
     - always_put_control_body_on_new_line
     - annotate_overrides
