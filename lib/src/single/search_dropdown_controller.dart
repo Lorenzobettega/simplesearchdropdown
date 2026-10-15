@@ -322,8 +322,9 @@ class SearchDropDownController<T> {
     if (shouldReset || selectedItem != null) {
       resetSelection();
     }
-    listItems.clear();
-    listItems.addAll(newList);
+    listItems
+      ..clear()
+      ..addAll(newList);
     _rebuildCaches();
     if (_currentSortType != 0) {
       sortList(_currentSortType);

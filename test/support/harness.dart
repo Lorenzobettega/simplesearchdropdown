@@ -4,6 +4,7 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 /// Hosts [child] the way a real app would (Material 3, centered, scaffold).
 Widget host(Widget child, {ThemeData? theme}) => MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: theme ?? ThemeData(useMaterial3: true),
       home: Scaffold(body: Center(child: child)),
     );

@@ -9,6 +9,8 @@ dependencies:
   flutter:
     sdk: flutter
 dev_dependencies:
+  flutter_test:
+    sdk: flutter
   simple_search_dropdown:
     path: ../
 flutter:
