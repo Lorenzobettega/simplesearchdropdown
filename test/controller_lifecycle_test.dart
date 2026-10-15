@@ -117,21 +117,36 @@ void main() {
       expect(() => c.dispose(), returnsNormally);
       expect(c.isDisposed, isTrue);
     });
-// ajuste no teste de lifecycle para validar o contrato correto pós-dispose
-    testWidgets('SearchDropDown respeita disposeController=true/false',
-        (tester) async {
+    // ajuste no teste de lifecycle para validar o contrato correto pós-dispose
+    testWidgets('SearchDropDown respeita disposeController=true/false', (
+      tester,
+    ) async {
       final cTrue = SearchDropDownController<String>(
-          listItems: const [], addMode: false, deleteMode: false);
+        listItems: const [],
+        addMode: false,
+        deleteMode: false,
+      );
       final cFalse = SearchDropDownController<String>(
-          listItems: const [], addMode: false, deleteMode: false);
+        listItems: const [],
+        addMode: false,
+        deleteMode: false,
+      );
 
-      await tester.pumpWidget(MaterialApp(
-        home: Column(children: [
-          SearchDropDown<String>(
-              controller: cTrue), // disposeController default = true
-          SearchDropDown<String>(controller: cFalse, disposeController: false),
-        ]),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Column(
+            children: [
+              SearchDropDown<String>(
+                controller: cTrue,
+              ), // disposeController default = true
+              SearchDropDown<String>(
+                controller: cFalse,
+                disposeController: false,
+              ),
+            ],
+          ),
+        ),
+      );
       await tester.pump();
 
       await tester.pumpWidget(const SizedBox.shrink());
@@ -156,11 +171,14 @@ void main() {
         const ValueItem(label: 'Sao Tome', value: 2),
         const ValueItem(label: 'Porto Alegre', value: 3),
       ];
-      final c = SearchDropDownController<int>(
-          listItems: items, addMode: false, deleteMode: false)
-
-        // Filtro "sao" deve encontrar 'São Paulo' e 'Sao Tome'
-        ..filterList('sao');
+      final c =
+          SearchDropDownController<int>(
+              listItems: items,
+              addMode: false,
+              deleteMode: false,
+            )
+            // Filtro "sao" deve encontrar 'São Paulo' e 'Sao Tome'
+            ..filterList('sao');
       expect(
         c.filteredItems.map((e) => e.label),
         containsAll(['São Paulo', 'Sao Tome']),

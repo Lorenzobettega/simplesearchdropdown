@@ -133,19 +133,19 @@ class DialogButtonSettings {
 
   /// A copy with the given fields replaced.
   DialogButtonSettings copyWith({String? text}) => DialogButtonSettings(
-        text ?? this.text,
-        padding: padding,
-        textColor: textColor,
-        activeBorder: activeBorder,
-        mediumFont: mediumFont,
-        radius: radius,
-        customHeight: customHeight,
-        fontSize: fontSize,
-        iconsize: iconsize,
-        customWidth: customWidth,
-        backgroundColor: backgroundColor,
-        icon: icon,
-      );
+    text ?? this.text,
+    padding: padding,
+    textColor: textColor,
+    activeBorder: activeBorder,
+    mediumFont: mediumFont,
+    radius: radius,
+    customHeight: customHeight,
+    fontSize: fontSize,
+    iconsize: iconsize,
+    customWidth: customWidth,
+    backgroundColor: backgroundColor,
+    icon: icon,
+  );
 }
 
 ///Default settings for Delete button.
@@ -165,10 +165,7 @@ const defaultCancelButtonSettings = DialogButtonSettings(
 );
 
 ///Default settings for OK button.
-const defaultOKButtonSettings = DialogButtonSettings(
-  'OK',
-  customWidth: 160,
-);
+const defaultOKButtonSettings = DialogButtonSettings('OK', customWidth: 160);
 
 ///Default settings for edit button.
 const defaultEditButtonSettings = DialogButtonSettings(
@@ -195,10 +192,7 @@ class DefaultDialogTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       confirmDialog ? strings.confirmDeleteTitle : strings.invalidItemTitle,
-      style: const TextStyle(
-        fontWeight: FontWeight.bold,
-        fontSize: 18,
-      ),
+      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
       textAlign: TextAlign.center,
     );
   }
@@ -223,9 +217,7 @@ class DefaultDialogContent extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       confirmDialog ? strings.confirmDeleteContent : strings.invalidItemContent,
-      style: const TextStyle(
-        fontSize: 16,
-      ),
+      style: const TextStyle(fontSize: 16),
       textAlign: TextAlign.center,
     );
   }

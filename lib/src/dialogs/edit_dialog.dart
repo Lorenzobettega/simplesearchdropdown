@@ -48,16 +48,15 @@ class _EditDialogState extends State<EditDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: dialogSettings.title ??
+      title:
+          dialogSettings.title ??
           Text(
             widget.strings.editTitle,
-            style: const TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             textAlign: TextAlign.center,
           ),
-      content: dialogSettings.content ??
+      content:
+          dialogSettings.content ??
           Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -69,9 +68,7 @@ class _EditDialogState extends State<EditDialog> {
                 ),
                 textAlign: TextAlign.center,
               ),
-              const SizedBox(
-                height: 20,
-              ),
+              const SizedBox(height: 20),
               InputField(
                 controle: controller,
                 hint: dialogSettings.editHint ?? widget.strings.editHint,

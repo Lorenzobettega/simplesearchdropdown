@@ -10,9 +10,7 @@ class SimpleSearchbarSettings {
     this.elevation = 2,
     this.backgroundColor = Colors.white,
     this.border = const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(
-        Radius.circular(10),
-      ),
+      borderRadius: BorderRadius.all(Radius.circular(10)),
     ),
     this.clearIconColor,
     this.searchBarTextStyle,
@@ -32,8 +30,12 @@ class SimpleSearchbarSettings {
     this.boxMultiSelectedClearIconSize = 20,
     this.boxMultiSelectedClearIconColor,
     this.boxMultiItemWidgetBuilder,
-    this.boxMultiSelectedBackgroundColor =
-        const Color.fromRGBO(224, 224, 224, 1),
+    this.boxMultiSelectedBackgroundColor = const Color.fromRGBO(
+      224,
+      224,
+      224,
+      1,
+    ),
     this.boxMultiSelectedTextStyle,
     this.searchBarPadding,
     this.showKeyboardOnTap = true,

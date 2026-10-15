@@ -59,20 +59,19 @@ SearchDropDownController<int> _controller(
   bool trim = true,
   void Function()? onFilterUpdated,
   void Function(ValueItem<int>?)? updateSelectedItem,
-}) =>
-    SearchDropDownController<int>(
-      listItems: items,
-      addMode: false,
-      deleteMode: false,
-      initialSelectedItem: initialSelectedItem,
-      sortType: sortType,
-      showClearIcon: showClearIcon,
-      latinize: latinize,
-      caseSensitive: caseSensitive,
-      trim: trim,
-      onFilterUpdated: onFilterUpdated,
-      updateSelectedItem: updateSelectedItem,
-    );
+}) => SearchDropDownController<int>(
+  listItems: items,
+  addMode: false,
+  deleteMode: false,
+  initialSelectedItem: initialSelectedItem,
+  sortType: sortType,
+  showClearIcon: showClearIcon,
+  latinize: latinize,
+  caseSensitive: caseSensitive,
+  trim: trim,
+  onFilterUpdated: onFilterUpdated,
+  updateSelectedItem: updateSelectedItem,
+);
 
 List<String> _labels(Iterable<ValueItem<int>> items) =>
     items.map((e) => e.label).toList();
@@ -83,8 +82,7 @@ Future<void> _pump(
   WidgetTester tester,
   SearchDropDownController<int> c, {
   Key? key,
-}) =>
-    tester.pumpWidget(host(SearchDropDown<int>(key: key, controller: c)));
+}) => tester.pumpWidget(host(SearchDropDown<int>(key: key, controller: c)));
 
 Future<void> _type(WidgetTester tester, String text) async {
   await tester.enterText(focusedField(), text);
@@ -134,8 +132,9 @@ void _typeViaController(SearchDropDownController<int> c, String text) {
 
 void main() {
   group('filter: substring match (default options)', () {
-    testWidgets('matches anywhere in the label, keeps list order',
-        (tester) async {
+    testWidgets('matches anywhere in the label, keeps list order', (
+      tester,
+    ) async {
       final c = _controller(fruitItems());
       await _pump(tester, c);
       await openSingle(tester);
@@ -165,8 +164,9 @@ void main() {
   });
 
   group('filter: latinize (accent-insensitive, default true)', () {
-    testWidgets('default: accents ignored on both query and labels',
-        (tester) async {
+    testWidgets('default: accents ignored on both query and labels', (
+      tester,
+    ) async {
       final c = _controller(fruitItems());
       await _pump(tester, c);
       await openSingle(tester);
@@ -218,8 +218,9 @@ void main() {
       expect(_labels(c.filteredItems), <String>['abacaxi']);
     });
 
-    testWidgets('caseSensitive true: case must match, latinize still applies',
-        (tester) async {
+    testWidgets('caseSensitive true: case must match, latinize still applies', (
+      tester,
+    ) async {
       final c = _controller(fruitItems(), caseSensitive: true);
       await _pump(tester, c);
       await openSingle(tester);
@@ -239,8 +240,9 @@ void main() {
   });
 
   group('filter: trim (default true)', () {
-    testWidgets('default: leading/trailing whitespace of the query ignored',
-        (tester) async {
+    testWidgets('default: leading/trailing whitespace of the query ignored', (
+      tester,
+    ) async {
       final c = _controller(fruitItems());
       await _pump(tester, c);
       await openSingle(tester);
@@ -253,8 +255,9 @@ void main() {
       expect(_labels(c.filteredItems), _fruitOrder);
     });
 
-    testWidgets('trim false: surrounding whitespace is significant',
-        (tester) async {
+    testWidgets('trim false: surrounding whitespace is significant', (
+      tester,
+    ) async {
       final c = _controller(fruitItems(), trim: false);
       await _pump(tester, c);
       await openSingle(tester);
@@ -269,17 +272,19 @@ void main() {
       expect(c.filteredItems, isEmpty);
     });
 
-    testWidgets('trim false: inner whitespace still matches as substring',
-        (tester) async {
+    testWidgets('trim false: inner whitespace still matches as substring', (
+      tester,
+    ) async {
       final c = _controller(numberedItems(12), trim: false);
       await _pump(tester, c);
       await openSingle(tester);
 
       await _type(tester, 'm 1');
-      expect(
-        _labels(c.filteredItems),
-        <String>['Item 1', 'Item 10', 'Item 11'],
-      );
+      expect(_labels(c.filteredItems), <String>[
+        'Item 1',
+        'Item 10',
+        'Item 11',
+      ]);
     });
   });
 
@@ -296,16 +301,18 @@ void main() {
       expect(_labels(c.filteredItems), <String>['Banana']);
     });
 
-    test('after onSearchOpen text changes filter immediately (no debounce)',
-        () {
-      final c = _controller(fruitItems());
-      addTearDown(c.dispose);
+    test(
+      'after onSearchOpen text changes filter immediately (no debounce)',
+      () {
+        final c = _controller(fruitItems());
+        addTearDown(c.dispose);
 
-      c.onSearchOpen();
-      expect(_labels(c.filteredItems), _fruitOrder);
-      _typeViaController(c, 'uva');
-      expect(_labels(c.filteredItems), <String>['Uva']);
-    });
+        c.onSearchOpen();
+        expect(_labels(c.filteredItems), _fruitOrder);
+        _typeViaController(c, 'uva');
+        expect(_labels(c.filteredItems), <String>['Uva']);
+      },
+    );
   });
 
   group('filter: filterList() direct API', () {
@@ -331,18 +338,20 @@ void main() {
       expect(_labels(c.filteredItems), <String>['Banana']);
     });
 
-    test('empty text shows everything and reports the change (8.0, B13 class)',
-        () {
-      var calls = 0;
-      final c = _controller(fruitItems(), onFilterUpdated: () => calls++);
-      addTearDown(c.dispose);
+    test(
+      'empty text shows everything and reports the change (8.0, B13 class)',
+      () {
+        var calls = 0;
+        final c = _controller(fruitItems(), onFilterUpdated: () => calls++);
+        addTearDown(c.dispose);
 
-      c.filterList('ban');
-      expect(calls, 1);
-      c.filterList('');
-      expect(_labels(c.filteredItems), _fruitOrder);
-      expect(calls, 2);
-    });
+        c.filterList('ban');
+        expect(calls, 1);
+        c.filterList('');
+        expect(_labels(c.filteredItems), _fruitOrder);
+        expect(calls, 2);
+      },
+    );
   });
 
   group('filter: incremental refine and widen', () {
@@ -370,24 +379,27 @@ void main() {
       expect(_labels(c.filteredItems), _fruitOrder);
     });
 
-    testWidgets('numbered items: refine to one, widen back to three',
-        (tester) async {
+    testWidgets('numbered items: refine to one, widen back to three', (
+      tester,
+    ) async {
       final c = _controller(numberedItems(12));
       await _pump(tester, c);
       await openSingle(tester);
 
       await _type(tester, '1');
-      expect(
-        _labels(c.filteredItems),
-        <String>['Item 1', 'Item 10', 'Item 11'],
-      );
+      expect(_labels(c.filteredItems), <String>[
+        'Item 1',
+        'Item 10',
+        'Item 11',
+      ]);
       await _type(tester, '11');
       expect(_labels(c.filteredItems), <String>['Item 11']);
       await _type(tester, '1');
-      expect(
-        _labels(c.filteredItems),
-        <String>['Item 1', 'Item 10', 'Item 11'],
-      );
+      expect(_labels(c.filteredItems), <String>[
+        'Item 1',
+        'Item 10',
+        'Item 11',
+      ]);
       await _type(tester, '');
       expect(c.filteredItems, hasLength(12));
     });
@@ -423,8 +435,9 @@ void main() {
       expect(calls, 3);
     });
 
-    testWidgets('filteredItems is already updated when the callback runs',
-        (tester) async {
+    testWidgets('filteredItems is already updated when the callback runs', (
+      tester,
+    ) async {
       final snapshots = <List<String>>[];
       late final SearchDropDownController<int> c;
       c = _controller(
@@ -442,15 +455,12 @@ void main() {
 
     test('fires when the length is equal but the first item differs', () {
       var calls = 0;
-      final c = _controller(
-        <ValueItem<int>>[
-          const ValueItem(label: 'AX', value: 1),
-          const ValueItem(label: 'BX', value: 2),
-          const ValueItem(label: 'AY', value: 3),
-          const ValueItem(label: 'BY', value: 4),
-        ],
-        onFilterUpdated: () => calls++,
-      );
+      final c = _controller(<ValueItem<int>>[
+        const ValueItem(label: 'AX', value: 1),
+        const ValueItem(label: 'BX', value: 2),
+        const ValueItem(label: 'AY', value: 3),
+        const ValueItem(label: 'BY', value: 4),
+      ], onFilterUpdated: () => calls++);
       addTearDown(c.dispose);
 
       c.onSearchOpen();
@@ -476,15 +486,12 @@ void main() {
       'B13: fires when only a middle element changes',
       () {
         var calls = 0;
-        final c = _controller(
-          <ValueItem<int>>[
-            const ValueItem(label: 'AXY', value: 1),
-            const ValueItem(label: 'BX', value: 2),
-            const ValueItem(label: 'BY', value: 3),
-            const ValueItem(label: 'CXY', value: 4),
-          ],
-          onFilterUpdated: () => calls++,
-        );
+        final c = _controller(<ValueItem<int>>[
+          const ValueItem(label: 'AXY', value: 1),
+          const ValueItem(label: 'BX', value: 2),
+          const ValueItem(label: 'BY', value: 3),
+          const ValueItem(label: 'CXY', value: 4),
+        ], onFilterUpdated: () => calls++);
         addTearDown(c.dispose);
 
         c.onSearchOpen();
@@ -531,14 +538,11 @@ void main() {
     });
 
     test('accented characters sort with their base letter (D2, 8.0)', () {
-      final c = _controller(
-        <ValueItem<int>>[
-          const ValueItem(label: 'Pêra', value: 1),
-          const ValueItem(label: 'Pzz', value: 2),
-          const ValueItem(label: 'Pera', value: 3),
-        ],
-        sortType: 1,
-      );
+      final c = _controller(<ValueItem<int>>[
+        const ValueItem(label: 'Pêra', value: 1),
+        const ValueItem(label: 'Pzz', value: 2),
+        const ValueItem(label: 'Pera', value: 3),
+      ], sortType: 1);
       addTearDown(c.dispose);
 
       expect(_labels(c.filteredItems), <String>['Pera', 'Pêra', 'Pzz']);
@@ -623,15 +627,17 @@ void main() {
       expect(_labels(items), _fruitOrder);
     });
 
-    test('initialSelectedItem not in list: order unchanged, still selected',
-        () {
-      final items = fruitItems();
-      final c = _controller(items, initialSelectedItem: _kiwi, sortType: 3);
-      addTearDown(c.dispose);
+    test(
+      'initialSelectedItem not in list: order unchanged, still selected',
+      () {
+        final items = fruitItems();
+        final c = _controller(items, initialSelectedItem: _kiwi, sortType: 3);
+        addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), _fruitOrder);
-      expect(c.selectedItem, _kiwi);
-    });
+        expect(_labels(c.filteredItems), _fruitOrder);
+        expect(c.selectedItem, _kiwi);
+      },
+    );
   });
 
   group('sort: sortList() public method', () {
@@ -658,10 +664,7 @@ void main() {
         const ValueItem(label: 'Abacate', value: 12),
       ];
       c.updateListItems(newList, false);
-      expect(
-        _labels(c.filteredItems),
-        <String>['Abacate', 'Figo', 'Kiwi'],
-      );
+      expect(_labels(c.filteredItems), <String>['Abacate', 'Figo', 'Kiwi']);
       expect(_labels(c.listItems), <String>['Abacate', 'Figo', 'Kiwi']);
       // The argument list itself is copied, not sorted.
       expect(_labels(newList), <String>['Kiwi', 'Figo', 'Abacate']);
@@ -687,8 +690,9 @@ void main() {
       expect(_labels(c.filteredItems), _fruitOrder);
     });
 
-    testWidgets('showClearIcon true -> clearVisible and bar clear button',
-        (tester) async {
+    testWidgets('showClearIcon true -> clearVisible and bar clear button', (
+      tester,
+    ) async {
       final c = _controller(
         fruitItems(),
         initialSelectedItem: _banana,
@@ -700,8 +704,9 @@ void main() {
       expect(_barClearVisible(tester), isTrue);
     });
 
-    testWidgets('showClearIcon false (controller default) -> clear hidden',
-        (tester) async {
+    testWidgets('showClearIcon false (controller default) -> clear hidden', (
+      tester,
+    ) async {
       final c = _controller(fruitItems(), initialSelectedItem: _banana);
       await _pump(tester, c);
 
@@ -709,16 +714,18 @@ void main() {
       expect(_barClearVisible(tester), isFalse);
     });
 
-    testWidgets('no initialSelectedItem -> clear hidden even if showClearIcon',
-        (tester) async {
-      final c = _controller(fruitItems(), showClearIcon: true);
-      await _pump(tester, c);
+    testWidgets(
+      'no initialSelectedItem -> clear hidden even if showClearIcon',
+      (tester) async {
+        final c = _controller(fruitItems(), showClearIcon: true);
+        await _pump(tester, c);
 
-      expect(c.selectedItem, isNull);
-      expect(c.clearVisible, isFalse);
-      expect(_barClearVisible(tester), isFalse);
-      expect(_barText(tester), '');
-    });
+        expect(c.selectedItem, isNull);
+        expect(c.clearVisible, isFalse);
+        expect(_barClearVisible(tester), isFalse);
+        expect(_barText(tester), '');
+      },
+    );
 
     testWidgets('opening the view lists every item (D1, 8.0)', (tester) async {
       var calls = 0;
@@ -758,8 +765,9 @@ void main() {
   });
 
   group('forceSelection: select by normalized label', () {
-    testWidgets('selects by case-insensitive label and notifies',
-        (tester) async {
+    testWidgets('selects by case-insensitive label and notifies', (
+      tester,
+    ) async {
       final selected = <ValueItem<int>?>[];
       final c = _controller(fruitItems(), updateSelectedItem: selected.add);
       await _pump(tester, c);
@@ -772,8 +780,9 @@ void main() {
       expect(selected, <ValueItem<int>?>[_banana]);
     });
 
-    testWidgets('label is normalized with trim + latinize + lowercase',
-        (tester) async {
+    testWidgets('label is normalized with trim + latinize + lowercase', (
+      tester,
+    ) async {
       final c = _controller(fruitItems());
       await _pump(tester, c);
 
@@ -821,8 +830,9 @@ void main() {
       expect(c.clearVisible, isTrue);
     });
 
-    testWidgets('an exact label wins over a normalized duplicate (8.0)',
-        (tester) async {
+    testWidgets('an exact label wins over a normalized duplicate (8.0)', (
+      tester,
+    ) async {
       final c = _controller(<ValueItem<int>>[
         const ValueItem(label: 'Maca', value: 10),
         const ValueItem(label: 'Maçã', value: 1),
@@ -899,8 +909,9 @@ void main() {
       expect(selected, <ValueItem<int>?>[null]);
     });
 
-    testWidgets('a selection bypasses shouldReset false (reset anyway)',
-        (tester) async {
+    testWidgets('a selection bypasses shouldReset false (reset anyway)', (
+      tester,
+    ) async {
       final selected = <ValueItem<int>?>[];
       final c = _controller(
         fruitItems(),
@@ -921,8 +932,9 @@ void main() {
       expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
 
-    testWidgets('lookup caches rebuilt: new labels found, old ones gone',
-        (tester) async {
+    testWidgets('lookup caches rebuilt: new labels found, old ones gone', (
+      tester,
+    ) async {
       final c = _controller(fruitItems());
       await _pump(tester, c);
 
@@ -966,8 +978,9 @@ void main() {
   });
 
   group('updateList: SearchDropDownState.updateList via GlobalKey', () {
-    testWidgets('default shouldreset true clears text and notifies',
-        (tester) async {
+    testWidgets('default shouldreset true clears text and notifies', (
+      tester,
+    ) async {
       final key = GlobalKey<SearchDropDownState<int>>();
       final selected = <ValueItem<int>?>[];
       final c = _controller(fruitItems(), updateSelectedItem: selected.add);
@@ -983,8 +996,9 @@ void main() {
       expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
 
-    testWidgets('shouldreset false without selection keeps text',
-        (tester) async {
+    testWidgets('shouldreset false without selection keeps text', (
+      tester,
+    ) async {
       final key = GlobalKey<SearchDropDownState<int>>();
       final selected = <ValueItem<int>?>[];
       final c = _controller(fruitItems(), updateSelectedItem: selected.add);
@@ -999,8 +1013,9 @@ void main() {
       expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
 
-    testWidgets('shouldreset false with a selection still resets',
-        (tester) async {
+    testWidgets('shouldreset false with a selection still resets', (
+      tester,
+    ) async {
       final key = GlobalKey<SearchDropDownState<int>>();
       final c = _controller(fruitItems(), initialSelectedItem: _banana);
       await _pump(tester, c, key: key);

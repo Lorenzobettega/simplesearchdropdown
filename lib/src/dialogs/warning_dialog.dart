@@ -28,9 +28,11 @@ class WarningDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     final dialogSettings = settings ?? const DialogSettings();
     return AlertDialog(
-      title: dialogSettings.title ??
+      title:
+          dialogSettings.title ??
           DefaultDialogTitle(confirmDialog: confirmDialog, strings: strings),
-      content: dialogSettings.content ??
+      content:
+          dialogSettings.content ??
           DefaultDialogContent(confirmDialog: confirmDialog, strings: strings),
       contentPadding: dialogSettings.contentPadding,
       titlePadding: dialogSettings.titlePadding,

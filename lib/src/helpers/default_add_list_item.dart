@@ -63,9 +63,7 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
             ),
           ),
           if (widget.addAdditionalWidget != null)
-            Flexible(
-              child: widget.addAdditionalWidget!,
-            ),
+            Flexible(child: widget.addAdditionalWidget!),
           Flexible(
             child: _isLoading
                 ? Padding(

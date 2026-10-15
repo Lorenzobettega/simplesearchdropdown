@@ -17,15 +17,19 @@ void main() {
     final key = UniqueKey();
     var selected = <ValueItem<int>>[];
 
-    await tester.pumpWidget(_wrap(MultipleSearchDropDown<int>(
-      key: key,
-      listItems: items,
-      selectedItems: selected,
-      sortType: 1,
-      updateSelectedItems: (v) => selected = List<ValueItem<int>>.from(v),
-      addMode: false,
-      deleteMode: false,
-    )));
+    await tester.pumpWidget(
+      _wrap(
+        MultipleSearchDropDown<int>(
+          key: key,
+          listItems: items,
+          selectedItems: selected,
+          sortType: 1,
+          updateSelectedItems: (v) => selected = List<ValueItem<int>>.from(v),
+          addMode: false,
+          deleteMode: false,
+        ),
+      ),
+    );
     await tester.pumpAndSettle();
 
     final tappable = find
@@ -43,7 +47,8 @@ void main() {
     await tester.tap(tappable);
     await tester.pumpAndSettle();
 
-    final opened = find.byType(TextField).evaluate().isNotEmpty ||
+    final opened =
+        find.byType(TextField).evaluate().isNotEmpty ||
         find.byType(Scrollable).evaluate().isNotEmpty;
     expect(opened, isTrue);
 

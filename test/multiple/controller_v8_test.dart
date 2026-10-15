@@ -9,20 +9,20 @@ MultipleSearchDropDownController<int> _ctrl({
   List<ValueItem<int>>? selected,
   void Function(List<ValueItem<int>>)? onChanged,
   SortType sort = SortType.none,
-}) =>
-    MultipleSearchDropDownController<int>(
-      items: items ?? fruitItems(),
-      selectedItems: selected,
-      updateSelectedItems: onChanged,
-      addMode: false,
-      deleteMode: false,
-      sort: sort,
-    );
+}) => MultipleSearchDropDownController<int>(
+  items: items ?? fruitItems(),
+  selectedItems: selected,
+  updateSelectedItems: onChanged,
+  addMode: false,
+  deleteMode: false,
+  sort: sort,
+);
 
 void main() {
   group('multiple controller: API without GlobalKey', () {
-    testWidgets('selection changes made in code update the chips',
-        (tester) async {
+    testWidgets('selection changes made in code update the chips', (
+      tester,
+    ) async {
       final c = _ctrl();
       addTearDown(c.dispose);
       await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
@@ -71,8 +71,9 @@ void main() {
       expect(mine.first.label, 'Maçã');
     });
 
-    testWidgets('the open list sits below dialogs (confirm delete works)',
-        (tester) async {
+    testWidgets('the open list sits below dialogs (confirm delete works)', (
+      tester,
+    ) async {
       final List<ValueItem<int>> items = fruitItems();
       final c = MultipleSearchDropDownController<int>(
         listItems: items,

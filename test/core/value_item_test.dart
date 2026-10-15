@@ -71,15 +71,21 @@ void main() {
   group('ValueItem: copyWith and toString', () {
     test('copyWith replaces only the given fields', () {
       const item = ValueItem<int>(label: 'A', value: 1);
-      expect(item.copyWith(label: 'B'),
-          const ValueItem<int>(label: 'B', value: 1));
       expect(
-          item.copyWith(value: 2), const ValueItem<int>(label: 'A', value: 2));
+        item.copyWith(label: 'B'),
+        const ValueItem<int>(label: 'B', value: 1),
+      );
+      expect(
+        item.copyWith(value: 2),
+        const ValueItem<int>(label: 'A', value: 2),
+      );
     });
 
     test('toString shows type, label and value', () {
-      expect(const ValueItem<int>(label: 'A', value: 1).toString(),
-          'ValueItem<int>(label: A, value: 1)');
+      expect(
+        const ValueItem<int>(label: 'A', value: 1).toString(),
+        'ValueItem<int>(label: A, value: 1)',
+      );
     });
   });
 }

@@ -48,34 +48,34 @@ class SearchDropDownController<T> extends ChangeNotifier {
     bool latinize = true,
     bool caseSensitive = false,
     bool trim = true,
-  })  : assert(
-          (listItems == null) != (items == null),
-          'Pass exactly one of listItems or items',
-        ),
-        assert(
-          (addMode && (newValueItem != null && onAddItem != null)) || !addMode,
-          'addMode can only be used with newValueItem != null && onAddItem != null',
-        ),
-        assert(
-          (deleteMode && onDeleteItem != null) || !deleteMode,
-          'deleteMode can only be used with onDeleteItem != null',
-        ),
-        assert(
-          (editMode && onEditItem != null && newValueItem != null) || !editMode,
-          'editMode can only be used with onEditItem != null && newValueItem != null',
-        ),
-        localSearchController = searchController ?? SearchController(),
-        _ownsSearchController = searchController == null,
-        listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
-        _enabled = enabled,
-        _sort = sortType != null ? SortType.fromLegacy(sortType) : sort,
-        _engine = FilterEngine<T>(
-          normalization: SearchNormalization(
-            latinize: latinize,
-            caseSensitive: caseSensitive,
-            trim: trim,
-          ),
-        ) {
+  }) : assert(
+         (listItems == null) != (items == null),
+         'Pass exactly one of listItems or items',
+       ),
+       assert(
+         (addMode && (newValueItem != null && onAddItem != null)) || !addMode,
+         'addMode can only be used with newValueItem != null && onAddItem != null',
+       ),
+       assert(
+         (deleteMode && onDeleteItem != null) || !deleteMode,
+         'deleteMode can only be used with onDeleteItem != null',
+       ),
+       assert(
+         (editMode && onEditItem != null && newValueItem != null) || !editMode,
+         'editMode can only be used with onEditItem != null && newValueItem != null',
+       ),
+       localSearchController = searchController ?? SearchController(),
+       _ownsSearchController = searchController == null,
+       listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
+       _enabled = enabled,
+       _sort = sortType != null ? SortType.fromLegacy(sortType) : sort,
+       _engine = FilterEngine<T>(
+         normalization: SearchNormalization(
+           latinize: latinize,
+           caseSensitive: caseSensitive,
+           trim: trim,
+         ),
+       ) {
     if (initialSelectedItem != null && this.listItems.isNotEmpty) {
       _selectedItem = initialSelectedItem;
       localSearchController.text = initialSelectedItem.label;
@@ -269,8 +269,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
       ..clear()
       ..addAll(switch (_sort) {
         SortType.alphabetical ||
-        SortType.reverseAlphabetical =>
-          _engine.sorted(listItems, _sort),
+        SortType.reverseAlphabetical => _engine.sorted(listItems, _sort),
         _ => listItems,
       });
   }
@@ -326,8 +325,9 @@ class SearchDropDownController<T> extends ChangeNotifier {
     final int current = _highlight.value;
     if (current < 0) {
       final int selected = selectedIndex;
-      _highlight.value =
-          selected != -1 ? selected : (step > 0 ? 0 : length - 1);
+      _highlight.value = selected != -1
+          ? selected
+          : (step > 0 ? 0 : length - 1);
       return;
     }
     _highlight.value = (current + step + length) % length;
@@ -335,8 +335,9 @@ class SearchDropDownController<T> extends ChangeNotifier {
 
   /// Highlights the first (`last == false`) or the last item.
   void highlightEdge({required bool last}) {
-    _highlight.value =
-        _filtered.isEmpty ? -1 : (last ? _filtered.length - 1 : 0);
+    _highlight.value = _filtered.isEmpty
+        ? -1
+        : (last ? _filtered.length - 1 : 0);
   }
 
   /// Selects the highlighted item, if any.
@@ -595,8 +596,10 @@ class SearchDropDownController<T> extends ChangeNotifier {
     final String text = localSearchController.text;
     if (selected != null && text == selected.label) {
       // Typing replaces the selected label instead of appending to it.
-      localSearchController.selection =
-          TextSelection(baseOffset: 0, extentOffset: text.length);
+      localSearchController.selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: text.length,
+      );
     }
   }
 

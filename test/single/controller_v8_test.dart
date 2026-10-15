@@ -13,17 +13,16 @@ SearchDropDownController<int> _ctrl({
   bool deleteMode = false,
   Function(ValueItem<int>)? onAddItem,
   Function(ValueItem<int>)? onDeleteItem,
-}) =>
-    SearchDropDownController<int>(
-      listItems: listItems,
-      items: items,
-      initialSelectedItem: initial,
-      addMode: addMode,
-      deleteMode: deleteMode,
-      onAddItem: onAddItem,
-      onDeleteItem: onDeleteItem,
-      newValueItem: (s) => ValueItem<int>(label: s, value: s.length),
-    );
+}) => SearchDropDownController<int>(
+  listItems: listItems,
+  items: items,
+  initialSelectedItem: initial,
+  addMode: addMode,
+  deleteMode: deleteMode,
+  onAddItem: onAddItem,
+  onDeleteItem: onDeleteItem,
+  newValueItem: (s) => ValueItem<int>(label: s, value: s.length),
+);
 
 void main() {
   group('controller: items (owned copy)', () {
@@ -45,8 +44,9 @@ void main() {
       );
     });
 
-    testWidgets('add keeps a legacy callback that also adds: no duplicates',
-        (tester) async {
+    testWidgets('add keeps a legacy callback that also adds: no duplicates', (
+      tester,
+    ) async {
       final List<ValueItem<int>> shared = fruitItems();
       final c = _ctrl(listItems: shared, addMode: true, onAddItem: shared.add);
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
@@ -58,8 +58,9 @@ void main() {
       expect(c.selectedItem?.label, 'Kiwi');
     });
 
-    testWidgets('the add row follows the text while results stay empty',
-        (tester) async {
+    testWidgets('the add row follows the text while results stay empty', (
+      tester,
+    ) async {
       final c = _ctrl(items: fruitItems(), addMode: true, onAddItem: (_) {});
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
@@ -85,8 +86,9 @@ void main() {
   });
 
   group('controller: ChangeNotifier (#45)', () {
-    testWidgets('selection made through the controller updates the bar',
-        (tester) async {
+    testWidgets('selection made through the controller updates the bar', (
+      tester,
+    ) async {
       final c = _ctrl(listItems: fruitItems());
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       expect(find.byIcon(Icons.clear), findsNothing);
@@ -123,15 +125,22 @@ void main() {
       expect(count, greaterThanOrEqualTo(3));
     });
 
-    testWidgets('changes made during build are delivered after the frame',
-        (tester) async {
+    testWidgets('changes made during build are delivered after the frame', (
+      tester,
+    ) async {
       final c = _ctrl(listItems: fruitItems());
-      await tester.pumpWidget(host(Builder(builder: (context) {
-        if (c.listItems.length == 5) {
-          c.updateListItems(numberedItems(2), true);
-        }
-        return SearchDropDown<int>(controller: c);
-      })));
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) {
+              if (c.listItems.length == 5) {
+                c.updateListItems(numberedItems(2), true);
+              }
+              return SearchDropDown<int>(controller: c);
+            },
+          ),
+        ),
+      );
       await tester.pump();
       expect(tester.takeException(), isNull);
       expect(c.filteredItems, hasLength(2));
@@ -153,8 +162,9 @@ void main() {
   });
 
   group('view: selection matched by label when values are not comparable', () {
-    testWidgets('an equal-label initialSelectedItem is shown as selected',
-        (tester) async {
+    testWidgets('an equal-label initialSelectedItem is shown as selected', (
+      tester,
+    ) async {
       final List<ValueItem<Object>> items = <ValueItem<Object>>[
         for (int i = 0; i < 60; i++)
           ValueItem<Object>(label: 'P$i', value: Object()),
@@ -164,8 +174,10 @@ void main() {
         listItems: items,
         addMode: false,
         deleteMode: false,
-        initialSelectedItem:
-            const ValueItem<Object>(label: 'P40', value: Object()),
+        initialSelectedItem: const ValueItem<Object>(
+          label: 'P40',
+          value: Object(),
+        ),
       );
       await tester.pumpWidget(host(SearchDropDown<Object>(controller: c)));
       await openSingle(tester);
@@ -175,26 +187,29 @@ void main() {
       expect(c.selectedIndex, 40);
     });
 
-    testWidgets('opening with a selection selects the text so typing replaces',
-        (tester) async {
-      final List<ValueItem<int>> items = fruitItems();
-      final c = SearchDropDownController<int>(
-        listItems: items,
-        addMode: false,
-        deleteMode: false,
-        initialSelectedItem: items[1],
-      );
-      await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
-      await openSingle(tester);
-      final TextSelection sel = c.localSearchController.selection;
-      expect(sel.start, 0);
-      expect(sel.end, 'Banana'.length);
-    });
+    testWidgets(
+      'opening with a selection selects the text so typing replaces',
+      (tester) async {
+        final List<ValueItem<int>> items = fruitItems();
+        final c = SearchDropDownController<int>(
+          listItems: items,
+          addMode: false,
+          deleteMode: false,
+          initialSelectedItem: items[1],
+        );
+        await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
+        await openSingle(tester);
+        final TextSelection sel = c.localSearchController.selection;
+        expect(sel.start, 0);
+        expect(sel.end, 'Banana'.length);
+      },
+    );
   });
 
   group('view: opens scrolled to the selection (#46)', () {
-    testWidgets('a selection far down the list is visible on open',
-        (tester) async {
+    testWidgets('a selection far down the list is visible on open', (
+      tester,
+    ) async {
       final List<ValueItem<int>> items = numberedItems(200);
       final c = _ctrl(listItems: items, initial: items[150]);
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
@@ -202,15 +217,13 @@ void main() {
 
       final Finder row = find.widgetWithText(DefaultListTile<int>, 'Item 150');
       expect(row, findsOneWidget);
-      expect(
-        tester.widget<DefaultListTile<int>>(row).selected,
-        isTrue,
-      );
+      expect(tester.widget<DefaultListTile<int>>(row).selected, isTrue);
       expect(c.filteredItems, hasLength(200));
     });
 
-    testWidgets('PageDown/PageUp highlight the last/first item',
-        (tester) async {
+    testWidgets('PageDown/PageUp highlight the last/first item', (
+      tester,
+    ) async {
       final c = _ctrl(listItems: numberedItems(50));
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
@@ -219,15 +232,18 @@ void main() {
       await tester.pumpAndSettle();
       expect(c.highlightedIndex, 49);
       expect(
-          find.widgetWithText(DefaultListTile<int>, 'Item 49'), findsOneWidget);
+        find.widgetWithText(DefaultListTile<int>, 'Item 49'),
+        findsOneWidget,
+      );
 
       await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
       await tester.pumpAndSettle();
       expect(c.highlightedIndex, 0);
     });
 
-    testWidgets('keys are ignored while a dialog covers the view',
-        (tester) async {
+    testWidgets('keys are ignored while a dialog covers the view', (
+      tester,
+    ) async {
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
         listItems: items,

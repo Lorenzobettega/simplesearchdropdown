@@ -92,41 +92,42 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
             Expanded(
               child: TextButton(
                 style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                    (Set<WidgetState> states) {
-                      if (widget.selected) {
-                        return widget
-                            .overlayListSettings.selectedItemBackgroundColor;
-                      }
-                      if (widget.highlighted) {
-                        return widget.overlayListSettings
-                                .highlightedItemBackgroundColor ??
-                            widget.overlayListSettings.unselectedItemHoverColor;
-                      }
-                      return Colors.transparent;
-                    },
-                  ),
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                    Set<WidgetState> states,
+                  ) {
+                    if (widget.selected) {
+                      return widget
+                          .overlayListSettings
+                          .selectedItemBackgroundColor;
+                    }
+                    if (widget.highlighted) {
+                      return widget
+                              .overlayListSettings
+                              .highlightedItemBackgroundColor ??
+                          widget.overlayListSettings.unselectedItemHoverColor;
+                    }
+                    return Colors.transparent;
+                  }),
                   shape: WidgetStateProperty.all<OutlinedBorder>(
                     RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(10),
                       side: widget.highlighted && !widget.selected
                           ? BorderSide(
-                              color: widget.overlayListSettings
+                              color: widget
+                                  .overlayListSettings
                                   .highlightedItemBorderColor,
                             )
                           : BorderSide.none,
                     ),
                   ),
-                  overlayColor: WidgetStateProperty.resolveWith<Color>(
-                    (Set<WidgetState> states) {
-                      if (widget.selected) {
-                        return widget
-                            .overlayListSettings.selectedItemHoverColor;
-                      }
-                      return widget
-                          .overlayListSettings.unselectedItemHoverColor;
-                    },
-                  ),
+                  overlayColor: WidgetStateProperty.resolveWith<Color>((
+                    Set<WidgetState> states,
+                  ) {
+                    if (widget.selected) {
+                      return widget.overlayListSettings.selectedItemHoverColor;
+                    }
+                    return widget.overlayListSettings.unselectedItemHoverColor;
+                  }),
                 ),
                 onPressed: () => widget.onPressed(widget.item),
                 child: widget.overlayListSettings.itemWidgetBuilder != null
@@ -140,7 +141,8 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
                           style: (widget.selected || widget.highlighted
                               ? widget.overlayListSettings.selectedItemTextStyle
                               : widget
-                                  .overlayListSettings.unselectedItemTextStyle),
+                                    .overlayListSettings
+                                    .unselectedItemTextStyle),
                         ),
                       ),
               ),
@@ -148,7 +150,8 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
             if (widget.defaultAdditionalWidget != null) ...[
               widget.defaultAdditionalWidget!,
               SizedBox(
-                  width: widget.overlayListSettings.additionalWidgetSpacing)
+                width: widget.overlayListSettings.additionalWidgetSpacing,
+              ),
             ],
             if (_isLoading)
               Padding(
@@ -176,7 +179,7 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
                       icon: widget.overlayListSettings.dialogDeleteIcon,
                     )
               else
-                const SizedBox.shrink()
+                const SizedBox.shrink(),
             ],
           ],
         ),

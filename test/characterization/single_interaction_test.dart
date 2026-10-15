@@ -17,8 +17,9 @@ import '../support/harness.dart';
 
 // A taller overlay so every row of the small fixtures is built (rows are
 // lazily built by the view's ListView).
-const SimpleOverlaySettings _tallOverlay =
-    SimpleOverlaySettings(dialogHeight: 400);
+const SimpleOverlaySettings _tallOverlay = SimpleOverlaySettings(
+  dialogHeight: 400,
+);
 
 SearchDropDownController<int> _ctrl(
   List<ValueItem<int>> items, {
@@ -27,17 +28,16 @@ SearchDropDownController<int> _ctrl(
   bool enabled = true,
   ValueItem<int>? initial,
   SearchController? searchController,
-}) =>
-    SearchDropDownController<int>(
-      listItems: items,
-      addMode: false,
-      deleteMode: false,
-      updateSelectedItem: calls?.add,
-      showClearIcon: showClearIcon,
-      enabled: enabled,
-      initialSelectedItem: initial,
-      searchController: searchController,
-    );
+}) => SearchDropDownController<int>(
+  listItems: items,
+  addMode: false,
+  deleteMode: false,
+  updateSelectedItem: calls?.add,
+  showClearIcon: showClearIcon,
+  enabled: enabled,
+  initialSelectedItem: initial,
+  searchController: searchController,
+);
 
 Widget _dropdown(
   SearchDropDownController<int> controller, {
@@ -47,16 +47,15 @@ Widget _dropdown(
   Widget? defaultAditionalWidget,
   bool disposeController = true,
   bool removeFocus = true,
-}) =>
-    SearchDropDown<int>(
-      key: key,
-      controller: controller,
-      searchBarSettings: settings,
-      overlayListSettings: overlay,
-      defaultAditionalWidget: defaultAditionalWidget,
-      disposeController: disposeController,
-      removeFocus: removeFocus,
-    );
+}) => SearchDropDown<int>(
+  key: key,
+  controller: controller,
+  searchBarSettings: settings,
+  overlayListSettings: overlay,
+  defaultAditionalWidget: defaultAditionalWidget,
+  disposeController: disposeController,
+  removeFocus: removeFocus,
+);
 
 Future<void> _pump(WidgetTester tester, Widget dropdown) async {
   await tester.pumpWidget(host(dropdown));
@@ -65,11 +64,11 @@ Future<void> _pump(WidgetTester tester, Widget dropdown) async {
 // Items whose labels all contain "an", so reopening after selecting "An"
 // still lists every item (the view pre-filters by the current text).
 List<ValueItem<int>> _anItems() => <ValueItem<int>>[
-      const ValueItem(label: 'Pan', value: 1),
-      const ValueItem(label: 'An', value: 2),
-      const ValueItem(label: 'Ant', value: 3),
-      const ValueItem(label: 'Can', value: 4),
-    ];
+  const ValueItem(label: 'Pan', value: 1),
+  const ValueItem(label: 'An', value: 2),
+  const ValueItem(label: 'Ant', value: 3),
+  const ValueItem(label: 'Can', value: 4),
+];
 
 /// Rows of the open list in visual (top to bottom) order.
 List<DefaultListTile<int>> _visualRows(WidgetTester tester) {
@@ -87,14 +86,13 @@ Iterable<DefaultListTile<int>> _rows(WidgetTester tester) =>
 List<String> _rowLabels(WidgetTester tester) =>
     _rows(tester).map((r) => r.item.label).toList();
 
-List<String> _selectedRows(WidgetTester tester) => _rows(tester)
-    .where((r) => r.selected || r.highlighted)
-    .map((r) => r.item.label)
-    .toList();
+List<String> _selectedRows(WidgetTester tester) => _rows(
+  tester,
+).where((r) => r.selected || r.highlighted).map((r) => r.item.label).toList();
 
 Finder _row(String label) => find.byWidgetPredicate(
-      (w) => w is DefaultListTile<int> && w.item.label == label,
-    );
+  (w) => w is DefaultListTile<int> && w.item.label == label,
+);
 
 Future<void> _tapRow(WidgetTester tester, String label) async {
   await tester.tap(
@@ -114,8 +112,8 @@ Finder _inBar(Finder matching) =>
     find.descendant(of: find.byType(SearchBar).first, matching: matching);
 
 SearchAnchor _anchor(WidgetTester tester) => tester.widget<SearchAnchor>(
-      find.byWidgetPredicate((w) => w is SearchAnchor),
-    );
+  find.byWidgetPredicate((w) => w is SearchAnchor),
+);
 
 EditableText _barField(WidgetTester tester) =>
     tester.widget<EditableText>(_inBar(find.byType(EditableText)));
@@ -137,29 +135,35 @@ bool _focusInsideDropdown() {
 }
 
 Widget _withLeadingField(Widget dropdown) => Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        const SizedBox(width: 300, child: TextField(key: Key('before'))),
-        dropdown,
-      ],
-    );
+  mainAxisSize: MainAxisSize.min,
+  children: <Widget>[
+    const SizedBox(width: 300, child: TextField(key: Key('before'))),
+    dropdown,
+  ],
+);
 
 void main() {
   group('single: open view on tap', () {
-    testWidgets('tapping the bar opens the view listing every item in order',
-        (tester) async {
+    testWidgets('tapping the bar opens the view listing every item in order', (
+      tester,
+    ) async {
       await _pump(tester, _dropdown(_ctrl(numberedItems(4))));
       expect(find.byType(DefaultListTile<int>), findsNothing);
 
       await openSingle(tester);
 
-      expect(
-          _rowLabels(tester), <String>['Item 0', 'Item 1', 'Item 2', 'Item 3']);
+      expect(_rowLabels(tester), <String>[
+        'Item 0',
+        'Item 1',
+        'Item 2',
+        'Item 3',
+      ]);
       expect(_selectedRows(tester), isEmpty);
     });
 
-    testWidgets('reopening after a selection lists every item (D1, 8.0)',
-        (tester) async {
+    testWidgets('reopening after a selection lists every item (D1, 8.0)', (
+      tester,
+    ) async {
       final c = _ctrl(numberedItems(4));
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
@@ -168,8 +172,12 @@ void main() {
       await openSingle(tester);
 
       expect(_rowLabels(tester), contains('Item 2'));
-      expect(c.filteredItems.map((e) => e.label),
-          <String>['Item 0', 'Item 1', 'Item 2', 'Item 3']);
+      expect(c.filteredItems.map((e) => e.label), <String>[
+        'Item 0',
+        'Item 1',
+        'Item 2',
+        'Item 3',
+      ]);
       expect(_selectedRows(tester), <String>['Item 2']);
     });
 
@@ -186,42 +194,48 @@ void main() {
 
   group('single: select item', () {
     testWidgets(
-        'tapping a row sets selectedItem, closes the view, notifies once and '
-        'writes the label into the bar', (tester) async {
-      final calls = <ValueItem<int>?>[];
-      final c = _ctrl(numberedItems(4), calls: calls);
-      await _pump(tester, _dropdown(c));
-      await openSingle(tester);
+      'tapping a row sets selectedItem, closes the view, notifies once and '
+      'writes the label into the bar',
+      (tester) async {
+        final calls = <ValueItem<int>?>[];
+        final c = _ctrl(numberedItems(4), calls: calls);
+        await _pump(tester, _dropdown(c));
+        await openSingle(tester);
 
-      await _tapRow(tester, 'Item 1');
+        await _tapRow(tester, 'Item 1');
 
-      expect(c.selectedItem, const ValueItem(label: 'Item 1', value: 1));
-      expect(calls, <ValueItem<int>?>[
-        const ValueItem(label: 'Item 1', value: 1),
-      ]);
-      expect(find.byType(DefaultListTile<int>), findsNothing);
-      expect(c.localSearchController.isOpen, isFalse);
-      expect(c.localSearchController.text, 'Item 1');
-      expect(_barField(tester).controller.text, 'Item 1');
-    });
+        expect(c.selectedItem, const ValueItem(label: 'Item 1', value: 1));
+        expect(calls, <ValueItem<int>?>[
+          const ValueItem(label: 'Item 1', value: 1),
+        ]);
+        expect(find.byType(DefaultListTile<int>), findsNothing);
+        expect(c.localSearchController.isOpen, isFalse);
+        expect(c.localSearchController.text, 'Item 1');
+        expect(_barField(tester).controller.text, 'Item 1');
+      },
+    );
   });
 
   group('single: arrow icon', () {
-    testWidgets('closed arrow (arrow_drop_down) is shown in the bar by default',
-        (tester) async {
-      await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
-      expect(_inBar(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
-      expect(find.byIcon(Icons.arrow_drop_up), findsNothing);
-    });
+    testWidgets(
+      'closed arrow (arrow_drop_down) is shown in the bar by default',
+      (tester) async {
+        await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
+        expect(_inBar(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
+        expect(find.byIcon(Icons.arrow_drop_up), findsNothing);
+      },
+    );
 
-    testWidgets('closed arrow is hidden when the controller is disabled',
-        (tester) async {
+    testWidgets('closed arrow is hidden when the controller is disabled', (
+      tester,
+    ) async {
       await _pump(tester, _dropdown(_ctrl(numberedItems(2), enabled: false)));
       expect(find.byIcon(Icons.arrow_drop_down), findsNothing);
     });
 
-    testWidgets('showArrow false hides the closed and the opened arrow',
-        (tester) async {
+    testWidgets('showArrow false hides the closed and the opened arrow', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _dropdown(
@@ -236,29 +250,31 @@ void main() {
     });
 
     testWidgets(
-        'tapping the closed arrow opens the view with all items; the opened '
-        'arrow (arrow_drop_up) closes it keeping the typed text',
-        (tester) async {
-      final c = _ctrl(numberedItems(3));
-      await _pump(tester, _dropdown(c));
+      'tapping the closed arrow opens the view with all items; the opened '
+      'arrow (arrow_drop_up) closes it keeping the typed text',
+      (tester) async {
+        final c = _ctrl(numberedItems(3));
+        await _pump(tester, _dropdown(c));
 
-      await tester.tap(_inBar(find.byIcon(Icons.arrow_drop_down)));
-      await tester.pumpAndSettle();
-      expect(c.localSearchController.isOpen, isTrue);
-      expect(_rowLabels(tester), <String>['Item 0', 'Item 1', 'Item 2']);
-      expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
+        await tester.tap(_inBar(find.byIcon(Icons.arrow_drop_down)));
+        await tester.pumpAndSettle();
+        expect(c.localSearchController.isOpen, isTrue);
+        expect(_rowLabels(tester), <String>['Item 0', 'Item 1', 'Item 2']);
+        expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
 
-      await typeInSingle(tester, 'abc');
-      await _closeWithArrow(tester);
+        await typeInSingle(tester, 'abc');
+        await _closeWithArrow(tester);
 
-      expect(c.localSearchController.isOpen, isFalse);
-      expect(find.byType(DefaultListTile<int>), findsNothing);
-      expect(c.localSearchController.text, 'abc');
-      expect(c.selectedItem, isNull);
-    });
+        expect(c.localSearchController.isOpen, isFalse);
+        expect(find.byType(DefaultListTile<int>), findsNothing);
+        expect(c.localSearchController.text, 'abc');
+        expect(c.selectedItem, isNull);
+      },
+    );
 
-    testWidgets('custom dropdownClosedArrowIcon / dropdownOpenedArrowIcon',
-        (tester) async {
+    testWidgets('custom dropdownClosedArrowIcon / dropdownOpenedArrowIcon', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _dropdown(
@@ -277,8 +293,9 @@ void main() {
       expect(find.byIcon(Icons.arrow_drop_up), findsNothing);
     });
 
-    testWidgets('dropdownClosedIconFunction replaces opening the view',
-        (tester) async {
+    testWidgets('dropdownClosedIconFunction replaces opening the view', (
+      tester,
+    ) async {
       int taps = 0;
       final c = _ctrl(numberedItems(2));
       await _pump(
@@ -299,8 +316,9 @@ void main() {
       expect(find.byType(DefaultListTile<int>), findsNothing);
     });
 
-    testWidgets('dropdownOpenedIconFunction replaces closing the view',
-        (tester) async {
+    testWidgets('dropdownOpenedIconFunction replaces closing the view', (
+      tester,
+    ) async {
       int taps = 0;
       final c = _ctrl(numberedItems(2));
       await _pump(
@@ -323,70 +341,72 @@ void main() {
     });
 
     testWidgets(
-        'searchBarSettings.actions replaces the bar trailing (arrow and clear)',
-        (tester) async {
-      final c = _ctrl(
-        numberedItems(2),
-        showClearIcon: true,
-        initial: const ValueItem(label: 'Item 0', value: 0),
-      );
-      await _pump(
-        tester,
-        _dropdown(
-          c,
-          settings: const SimpleSearchbarSettings(
-            actions: <Widget>[Icon(Icons.search)],
+      'searchBarSettings.actions replaces the bar trailing (arrow and clear)',
+      (tester) async {
+        final c = _ctrl(
+          numberedItems(2),
+          showClearIcon: true,
+          initial: const ValueItem(label: 'Item 0', value: 0),
+        );
+        await _pump(
+          tester,
+          _dropdown(
+            c,
+            settings: const SimpleSearchbarSettings(
+              actions: <Widget>[Icon(Icons.search)],
+            ),
           ),
-        ),
-      );
+        );
 
-      expect(_inBar(find.byIcon(Icons.search)), findsOneWidget);
-      expect(_inBar(find.byIcon(Icons.arrow_drop_down)), findsNothing);
-      expect(_inBar(find.byIcon(Icons.clear)), findsNothing);
-    });
+        expect(_inBar(find.byIcon(Icons.search)), findsOneWidget);
+        expect(_inBar(find.byIcon(Icons.arrow_drop_down)), findsNothing);
+        expect(_inBar(find.byIcon(Icons.clear)), findsNothing);
+      },
+    );
 
     testWidgets(
-        'B7: opening the view via the arrow then typing filters the list',
-        (tester) async {
-      final c = _ctrl(numberedItems(5));
-      await _pump(tester, _dropdown(c));
-      await tester.tap(_inBar(find.byIcon(Icons.arrow_drop_down)));
-      await tester.pumpAndSettle();
+      'B7: opening the view via the arrow then typing filters the list',
+      (tester) async {
+        final c = _ctrl(numberedItems(5));
+        await _pump(tester, _dropdown(c));
+        await tester.tap(_inBar(find.byIcon(Icons.arrow_drop_down)));
+        await tester.pumpAndSettle();
 
-      await typeInSingle(tester, 'Item 1');
+        await typeInSingle(tester, 'Item 1');
 
-      expect(c.filteredItems.map((e) => e.label), <String>['Item 1']);
-      expect(_rowLabels(tester), <String>['Item 1']);
-    }); // B7: fixed in 8.0
+        expect(c.filteredItems.map((e) => e.label), <String>['Item 1']);
+        expect(_rowLabels(tester), <String>['Item 1']);
+      },
+    ); // B7: fixed in 8.0
   });
 
   group('single: clear button', () {
     testWidgets(
-        'controller.showClearIcon + settings.showClearIcon with an initial '
-        'selection: clear is visible; tapping it clears and notifies null',
-        (tester) async {
-      final calls = <ValueItem<int>?>[];
-      final c = _ctrl(
-        numberedItems(3),
-        calls: calls,
-        showClearIcon: true,
-        initial: const ValueItem(label: 'Item 1', value: 1),
-      );
-      await _pump(tester, _dropdown(c));
-      expect(c.clearVisible, isTrue);
-      expect(_inBar(find.byIcon(Icons.clear)), findsOneWidget);
+      'controller.showClearIcon + settings.showClearIcon with an initial '
+      'selection: clear is visible; tapping it clears and notifies null',
+      (tester) async {
+        final calls = <ValueItem<int>?>[];
+        final c = _ctrl(
+          numberedItems(3),
+          calls: calls,
+          showClearIcon: true,
+          initial: const ValueItem(label: 'Item 1', value: 1),
+        );
+        await _pump(tester, _dropdown(c));
+        expect(c.clearVisible, isTrue);
+        expect(_inBar(find.byIcon(Icons.clear)), findsOneWidget);
 
-      await tester.tap(_inBar(find.byIcon(Icons.clear)));
-      await tester.pumpAndSettle();
+        await tester.tap(_inBar(find.byIcon(Icons.clear)));
+        await tester.pumpAndSettle();
 
-      expect(c.selectedItem, isNull);
-      expect(c.localSearchController.text, '');
-      expect(c.clearVisible, isFalse);
-      expect(calls, <ValueItem<int>?>[null]);
-    });
+        expect(c.selectedItem, isNull);
+        expect(c.localSearchController.text, '');
+        expect(c.clearVisible, isFalse);
+        expect(calls, <ValueItem<int>?>[null]);
+      },
+    );
 
-    testWidgets(
-        'after selecting through the view the bar clear button shows '
+    testWidgets('after selecting through the view the bar clear button shows '
         'right away (8.0: controller notifies)', (tester) async {
       final calls = <ValueItem<int>?>[];
       final c = _ctrl(numberedItems(3), calls: calls, showClearIcon: true);
@@ -423,28 +443,29 @@ void main() {
     });
 
     testWidgets(
-        'controller.showClearIcon true + settings.showClearIcon false: no '
-        'clear in the bar nor in the open view (8.0)', (tester) async {
-      final c = _ctrl(
-        numberedItems(3),
-        showClearIcon: true,
-        initial: const ValueItem(label: 'Item 1', value: 1),
-      );
-      await _pump(
-        tester,
-        _dropdown(
-          c,
-          settings: const SimpleSearchbarSettings(showClearIcon: false),
-        ),
-      );
-      expect(find.byIcon(Icons.clear), findsNothing);
+      'controller.showClearIcon true + settings.showClearIcon false: no '
+      'clear in the bar nor in the open view (8.0)',
+      (tester) async {
+        final c = _ctrl(
+          numberedItems(3),
+          showClearIcon: true,
+          initial: const ValueItem(label: 'Item 1', value: 1),
+        );
+        await _pump(
+          tester,
+          _dropdown(
+            c,
+            settings: const SimpleSearchbarSettings(showClearIcon: false),
+          ),
+        );
+        expect(find.byIcon(Icons.clear), findsNothing);
 
-      await openSingle(tester);
-      expect(find.byIcon(Icons.clear), findsNothing);
-    });
+        await openSingle(tester);
+        expect(find.byIcon(Icons.clear), findsNothing);
+      },
+    );
 
-    testWidgets(
-        'controller.showClearIcon false: clear never appears after '
+    testWidgets('controller.showClearIcon false: clear never appears after '
         'selecting', (tester) async {
       final c = _ctrl(numberedItems(3), showClearIcon: false);
       late StateSetter rebuild;
@@ -468,35 +489,38 @@ void main() {
     });
 
     testWidgets(
-        'B6: with default settings the clear button appears after selecting',
-        (tester) async {
-      final c = _ctrl(numberedItems(3));
-      late StateSetter rebuild;
-      await tester.pumpWidget(
-        host(
-          StatefulBuilder(
-            builder: (context, setState) {
-              rebuild = setState;
-              return _dropdown(c);
-            },
+      'B6: with default settings the clear button appears after selecting',
+      (tester) async {
+        final c = _ctrl(numberedItems(3));
+        late StateSetter rebuild;
+        await tester.pumpWidget(
+          host(
+            StatefulBuilder(
+              builder: (context, setState) {
+                rebuild = setState;
+                return _dropdown(c);
+              },
+            ),
           ),
-        ),
-      );
-      await openSingle(tester);
-      await _tapRow(tester, 'Item 1');
-      rebuild(() {});
-      await tester.pump();
+        );
+        await openSingle(tester);
+        await _tapRow(tester, 'Item 1');
+        rebuild(() {});
+        await tester.pump();
 
-      expect(_inBar(find.byIcon(Icons.clear)), findsOneWidget);
-    }); // B6: fixed in 8.0
+        expect(_inBar(find.byIcon(Icons.clear)), findsOneWidget);
+      },
+    ); // B6: fixed in 8.0
   });
 
   group('single: clearOnClose', () {
-    const SimpleSearchbarSettings clearOnClose =
-        SimpleSearchbarSettings(clearOnClose: true);
+    const SimpleSearchbarSettings clearOnClose = SimpleSearchbarSettings(
+      clearOnClose: true,
+    );
 
-    testWidgets('true: closing with typed text restores the selected label',
-        (tester) async {
+    testWidgets('true: closing with typed text restores the selected label', (
+      tester,
+    ) async {
       final calls = <ValueItem<int>?>[];
       final c = _ctrl(numberedItems(3), calls: calls);
       await _pump(tester, _dropdown(c, settings: clearOnClose));
@@ -512,8 +536,9 @@ void main() {
       expect(calls, hasLength(1));
     });
 
-    testWidgets('true: closing with typed text and no selection clears it',
-        (tester) async {
+    testWidgets('true: closing with typed text and no selection clears it', (
+      tester,
+    ) async {
       final c = _ctrl(numberedItems(3));
       await _pump(tester, _dropdown(c, settings: clearOnClose));
       await openSingle(tester);
@@ -524,8 +549,9 @@ void main() {
       expect(c.selectedItem, isNull);
     });
 
-    testWidgets('false (default): typed text is kept, selection unchanged',
-        (tester) async {
+    testWidgets('false (default): typed text is kept, selection unchanged', (
+      tester,
+    ) async {
       final c = _ctrl(numberedItems(3));
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
@@ -541,8 +567,9 @@ void main() {
   });
 
   group('single: enabled / enableDisable() / resetSelection()', () {
-    testWidgets('enabled false disables the bar; tapping does not open',
-        (tester) async {
+    testWidgets('enabled false disables the bar; tapping does not open', (
+      tester,
+    ) async {
       final c = _ctrl(numberedItems(3), enabled: false);
       await _pump(tester, _dropdown(c));
       expect(_anchor(tester).enabled, isFalse);
@@ -554,8 +581,9 @@ void main() {
       expect(find.byType(DefaultListTile<int>), findsNothing);
     });
 
-    testWidgets('SearchDropDownState.enableDisable() toggles enabled',
-        (tester) async {
+    testWidgets('SearchDropDownState.enableDisable() toggles enabled', (
+      tester,
+    ) async {
       final key = GlobalKey<SearchDropDownState<int>>();
       final c = _ctrl(numberedItems(3));
       await _pump(tester, _dropdown(c, key: key));
@@ -576,31 +604,34 @@ void main() {
     });
 
     testWidgets(
-        'SearchDropDownState.resetSelection() clears selection and text and '
-        'notifies null', (tester) async {
-      final key = GlobalKey<SearchDropDownState<int>>();
-      final calls = <ValueItem<int>?>[];
-      final c = _ctrl(numberedItems(3), calls: calls);
-      await _pump(tester, _dropdown(c, key: key));
-      await openSingle(tester);
-      await _tapRow(tester, 'Item 2');
+      'SearchDropDownState.resetSelection() clears selection and text and '
+      'notifies null',
+      (tester) async {
+        final key = GlobalKey<SearchDropDownState<int>>();
+        final calls = <ValueItem<int>?>[];
+        final c = _ctrl(numberedItems(3), calls: calls);
+        await _pump(tester, _dropdown(c, key: key));
+        await openSingle(tester);
+        await _tapRow(tester, 'Item 2');
 
-      key.currentState!.resetSelection();
-      await tester.pump();
+        key.currentState!.resetSelection();
+        await tester.pump();
 
-      expect(c.selectedItem, isNull);
-      expect(c.localSearchController.text, '');
-      expect(_barField(tester).controller.text, '');
-      expect(calls, <ValueItem<int>?>[
-        const ValueItem(label: 'Item 2', value: 2),
-        null,
-      ]);
-    });
+        expect(c.selectedItem, isNull);
+        expect(c.localSearchController.text, '');
+        expect(_barField(tester).controller.text, '');
+        expect(calls, <ValueItem<int>?>[
+          const ValueItem(label: 'Item 2', value: 2),
+          null,
+        ]);
+      },
+    );
   });
 
   group('single: keyboard arrow navigation', () {
-    testWidgets('ArrowDown with no highlight starts at 0 and wraps around',
-        (tester) async {
+    testWidgets('ArrowDown with no highlight starts at 0 and wraps around', (
+      tester,
+    ) async {
       final c = _ctrl(_anItems());
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
@@ -620,8 +651,9 @@ void main() {
       expect(painted[3], <String>['Can']);
     });
 
-    testWidgets('ArrowUp with no highlight starts at the last item and wraps',
-        (tester) async {
+    testWidgets('ArrowUp with no highlight starts at the last item and wraps', (
+      tester,
+    ) async {
       final c = _ctrl(_anItems());
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
@@ -636,8 +668,9 @@ void main() {
       expect(_selectedRows(tester), <String>['Can']);
     });
 
-    testWidgets('ArrowDown starts from the selected item when one exists',
-        (tester) async {
+    testWidgets('ArrowDown starts from the selected item when one exists', (
+      tester,
+    ) async {
       final c = _ctrl(_anItems());
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
@@ -651,8 +684,9 @@ void main() {
       expect(c.highlightedIndex, 2);
     });
 
-    testWidgets('ArrowUp starts from the selected item when one exists',
-        (tester) async {
+    testWidgets('ArrowUp starts from the selected item when one exists', (
+      tester,
+    ) async {
       final c = _ctrl(_anItems());
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
@@ -665,8 +699,9 @@ void main() {
       expect(c.highlightedIndex, 0);
     });
 
-    testWidgets('arrow keys and Enter are ignored while the view is closed',
-        (tester) async {
+    testWidgets('arrow keys and Enter are ignored while the view is closed', (
+      tester,
+    ) async {
       final calls = <ValueItem<int>?>[];
       final c = _ctrl(numberedItems(3), calls: calls);
       await _pump(tester, _dropdown(c));
@@ -680,43 +715,49 @@ void main() {
     });
 
     testWidgets(
-        'typing after highlighting resets controller.highlightedIndex to -1',
-        (tester) async {
-      final c = _ctrl(numberedItems(12));
-      await _pump(tester, _dropdown(c));
-      await openSingle(tester);
-      await _key(tester, LogicalKeyboardKey.arrowDown);
-      await _key(tester, LogicalKeyboardKey.arrowDown);
-      expect(c.highlightedIndex, 1);
+      'typing after highlighting resets controller.highlightedIndex to -1',
+      (tester) async {
+        final c = _ctrl(numberedItems(12));
+        await _pump(tester, _dropdown(c));
+        await openSingle(tester);
+        await _key(tester, LogicalKeyboardKey.arrowDown);
+        await _key(tester, LogicalKeyboardKey.arrowDown);
+        expect(c.highlightedIndex, 1);
 
-      await typeInSingle(tester, '1');
-      await tester.pumpAndSettle();
+        await typeInSingle(tester, '1');
+        await tester.pumpAndSettle();
 
-      expect(c.highlightedIndex, -1);
-      expect(c.filteredItems.map((e) => e.label),
-          <String>['Item 1', 'Item 10', 'Item 11']);
-    });
+        expect(c.highlightedIndex, -1);
+        expect(c.filteredItems.map((e) => e.label), <String>[
+          'Item 1',
+          'Item 10',
+          'Item 11',
+        ]);
+      },
+    );
 
     testWidgets(
-        'B4: after typing resets the highlight, no row is painted highlighted',
-        (tester) async {
-      final c = _ctrl(numberedItems(12));
-      await _pump(tester, _dropdown(c));
-      await openSingle(tester);
-      await _key(tester, LogicalKeyboardKey.arrowDown);
-      await _key(tester, LogicalKeyboardKey.arrowDown);
+      'B4: after typing resets the highlight, no row is painted highlighted',
+      (tester) async {
+        final c = _ctrl(numberedItems(12));
+        await _pump(tester, _dropdown(c));
+        await openSingle(tester);
+        await _key(tester, LogicalKeyboardKey.arrowDown);
+        await _key(tester, LogicalKeyboardKey.arrowDown);
 
-      await typeInSingle(tester, '1');
-      await tester.pumpAndSettle();
+        await typeInSingle(tester, '1');
+        await tester.pumpAndSettle();
 
-      expect(c.highlightedIndex, -1);
-      expect(_selectedRows(tester), isEmpty);
-    }); // B4: fixed in 8.0
+        expect(c.highlightedIndex, -1);
+        expect(_selectedRows(tester), isEmpty);
+      },
+    ); // B4: fixed in 8.0
   });
 
   group('single: Enter key / onSubmitted', () {
-    testWidgets('Enter selects the highlighted item and closes the view',
-        (tester) async {
+    testWidgets('Enter selects the highlighted item and closes the view', (
+      tester,
+    ) async {
       final calls = <ValueItem<int>?>[];
       final c = _ctrl(numberedItems(4), calls: calls);
       await _pump(tester, _dropdown(c));
@@ -732,8 +773,9 @@ void main() {
       expect(calls.map((e) => e?.label), <String>['Item 1']);
     });
 
-    testWidgets('Enter with no highlight selects the first filtered item',
-        (tester) async {
+    testWidgets('Enter with no highlight selects the first filtered item', (
+      tester,
+    ) async {
       final calls = <ValueItem<int>?>[];
       final c = _ctrl(numberedItems(4), calls: calls);
       await _pump(tester, _dropdown(c));
@@ -757,49 +799,54 @@ void main() {
       expect(c.selectedItem?.label, 'Item 0');
     });
 
-    testWidgets('onSubmitted (IME done action) selects the first filtered item',
-        (tester) async {
-      final calls = <ValueItem<int>?>[];
-      final c = _ctrl(numberedItems(4), calls: calls);
-      await _pump(tester, _dropdown(c));
-      await openSingle(tester);
-      await typeInSingle(tester, '3');
+    testWidgets(
+      'onSubmitted (IME done action) selects the first filtered item',
+      (tester) async {
+        final calls = <ValueItem<int>?>[];
+        final c = _ctrl(numberedItems(4), calls: calls);
+        await _pump(tester, _dropdown(c));
+        await openSingle(tester);
+        await typeInSingle(tester, '3');
 
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpAndSettle();
 
-      expect(c.selectedItem?.label, 'Item 3');
-      expect(c.localSearchController.text, 'Item 3');
-      expect(calls.map((e) => e?.label), <String>['Item 3']);
-    });
+        expect(c.selectedItem?.label, 'Item 3');
+        expect(c.localSearchController.text, 'Item 3');
+        expect(calls.map((e) => e?.label), <String>['Item 3']);
+      },
+    );
 
     // Not reproduced: the hardware handler closes the view synchronously and
     // the IME connection is gone before a done action can arrive; in the
     // reverse order onSubmitted closes the view so the handler ignores Enter.
     testWidgets(
-        'B8 (not reproduced): a physical Enter (key event + IME submit, in '
-        'either order) notifies exactly once', (tester) async {
-      final calls = <ValueItem<int>?>[];
-      final c = _ctrl(numberedItems(4), calls: calls);
-      await _pump(tester, _dropdown(c));
+      'B8 (not reproduced): a physical Enter (key event + IME submit, in '
+      'either order) notifies exactly once',
+      (tester) async {
+        final calls = <ValueItem<int>?>[];
+        final c = _ctrl(numberedItems(4), calls: calls);
+        await _pump(tester, _dropdown(c));
 
-      await openSingle(tester);
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.pumpAndSettle();
-      expect(calls, hasLength(1));
+        await openSingle(tester);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.pumpAndSettle();
+        expect(calls, hasLength(1));
 
-      await openSingle(tester);
-      await tester.testTextInput.receiveAction(TextInputAction.done);
-      await tester.sendKeyEvent(LogicalKeyboardKey.enter);
-      await tester.pumpAndSettle();
-      expect(calls, hasLength(2));
-    });
+        await openSingle(tester);
+        await tester.testTextInput.receiveAction(TextInputAction.done);
+        await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+        await tester.pumpAndSettle();
+        expect(calls, hasLength(2));
+      },
+    );
   });
 
   group('single: openFullScreen', () {
-    testWidgets('default false; true makes the view fill the screen',
-        (tester) async {
+    testWidgets('default false; true makes the view fill the screen', (
+      tester,
+    ) async {
       await _pump(tester, _dropdown(_ctrl(numberedItems(3))));
       expect(_anchor(tester).isFullScreen, isFalse);
 
@@ -828,10 +875,14 @@ void main() {
         const BoxConstraints(maxWidth: 300, maxHeight: 200),
       );
       await openSingle(tester);
-      expect(tester.getSize(find.byType(ScrollablePositionedList)).height,
-          lessThanOrEqualTo(200));
-      expect(tester.getSize(find.byType(ScrollablePositionedList)).width,
-          lessThanOrEqualTo(300));
+      expect(
+        tester.getSize(find.byType(ScrollablePositionedList)).height,
+        lessThanOrEqualTo(200),
+      );
+      expect(
+        tester.getSize(find.byType(ScrollablePositionedList)).width,
+        lessThanOrEqualTo(300),
+      );
     });
 
     testWidgets('custom dropdownWidth and dialogHeight', (tester) async {
@@ -851,8 +902,9 @@ void main() {
   });
 
   group('single: hint text', () {
-    testWidgets('default hint is Pesquisar on the bar and the view',
-        (tester) async {
+    testWidgets('default hint is Pesquisar on the bar and the view', (
+      tester,
+    ) async {
       await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
       expect(_inBar(find.text('Pesquisar')), findsOneWidget);
       expect(_anchor(tester).viewHintText, 'Pesquisar');
@@ -872,15 +924,17 @@ void main() {
   });
 
   group('single: showKeyboardOnTap / keyboardType / textInputAction', () {
-    testWidgets('default: keyboardType null on the anchor, text on the field',
-        (tester) async {
+    testWidgets('default: keyboardType null on the anchor, text on the field', (
+      tester,
+    ) async {
       await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
       expect(_anchor(tester).keyboardType, isNull);
       expect(_barField(tester).keyboardType, TextInputType.text);
     });
 
-    testWidgets('showKeyboardOnTap false forces TextInputType.none',
-        (tester) async {
+    testWidgets('showKeyboardOnTap false forces TextInputType.none', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _dropdown(
@@ -900,8 +954,9 @@ void main() {
       );
     });
 
-    testWidgets('keyboardType and textInputAction are passed through',
-        (tester) async {
+    testWidgets('keyboardType and textInputAction are passed through', (
+      tester,
+    ) async {
       await _pump(
         tester,
         _dropdown(
@@ -919,22 +974,23 @@ void main() {
 
   group('single: showDivider', () {
     testWidgets(
-        'false (default): divider painted with the view background colour',
-        (tester) async {
-      await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
-      expect(_anchor(tester).dividerColor, Colors.white);
+      'false (default): divider painted with the view background colour',
+      (tester) async {
+        await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
+        expect(_anchor(tester).dividerColor, Colors.white);
 
-      await _pump(
-        tester,
-        _dropdown(
-          _ctrl(numberedItems(2)),
-          overlay: const SimpleOverlaySettings(
-            dialogBackgroundColor: Colors.amber,
+        await _pump(
+          tester,
+          _dropdown(
+            _ctrl(numberedItems(2)),
+            overlay: const SimpleOverlaySettings(
+              dialogBackgroundColor: Colors.amber,
+            ),
           ),
-        ),
-      );
-      expect(_anchor(tester).dividerColor, Colors.amber);
-    });
+        );
+        expect(_anchor(tester).dividerColor, Colors.amber);
+      },
+    );
 
     testWidgets('true: dividerColor left null (theme default)', (tester) async {
       await _pump(
@@ -949,8 +1005,9 @@ void main() {
   });
 
   group('single: itemWidgetBuilder', () {
-    testWidgets('custom builder is used as the content of every row',
-        (tester) async {
+    testWidgets('custom builder is used as the content of every row', (
+      tester,
+    ) async {
       final c = _ctrl(numberedItems(3));
       await _pump(
         tester,
@@ -994,31 +1051,36 @@ void main() {
   });
 
   group('single: disposeController', () {
-    testWidgets('true (default) disposes the owned SearchController on unmount',
-        (tester) async {
-      final c = _ctrl(numberedItems(2));
-      await _pump(tester, _dropdown(c));
-      await tester.pumpWidget(host(const SizedBox()));
+    testWidgets(
+      'true (default) disposes the owned SearchController on unmount',
+      (tester) async {
+        final c = _ctrl(numberedItems(2));
+        await _pump(tester, _dropdown(c));
+        await tester.pumpWidget(host(const SizedBox()));
 
-      expect(
-        () => c.localSearchController.addListener(() {}),
-        throwsFlutterError,
-      );
-    });
+        expect(
+          () => c.localSearchController.addListener(() {}),
+          throwsFlutterError,
+        );
+      },
+    );
 
-    testWidgets('true does not dispose an externally supplied SearchController',
-        (tester) async {
-      final external = SearchController();
-      addTearDown(external.dispose);
-      final c = _ctrl(numberedItems(2), searchController: external);
-      await _pump(tester, _dropdown(c));
-      await tester.pumpWidget(host(const SizedBox()));
+    testWidgets(
+      'true does not dispose an externally supplied SearchController',
+      (tester) async {
+        final external = SearchController();
+        addTearDown(external.dispose);
+        final c = _ctrl(numberedItems(2), searchController: external);
+        await _pump(tester, _dropdown(c));
+        await tester.pumpWidget(host(const SizedBox()));
 
-      expect(() => external.addListener(() {}), returnsNormally);
-    });
+        expect(() => external.addListener(() {}), returnsNormally);
+      },
+    );
 
-    testWidgets('false keeps the controller usable by a new SearchDropDown',
-        (tester) async {
+    testWidgets('false keeps the controller usable by a new SearchDropDown', (
+      tester,
+    ) async {
       final c = _ctrl(numberedItems(2));
       addTearDown(c.dispose);
       await _pump(tester, _dropdown(c, disposeController: false));
@@ -1033,8 +1095,9 @@ void main() {
   });
 
   group('single: removeFocus', () {
-    testWidgets('true (default): Tab into the bar keeps the focus (B11, 8.0)',
-        (tester) async {
+    testWidgets('true (default): Tab into the bar keeps the focus (B11, 8.0)', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         host(_withLeadingField(_dropdown(_ctrl(numberedItems(2))))),
       );
@@ -1047,8 +1110,9 @@ void main() {
       expect(_focusInsideDropdown(), isTrue);
     });
 
-    testWidgets('false: Tab into the bar keeps the focus there',
-        (tester) async {
+    testWidgets('false: Tab into the bar keeps the focus there', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         host(
           _withLeadingField(
@@ -1065,8 +1129,9 @@ void main() {
       expect(_focusInsideDropdown(), isTrue);
     });
 
-    testWidgets('true: after selecting, focus is not left in the bar',
-        (tester) async {
+    testWidgets('true: after selecting, focus is not left in the bar', (
+      tester,
+    ) async {
       await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
       await openSingle(tester);
       await _tapRow(tester, 'Item 1');
@@ -1075,19 +1140,21 @@ void main() {
     });
 
     testWidgets(
-        'B11: with removeFocus true, Tab into the bar keeps focus until a view '
-        'closes', (tester) async {
-      await tester.pumpWidget(
-        host(_withLeadingField(_dropdown(_ctrl(numberedItems(2))))),
-      );
-      await tester.tap(find.byKey(const Key('before')));
-      await tester.pump();
+      'B11: with removeFocus true, Tab into the bar keeps focus until a view '
+      'closes',
+      (tester) async {
+        await tester.pumpWidget(
+          host(_withLeadingField(_dropdown(_ctrl(numberedItems(2))))),
+        );
+        await tester.tap(find.byKey(const Key('before')));
+        await tester.pump();
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-      await tester.pump();
+        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
+        await tester.pump();
 
-      expect(_focusInsideDropdown(), isTrue);
-    }); // B11: fixed in 8.0
+        expect(_focusInsideDropdown(), isTrue);
+      },
+    ); // B11: fixed in 8.0
   });
 
   group('single: selected row styling', () {
@@ -1099,48 +1166,55 @@ void main() {
     );
 
     testWidgets(
-        'selected row uses selectedItemBackgroundColor/TextStyle; others are '
-        'transparent with the unselected style', (tester) async {
-      final c = _ctrl(_anItems());
-      await _pump(tester, _dropdown(c, overlay: styled));
-      await openSingle(tester);
-      await _tapRow(tester, 'An');
-      await openSingle(tester);
+      'selected row uses selectedItemBackgroundColor/TextStyle; others are '
+      'transparent with the unselected style',
+      (tester) async {
+        final c = _ctrl(_anItems());
+        await _pump(tester, _dropdown(c, overlay: styled));
+        await openSingle(tester);
+        await _tapRow(tester, 'An');
+        await openSingle(tester);
 
-      expect(_selectedRows(tester), <String>['An']);
-      expect(_rowBackground(tester, 'An'), Colors.purple);
-      expect(_rowBackground(tester, 'Pan'), Colors.transparent);
-      expect(
-          tester.widget<Text>(find.text('An').last).style?.color, Colors.green);
-      expect(tester.widget<Text>(find.text('Pan')).style?.color, Colors.grey);
-    });
-
-    testWidgets(
-        'typing an exact label does not mark the row selected (B10, 8.0)',
-        (tester) async {
-      final c = _ctrl(numberedItems(4));
-      await _pump(tester, _dropdown(c, overlay: styled));
-      await openSingle(tester);
-
-      await typeInSingle(tester, 'Item 2');
-
-      expect(c.selectedItem, isNull);
-      expect(_selectedRows(tester), isEmpty);
-      expect(_rowBackground(tester, 'Item 2'), isNot(Colors.purple));
-    });
+        expect(_selectedRows(tester), <String>['An']);
+        expect(_rowBackground(tester, 'An'), Colors.purple);
+        expect(_rowBackground(tester, 'Pan'), Colors.transparent);
+        expect(
+          tester.widget<Text>(find.text('An').last).style?.color,
+          Colors.green,
+        );
+        expect(tester.widget<Text>(find.text('Pan')).style?.color, Colors.grey);
+      },
+    );
 
     testWidgets(
-        'B10: typing the exact label of an unselected item does not render '
-        'that row as selected', (tester) async {
-      final c = _ctrl(numberedItems(4));
-      await _pump(tester, _dropdown(c, overlay: styled));
-      await openSingle(tester);
+      'typing an exact label does not mark the row selected (B10, 8.0)',
+      (tester) async {
+        final c = _ctrl(numberedItems(4));
+        await _pump(tester, _dropdown(c, overlay: styled));
+        await openSingle(tester);
 
-      await typeInSingle(tester, 'Item 2');
+        await typeInSingle(tester, 'Item 2');
 
-      expect(c.selectedItem, isNull);
-      expect(_selectedRows(tester), isEmpty);
-      expect(_rowBackground(tester, 'Item 2'), Colors.transparent);
-    }); // B10: fixed in 8.0
+        expect(c.selectedItem, isNull);
+        expect(_selectedRows(tester), isEmpty);
+        expect(_rowBackground(tester, 'Item 2'), isNot(Colors.purple));
+      },
+    );
+
+    testWidgets(
+      'B10: typing the exact label of an unselected item does not render '
+      'that row as selected',
+      (tester) async {
+        final c = _ctrl(numberedItems(4));
+        await _pump(tester, _dropdown(c, overlay: styled));
+        await openSingle(tester);
+
+        await typeInSingle(tester, 'Item 2');
+
+        expect(c.selectedItem, isNull);
+        expect(_selectedRows(tester), isEmpty);
+        expect(_rowBackground(tester, 'Item 2'), Colors.transparent);
+      },
+    ); // B10: fixed in 8.0
   });
 }

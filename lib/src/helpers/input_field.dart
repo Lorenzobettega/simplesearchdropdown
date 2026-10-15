@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 /// Formatter that accepts any input (default of [InputField.mascara]).
-FilteringTextInputFormatter allValues =
-    FilteringTextInputFormatter.allow(RegExp('.*'));
+FilteringTextInputFormatter allValues = FilteringTextInputFormatter.allow(
+  RegExp('.*'),
+);
 
 /// The text field used by the edit dialog.
 class InputField extends StatelessWidget {
@@ -32,10 +33,13 @@ class InputField extends StatelessWidget {
     this.disabledColor,
     this.capitalization,
   }) : estilo = estilo ?? const TextStyle(fontSize: 16);
-  static const TextStyle _hintLabelStyle =
-      TextStyle(fontSize: 16, color: Colors.grey);
-  static const BorderSide _focusedBorderSide =
-      BorderSide(color: Color.fromARGB(255, 0, 67, 0));
+  static const TextStyle _hintLabelStyle = TextStyle(
+    fontSize: 16,
+    color: Colors.grey,
+  );
+  static const BorderSide _focusedBorderSide = BorderSide(
+    color: Color.fromARGB(255, 0, 67, 0),
+  );
   static const BorderSide _errorBorderSide = BorderSide(color: Colors.red);
 
   /// Text controller.
@@ -160,8 +164,11 @@ class InputField extends StatelessWidget {
                     child: InkWell(
                       canRequestFocus: false,
                       borderRadius: const BorderRadius.all(Radius.circular(24)),
-                      child:
-                          const Icon(Icons.clear, color: Colors.grey, size: 20),
+                      child: const Icon(
+                        Icons.clear,
+                        color: Colors.grey,
+                        size: 20,
+                      ),
                       onTap: () {
                         controle.clear();
                         if (mascara is! FilteringTextInputFormatter) {

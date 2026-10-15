@@ -42,22 +42,21 @@ SearchDropDownController<int> _ctrl(
   bool enabled = true,
   ValueItem<int>? initial,
   void Function()? onFilterUpdated,
-}) =>
-    SearchDropDownController<int>(
-      listItems: items,
-      addMode: addMode,
-      newValueItem: _newItem,
-      onAddItem: (_) {},
-      deleteMode: deleteMode,
-      onDeleteItem: (_) {},
-      confirmDelete: confirmDelete,
-      editMode: editMode,
-      onEditItem: (_, __) {},
-      showClearIcon: showClearIcon,
-      enabled: enabled,
-      initialSelectedItem: initial,
-      onFilterUpdated: onFilterUpdated,
-    );
+}) => SearchDropDownController<int>(
+  listItems: items,
+  addMode: addMode,
+  newValueItem: _newItem,
+  onAddItem: (_) {},
+  deleteMode: deleteMode,
+  onDeleteItem: (_) {},
+  confirmDelete: confirmDelete,
+  editMode: editMode,
+  onEditItem: (_, _) {},
+  showClearIcon: showClearIcon,
+  enabled: enabled,
+  initialSelectedItem: initial,
+  onFilterUpdated: onFilterUpdated,
+);
 
 /// Fixes the surface to 800x600 logical pixels at devicePixelRatio 1.
 void _fixSurface(WidgetTester tester) {
@@ -113,16 +112,16 @@ Future<void> _frames(WidgetTester tester) async {
 }
 
 Finder _row(String label) => find.byWidgetPredicate(
-      (w) => w is DefaultListTile<int> && w.item.label == label,
-    );
+  (w) => w is DefaultListTile<int> && w.item.label == label,
+);
 
 Finder _inRow(String label, Finder matching) =>
     find.descendant(of: _row(label), matching: matching);
 
 Future<void> _matchesGolden(String name) => expectLater(
-      find.byType(MaterialApp),
-      matchesGoldenFile('goldens/$name.png'),
-    );
+  find.byType(MaterialApp),
+  matchesGoldenFile('goldens/$name.png'),
+);
 
 // ---------------------------------------------------------------------------
 // Perf helpers
@@ -297,8 +296,9 @@ void main() {
   });
 
   group('golden: multiple open', () {
-    testWidgets('overlay list below the box with one selected row',
-        (tester) async {
+    testWidgets('overlay list below the box with one selected row', (
+      tester,
+    ) async {
       final items = fruitItems();
       await _pumpMultiple(tester, items, <ValueItem<int>>[items[1]]);
       await openMultiple(tester);
@@ -309,8 +309,9 @@ void main() {
   });
 
   group('golden: delete confirm dialog', () {
-    testWidgets('WarningDialog over the open view, row spinner behind',
-        (tester) async {
+    testWidgets('WarningDialog over the open view, row spinner behind', (
+      tester,
+    ) async {
       await _pumpSingle(
         tester,
         _ctrl(fruitItems(), deleteMode: true, confirmDelete: true),
@@ -382,19 +383,23 @@ void main() {
   });
 
   group('perf baseline: onFilterUpdated calls typing "Item 99"', () {
-    testWidgets('counts onFilterUpdated calls for open + typing',
-        (tester) async {
+    testWidgets('counts onFilterUpdated calls for open + typing', (
+      tester,
+    ) async {
       final counters = _Counters();
       await _pumpPerf(tester, counters);
       final int beforeOpen = counters.filterUpdates;
       await openSingle(tester);
       final int onOpen = counters.filterUpdates - beforeOpen;
 
-      final List<int> perKey =
-          await _typeCounting(tester, () => counters.filterUpdates);
+      final List<int> perKey = await _typeCounting(
+        tester,
+        () => counters.filterUpdates,
+      );
       for (int i = 0; i < perKey.length; i++) {
         debugPrint(
-            'BASELINE on_filter_updated_keystroke_${i + 1}=${perKey[i]}');
+          'BASELINE on_filter_updated_keystroke_${i + 1}=${perKey[i]}',
+        );
       }
       debugPrint('BASELINE on_filter_updated_on_open=$onOpen');
       debugPrint('BASELINE on_filter_updated_typing_total=${_sum(perKey)}');
@@ -405,8 +410,9 @@ void main() {
   });
 
   group('perf baseline: search bar actions widget rebuilds per keystroke', () {
-    testWidgets('counts builds of a searchBarSettings.actions widget',
-        (tester) async {
+    testWidgets('counts builds of a searchBarSettings.actions widget', (
+      tester,
+    ) async {
       final counters = _Counters();
       await _pumpPerf(tester, counters);
       final int initial = counters.bar;
@@ -416,7 +422,8 @@ void main() {
       final List<int> perKey = await _typeCounting(tester, () => counters.bar);
       for (int i = 0; i < perKey.length; i++) {
         debugPrint(
-            'BASELINE bar_action_builds_keystroke_${i + 1}=${perKey[i]}');
+          'BASELINE bar_action_builds_keystroke_${i + 1}=${perKey[i]}',
+        );
       }
       debugPrint('BASELINE bar_action_builds_initial=$initial');
       debugPrint('BASELINE bar_action_builds_on_open=$onOpen');

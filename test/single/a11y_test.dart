@@ -14,7 +14,7 @@ void main() {
         addMode: false,
         onDeleteItem: items.remove,
         editMode: true,
-        onEditItem: (_, __) {},
+        onEditItem: (_, _) {},
         newValueItem: (s) => ValueItem<int>(label: s, value: 0),
         initialSelectedItem: items.first,
       );
@@ -39,20 +39,23 @@ void main() {
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
       bool selectedFlag(String label) => tester
-          .widget<Semantics>(find
-              .descendant(
-                of: find.widgetWithText(DefaultListTile<int>, label),
-                matching: find.byType(Semantics),
-              )
-              .first)
+          .widget<Semantics>(
+            find
+                .descendant(
+                  of: find.widgetWithText(DefaultListTile<int>, label),
+                  matching: find.byType(Semantics),
+                )
+                .first,
+          )
           .properties
           .selected!;
       expect(selectedFlag('Banana'), isTrue);
       expect(selectedFlag('Uva'), isFalse);
     });
 
-    testWidgets('keyboard highlight is distinct from the selection',
-        (tester) async {
+    testWidgets('keyboard highlight is distinct from the selection', (
+      tester,
+    ) async {
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
         listItems: items,
@@ -66,10 +69,12 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
       await tester.pumpAndSettle();
 
-      final DefaultListTile<int> selected = tester
-          .widget(find.widgetWithText(DefaultListTile<int>, items[0].label));
-      final DefaultListTile<int> highlighted = tester
-          .widget(find.widgetWithText(DefaultListTile<int>, items[1].label));
+      final DefaultListTile<int> selected = tester.widget(
+        find.widgetWithText(DefaultListTile<int>, items[0].label),
+      );
+      final DefaultListTile<int> highlighted = tester.widget(
+        find.widgetWithText(DefaultListTile<int>, items[1].label),
+      );
       expect(selected.selected && !selected.highlighted, isTrue);
       expect(highlighted.highlighted && !highlighted.selected, isTrue);
     });

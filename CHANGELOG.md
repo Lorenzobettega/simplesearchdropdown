@@ -1,3 +1,42 @@
+## [8.0.0] - 2026-10-15.
+Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecated` (removed in 9.0.0). See "Migrating from 7.x" in the README.
+
+### Added
+- `SearchDropDownController` is a `ChangeNotifier`: change selection, items or `enabled` from code and the widget updates, no `GlobalKey` needed (#45).
+- `MultipleSearchDropDownController` (exported) and a `controller:` parameter on `MultipleSearchDropDown`.
+- `items:` on both controllers: the controller keeps its own copy (`listItems:` still shares your list).
+- The single list opens scrolled to the selected item (#46); PageUp/PageDown jump to the first/last item.
+- `SearchDropDownStrings` (Portuguese defaults, `.en()`), per widget (`strings:`) or app-wide with `SearchDropDownStringsScope`.
+- `SortType` enum (`sort:`), natural A-Z/Z-A ordering (ignores case and accents).
+- Multiple dropdown: edit mode works (it was a stub); `latinize`/`caseSensitive`/`trim` apply there too.
+- Keyboard highlight is distinct from the selection (`highlightedItemBackgroundColor`, `highlightedItemBorderColor`); tooltips and semantics on buttons, rows, chips and spinners.
+
+### Changed
+- Reopening the single dropdown lists every item instead of only the selected one; the text is selected so typing replaces it.
+- The clear button follows `SimpleSearchbarSettings.showClearIcon` by default (controller `showClearIcon` is now `bool?`).
+- After add/edit/delete callbacks the item list is kept in sync if the callback did not change it.
+- `forceSelection` matches the exact label first, then ignoring case/accents (both dropdowns).
+- The multiple list is drawn with `OverlayPortal`: it follows parent rebuilds, is removed with the widget and stays below dialogs (confirm/verify dialogs are now regular modal dialogs).
+- Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) are nullable and fall back to `SearchDropDownStrings`.
+- `SearchDropDownController.dispose()` can be called more than once.
+- Internal helpers renamed without aliases: `DefaultListTile.defaultAdditionalWidget`, `DefaultAddListItem.addAdditionalWidget`; `MultipleListView` now takes a controller.
+
+### Fixed
+- Crash when filtering after deleting/editing with a callback that does not change the list, or after the shared list grew from outside (e.g. an item added through the multiple dropdown).
+- `updateListItems` with the same list instance emptied it.
+- Opening the single list through the arrow did not filter while typing.
+- Keyboard highlight could stay on a stale row; rows were marked selected just because the typed text equalled their label; Tab focus was dropped immediately.
+- Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected.
+- `onFilterUpdated` missed changes with the same length/first/last item.
+- Multiple: deleting an item cleared the whole selection; `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; sorting reordered the caller's list; the list leaked when the widget was removed; a rejected item stayed in the search field (#13); async callbacks were not awaited.
+
+### Deprecated
+- `SearchDropDownState.enableDisable/resetSelection/updateList` and the `MultipleSearchDropDownState` methods → use the controllers.
+- `sortType` → `sort`; `addAditionalWidget`/`defaultAditionalWidget`/`aditionalWidgetSpacing` → `*Additional*`.
+
+### Performance
+- One shared filter engine with a lazy label cache. Typing "Item 99" over 10,000 items rebuilds 20 rows instead of 63; the bar no longer rebuilds while typing.
+
 ## [7.8.0] - 2026-04-03.
 - Added `caseSensitive` parameter to the controller. It defines if the search should be case sensitive (default: `false`).
 - Added `trim` parameter to the controller. It defines if leading and trailing whitespaces should be ignored when filtering the text (default: `true`).

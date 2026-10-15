@@ -40,34 +40,34 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     Widget? defaultAditionalWidget,
     this.enabled = true,
     this.strings,
-  })  : _legacySortType = sortType,
-        _sort = sort,
-        addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
-        defaultAdditionalWidget =
-            defaultAdditionalWidget ?? defaultAditionalWidget,
-        assert(
-          controller != null ||
-              (listItems != null &&
-                  selectedItems != null &&
-                  updateSelectedItems != null),
-          'Pass a controller, or listItems + selectedItems + updateSelectedItems',
-        ),
-        assert(
-          controller != null ||
-              (addMode && (newValueItem != null && onAddItem != null)) ||
-              !addMode,
-          'addMode can only be used with newValueItem != null && onAddItem != null',
-        ),
-        assert(
-          controller != null ||
-              (deleteMode && onDeleteItem != null) ||
-              !deleteMode,
-          'deleteMode can only be used with onDeleteItem != null',
-        ),
-        assert(
-          controller != null || (editMode && onEditItem != null) || !editMode,
-          'editMode can only be used with onEditItem != null',
-        );
+  }) : _legacySortType = sortType,
+       _sort = sort,
+       addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
+       defaultAdditionalWidget =
+           defaultAdditionalWidget ?? defaultAditionalWidget,
+       assert(
+         controller != null ||
+             (listItems != null &&
+                 selectedItems != null &&
+                 updateSelectedItems != null),
+         'Pass a controller, or listItems + selectedItems + updateSelectedItems',
+       ),
+       assert(
+         controller != null ||
+             (addMode && (newValueItem != null && onAddItem != null)) ||
+             !addMode,
+         'addMode can only be used with newValueItem != null && onAddItem != null',
+       ),
+       assert(
+         controller != null ||
+             (deleteMode && onDeleteItem != null) ||
+             !deleteMode,
+         'deleteMode can only be used with onDeleteItem != null',
+       ),
+       assert(
+         controller != null || (editMode && onEditItem != null) || !editMode,
+         'editMode can only be used with onEditItem != null',
+       );
 
   /// Holds items, selection and search. When set, the 7.x data parameters
   /// below are ignored.
@@ -305,7 +305,8 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
 
   /// Replaces the selection with [values].
   @Deprecated(
-      'Use controller.forceMultipleSelection(). Will be removed in 9.0.0')
+    'Use controller.forceMultipleSelection(). Will be removed in 9.0.0',
+  )
   void forceMultipleSelection(List<ValueItem<T>> values) =>
       _controller.forceMultipleSelection(values);
 
@@ -367,10 +368,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
           child: CompositedTransformFollower(
             link: _layerLink,
             showWhenUnlinked: false,
-            offset: Offset(
-              list.offsetWidth,
-              size.height + list.offsetHeight,
-            ),
+            offset: Offset(list.offsetWidth, size.height + list.offsetHeight),
             child: Material(
               color: Colors.transparent,
               child: MultipleListView<T>(
@@ -427,8 +425,9 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                       border: Border.all(style: BorderStyle.none),
                       boxShadow: <BoxShadow>[
                         BoxShadow(
-                          color: Colors.grey
-                              .withAlpha(bar.elevation != 0 ? 125 : 0),
+                          color: Colors.grey.withAlpha(
+                            bar.elevation != 0 ? 125 : 0,
+                          ),
                           spreadRadius: 0.5,
                           blurRadius: bar.elevation,
                           offset: Offset(0, 0.5 * bar.elevation),

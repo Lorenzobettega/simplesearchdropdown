@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
-Widget _wrap(Widget child) =>
-    MaterialApp(home: Scaffold(body: Center(child: child)));
+Widget _wrap(Widget child) => MaterialApp(
+  home: Scaffold(body: Center(child: child)),
+);
 
 void main() {
   group('SearchDropDown (single)', () {
@@ -20,21 +21,27 @@ void main() {
         const ValueItem(label: 'Uva', value: 3),
       ];
       controller = SearchDropDownController<int>(
-          listItems: items, addMode: false, deleteMode: false);
+        listItems: items,
+        addMode: false,
+        deleteMode: false,
+      );
     });
 
     testWidgets(
-        'renderiza barra de busca e nenhum item selecionado inicialmente',
-        (tester) async {
-      await tester
-          .pumpWidget(_wrap(SearchDropDown<int>(controller: controller)));
-      expect(find.byType(SearchBar), findsOneWidget);
-      expect(controller.selectedItem, isNull);
-    });
+      'renderiza barra de busca e nenhum item selecionado inicialmente',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(SearchDropDown<int>(controller: controller)),
+        );
+        expect(find.byType(SearchBar), findsOneWidget);
+        expect(controller.selectedItem, isNull);
+      },
+    );
 
     testWidgets('filtra ignorando acentos/maiúsculas', (tester) async {
-      await tester
-          .pumpWidget(_wrap(SearchDropDown<int>(controller: controller)));
+      await tester.pumpWidget(
+        _wrap(SearchDropDown<int>(controller: controller)),
+      );
       await tester.tap(find.byType(SearchBar));
       await tester.pumpAndSettle();
 
@@ -44,26 +51,27 @@ void main() {
       expect(activeField, findsOneWidget);
 
       await tester.enterText(activeField, 'maca');
-// um pouco mais de tempo por causa de debounce interno
+      // um pouco mais de tempo por causa de debounce interno
       await tester.pump(const Duration(milliseconds: 350));
 
-// valide o resultado via controller (evita ruído de outros Texts na árvore)
+      // valide o resultado via controller (evita ruído de outros Texts na árvore)
       expect(
         controller.filteredItems.map((e) => e.label).toList(),
         equals(['Maçã']),
       );
 
-// opcional: também confirme que o texto aparece em tela (sem checar ausências)
+      // opcional: também confirme que o texto aparece em tela (sem checar ausências)
       expect(find.text('Maçã'), findsWidgets);
     });
 
     testWidgets('seleciona item e fecha a lista', (tester) async {
-      await tester
-          .pumpWidget(_wrap(SearchDropDown<int>(controller: controller)));
+      await tester.pumpWidget(
+        _wrap(SearchDropDown<int>(controller: controller)),
+      );
       await tester.tap(find.byType(SearchBar));
       await tester.pumpAndSettle();
 
-// Digita para reduzir a lista
+      // Digita para reduzir a lista
       await tester.enterText(
         find.byWidgetPredicate(
           (w) => w is EditableText && w.focusNode.hasFocus,
@@ -72,24 +80,26 @@ void main() {
       );
       await tester.pump(const Duration(milliseconds: 200));
 
-// Toca no item "Banana"
+      // Toca no item "Banana"
       await tester.tap(find.text('Banana').first);
       await tester.pumpAndSettle();
 
       expect(controller.selectedItem?.label, 'Banana');
-// A view deve ter sido fechada
+      // A view deve ter sido fechada
       expect(find.byType(ListView), findsNothing);
     });
 
     // reescrita do teste: 'addMode cria item novo via DefaultAddListItem'
 
-    testWidgets('disposeController=true descarta controller no dispose',
-        (tester) async {
+    testWidgets('disposeController=true descarta controller no dispose', (
+      tester,
+    ) async {
       final local = SearchDropDownController<int>(
-          listItems: items, addMode: false, deleteMode: false);
-      await tester.pumpWidget(_wrap(SearchDropDown<int>(
-        controller: local,
-      )));
+        listItems: items,
+        addMode: false,
+        deleteMode: false,
+      );
+      await tester.pumpWidget(_wrap(SearchDropDown<int>(controller: local)));
       // Remove o widget
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
@@ -100,14 +110,19 @@ void main() {
       expect(() => local.localSearchController.text, returnsNormally);
     });
 
-    testWidgets('disposeController=false não descarta controller no dispose',
-        (tester) async {
+    testWidgets('disposeController=false não descarta controller no dispose', (
+      tester,
+    ) async {
       final external = SearchDropDownController<int>(
-          listItems: items, addMode: false, deleteMode: false);
-      await tester.pumpWidget(_wrap(SearchDropDown<int>(
-        controller: external,
-        disposeController: false,
-      )));
+        listItems: items,
+        addMode: false,
+        deleteMode: false,
+      );
+      await tester.pumpWidget(
+        _wrap(
+          SearchDropDown<int>(controller: external, disposeController: false),
+        ),
+      );
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
 
@@ -116,18 +131,18 @@ void main() {
       expect(external.localSearchController.text, 'ok');
     });
 
-    testWidgets('SearchDropDown com showArrow/clear icon respeita settings',
-        (tester) async {
-      final c = SearchDropDownController<int>(listItems: [
-        const ValueItem(label: 'A', value: 1),
-      ], addMode: false, deleteMode: false);
-      const s = SimpleSearchbarSettings(
-        hint: 'procure',
+    testWidgets('SearchDropDown com showArrow/clear icon respeita settings', (
+      tester,
+    ) async {
+      final c = SearchDropDownController<int>(
+        listItems: [const ValueItem(label: 'A', value: 1)],
+        addMode: false,
+        deleteMode: false,
       );
-      await tester.pumpWidget(_wrap(SearchDropDown<int>(
-        controller: c,
-        searchBarSettings: s,
-      )));
+      const s = SimpleSearchbarSettings(hint: 'procure');
+      await tester.pumpWidget(
+        _wrap(SearchDropDown<int>(controller: c, searchBarSettings: s)),
+      );
       expect(find.text('procure'), findsOneWidget);
       expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
     });
@@ -149,24 +164,35 @@ void main() {
         sortType: 1, // Ordenação alfabética (A, B, C)
       );
 
-      expect(controller.listItems.length, 3,
-          reason: 'Após a atualização, a lista deve ter 3 itens.');
+      expect(
+        controller.listItems.length,
+        3,
+        reason: 'Após a atualização, a lista deve ter 3 itens.',
+      );
 
       // Verificação de ordenação inicial
-      expect(controller.filteredItems.first.label, 'Apple',
-          reason:
-              'A lista filtrada inicial deve estar ordenada alfabeticamente.');
+      expect(
+        controller.filteredItems.first.label,
+        'Apple',
+        reason: 'A lista filtrada inicial deve estar ordenada alfabeticamente.',
+      );
 
       // Ação: Nova Lista
       final newList = [itemE, itemD]; // Elderberry, Dates
       controller.updateListItems(newList, true);
 
       // Verificação: A nova lista deve estar ordenada alfabeticamente (Dates, Elderberry)
-      expect(controller.filteredItems.first.label, 'Dates',
-          reason: 'A nova lista deve ser reordenada alfabeticamente.');
+      expect(
+        controller.filteredItems.first.label,
+        'Dates',
+        reason: 'A nova lista deve ser reordenada alfabeticamente.',
+      );
 
-      expect(controller.listItems.length, 2,
-          reason: 'Após a atualização, a lista deve ter 2 itens.');
+      expect(
+        controller.listItems.length,
+        2,
+        reason: 'Após a atualização, a lista deve ter 2 itens.',
+      );
     });
   });
 }

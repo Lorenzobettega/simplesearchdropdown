@@ -24,9 +24,9 @@ class SearchDropDown<T> extends StatefulWidget {
     this.disposeController = true,
     this.removeFocus = true,
     this.strings,
-  })  : addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
-        defaultAdditionalWidget =
-            defaultAdditionalWidget ?? defaultAditionalWidget;
+  }) : addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
+       defaultAdditionalWidget =
+           defaultAdditionalWidget ?? defaultAditionalWidget;
 
   /// Holds items, selection and search text.
   final SearchDropDownController<T> controller;
@@ -173,7 +173,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
             showClear: _clearEnabled,
           ),
         ],
-        barTrailing: bar.actions ??
+        barTrailing:
+            bar.actions ??
             <Widget>[
               if (bar.showArrow && _controller.enabled)
                 IconButton(
@@ -205,10 +206,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         barHintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
         barHintText: hint,
         barOverlayColor: WidgetStatePropertyAll<Color>(bar.hoverColor),
-        barTextStyle:
-            WidgetStatePropertyAll<TextStyle?>(bar.searchBarTextStyle),
-        barPadding:
-            WidgetStatePropertyAll<EdgeInsetsGeometry?>(bar.searchBarPadding),
+        barTextStyle: WidgetStatePropertyAll<TextStyle?>(
+          bar.searchBarTextStyle,
+        ),
+        barPadding: WidgetStatePropertyAll<EdgeInsetsGeometry?>(
+          bar.searchBarPadding,
+        ),
         barLeading: const SizedBox.shrink(),
         viewSide: const BorderSide(style: BorderStyle.none),
         viewLeading: const SizedBox.shrink(),
@@ -216,15 +219,16 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         viewHintText: hint,
         viewHeaderHintStyle: bar.hintStyle,
         viewHeaderTextStyle: bar.searchBarTextStyle,
-        keyboardType:
-            bar.showKeyboardOnTap ? bar.keyboardType : TextInputType.none,
+        keyboardType: bar.showKeyboardOnTap
+            ? bar.keyboardType
+            : TextInputType.none,
         textInputAction: bar.textInputAction,
         // The list is built by viewBuilder from the controller; the
         // suggestions only tell SearchAnchor whether there is content.
         suggestionsBuilder: (BuildContext context, SearchController search) =>
             _controller.filteredItems.isNotEmpty || _showAddRow(search.text)
-                ? const <Widget>[SizedBox.shrink()]
-                : const <Widget>[],
+            ? const <Widget>[SizedBox.shrink()]
+            : const <Widget>[],
         // SearchAnchor calls this on every frame of its open animation;
         // returning the same instance lets Flutter skip rebuilding the rows.
         viewBuilder: (Iterable<Widget> suggestions) => _viewList(strings),
@@ -242,7 +246,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         identical(cached.strings, strings) &&
         identical(cached.addAdditionalWidget, widget.addAdditionalWidget) &&
         identical(
-            cached.defaultAdditionalWidget, widget.defaultAdditionalWidget)) {
+          cached.defaultAdditionalWidget,
+          widget.defaultAdditionalWidget,
+        )) {
       return cached;
     }
     return _cachedViewList = _ViewList<T>(
@@ -287,7 +293,8 @@ class _ViewTrailing<T> extends StatelessWidget {
           if (settings.showArrow)
             IconButton(
               tooltip: strings.closeTooltip,
-              onPressed: settings.dropdownOpenedIconFunction ??
+              onPressed:
+                  settings.dropdownOpenedIconFunction ??
                   () => search.closeView(search.text),
               icon: Icon(
                 settings.dropdownOpenedArrowIcon,
@@ -341,12 +348,16 @@ class _ViewListState<T> extends State<_ViewList<T>> {
   /// change (e.g. the view's open animation) and keystroke; handing back the
   /// same widget skips rebuilding the row. Cleared when the results change.
   final Map<int, Widget> _rows = <int, Widget>{};
-  late final Listenable _rowInputs =
-      Listenable.merge(<Listenable>[_controller.highlight, _controller]);
+  late final Listenable _rowInputs = Listenable.merge(<Listenable>[
+    _controller.highlight,
+    _controller,
+  ]);
 
   /// The list depends on the results and, for the add row, on the text.
-  late final Listenable _listInputs = Listenable.merge(
-      <Listenable>[_controller.results, _controller.localSearchController]);
+  late final Listenable _listInputs = Listenable.merge(<Listenable>[
+    _controller.results,
+    _controller.localSearchController,
+  ]);
 
   SearchDropDownController<T> get _controller => widget.controller;
 
@@ -437,16 +448,17 @@ class _ViewListState<T> extends State<_ViewList<T>> {
           return ScrollablePositionedList.builder(
             itemScrollController: _scroll,
             itemPositionsListener: _positions,
-            initialScrollIndex:
-                _initialIndex < items.length ? _initialIndex : 0,
+            initialScrollIndex: _initialIndex < items.length
+                ? _initialIndex
+                : 0,
             padding: EdgeInsets.only(
               bottom: MediaQuery.viewInsetsOf(context).bottom,
             ),
             itemCount: items.length + (addRow ? 1 : 0),
             itemBuilder: (BuildContext context, int index) =>
                 index == items.length
-                    ? _buildAddRow(context, text)
-                    : _rows[index] ??= _buildRow(context, items[index], index),
+                ? _buildAddRow(context, text)
+                : _rows[index] ??= _buildRow(context, items[index], index),
           );
         },
       ),
@@ -454,13 +466,13 @@ class _ViewListState<T> extends State<_ViewList<T>> {
   }
 
   Widget _buildAddRow(BuildContext context, String text) => DefaultAddListItem(
-        text: text,
-        addAdditionalWidget: widget.addAdditionalWidget,
-        overlayListSettings: widget.settings,
-        strings: widget.strings,
-        itemAdded: (String input) =>
-            _controller.addItem(input, context, strings: widget.strings),
-      );
+    text: text,
+    addAdditionalWidget: widget.addAdditionalWidget,
+    overlayListSettings: widget.settings,
+    strings: widget.strings,
+    itemAdded: (String input) =>
+        _controller.addItem(input, context, strings: widget.strings),
+  );
 
   Widget _buildRow(BuildContext context, ValueItem<T> item, int index) {
     return ListenableBuilder(

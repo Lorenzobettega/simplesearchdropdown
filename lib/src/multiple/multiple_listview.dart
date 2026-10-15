@@ -63,8 +63,9 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     if (!mounted || _controller.selectedItems.isEmpty || !_scroll.isAttached) {
       return;
     }
-    final int index =
-        _controller.filteredItems.indexOf(_controller.selectedItems.first);
+    final int index = _controller.filteredItems.indexOf(
+      _controller.selectedItems.first,
+    );
     if (index > 1) {
       _scroll.scrollTo(
         index: index,
@@ -97,16 +98,19 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
           children: <Widget>[
             SearchBar(
               controller: _search,
-              backgroundColor:
-                  WidgetStatePropertyAll<Color>(bar.backgroundColor),
-              overlayColor:
-                  WidgetStatePropertyAll<Color>(list.unselectedItemHoverColor),
+              backgroundColor: WidgetStatePropertyAll<Color>(
+                bar.backgroundColor,
+              ),
+              overlayColor: WidgetStatePropertyAll<Color>(
+                list.unselectedItemHoverColor,
+              ),
               constraints: BoxConstraints(
                 minHeight: bar.dropdownHeight,
                 maxWidth: bar.dropdownWidth,
               ),
-              surfaceTintColor:
-                  WidgetStatePropertyAll<Color>(bar.backgroundColor),
+              surfaceTintColor: WidgetStatePropertyAll<Color>(
+                bar.backgroundColor,
+              ),
               shape: WidgetStatePropertyAll<OutlinedBorder>(bar.border),
               hintText: bar.hint ?? widget.strings.searchHint,
               hintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
@@ -152,11 +156,16 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                           editMode: _controller.editMode,
                           item: item,
                           onDelete: (ValueItem<T> value) =>
-                              _controller.deleteItem(value, context,
-                                  strings: widget.strings),
+                              _controller.deleteItem(
+                                value,
+                                context,
+                                strings: widget.strings,
+                              ),
                           onEdit: (ValueItem<T> value) => _controller.editItem(
-                              value, context,
-                              strings: widget.strings),
+                            value,
+                            context,
+                            strings: widget.strings,
+                          ),
                           onPressed: _controller.toggle,
                           overlayListSettings: list,
                           selected: _controller.isSelected(item),

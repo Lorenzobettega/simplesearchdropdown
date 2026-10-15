@@ -40,33 +40,33 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     bool latinize = true,
     bool caseSensitive = false,
     bool trim = true,
-  })  : assert(
-          (listItems == null) != (items == null),
-          'Pass exactly one of listItems or items',
-        ),
-        assert(
-          (addMode && (newValueItem != null && onAddItem != null)) || !addMode,
-          'addMode can only be used with newValueItem != null && onAddItem != null',
-        ),
-        assert(
-          (deleteMode && onDeleteItem != null) || !deleteMode,
-          'deleteMode can only be used with onDeleteItem != null',
-        ),
-        assert(
-          (editMode && onEditItem != null && newValueItem != null) || !editMode,
-          'editMode can only be used with onEditItem != null && newValueItem != null',
-        ),
-        listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
-        selectedItems = selectedItems ?? <ValueItem<T>>[],
-        _sort = sort,
-        _enabled = enabled,
-        _engine = FilterEngine<T>(
-          normalization: SearchNormalization(
-            latinize: latinize,
-            caseSensitive: caseSensitive,
-            trim: trim,
-          ),
-        ) {
+  }) : assert(
+         (listItems == null) != (items == null),
+         'Pass exactly one of listItems or items',
+       ),
+       assert(
+         (addMode && (newValueItem != null && onAddItem != null)) || !addMode,
+         'addMode can only be used with newValueItem != null && onAddItem != null',
+       ),
+       assert(
+         (deleteMode && onDeleteItem != null) || !deleteMode,
+         'deleteMode can only be used with onDeleteItem != null',
+       ),
+       assert(
+         (editMode && onEditItem != null && newValueItem != null) || !editMode,
+         'editMode can only be used with onEditItem != null && newValueItem != null',
+       ),
+       listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
+       selectedItems = selectedItems ?? <ValueItem<T>>[],
+       _sort = sort,
+       _enabled = enabled,
+       _engine = FilterEngine<T>(
+         normalization: SearchNormalization(
+           latinize: latinize,
+           caseSensitive: caseSensitive,
+           trim: trim,
+         ),
+       ) {
     _rebuildBase();
     _filtered.addAll(_base);
   }
@@ -177,11 +177,13 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   void _rebuildBase() {
     _base
       ..clear()
-      ..addAll(_engine.sorted(
-        listItems,
-        _sort,
-        selected: selectedItems.isEmpty ? null : selectedItems.first,
-      ));
+      ..addAll(
+        _engine.sorted(
+          listItems,
+          _sort,
+          selected: selectedItems.isEmpty ? null : selectedItems.first,
+        ),
+      );
   }
 
   void _applyFilter() {
@@ -244,8 +246,9 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Replaces the selection with the [values] that exist in [listItems].
   void forceMultipleSelection(List<ValueItem<T>> values) {
     final Set<ValueItem<T>> known = listItems.toSet();
-    final List<ValueItem<T>> next =
-        values.where(known.contains).toList(growable: false);
+    final List<ValueItem<T>> next = values
+        .where(known.contains)
+        .toList(growable: false);
     selectedItems
       ..clear()
       ..addAll(next);

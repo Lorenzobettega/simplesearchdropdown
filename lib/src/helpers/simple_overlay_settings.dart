@@ -23,11 +23,7 @@ class SimpleOverlaySettings {
       color: Color.fromRGBO(183, 28, 28, 1),
       size: 20,
     ),
-    this.dialogEditIcon = const Icon(
-      Icons.edit,
-      color: Colors.black,
-      size: 20,
-    ),
+    this.dialogEditIcon = const Icon(Icons.edit, color: Colors.black, size: 20),
     this.dialogActionWidget,
     this.separatorHeight = 1,
     this.animationDuration = const Duration(milliseconds: 100),
@@ -44,7 +40,7 @@ class SimpleOverlaySettings {
     this.loadingColor = darkGreen,
     this.loadingSize = 28,
   }) : additionalWidgetSpacing =
-            additionalWidgetSpacing ?? aditionalWidgetSpacing ?? 5;
+           additionalWidgetSpacing ?? aditionalWidgetSpacing ?? 5;
 
   ///Dropdown Container height (default:`200`).
   final double dialogHeight;
