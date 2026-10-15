@@ -56,8 +56,8 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
          (editMode && onEditItem != null && newValueItem != null) || !editMode,
          'editMode can only be used with onEditItem != null && newValueItem != null',
        ),
-       listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
-       selectedItems = selectedItems ?? <ValueItem<T>>[],
+       _listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
+       _selectedItems = selectedItems ?? <ValueItem<T>>[],
        _sort = sort,
        _enabled = enabled,
        _engine = FilterEngine<T>(
@@ -71,11 +71,35 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     _filtered.addAll(_base);
   }
 
+  List<ValueItem<T>> _listItems;
+  List<ValueItem<T>> _selectedItems;
+
   /// The items shown by the dropdown.
-  final List<ValueItem<T>> listItems;
+  List<ValueItem<T>> get listItems => _listItems;
 
   /// The selected items, in selection order. Updated in place.
-  final List<ValueItem<T>> selectedItems;
+  List<ValueItem<T>> get selectedItems => _selectedItems;
+
+  /// Points the controller at other lists (shared by reference), keeping the
+  /// search and enabled state. Used by [MultipleSearchDropDown] when its 7.x
+  /// `listItems`/`selectedItems` parameters change.
+  void replaceSources({
+    List<ValueItem<T>>? listItems,
+    List<ValueItem<T>>? selectedItems,
+  }) {
+    final bool changed =
+        (listItems != null && !identical(listItems, _listItems)) ||
+        (selectedItems != null && !identical(selectedItems, _selectedItems));
+    if (!changed) {
+      return;
+    }
+    _listItems = listItems ?? _listItems;
+    _selectedItems = selectedItems ?? _selectedItems;
+    _engine.clearCache();
+    _rebuildBase();
+    _applyFilter();
+    _notify();
+  }
 
   /// Called with [selectedItems] whenever the user changes the selection.
   final void Function(List<ValueItem<T>>)? updateSelectedItems;
@@ -102,7 +126,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   final Function(ValueItem<T> originalItem, ValueItem<T> newValue)? onEditItem;
 
   /// Settings of the edit dialog.
-  final DialogSettings? editDialogSettings;
+  DialogSettings? editDialogSettings;
 
   /// Called when the user deselects an item.
   final Function(ValueItem<T>)? onClearItem;
@@ -114,13 +138,13 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   final bool confirmDelete;
 
   /// Settings of the delete confirmation dialog.
-  final DialogSettings? deleteDialogSettings;
+  DialogSettings? deleteDialogSettings;
 
   /// Return `false` to reject an item the user is about to create.
   final bool Function(ValueItem<T>)? verifyInputItem;
 
   /// Settings of the dialog shown when [verifyInputItem] rejects an item.
-  final DialogSettings? verifyDialogSettings;
+  DialogSettings? verifyDialogSettings;
 
   /// Called when [filteredItems] changes.
   final void Function()? onFilterUpdated;
@@ -197,7 +221,20 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    onFilterUpdated?.call();
+    final void Function()? onUpdated = onFilterUpdated;
+    if (onUpdated != null) {
+      // User callbacks often call setState; never run them during a build.
+      final SchedulerBinding binding = SchedulerBinding.instance;
+      if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+        binding.addPostFrameCallback((_) {
+          if (!_disposed) {
+            onUpdated();
+          }
+        });
+      } else {
+        onUpdated();
+      }
+    }
     _notify();
   }
 
@@ -316,9 +353,8 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       return;
     }
     await onAddItem?.call(item);
-    if (_disposed) {
-      return;
-    }
+    // Shared lists are updated even if a parent rebuild replaced this
+    // controller while the callback ran; notifications are skipped then.
     if (!listItems.contains(item)) {
       listItems.add(item);
     }
@@ -358,9 +394,8 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       }
     }
     await onDeleteItem?.call(item);
-    if (_disposed) {
-      return;
-    }
+    // Shared lists are updated even if a parent rebuild replaced this
+    // controller while the callback ran; notifications are skipped then.
     listItems.remove(item);
     _engine.forget(item);
     if (selectedItems.remove(item)) {
@@ -405,9 +440,8 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     }
     final ValueItem<T> newValue = create(text);
     await onEditItem?.call(item, newValue);
-    if (_disposed) {
-      return;
-    }
+    // Shared lists are updated even if a parent rebuild replaced this
+    // controller while the callback ran; notifications are skipped then.
     _replace(listItems, item, newValue);
     final int selectedIndex = selectedItems.indexOf(item);
     if (selectedIndex != -1) {

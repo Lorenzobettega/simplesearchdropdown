@@ -8,10 +8,12 @@ class DefaultAddListItem extends StatefulWidget {
     required this.text,
     required this.overlayListSettings,
     required this.itemAdded,
-    required this.addAdditionalWidget,
+    Widget? addAdditionalWidget,
+    @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
+    Widget? addAditionalWidget,
     this.strings = const SearchDropDownStrings(),
     super.key,
-  });
+  }) : addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget;
 
   ///Function to be executed after the item was added.
   final Function(String value) itemAdded;
@@ -24,6 +26,10 @@ class DefaultAddListItem extends StatefulWidget {
 
   /// Widget shown between the text and the create button.
   final Widget? addAdditionalWidget;
+
+  /// Deprecated alias of [addAdditionalWidget].
+  @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
+  Widget? get addAditionalWidget => addAdditionalWidget;
 
   /// Source of the default texts.
   final SearchDropDownStrings strings;
@@ -79,7 +85,7 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
                 : TextButton(
                     onPressed: _handleItemAdded,
                     child: Text(
-                      widget.overlayListSettings.addItemHint ??
+                      widget.overlayListSettings.customAddItemHint ??
                           widget.strings.addItem,
                       style: widget.overlayListSettings.addItemHintStyle,
                     ),

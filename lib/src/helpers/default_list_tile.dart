@@ -13,11 +13,14 @@ class DefaultListTile<T> extends StatefulWidget {
     required this.onPressed,
     required this.overlayListSettings,
     required this.selected,
-    required this.defaultAdditionalWidget,
+    Widget? defaultAdditionalWidget,
+    @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
+    Widget? defaultAditionalWidget,
     this.strings = const SearchDropDownStrings(),
     this.highlighted = false,
     super.key,
-  });
+  }) : defaultAdditionalWidget =
+           defaultAdditionalWidget ?? defaultAditionalWidget;
 
   ///The overlay list of items settings.
   final SimpleOverlaySettings overlayListSettings;
@@ -48,6 +51,10 @@ class DefaultListTile<T> extends StatefulWidget {
 
   /// Widget shown between the label and the action buttons.
   final Widget? defaultAdditionalWidget;
+
+  /// Deprecated alias of [defaultAdditionalWidget].
+  @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
+  Widget? get defaultAditionalWidget => defaultAdditionalWidget;
 
   /// Source of tooltips and semantics labels.
   final SearchDropDownStrings strings;

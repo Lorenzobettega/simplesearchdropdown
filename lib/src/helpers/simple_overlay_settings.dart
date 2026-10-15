@@ -27,7 +27,7 @@ class SimpleOverlaySettings {
     this.dialogActionWidget,
     this.separatorHeight = 1,
     this.animationDuration = const Duration(milliseconds: 100),
-    this.addItemHint,
+    String? addItemHint,
     this.addItemHintStyle,
     this.itemWidgetBuilder,
     this.reOpenedScrollDuration = const Duration(seconds: 1),
@@ -39,7 +39,8 @@ class SimpleOverlaySettings {
     this.openFullScreen = false,
     this.loadingColor = darkGreen,
     this.loadingSize = 28,
-  }) : additionalWidgetSpacing =
+  }) : customAddItemHint = addItemHint,
+       additionalWidgetSpacing =
            additionalWidgetSpacing ?? aditionalWidgetSpacing ?? 5;
 
   ///Dropdown Container height (default:`200`).
@@ -90,8 +91,13 @@ class SimpleOverlaySettings {
   ///The duration of the dropdown opening animation (default:`Duration(milliseconds: 100)`).
   final Duration animationDuration;
 
-  ///The text of the add button. Defaults to [SearchDropDownStrings.addItem].
-  final String? addItemHint;
+  ///The add button text set explicitly, or `null` to use
+  ///[SearchDropDownStrings.addItem].
+  final String? customAddItemHint;
+
+  ///The text of the add button (default: `'Criar'`).
+  String get addItemHint =>
+      customAddItemHint ?? const SearchDropDownStrings().addItem;
 
   ///The style of the add button when user is allowed to add items in the list.
   final TextStyle? addItemHintStyle;

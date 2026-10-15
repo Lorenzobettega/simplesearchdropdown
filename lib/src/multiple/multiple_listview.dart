@@ -112,7 +112,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                 bar.backgroundColor,
               ),
               shape: WidgetStatePropertyAll<OutlinedBorder>(bar.border),
-              hintText: bar.hint ?? widget.strings.searchHint,
+              hintText: bar.customHint ?? widget.strings.searchHint,
               hintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
               textStyle: WidgetStatePropertyAll<TextStyle?>(
                 bar.searchBarTextStyle ?? bar.hintStyle,

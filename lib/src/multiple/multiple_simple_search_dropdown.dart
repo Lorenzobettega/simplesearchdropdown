@@ -182,8 +182,24 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   /// Whether the list is open.
   bool get aberto => _portal.isShowing;
 
+  /// Opens (`true`) or closes (`false`) the list.
+  @Deprecated(
+    'Use the open/close behaviour of the widget. Will be removed in 9.0.0',
+  )
+  set aberto(bool open) => open ? _showOverlay() : hideOverlay();
+
   /// Whether the dropdown accepts interaction.
   bool get enabled => _controller.enabled;
+
+  /// Enables or disables the dropdown.
+  @Deprecated('Use controller.enabled. Will be removed in 9.0.0')
+  set enabled(bool value) => _controller.enabled = value;
+
+  /// The 7.x overlay helper. The list no longer uses it.
+  @Deprecated(
+    'No longer used: the list is an OverlayPortal. Will be removed in 9.0.0',
+  )
+  OverlayScreen get overlayScreen => OverlayScreen.of(context);
 
   SearchDropDownStrings get _strings =>
       widget.strings ?? SearchDropDownStrings.of(context);
@@ -233,11 +249,10 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     );
   }
 
-  /// Whether a 7.x parameter that the controller captures changed.
+  /// Whether a 7.x parameter that shapes the controller changed. Lists and
+  /// dialog settings are updated in place instead (see [didUpdateWidget]).
   bool _legacyShapeChanged(MultipleSearchDropDown<T> old) =>
       old.controller != null ||
-      !identical(old.listItems, widget.listItems) ||
-      !identical(old.selectedItems, widget.selectedItems) ||
       old.addMode != widget.addMode ||
       old.deleteMode != widget.deleteMode ||
       old.editMode != widget.editMode ||
@@ -247,9 +262,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
       (old.verifyInputItem == null) != (widget.verifyInputItem == null) ||
       (old.onAddItem == null) != (widget.onAddItem == null) ||
       (old.onDeleteItem == null) != (widget.onDeleteItem == null) ||
-      (old.onEditItem == null) != (widget.onEditItem == null) ||
-      !identical(old.deleteDialogSettings, widget.deleteDialogSettings) ||
-      !identical(old.verifyDialogSettings, widget.verifyDialogSettings);
+      (old.onEditItem == null) != (widget.onEditItem == null);
 
   @override
   void didUpdateWidget(covariant MultipleSearchDropDown<T> oldWidget) {
@@ -260,9 +273,26 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     if (widget.controller == null) {
       if (_legacyShapeChanged(oldWidget)) {
         stale = _ownController;
-        _ownController = _legacyController();
-      } else if (oldWidget.enabled != widget.enabled) {
-        _ownController!.enabled = widget.enabled;
+        final MultipleSearchDropDownController<T> next = _legacyController();
+        // Keep what the user is doing (search text, toggled enabled state).
+        if (stale != null) {
+          next.search(stale.query);
+          if (oldWidget.enabled == widget.enabled) {
+            next.enabled = stale.enabled;
+          }
+        }
+        _ownController = next;
+      } else {
+        final MultipleSearchDropDownController<T> own = _ownController!
+          ..replaceSources(
+            listItems: widget.listItems,
+            selectedItems: widget.selectedItems,
+          )
+          ..deleteDialogSettings = widget.deleteDialogSettings
+          ..verifyDialogSettings = widget.verifyDialogSettings;
+        if (oldWidget.enabled != widget.enabled) {
+          own.enabled = widget.enabled;
+        }
       }
     } else {
       stale = _ownController;
@@ -447,7 +477,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                         CrossAxisAlignment.start,
                                     children: <Widget>[
                                       Text(
-                                        bar.hint ?? _strings.searchHint,
+                                        bar.customHint ?? _strings.searchHint,
                                         textAlign: TextAlign.start,
                                         style: bar.hintStyle,
                                       ),

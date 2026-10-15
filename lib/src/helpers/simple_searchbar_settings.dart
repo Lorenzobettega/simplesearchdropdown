@@ -15,7 +15,7 @@ class SimpleSearchbarSettings {
     this.clearIconColor,
     this.searchBarTextStyle,
     this.actions,
-    this.hint,
+    String? hint,
     this.hintStyle = const TextStyle(fontSize: 14),
     this.hoverColor = const Color.fromRGBO(245, 245, 245, 1),
     this.showArrow = true,
@@ -42,7 +42,7 @@ class SimpleSearchbarSettings {
     this.keyboardType,
     this.textInputAction,
     this.showDivider = false,
-  });
+  }) : customHint = hint;
 
   ///Main/outside Container height(default:50)
   final double dropdownHeight;
@@ -71,8 +71,11 @@ class SimpleSearchbarSettings {
   ///The style of searchbar text when something is typed (default:hintStyle)
   final TextStyle? searchBarTextStyle;
 
-  ///The hint of the searchbar. Defaults to [SearchDropDownStrings.searchHint].
-  final String? hint;
+  ///The hint set explicitly, or `null` to use [SearchDropDownStrings.searchHint].
+  final String? customHint;
+
+  ///The hint of the searchbar (default: `'Pesquisar'`).
+  String get hint => customHint ?? const SearchDropDownStrings().searchHint;
 
   ///The style of the hint of the searchbar.
   final TextStyle? hintStyle;

@@ -74,20 +74,31 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   SearchDropDownController<T> get _controller => widget.controller;
 
+  /// Controllers this widget has shown. A swapped-out controller may still be
+  /// driving a closing view or be swapped back in, so they are all disposed
+  /// together with the widget (when [SearchDropDown.disposeController]).
+  final Set<SearchDropDownController<T>> _seenControllers =
+      <SearchDropDownController<T>>{};
+
+  @override
+  void initState() {
+    super.initState();
+    _seenControllers.add(widget.controller);
+  }
+
   @override
   void didUpdateWidget(covariant SearchDropDown<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.controller != widget.controller &&
-        oldWidget.disposeController) {
-      oldWidget.controller.dispose();
-    }
+    _seenControllers.add(widget.controller);
   }
 
   @override
   void dispose() {
     _unfocusWindow?.cancel();
     if (widget.disposeController) {
-      _controller.dispose();
+      for (final SearchDropDownController<T> c in _seenControllers) {
+        c.dispose();
+      }
     }
     _focusNode.dispose();
     super.dispose();
@@ -147,7 +158,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     final SimpleSearchbarSettings bar = widget.searchBarSettings;
     final SimpleOverlaySettings list = widget.overlayListSettings;
     final SearchController search = _controller.localSearchController;
-    final String hint = bar.hint ?? strings.searchHint;
+    final String hint = bar.customHint ?? strings.searchHint;
     final Color viewBackground =
         list.dialogBackgroundColor ?? bar.backgroundColor;
     return SizedBox(

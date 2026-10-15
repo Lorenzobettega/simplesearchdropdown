@@ -71,7 +71,7 @@ class _EditDialogState extends State<EditDialog> {
               const SizedBox(height: 20),
               InputField(
                 controle: controller,
-                hint: dialogSettings.editHint ?? widget.strings.editHint,
+                hint: dialogSettings.customEditHint ?? widget.strings.editHint,
               ),
             ],
           ),

@@ -265,6 +265,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
   }
 
   void _rebuildBase() {
+    _lastQuery = null;
     _base
       ..clear()
       ..addAll(switch (_sort) {
@@ -274,7 +275,23 @@ class SearchDropDownController<T> extends ChangeNotifier {
       });
   }
 
-  void _applyFilter() => _show(_engine.filter(_base, _query));
+  void _applyFilter() => _filterBy(_query);
+
+  /// Normalized query behind [_filtered]; `null` when it is not a narrowing
+  /// base (e.g. after the items changed).
+  String? _lastQuery;
+
+  void _filterBy(String text) {
+    final String query = _engine.normalize(text);
+    final String? last = _lastQuery;
+    // Typing more characters can only narrow the previous results.
+    final List<ValueItem<T>> source =
+        last != null && last.isNotEmpty && query.startsWith(last)
+        ? List<ValueItem<T>>.of(_filtered)
+        : _base;
+    _show(_engine.filter(source, text));
+    _lastQuery = query;
+  }
 
   void _show(List<ValueItem<T>> next) {
     if (listEquals(next, _filtered)) {
@@ -288,11 +305,29 @@ class SearchDropDownController<T> extends ChangeNotifier {
     }
     _highlight.value = -1;
     _results.fire();
-    onFilterUpdated?.call();
+    final void Function()? onUpdated = onFilterUpdated;
+    if (onUpdated != null) {
+      _runOutsideBuild(onUpdated);
+    }
+  }
+
+  /// Runs [callback] now, or after the frame when called during a build
+  /// (user callbacks often call setState).
+  void _runOutsideBuild(void Function() callback) {
+    final SchedulerBinding binding = SchedulerBinding.instance;
+    if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
+      binding.addPostFrameCallback((_) {
+        if (!_disposed) {
+          callback();
+        }
+      });
+    } else {
+      callback();
+    }
   }
 
   /// Filters by [text] immediately (ignores whether the view is open).
-  void filterList(String text) => _show(_engine.filter(_base, text));
+  void filterList(String text) => _filterBy(text);
 
   /// Sorts [listItems] in place by [sortType] (0 none, 1 A-Z, 2 Z-A,
   /// 3 selected first) and refreshes the results.
@@ -370,6 +405,8 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// calls [updateSelectedItem].
   void selectItem(ValueItem<T> item) {
     _selectedItem = item;
+    // The view is closing: writing the label must not re-filter the list.
+    _viewOpen = false;
     if (localSearchController.isAttached && localSearchController.isOpen) {
       localSearchController.closeView(item.label);
     } else {
@@ -570,7 +607,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     }
     final int index = listItems.indexOf(item);
     final bool hasNew = listItems.contains(newValue);
-    if (index != -1 && !hasNew) {
+    if (index != -1 && (!hasNew || newValue == item)) {
       listItems[index] = newValue;
     } else if (index != -1) {
       listItems.removeAt(index);
@@ -591,6 +628,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// [listItems] and shows every item (the selected label is not a query).
   void onSearchOpen() {
     _viewOpen = true;
+    _highlight.value = -1;
     _refresh();
     final ValueItem<T>? selected = _selectedItem;
     final String text = localSearchController.text;
@@ -606,6 +644,9 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Restores or clears the text when the search view closes.
   void onSearchClose(bool clearOnClose) {
     _viewOpen = false;
+    if (!_disposed) {
+      _highlight.value = -1;
+    }
     final String text = localSearchController.text;
     if (clearOnClose && text.isNotEmpty) {
       final ValueItem<T>? selected = _selectedItem;

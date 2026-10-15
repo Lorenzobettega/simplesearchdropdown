@@ -17,9 +17,14 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - After add/edit/delete callbacks the item list is kept in sync if the callback did not change it.
 - `forceSelection` matches the exact label first, then ignoring case/accents (both dropdowns).
 - The multiple list is drawn with `OverlayPortal`: it follows parent rebuilds, is removed with the widget and stays below dialogs (confirm/verify dialogs are now regular modal dialogs).
-- Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) are nullable and fall back to `SearchDropDownStrings`.
+- Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) still read as before, but a value you do not set now comes from `SearchDropDownStrings`; `customHint`, `customAddItemHint`, `customEditHint` tell whether one was set explicitly.
 - `SearchDropDownController.dispose()` can be called more than once.
-- Internal helpers renamed without aliases: `DefaultListTile.defaultAdditionalWidget`, `DefaultAddListItem.addAdditionalWidget`; `MultipleListView` now takes a controller.
+- Swapping `SearchDropDown.controller` no longer disposes the old controller right away: every controller the widget showed is disposed with the widget (with `disposeController`).
+- A legacy `MultipleSearchDropDown` keeps its search and pending add/delete across parent rebuilds; new list instances or dialog settings are applied in place.
+
+### Breaking
+- `MultipleListView` (exported helper) takes a `MultipleSearchDropDownController`; use `MultipleSearchDropDown` instead of building it directly.
+- `SearchDropDownController.showClearIcon` is `bool?` (`null` = follow the search bar settings).
 
 ### Fixed
 - Crash when filtering after deleting/editing with a callback that does not change the list, or after the shared list grew from outside (e.g. an item added through the multiple dropdown).
@@ -27,15 +32,17 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Opening the single list through the arrow did not filter while typing.
 - Keyboard highlight could stay on a stale row; rows were marked selected just because the typed text equalled their label; Tab focus was dropped immediately.
 - Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected.
-- `onFilterUpdated` missed changes with the same length/first/last item.
+- `onFilterUpdated` missed changes with the same length/first/last item, and is never called during a build (safe to `setState` in it).
+- Keyboard highlight is cleared when the list reopens; selecting no longer re-filters the list while it closes; confirming the edit dialog unchanged keeps the item.
 - Multiple: deleting an item cleared the whole selection; `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; sorting reordered the caller's list; the list leaked when the widget was removed; a rejected item stayed in the search field (#13); async callbacks were not awaited.
 
 ### Deprecated
 - `SearchDropDownState.enableDisable/resetSelection/updateList` and the `MultipleSearchDropDownState` methods → use the controllers.
-- `sortType` → `sort`; `addAditionalWidget`/`defaultAditionalWidget`/`aditionalWidgetSpacing` → `*Additional*`.
+- `sortType` → `sort`; `addAditionalWidget`/`defaultAditionalWidget`/`aditionalWidgetSpacing` → `*Additional*` (also on `DefaultListTile` and `DefaultAddListItem`).
+- `MultipleSearchDropDownState.aberto`/`enabled` setters and `overlayScreen`.
 
 ### Performance
-- One shared filter engine with a lazy label cache. Typing "Item 99" over 10,000 items rebuilds 20 rows instead of 63; the bar no longer rebuilds while typing.
+- One shared filter engine with a lazy label cache; typing more characters narrows the previous results. Typing "Item 99" over 10,000 items rebuilds 20 rows instead of 63; the bar no longer rebuilds while typing.
 
 ## [7.8.0] - 2026-04-03.
 - Added `caseSensitive` parameter to the controller. It defines if the search should be case sensitive (default: `false`).

@@ -14,16 +14,20 @@ class DialogSettings {
     this.backgroundColor,
     this.elevation,
     this.shape,
-    this.customCancelButtonSettings,
-    this.customDeleteButtonSettings,
-    this.customOkButtonSettings,
-    this.customEditButtonSettings,
+    DialogButtonSettings? customCancelButtonSettings,
+    DialogButtonSettings? customDeleteButtonSettings,
+    DialogButtonSettings? customOkButtonSettings,
+    DialogButtonSettings? customEditButtonSettings,
     this.insetPadding = const EdgeInsets.symmetric(
       horizontal: 40,
       vertical: 24,
     ),
-    this.editHint,
-  });
+    String? editHint,
+  }) : _cancel = customCancelButtonSettings,
+       _delete = customDeleteButtonSettings,
+       _ok = customOkButtonSettings,
+       _edit = customEditButtonSettings,
+       customEditHint = editHint;
 
   /// Replaces the default title.
   final Widget? title;
@@ -31,21 +35,29 @@ class DialogSettings {
   /// Replaces the default content.
   final Widget? content;
 
-  /// Cancel button. Defaults to [defaultCancelButtonSettings] with
-  /// [SearchDropDownStrings.cancelButton].
-  final DialogButtonSettings? customCancelButtonSettings;
+  final DialogButtonSettings? _cancel;
 
-  /// Delete button. Defaults to [defaultDeleteButtonSettings] with
-  /// [SearchDropDownStrings.deleteButton].
-  final DialogButtonSettings? customDeleteButtonSettings;
+  /// The cancel button (default: [defaultCancelButtonSettings]).
+  DialogButtonSettings get customCancelButtonSettings =>
+      _cancel ?? defaultCancelButtonSettings;
 
-  /// OK button. Defaults to [defaultOKButtonSettings] with
-  /// [SearchDropDownStrings.okButton].
-  final DialogButtonSettings? customOkButtonSettings;
+  final DialogButtonSettings? _delete;
 
-  /// Edit button. Defaults to [defaultEditButtonSettings] with
-  /// [SearchDropDownStrings.editButton].
-  final DialogButtonSettings? customEditButtonSettings;
+  /// The delete button (default: [defaultDeleteButtonSettings]).
+  DialogButtonSettings get customDeleteButtonSettings =>
+      _delete ?? defaultDeleteButtonSettings;
+
+  final DialogButtonSettings? _ok;
+
+  /// The ok button (default: [defaultOKButtonSettings]).
+  DialogButtonSettings get customOkButtonSettings =>
+      _ok ?? defaultOKButtonSettings;
+
+  final DialogButtonSettings? _edit;
+
+  /// The edit button (default: [defaultEditButtonSettings]).
+  DialogButtonSettings get customEditButtonSettings =>
+      _edit ?? defaultEditButtonSettings;
 
   /// Paddings forwarded to the [AlertDialog].
   final EdgeInsetsGeometry? contentPadding, titlePadding, actionsPadding;
@@ -65,28 +77,31 @@ class DialogSettings {
   /// Shape forwarded to the [AlertDialog].
   final ShapeBorder? shape;
 
-  /// Hint of the edit field. Defaults to [SearchDropDownStrings.editHint].
-  final String? editHint;
+  /// The edit hint set explicitly, or `null` to use
+  /// [SearchDropDownStrings.editHint].
+  final String? customEditHint;
+
+  /// Hint of the edit field (default: `'Novo valor'`).
+  String get editHint =>
+      customEditHint ?? const SearchDropDownStrings().editHint;
 
   /// The cancel button resolved against [strings].
   DialogButtonSettings cancelButton(SearchDropDownStrings strings) =>
-      customCancelButtonSettings ??
+      _cancel ??
       defaultCancelButtonSettings.copyWith(text: strings.cancelButton);
 
   /// The delete button resolved against [strings].
   DialogButtonSettings deleteButton(SearchDropDownStrings strings) =>
-      customDeleteButtonSettings ??
+      _delete ??
       defaultDeleteButtonSettings.copyWith(text: strings.deleteButton);
 
   /// The OK button resolved against [strings].
   DialogButtonSettings okButton(SearchDropDownStrings strings) =>
-      customOkButtonSettings ??
-      defaultOKButtonSettings.copyWith(text: strings.okButton);
+      _ok ?? defaultOKButtonSettings.copyWith(text: strings.okButton);
 
   /// The edit button resolved against [strings].
   DialogButtonSettings editButton(SearchDropDownStrings strings) =>
-      customEditButtonSettings ??
-      defaultEditButtonSettings.copyWith(text: strings.editButton);
+      _edit ?? defaultEditButtonSettings.copyWith(text: strings.editButton);
 }
 
 ///Class to hold all the customizations of the buttons in the dialog.
