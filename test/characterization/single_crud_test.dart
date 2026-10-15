@@ -1,3 +1,6 @@
+// Characterization tests exercise the legacy (deprecated) API on purpose.
+// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
+
 // Characterization tests for the add / edit / delete (CRUD) surface of the
 // single-selection SearchDropDown. They lock the behaviour of v7.8.0 before
 // the 8.0 refactor. Tests named 'B<n>: ...' assert the CORRECT behaviour of a

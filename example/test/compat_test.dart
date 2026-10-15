@@ -1,3 +1,6 @@
+// Characterization tests exercise the legacy (deprecated) API on purpose.
+// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
+
 // Backwards-compat fixture: drives the UNCHANGED example app through the
 // user journeys that simple_search_dropdown 8.0 must keep working.
 //

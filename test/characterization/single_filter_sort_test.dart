@@ -1,3 +1,6 @@
+// Characterization tests exercise the legacy (deprecated) API on purpose.
+// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
+
 // Characterization tests for SearchDropDownController + SearchDropDown
 // (single selection): filtering, sorting and list data management.
 //

@@ -1,3 +1,6 @@
+// Characterization tests exercise the legacy (deprecated) API on purpose.
+// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
+
 // Characterization tests for the MultipleSearchDropDown widget (v7.8.0).
 // They lock the CURRENT behaviour before the 8.0 refactor, through the public
 // API and the user-visible widgets. Tests named 'M<n>: ...' assert the
