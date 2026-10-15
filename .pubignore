@@ -1,0 +1,52 @@
+# pub ignores .gitignore when this file exists: keep it as .gitignore + the extras below.
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+coverage/
+
+# Test artefacts
+**/failures/
+
+# Android
+**/android/**/generated/
+**/android/.gradle/
+**/android/app/.cxx/
+**/android/local.properties
+**/android/key.properties
+*.jks
+*.keystore
+
+# iOS/macOS
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/Pods/
+**/*.xcworkspace
+!**/Runner.xcworkspace
+
+# Web
+web/index.html.gz
+
+# Secrets
+.env
+.env.*
+
+# IDE/OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# Tracked, but not shipped to pub.dev
+assets/
+docs/
+tool/
+.claude/
+.github/
+CLAUDE.md
+dart_test.yaml
