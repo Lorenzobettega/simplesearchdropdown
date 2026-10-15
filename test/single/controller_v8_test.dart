@@ -152,6 +152,46 @@ void main() {
     });
   });
 
+  group('view: selection matched by label when values are not comparable', () {
+    testWidgets('an equal-label initialSelectedItem is shown as selected',
+        (tester) async {
+      final List<ValueItem<Object>> items = <ValueItem<Object>>[
+        for (int i = 0; i < 60; i++)
+          ValueItem<Object>(label: 'P$i', value: Object()),
+      ];
+      // Same label, different value instance (no == on the value type).
+      final c = SearchDropDownController<Object>(
+        listItems: items,
+        addMode: false,
+        deleteMode: false,
+        initialSelectedItem:
+            const ValueItem<Object>(label: 'P40', value: Object()),
+      );
+      await tester.pumpWidget(host(SearchDropDown<Object>(controller: c)));
+      await openSingle(tester);
+      final Finder row = find.widgetWithText(DefaultListTile<Object>, 'P40');
+      expect(row, findsOneWidget);
+      expect(tester.widget<DefaultListTile<Object>>(row).selected, isTrue);
+      expect(c.selectedIndex, 40);
+    });
+
+    testWidgets('opening with a selection selects the text so typing replaces',
+        (tester) async {
+      final List<ValueItem<int>> items = fruitItems();
+      final c = SearchDropDownController<int>(
+        listItems: items,
+        addMode: false,
+        deleteMode: false,
+        initialSelectedItem: items[1],
+      );
+      await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
+      await openSingle(tester);
+      final TextSelection sel = c.localSearchController.selection;
+      expect(sel.start, 0);
+      expect(sel.end, 'Banana'.length);
+    });
+  });
+
   group('view: opens scrolled to the selection (#46)', () {
     testWidgets('a selection far down the list is visible on open',
         (tester) async {

@@ -477,7 +477,7 @@ class _ViewListState<T> extends State<_ViewList<T>> {
         onEdit: (ValueItem<T> value) =>
             _controller.editItem(value, context, strings: widget.strings),
         onPressed: _controller.selectItem,
-        selected: item == _controller.selectedItem,
+        selected: _controller.isSelected(item),
         highlighted: index == _controller.highlightedIndex,
       ),
     );

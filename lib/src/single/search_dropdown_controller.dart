@@ -222,7 +222,21 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Index of [selectedItem] in [filteredItems], or -1.
   int get selectedIndex {
     final ValueItem<T>? selected = _selectedItem;
-    return selected == null ? -1 : _filtered.indexOf(selected);
+    if (selected == null) {
+      return -1;
+    }
+    final int index = _filtered.indexOf(selected);
+    return index != -1
+        ? index
+        : _filtered.indexWhere((ValueItem<T> e) => e.label == selected.label);
+  }
+
+  /// Whether [item] is the selected item. Items whose values cannot be
+  /// compared (no `==`) match by label, as in 7.x.
+  bool isSelected(ValueItem<T> item) {
+    final ValueItem<T>? selected = _selectedItem;
+    return selected != null &&
+        (item == selected || item.label == selected.label);
   }
 
   // ------------------------------------------------------------- filtering
@@ -577,6 +591,13 @@ class SearchDropDownController<T> extends ChangeNotifier {
   void onSearchOpen() {
     _viewOpen = true;
     _refresh();
+    final ValueItem<T>? selected = _selectedItem;
+    final String text = localSearchController.text;
+    if (selected != null && text == selected.label) {
+      // Typing replaces the selected label instead of appending to it.
+      localSearchController.selection =
+          TextSelection(baseOffset: 0, extentOffset: text.length);
+    }
   }
 
   /// Restores or clears the text when the search view closes.
