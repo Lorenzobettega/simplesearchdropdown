@@ -15,6 +15,8 @@ class SimpleOverlaySettings {
     this.selectedItemTextStyle = const TextStyle(color: Colors.black),
     this.unselectedItemTextStyle = const TextStyle(color: Colors.black45),
     this.unselectedItemHoverColor = const Color.fromRGBO(245, 245, 245, 1),
+    this.highlightedItemBackgroundColor,
+    this.highlightedItemBorderColor = Colors.black26,
     this.dialogDeleteIcon = const Icon(
       Icons.delete,
       color: Color.fromRGBO(183, 28, 28, 1),
@@ -68,6 +70,13 @@ class SimpleOverlaySettings {
 
   ///The hover color of the unselected items of the list.
   final Color unselectedItemHoverColor;
+
+  ///Background of the row highlighted with the keyboard arrows
+  ///(default: [unselectedItemHoverColor]).
+  final Color? highlightedItemBackgroundColor;
+
+  ///Border of the row highlighted with the keyboard arrows (default: `Colors.black26`).
+  final Color highlightedItemBorderColor;
 
   ///The delete Icon in dropdown listview (default:red trash)
   final Icon dialogDeleteIcon;

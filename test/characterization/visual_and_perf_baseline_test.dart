@@ -269,7 +269,7 @@ void main() {
 
       expect(controller.highlightedIndex, 1);
       expect(
-        tester.widget<DefaultListTile<int>>(_row('Banana')).selected,
+        tester.widget<DefaultListTile<int>>(_row('Banana')).highlighted,
         isTrue,
       );
       await _matchesGolden('single_open_highlight');

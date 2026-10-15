@@ -66,8 +66,10 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
                     padding: const EdgeInsets.only(top: 4),
                     child: SizedBox(
                       height: widget.overlayListSettings.loadingSize,
-                      child:
-                          Loading(cor: widget.overlayListSettings.loadingColor),
+                      child: Loading(
+                        cor: widget.overlayListSettings.loadingColor,
+                        semanticsLabel: widget.strings.loadingLabel,
+                      ),
                     ),
                   )
                 : TextButton(

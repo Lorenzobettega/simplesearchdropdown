@@ -87,8 +87,10 @@ Iterable<DefaultListTile<int>> _rows(WidgetTester tester) =>
 List<String> _rowLabels(WidgetTester tester) =>
     _rows(tester).map((r) => r.item.label).toList();
 
-List<String> _selectedRows(WidgetTester tester) =>
-    _rows(tester).where((r) => r.selected).map((r) => r.item.label).toList();
+List<String> _selectedRows(WidgetTester tester) => _rows(tester)
+    .where((r) => r.selected || r.highlighted)
+    .map((r) => r.item.label)
+    .toList();
 
 Finder _row(String label) => find.byWidgetPredicate(
       (w) => w is DefaultListTile<int> && w.item.label == label,

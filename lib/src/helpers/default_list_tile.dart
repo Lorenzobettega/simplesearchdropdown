@@ -14,6 +14,7 @@ class DefaultListTile<T> extends StatefulWidget {
     required this.selected,
     required this.defaultAdditionalWidget,
     this.strings = const SearchDropDownStrings(),
+    this.highlighted = false,
     super.key,
   });
 
@@ -26,6 +27,9 @@ class DefaultListTile<T> extends StatefulWidget {
   final Function(ValueItem<T> value) onDelete;
   final Function(ValueItem<T> value) onPressed;
   final bool selected;
+
+  /// Whether the row is highlighted by keyboard navigation.
+  final bool highlighted;
   final Widget? defaultAdditionalWidget;
 
   /// Source of tooltips and semantics labels.
@@ -62,83 +66,103 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: widget.overlayListSettings.itemsPadding,
-      child: Row(
-        children: [
-          Expanded(
-            child: TextButton(
-              style: ButtonStyle(
-                backgroundColor: WidgetStateProperty.resolveWith<Color>(
-                  (Set<WidgetState> states) {
-                    if (widget.selected) {
+    return Semantics(
+      selected: widget.selected,
+      child: Padding(
+        padding: widget.overlayListSettings.itemsPadding,
+        child: Row(
+          children: [
+            Expanded(
+              child: TextButton(
+                style: ButtonStyle(
+                  backgroundColor: WidgetStateProperty.resolveWith<Color>(
+                    (Set<WidgetState> states) {
+                      if (widget.selected) {
+                        return widget
+                            .overlayListSettings.selectedItemBackgroundColor;
+                      }
+                      if (widget.highlighted) {
+                        return widget.overlayListSettings
+                                .highlightedItemBackgroundColor ??
+                            widget.overlayListSettings.unselectedItemHoverColor;
+                      }
+                      return Colors.transparent;
+                    },
+                  ),
+                  shape: WidgetStateProperty.all<OutlinedBorder>(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                      side: widget.highlighted && !widget.selected
+                          ? BorderSide(
+                              color: widget.overlayListSettings
+                                  .highlightedItemBorderColor,
+                            )
+                          : BorderSide.none,
+                    ),
+                  ),
+                  overlayColor: WidgetStateProperty.resolveWith<Color>(
+                    (Set<WidgetState> states) {
+                      if (widget.selected) {
+                        return widget
+                            .overlayListSettings.selectedItemHoverColor;
+                      }
                       return widget
-                          .overlayListSettings.selectedItemBackgroundColor;
-                    }
-                    return Colors.transparent;
-                  },
-                ),
-                shape: WidgetStateProperty.all<OutlinedBorder>(
-                  RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10),
+                          .overlayListSettings.unselectedItemHoverColor;
+                    },
                   ),
                 ),
-                overlayColor: WidgetStateProperty.resolveWith<Color>(
-                  (Set<WidgetState> states) {
-                    if (widget.selected) {
-                      return widget.overlayListSettings.selectedItemHoverColor;
-                    }
-                    return widget.overlayListSettings.unselectedItemHoverColor;
-                  },
-                ),
-              ),
-              onPressed: () => widget.onPressed(widget.item),
-              child: widget.overlayListSettings.itemWidgetBuilder != null
-                  ? widget.overlayListSettings.itemWidgetBuilder!(widget.item)
-                  : Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        widget.item.label,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: (widget.selected
-                            ? widget.overlayListSettings.selectedItemTextStyle
-                            : widget
-                                .overlayListSettings.unselectedItemTextStyle),
+                onPressed: () => widget.onPressed(widget.item),
+                child: widget.overlayListSettings.itemWidgetBuilder != null
+                    ? widget.overlayListSettings.itemWidgetBuilder!(widget.item)
+                    : Align(
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          widget.item.label,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: (widget.selected || widget.highlighted
+                              ? widget.overlayListSettings.selectedItemTextStyle
+                              : widget
+                                  .overlayListSettings.unselectedItemTextStyle),
+                        ),
                       ),
-                    ),
+              ),
             ),
-          ),
-          if (widget.defaultAdditionalWidget != null) ...[
-            widget.defaultAdditionalWidget!,
-            SizedBox(width: widget.overlayListSettings.additionalWidgetSpacing)
+            if (widget.defaultAdditionalWidget != null) ...[
+              widget.defaultAdditionalWidget!,
+              SizedBox(
+                  width: widget.overlayListSettings.additionalWidgetSpacing)
+            ],
+            if (_isLoading)
+              Padding(
+                padding: const EdgeInsets.only(left: 6, right: 6),
+                child: SizedBox(
+                  height: widget.overlayListSettings.loadingSize,
+                  child: Loading(
+                    cor: widget.overlayListSettings.loadingColor,
+                    semanticsLabel: widget.strings.loadingLabel,
+                  ),
+                ),
+              )
+            else ...[
+              if (widget.editMode)
+                IconButton(
+                  tooltip: widget.strings.editItemTooltip,
+                  onPressed: _handleEditItem,
+                  icon: widget.overlayListSettings.dialogEditIcon,
+                ),
+              if (widget.deleteMode)
+                widget.overlayListSettings.dialogActionWidget ??
+                    IconButton(
+                      tooltip: widget.strings.deleteItemTooltip,
+                      onPressed: _handleDeleteItem,
+                      icon: widget.overlayListSettings.dialogDeleteIcon,
+                    )
+              else
+                const SizedBox.shrink()
+            ],
           ],
-          if (_isLoading)
-            Padding(
-              padding: const EdgeInsets.only(left: 6, right: 6),
-              child: SizedBox(
-                height: widget.overlayListSettings.loadingSize,
-                child: Loading(cor: widget.overlayListSettings.loadingColor),
-              ),
-            )
-          else ...[
-            if (widget.editMode)
-              IconButton(
-                tooltip: widget.strings.editItemTooltip,
-                onPressed: _handleEditItem,
-                icon: widget.overlayListSettings.dialogEditIcon,
-              ),
-            if (widget.deleteMode)
-              widget.overlayListSettings.dialogActionWidget ??
-                  IconButton(
-                    tooltip: widget.strings.deleteItemTooltip,
-                    onPressed: _handleDeleteItem,
-                    icon: widget.overlayListSettings.dialogDeleteIcon,
-                  )
-            else
-              const SizedBox.shrink()
-          ],
-        ],
+        ),
       ),
     );
   }
