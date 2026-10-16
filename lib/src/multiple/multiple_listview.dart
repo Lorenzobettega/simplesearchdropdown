@@ -92,6 +92,70 @@ class MultipleListView<T> extends StatefulWidget {
   final int _sortType;
   final ValueItem<T> Function(String input)? _newValueItem;
 
+  /// Deprecated alias of [addAdditionalWidget].
+  @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
+  Widget? get addAditionalWidget => addAdditionalWidget;
+
+  /// Deprecated alias of [defaultAdditionalWidget].
+  @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
+  Widget? get defaultAditionalWidget => defaultAdditionalWidget;
+
+  /// The items: the controller's `listItems`, else the 7.x parameter.
+  @Deprecated(_legacyHint)
+  List<ValueItem<T>> get listItens =>
+      controller?.listItems ?? _listItens ?? <ValueItem<T>>[];
+
+  /// The selection: the controller's `selectedItems`, else the 7.x parameter.
+  @Deprecated(_legacyHint)
+  List<ValueItem<T>> get selectedItens =>
+      controller?.selectedItems ?? _selectedItens ?? <ValueItem<T>>[];
+
+  /// Whether items can be added (the controller's, else the 7.x parameter).
+  @Deprecated(_legacyHint)
+  bool get addMode => controller?.addMode ?? _addMode;
+
+  /// Whether items can be edited (the controller's, else the 7.x parameter).
+  @Deprecated(_legacyHint)
+  bool get editMode => controller?.editMode ?? _editMode;
+
+  /// Whether items can be deleted (the controller's, else the 7.x parameter).
+  @Deprecated(_legacyHint)
+  bool get deleteMode => controller?.deleteMode ?? _deleteMode;
+
+  /// The add callback (the controller's, else the 7.x parameter); never null.
+  @Deprecated(_legacyHint)
+  Function(ValueItem<T> value) get onAddItem =>
+      (controller == null ? _onAddItem : controller!.onAddItem) ?? _ignore;
+
+  /// The delete callback (the controller's, else the 7.x parameter); never
+  /// null.
+  @Deprecated(_legacyHint)
+  Function(ValueItem<T> value) get onDeleteItem =>
+      (controller == null ? _onDeleteItem : controller!.onDeleteItem) ??
+      _ignore;
+
+  /// The 7.x edit callback; the controller's has another signature, so with
+  /// a controller this is the 7.x parameter or a no-op.
+  @Deprecated(_legacyHint)
+  Function(ValueItem<T> value) get onEditItem => _onEditItem ?? _ignore;
+
+  /// The 7.x tap callback; the controller has none, so with a controller
+  /// this is the 7.x parameter or a no-op.
+  @Deprecated(_legacyHint)
+  Function(ValueItem<T> value) get onItemSelected => _onItemSelected ?? _ignore;
+
+  /// The legacy `int` sort type (0-3): the controller's `sort`, else the 7.x
+  /// parameter.
+  @Deprecated(_legacyHint)
+  int get sortType => controller?.sort.legacyValue ?? _sortType;
+
+  /// Creates an item from input (the controller's, else the 7.x parameter).
+  @Deprecated(_legacyHint)
+  ValueItem<T> Function(String input)? get newValueItem =>
+      controller == null ? _newValueItem : controller!.newValueItem;
+
+  static void _ignore(Object? _) {}
+
   @override
   State<MultipleListView<T>> createState() => _MultipleListViewState<T>();
 }

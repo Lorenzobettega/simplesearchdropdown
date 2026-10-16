@@ -775,6 +775,98 @@ void main() {
         throwsAssertionError,
       );
     });
+
+    test('the 7.x fields read back with their 7.x types', () {
+      final List<ValueItem<int>> items = _items();
+      final List<ValueItem<int>> sel = _noSelection();
+      final List<String> calls = <String>[];
+      const Widget add = Text('add');
+      const Widget row = Text('row');
+      final MultipleListView<int> w = MultipleListView<int>(
+        addMode: true,
+        editMode: true,
+        deleteMode: false,
+        overlayListSettings: const SimpleOverlaySettings(),
+        searchBarSettings: const SimpleSearchbarSettings(),
+        listItens: items,
+        selectedItens: sel,
+        onAddItem: (ValueItem<int> v) => calls.add('add ${v.label}'),
+        onDeleteItem: (ValueItem<int> v) => calls.add('delete ${v.label}'),
+        onEditItem: (ValueItem<int> v) => calls.add('edit ${v.label}'),
+        onItemSelected: (ValueItem<int> v) => calls.add('tap ${v.label}'),
+        sortType: 2,
+        newValueItem: (String s) => ValueItem(label: s, value: 99),
+        addAditionalWidget: add,
+        defaultAditionalWidget: row,
+      );
+      final List<ValueItem<int>> l = w.listItens;
+      final List<ValueItem<int>> s = w.selectedItens;
+      final bool addMode = w.addMode;
+      final bool editMode = w.editMode;
+      final bool deleteMode = w.deleteMode;
+      final int sortType = w.sortType;
+      final Function(ValueItem<int> value) onAdd = w.onAddItem;
+      final Function(ValueItem<int> value) onDelete = w.onDeleteItem;
+      final Function(ValueItem<int> value) onEdit = w.onEditItem;
+      final Function(ValueItem<int> value) onTap = w.onItemSelected;
+      final ValueItem<int> Function(String input)? newValueItem =
+          w.newValueItem;
+      final Widget? addWidget = w.addAditionalWidget;
+      final Widget? rowWidget = w.defaultAditionalWidget;
+      expect(identical(l, items), isTrue);
+      expect(identical(s, sel), isTrue);
+      expect(<bool>[addMode, editMode, deleteMode], <bool>[true, true, false]);
+      expect(sortType, 2);
+      onAdd(items[0]);
+      onDelete(items[0]);
+      onEdit(items[0]);
+      onTap(items[0]);
+      expect(calls, <String>['add Uva', 'delete Uva', 'edit Uva', 'tap Uva']);
+      expect(newValueItem!('Kiwi').label, 'Kiwi');
+      expect(identical(addWidget, add), isTrue);
+      expect(identical(rowWidget, row), isTrue);
+    });
+
+    test('with a controller the 7.x fields read the controller', () {
+      final List<ValueItem<int>> added = <ValueItem<int>>[];
+      final List<ValueItem<int>> deleted = <ValueItem<int>>[];
+      ValueItem<int> make(String s) => ValueItem(label: s, value: 7);
+      final MultipleSearchDropDownController<int> mc =
+          MultipleSearchDropDownController<int>(
+            items: fruitItems(),
+            addMode: true,
+            deleteMode: true,
+            editMode: false,
+            sort: SortType.selectedFirst,
+            newValueItem: make,
+            onAddItem: added.add,
+            onDeleteItem: deleted.add,
+          );
+      addTearDown(mc.dispose);
+      final MultipleListView<int> w = MultipleListView<int>(
+        controller: mc,
+        overlayListSettings: const SimpleOverlaySettings(),
+        searchBarSettings: const SimpleSearchbarSettings(),
+      );
+      expect(identical(w.listItens, mc.listItems), isTrue);
+      expect(identical(w.selectedItens, mc.selectedItems), isTrue);
+      expect(
+        <bool>[w.addMode, w.editMode, w.deleteMode],
+        <bool>[true, false, true],
+      );
+      expect(w.sortType, 3);
+      expect(identical(w.newValueItem, mc.newValueItem), isTrue);
+      w.onAddItem(mc.listItems[0]);
+      w.onDeleteItem(mc.listItems[1]);
+      expect(added, <ValueItem<int>>[mc.listItems[0]]);
+      expect(deleted, <ValueItem<int>>[mc.listItems[1]]);
+      // No 7.x-shaped counterpart on the controller: calling them is a no-op.
+      w.onEditItem(mc.listItems[0]);
+      w.onItemSelected(mc.listItems[0]);
+      expect(mc.selectedItems, isEmpty);
+      expect(w.addAditionalWidget, isNull);
+      expect(w.defaultAditionalWidget, isNull);
+    });
   });
 }
 
