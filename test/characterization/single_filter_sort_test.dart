@@ -568,6 +568,33 @@ void main() {
         throwsUnsupportedError,
       );
     });
+
+    test('items appended to the live caller list are sorted into the view '
+        'without re-sorting the caller list (F13)', () {
+      final items = fruitItems();
+      final c = _controller(items, sortType: 1);
+      addTearDown(c.dispose);
+
+      items.add(const ValueItem(label: 'Abacate', value: 12));
+      c.onSearchOpen();
+
+      expect(_labels(c.filteredItems).first, 'Abacate');
+      expect(_labels(items).last, 'Abacate');
+      expect(identical(c.listItems, items), isTrue);
+    });
+
+    test('digits compare as text, like 7.x (D2: Item 10 before Item 2)', () {
+      final items = <ValueItem<int>>[
+        const ValueItem(label: 'Item 2', value: 2),
+        const ValueItem(label: 'Item 10', value: 10),
+        const ValueItem(label: 'Item 1', value: 1),
+      ];
+      final c = _controller(items, sortType: 1);
+      addTearDown(c.dispose);
+
+      expect(_labels(c.filteredItems), <String>['Item 1', 'Item 10', 'Item 2']);
+      expect(_labels(items), <String>['Item 1', 'Item 10', 'Item 2']);
+    });
   });
 
   group('sort: sortType 2 Z-A', () {

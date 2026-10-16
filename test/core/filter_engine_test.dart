@@ -91,6 +91,26 @@ void main() {
       const ValueItem(label: 'a', value: 1),
     ];
 
+    test('digits compare as text, like 7.x (Item 10 before Item 2)', () {
+      final List<ValueItem<int>> items = <ValueItem<int>>[
+        const ValueItem(label: 'Item 2', value: 2),
+        const ValueItem(label: 'Item 10', value: 10),
+        const ValueItem(label: 'Item 1', value: 1),
+        const ValueItem(label: 'Item 20', value: 20),
+      ];
+      final FilterEngine<int> engine = FilterEngine<int>();
+      expect(_labels(engine.sorted(items, SortType.alphabetical)), <String>[
+        'Item 1',
+        'Item 10',
+        'Item 2',
+        'Item 20',
+      ]);
+      expect(
+        _labels(engine.sorted(items, SortType.reverseAlphabetical)),
+        <String>['Item 20', 'Item 2', 'Item 10', 'Item 1'],
+      );
+    });
+
     test('legacy int maps to SortType and back', () {
       for (int i = 0; i < 4; i++) {
         expect(SortType.fromLegacy(i).legacyValue, i);

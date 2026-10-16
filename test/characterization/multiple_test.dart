@@ -497,6 +497,73 @@ void main() {
     });
   });
 
+  group('overlay: reopens scrolled to the first selected item '
+      '(reOpenedScrollDuration)', () {
+    Future<List<ValueItem<int>>> openScrolled(
+      WidgetTester tester, {
+      required List<int> selectedIdx,
+      int sortType = 0,
+    }) async {
+      final items = numberedItems(50);
+      await tester.pumpWidget(
+        _app(
+          _dropdown(
+            items: items,
+            selected: [for (final i in selectedIdx) items[i]],
+            probe: _Probe(),
+            sortType: sortType,
+          ),
+        ),
+      );
+      await openMultiple(tester);
+      return items;
+    }
+
+    void expectScrolledTo(WidgetTester tester, String label) {
+      expect(_row(label), findsOneWidget);
+      expect(_rowSelected(tester, label), isTrue);
+      final Rect list = tester.getRect(_list);
+      final double top = tester.getRect(_row(label)).top;
+      expect(top >= list.top && top < list.bottom, isTrue, reason: '$top');
+      expect(_row('Item 0'), findsNothing);
+    }
+
+    testWidgets('a selection far down the list is visible on open', (
+      tester,
+    ) async {
+      await openScrolled(tester, selectedIdx: [40]);
+      expectScrolledTo(tester, 'Item 40');
+    });
+
+    testWidgets('scrolls again on every reopen', (tester) async {
+      await openScrolled(tester, selectedIdx: [40]);
+      await tester.tapAt(tester.getCenter(_box));
+      await tester.pumpAndSettle();
+      expect(_list, findsNothing);
+
+      await openMultiple(tester);
+      expectScrolledTo(tester, 'Item 40');
+    });
+
+    testWidgets('uses the FIRST selected item', (tester) async {
+      await openScrolled(tester, selectedIdx: [40, 3]);
+      expectScrolledTo(tester, 'Item 40');
+    });
+
+    testWidgets('index <= 1 does not scroll', (tester) async {
+      await openScrolled(tester, selectedIdx: [1]);
+      expect(_row('Item 0'), findsOneWidget);
+      expect(tester.getRect(_row('Item 0')).top, greaterThan(0));
+    });
+
+    testWidgets('sortType 3 puts the selection at index 0: no scroll', (
+      tester,
+    ) async {
+      await openScrolled(tester, selectedIdx: [40], sortType: 3);
+      expect(_rowLabels(tester).take(2), ['Item 40', 'Item 0']);
+    });
+  });
+
   group('overlay: tapping outside closes (hideOverlay barrier)', () {
     testWidgets('tap far outside the list closes the overlay', (tester) async {
       await tester.pumpWidget(
@@ -667,16 +734,11 @@ void main() {
       expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
-    testWidgets('M7: sortType 1 must not reorder the caller listItems', (
-      tester,
-    ) async {
-      final items = await openWith(tester, 1);
-      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
-    }); // M7: fixed in 8.0
-
     testWidgets('2: natural Z-A order (D2, 8.0)', (tester) async {
-      await openWith(tester, 2);
+      final items = await openWith(tester, 2);
       expect(_rowLabels(tester), ['Cherry', 'Banana', 'apple']);
+      // M7 (8.0): the caller list keeps its order.
+      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('3 without selection: original order', (tester) async {
@@ -1563,7 +1625,7 @@ void main() {
     });
   });
 
-  group('edit mode: edit icon is a no-op', () {
+  group('edit mode: edit icon opens EditDialog (8.0; 7.x was a stub)', () {
     testWidgets('edit icon opens the edit dialog; confirming calls onEditItem '
         '(8.0)', (tester) async {
       final probe = _Probe();
@@ -1597,6 +1659,53 @@ void main() {
       expect(find.byType(EditDialog), findsNothing);
       expect(_labels(probe.edited), ['Cherry2']);
       expect(_rowLabels(tester), contains('Cherry2'));
+    });
+
+    testWidgets('editing a selected item replaces it in the caller listItems '
+        'and selectedItems and fires updateSelectedItems (8.0)', (
+      tester,
+    ) async {
+      final probe = _Probe();
+      final items = _items();
+      final List<ValueItem<int>> selected = [items[1]]; // 'apple'
+      await tester.pumpWidget(
+        _app(
+          _dropdown(
+            items: items,
+            selected: selected,
+            probe: probe,
+            editMode: true,
+          ),
+        ),
+      );
+      await openMultiple(tester);
+
+      await tester.tap(
+        find.descendant(of: _row('apple'), matching: find.byIcon(Icons.edit)),
+      );
+      await tester.pump(const Duration(milliseconds: 400));
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(EditDialog),
+          matching: find.byType(TextField),
+        ),
+        'apple2',
+      );
+      await tester.tap(find.text('Editar'));
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Replaced in place: same position, caller list not reordered.
+      expect(_labels(items), ['Cherry', 'apple2', 'Banana']);
+      expect(_labels(selected), ['apple2']);
+      expect(selected.single, const ValueItem(label: 'apple2', value: 99));
+      expect(selected.every(items.contains), isTrue);
+      expect(probe.updates, hasLength(1));
+      expect(probe.updates.single, same(selected));
+      expect(_labels(probe.edited), ['apple2']);
+      expect(_rowSelected(tester, 'apple2'), isTrue);
+      // The chip is relabelled.
+      expect(_inBox(find.text('apple2')), findsOneWidget);
+      expect(_inBox(find.text('apple')), findsNothing);
     });
   });
 
@@ -1786,5 +1895,107 @@ void main() {
 
       expect(_list, findsNothing);
     }); // M6: fixed in 8.0
+  });
+
+  group('overlay host: follows the box and drops focus (#5, #35)', () {
+    testWidgets('#5: the list follows the box when the page scrolls', (
+      tester,
+    ) async {
+      final ScrollController scroll = ScrollController();
+      addTearDown(scroll.dispose);
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: SingleChildScrollView(
+              controller: scroll,
+              child: Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    _dropdown(items: _items(), selected: [], probe: _Probe()),
+                    const SizedBox(height: 2000),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await openMultiple(tester);
+      expect(tester.getTopLeft(_box), const Offset(20, 20));
+
+      // The barrier takes every pointer, so the page moves programmatically
+      // (as with a keyboard resize or a controller-driven scroll).
+      scroll.jumpTo(15);
+      await tester.pump();
+
+      expect(tester.getTopLeft(_box), const Offset(20, 5));
+      expect(_list, findsOneWidget);
+      expect(
+        tester.getTopLeft(_list) - tester.getTopLeft(_box),
+        const Offset(0, 53),
+      );
+    });
+
+    testWidgets('#5: the list follows the box when the keyboard resizes', (
+      tester,
+    ) async {
+      addTearDown(tester.view.resetViewInsets);
+      await tester.pumpWidget(
+        host(_dropdown(items: _items(), selected: [], probe: _Probe())),
+      );
+      await openMultiple(tester);
+      final Offset before = tester.getTopLeft(_box);
+
+      tester.view.viewInsets = FakeViewPadding(
+        bottom: 200 * tester.view.devicePixelRatio,
+      );
+      await tester.pump();
+
+      expect(tester.getTopLeft(_box).dy, before.dy - 100);
+      expect(
+        tester.getTopLeft(_list) - tester.getTopLeft(_box),
+        const Offset(0, 53),
+      );
+    });
+
+    testWidgets('#35: closing the list removes the focus', (tester) async {
+      final FocusNode page = FocusNode();
+      addTearDown(page.dispose);
+      await tester.pumpWidget(
+        _app(
+          Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: <Widget>[
+              _dropdown(items: _items(), selected: [], probe: _Probe()),
+              SizedBox(
+                width: 300,
+                child: TextField(key: const Key('page'), focusNode: page),
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.tap(find.byKey(const Key('page')));
+      await tester.pump();
+      expect(page.hasFocus, isTrue);
+
+      await openMultiple(tester);
+      await tester.tap(_searchField);
+      await tester.pump();
+      expect(focusedField(), findsOneWidget);
+      expect(page.hasFocus, isFalse);
+
+      await tester.tapAt(const Offset(780, 580));
+      await tester.pumpAndSettle();
+
+      expect(_list, findsNothing);
+      // Without the unfocus, detaching the list field gives the focus back
+      // to the page field (and the keyboard comes back).
+      expect(page.hasFocus, isFalse);
+      expect(focusedField(), findsNothing);
+    });
   });
 }

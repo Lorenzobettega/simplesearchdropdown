@@ -70,6 +70,8 @@ void main() {
       );
       await tester.tap(find.byType(SearchBar));
       await tester.pumpAndSettle();
+      expect(controller.localSearchController.isOpen, isTrue);
+      expect(find.byType(DefaultListTile<int>), findsWidgets);
 
       // Digita para reduzir a lista
       await tester.enterText(
@@ -85,8 +87,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(controller.selectedItem?.label, 'Banana');
-      // A view deve ter sido fechada
-      expect(find.byType(ListView), findsNothing);
+      // A view deve ter sido fechada (a lista é uma ScrollablePositionedList,
+      // não um ListView: confira o estado da view e as linhas).
+      expect(controller.localSearchController.isOpen, isFalse);
+      expect(find.byType(DefaultListTile<int>), findsNothing);
     });
 
     // reescrita do teste: 'addMode cria item novo via DefaultAddListItem'
@@ -104,10 +108,12 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
 
-      // A API pública não expõe "isDisposed"; validamos indiretamente:
-      // acessar o controller deve ser seguro, mas o TextEditingController interno
-      // não deve estar em uso por nenhum widget.
-      expect(() => local.localSearchController.text, returnsNormally);
+      expect(local.isDisposed, isTrue);
+      // O SearchController próprio foi descartado (como no 7.x).
+      expect(
+        () => local.localSearchController.addListener(() {}),
+        throwsFlutterError,
+      );
     });
 
     testWidgets('disposeController=false não descarta controller no dispose', (
@@ -118,6 +124,7 @@ void main() {
         addMode: false,
         deleteMode: false,
       );
+      addTearDown(external.dispose);
       await tester.pumpWidget(
         _wrap(
           SearchDropDown<int>(controller: external, disposeController: false),
@@ -125,6 +132,7 @@ void main() {
       );
       await tester.pumpWidget(const SizedBox.shrink());
       await tester.pump();
+      expect(external.isDisposed, isFalse);
 
       // Ainda podemos escrever/ler sem exceção
       external.localSearchController.text = 'ok';

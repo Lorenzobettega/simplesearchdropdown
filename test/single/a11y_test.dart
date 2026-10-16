@@ -78,5 +78,76 @@ void main() {
       expect(selected.selected && !selected.highlighted, isTrue);
       expect(highlighted.highlighted && !highlighted.selected, isTrue);
     });
+
+    group('highlight colours', () {
+      Future<void> highlightBanana(
+        WidgetTester tester,
+        SimpleOverlaySettings overlay,
+      ) async {
+        final c = SearchDropDownController<int>(
+          listItems: fruitItems(),
+          addMode: false,
+          deleteMode: false,
+        );
+        await tester.pumpWidget(
+          host(
+            SearchDropDown<int>(controller: c, overlayListSettings: overlay),
+          ),
+        );
+        await openSingle(tester);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<DefaultListTile<int>>(
+                find.widgetWithText(DefaultListTile<int>, 'Banana'),
+              )
+              .highlighted,
+          isTrue,
+        );
+      }
+
+      ButtonStyle styleOf(WidgetTester tester, String label) => tester
+          .widget<TextButton>(
+            find.descendant(
+              of: find.widgetWithText(DefaultListTile<int>, label),
+              matching: find.byType(TextButton),
+            ),
+          )
+          .style!;
+      Color background(WidgetTester tester, String label) =>
+          styleOf(tester, label).backgroundColor!.resolve(<WidgetState>{})!;
+      BorderSide side(WidgetTester tester, String label) =>
+          (styleOf(tester, label).shape!.resolve(<WidgetState>{})!
+                  as RoundedRectangleBorder)
+              .side;
+
+      testWidgets('custom colours are applied to the highlighted row', (
+        tester,
+      ) async {
+        await highlightBanana(
+          tester,
+          const SimpleOverlaySettings(
+            highlightedItemBackgroundColor: Colors.red,
+            highlightedItemBorderColor: Colors.blue,
+          ),
+        );
+        expect(background(tester, 'Banana'), Colors.red);
+        expect(side(tester, 'Banana').color, Colors.blue);
+        expect(background(tester, 'Uva'), Colors.transparent);
+        expect(side(tester, 'Uva'), BorderSide.none);
+      });
+
+      testWidgets('defaults: hover colour and a black26 border', (
+        tester,
+      ) async {
+        const SimpleOverlaySettings settings = SimpleOverlaySettings();
+        await highlightBanana(tester, settings);
+        expect(background(tester, 'Banana'), settings.unselectedItemHoverColor);
+        expect(side(tester, 'Banana').color, Colors.black26);
+        expect(background(tester, 'Uva'), Colors.transparent);
+      });
+    });
   });
 }

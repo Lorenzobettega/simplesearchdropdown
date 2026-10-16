@@ -147,6 +147,18 @@ class _CountingAction extends StatelessWidget {
   }
 }
 
+/// Bar settings whose `actions` is a new widget on every read, so each
+/// re-run of the dropdown's bar build (ListenableBuilder/setState) rebuilds
+/// the probe: Flutter cannot short-circuit an identical widget instance.
+class _CountingBarSettings extends SimpleSearchbarSettings {
+  _CountingBarSettings(this.counters);
+
+  final _Counters counters;
+
+  @override
+  List<Widget> get actions => <Widget>[_CountingAction(counters)];
+}
+
 const String _typed = 'Item 99';
 
 Future<SearchDropDownController<int>> _pumpPerf(
@@ -166,9 +178,7 @@ Future<SearchDropDownController<int>> _pumpPerf(
         return Text(item.label);
       },
     ),
-    settings: SimpleSearchbarSettings(
-      actions: <Widget>[_CountingAction(counters)],
-    ),
+    settings: _CountingBarSettings(counters),
   );
   return controller;
 }
@@ -429,8 +439,36 @@ void main() {
       debugPrint('BASELINE bar_action_builds_on_open=$onOpen');
       debugPrint('BASELINE bar_action_builds_typing_total=${_sum(perKey)}');
       expect(initial, greaterThanOrEqualTo(1), reason: 'actions are rendered');
-      // 7.8 baseline: the bar does not rebuild while typing.
+      // 7.8 baseline: the bar does not rebuild while typing. The probe is a
+      // new widget per bar build, so a ListenableBuilder/setState rebuild of
+      // the bar while typing would be counted here.
       expect(_sum(perKey), 0);
+    });
+
+    testWidgets(
+      'the probe counts a bar rebuild caused by a controller notify',
+      (tester) async {
+        final counters = _Counters();
+        final c = await _pumpPerf(tester, counters);
+        final int before = counters.bar;
+        c.selectedItem = c.listItems[3];
+        await tester.pumpAndSettle();
+        expect(counters.bar - before, greaterThanOrEqualTo(1));
+      },
+    );
+
+    testWidgets('the guard fails when every keystroke rebuilds the bar', (
+      tester,
+    ) async {
+      final counters = _Counters();
+      final c = await _pumpPerf(tester, counters);
+      await openSingle(tester);
+      // Simulates the regression: a controller notify on every keystroke.
+      c.localSearchController.addListener(
+        () => c.clearVisible = !c.clearVisible,
+      );
+      final List<int> perKey = await _typeCounting(tester, () => counters.bar);
+      expect(perKey.every((n) => n >= 1), isTrue, reason: '$perKey');
     });
   });
 }

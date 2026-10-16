@@ -134,6 +134,31 @@ bool _focusInsideDropdown() {
       ctx.findAncestorWidgetOfExactType<SearchDropDown<int>>() != null;
 }
 
+/// Whether a plain [SearchAnchor.bar] still has the focus after its view
+/// closes on this Flutter version (the reference for `removeFocus: false`).
+Future<bool> _frameworkKeepsBarFocus(WidgetTester tester) async {
+  final SearchController search = SearchController();
+  addTearDown(search.dispose);
+  await tester.pumpWidget(
+    host(
+      SearchAnchor.bar(
+        searchController: search,
+        suggestionsBuilder: (_, _) => <Widget>[],
+      ),
+    ),
+  );
+  await tester.tap(find.byType(SearchBar));
+  await tester.pumpAndSettle();
+  search.closeView('x');
+  await tester.pumpAndSettle();
+  await tester.pump(const Duration(milliseconds: 700));
+  final BuildContext? ctx = FocusManager.instance.primaryFocus?.context;
+  final bool keeps =
+      ctx != null && ctx.findAncestorWidgetOfExactType<SearchBar>() != null;
+  await tester.pumpWidget(const SizedBox.shrink());
+  return keeps;
+}
+
 Widget _withLeadingField(Widget dropdown) => Column(
   mainAxisSize: MainAxisSize.min,
   children: <Widget>[
@@ -1098,6 +1123,7 @@ void main() {
     testWidgets('true (default): Tab into the bar keeps the focus (B11, 8.0)', (
       tester,
     ) async {
+      // B11: fixed in 8.0 (the focus is only dropped after a view closes).
       await tester.pumpWidget(
         host(_withLeadingField(_dropdown(_ctrl(numberedItems(2))))),
       );
@@ -1139,22 +1165,23 @@ void main() {
       expect(_focusInsideDropdown(), isFalse);
     });
 
-    testWidgets(
-      'B11: with removeFocus true, Tab into the bar keeps focus until a view '
-      'closes',
-      (tester) async {
-        await tester.pumpWidget(
-          host(_withLeadingField(_dropdown(_ctrl(numberedItems(2))))),
-        );
-        await tester.tap(find.byKey(const Key('before')));
-        await tester.pump();
+    testWidgets('false: after selecting, focus stays in the bar (6.3.0)', (
+      tester,
+    ) async {
+      // N49: newer Flutter versions (after 3.32) unfocus a SearchAnchor's
+      // bar themselves after its view closes, so `false` can only keep the
+      // focus where the framework does.
+      final bool frameworkKeeps = await _frameworkKeepsBarFocus(tester);
+      final c = _ctrl(numberedItems(2));
+      await _pump(tester, _dropdown(c, removeFocus: false));
+      await openSingle(tester);
+      await _tapRow(tester, 'Item 1');
+      // Past the 600 ms window in which `true` drops the focus.
+      await tester.pump(const Duration(milliseconds: 700));
 
-        await tester.sendKeyEvent(LogicalKeyboardKey.tab);
-        await tester.pump();
-
-        expect(_focusInsideDropdown(), isTrue);
-      },
-    ); // B11: fixed in 8.0
+      expect(c.selectedItem?.label, 'Item 1');
+      expect(_focusInsideDropdown(), frameworkKeeps);
+    });
   });
 
   group('single: selected row styling', () {

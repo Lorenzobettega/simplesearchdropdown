@@ -13,6 +13,7 @@ SearchDropDownController<int> _ctrl({
   bool deleteMode = false,
   Function(ValueItem<int>)? onAddItem,
   Function(ValueItem<int>)? onDeleteItem,
+  void Function(ValueItem<int>?)? updateSelectedItem,
 }) => SearchDropDownController<int>(
   listItems: listItems,
   items: items,
@@ -21,6 +22,7 @@ SearchDropDownController<int> _ctrl({
   deleteMode: deleteMode,
   onAddItem: onAddItem,
   onDeleteItem: onDeleteItem,
+  updateSelectedItem: updateSelectedItem,
   newValueItem: (s) => ValueItem<int>(label: s, value: s.length),
 );
 
@@ -119,10 +121,21 @@ void main() {
       int count = 0;
       c
         ..addListener(() => count++)
-        ..forceSelection('Banana')
-        ..toggleEnabled()
-        ..updateListItems(numberedItems(3), true);
-      expect(count, greaterThanOrEqualTo(3));
+        ..forceSelection('Banana');
+      expect(count, 1, reason: 'forceSelection/selectItem must notify once');
+
+      c.toggleEnabled();
+      expect(count, 2, reason: 'toggleEnabled must notify once');
+      expect(c.enabled, isFalse);
+
+      final int beforeList = count;
+      c.updateListItems(numberedItems(3), true);
+      expect(
+        count - beforeList,
+        greaterThanOrEqualTo(1),
+        reason: 'updateListItems must notify',
+      );
+      expect(c.selectedItem, isNull);
     });
 
     testWidgets('changes made during build are delivered after the frame', (
@@ -146,19 +159,104 @@ void main() {
       expect(c.filteredItems, hasLength(2));
     });
 
+    testWidgets(
+      'a mutation from a sibling rebuild defers notify and onFilterUpdated',
+      (tester) async {
+        late StateSetter rebuildParent;
+        late StateSetter rebuildSibling;
+        bool mutate = false;
+        int filterUpdates = 0;
+        final c = SearchDropDownController<int>(
+          listItems: fruitItems(),
+          addMode: false,
+          deleteMode: false,
+          onFilterUpdated: () {
+            filterUpdates++;
+            // An ancestor setState throws when called during a build.
+            rebuildParent(() {});
+          },
+        );
+        addTearDown(c.dispose);
+        await tester.pumpWidget(
+          host(
+            StatefulBuilder(
+              builder: (context, setParent) {
+                rebuildParent = setParent;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    // Mounted sibling listening to the controller.
+                    SearchDropDown<int>(controller: c),
+                    StatefulBuilder(
+                      builder: (context, setSibling) {
+                        rebuildSibling = setSibling;
+                        if (mutate) {
+                          mutate = false;
+                          // shouldReset false: the bar text is untouched.
+                          c.updateListItems(numberedItems(2), false);
+                        }
+                        return const SizedBox.shrink();
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+        expect(filterUpdates, 0);
+
+        rebuildSibling(() => mutate = true);
+        await tester.pump(); // the sibling rebuilds inside drawFrame
+        expect(tester.takeException(), isNull);
+        expect(c.filteredItems, hasLength(2));
+        expect(filterUpdates, 1, reason: 'delivered after that frame');
+
+        await tester.pump(); // flushes the parent rebuild it asked for
+        expect(tester.takeException(), isNull);
+        expect(filterUpdates, 1);
+        expect(c.listItems, hasLength(2));
+      },
+    );
+
     test('async callbacks finishing after dispose are ignored', () async {
+      final List<ValueItem<int>> mine = fruitItems();
+      final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
       final c = _ctrl(
-        listItems: fruitItems(),
+        listItems: mine,
         deleteMode: true,
         onDeleteItem: (_) => Future<void>.delayed(Duration.zero),
+        updateSelectedItem: selections.add,
       );
-      final ValueItem<int> banana = c.listItems[1];
+      final ValueItem<int> banana = mine[1];
       final BuildContext context = _FakeContext();
       final Future<void> pending = c.deleteItem(banana, context);
       c.dispose();
       await pending;
-      expect(c.isDisposed, isTrue);
+      expect(mine, hasLength(5));
+      expect(mine, contains(banana));
+      expect(selections, isEmpty);
     });
+
+    test(
+      'async add finishing after dispose leaves the caller list alone',
+      () async {
+        final List<ValueItem<int>> mine = fruitItems();
+        final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
+        final c = _ctrl(
+          listItems: mine,
+          addMode: true,
+          onAddItem: (_) => Future<void>.delayed(Duration.zero),
+          updateSelectedItem: selections.add,
+        );
+        final Future<void> pending = c.addItem('Kiwi', _FakeContext());
+        c.dispose();
+        await pending;
+        expect(mine.map((e) => e.label), isNot(contains('Kiwi')));
+        expect(mine, hasLength(5));
+        expect(selections, isEmpty);
+      },
+    );
   });
 
   group('view: selection matched by label when values are not comparable', () {
