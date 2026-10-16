@@ -11,9 +11,12 @@ import 'package:simple_search_dropdown/src/core/shared_list.dart';
 /// filtering. Changes notify listeners, so the widget updates without a
 /// `GlobalKey`.
 ///
-/// Items come from [listItems] (your list, shared by reference) or `items`
-/// (copied once). [selectedItems] is your list when passed (it is updated in
-/// place, as in 7.x) or a list owned by the controller.
+/// Items come from [listItems] (your list, shared by reference; changes you
+/// make to it show up on the next keystroke, tap or rebuild of your widget, as
+/// in 7.x) or `items` (copied once). [selectedItems] follows the same mode:
+/// with [listItems] it is your list, updated in place as in 7.x (so it must be
+/// growable); with `items` the initial selection is copied once and the
+/// controller owns the list.
 ///
 /// Add/edit/delete keep [listItems] in sync after your callback returns,
 /// unless the callback already stored the item: the list holds it, an equal
@@ -65,7 +68,9 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
          'editMode can only be used with onEditItem != null && newValueItem != null',
        ),
        _listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
-       _selectedItems = selectedItems ?? <ValueItem<T>>[],
+       _selectedItems = items != null
+           ? List<ValueItem<T>>.of(selectedItems ?? const [])
+           : selectedItems ?? <ValueItem<T>>[],
        _sort = sort,
        _enabled = enabled,
        _engine = FilterEngine<T>(
@@ -85,12 +90,15 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// The items shown by the dropdown.
   List<ValueItem<T>> get listItems => _listItems;
 
-  /// The selected items, in selection order. Updated in place.
+  /// The selected items, in selection order: the controller's list (yours in
+  /// `listItems` mode), updated in place.
   List<ValueItem<T>> get selectedItems => _selectedItems;
 
   /// Points the controller at other lists (shared by reference), keeping the
-  /// search and enabled state. Used by [MultipleSearchDropDown] when its 7.x
-  /// `listItems`/`selectedItems` parameters change.
+  /// search and enabled state. Used by [MultipleSearchDropDown] on every
+  /// rebuild with its 7.x `listItems`/`selectedItems` parameters: the results
+  /// are refiltered only when the items changed (also in place), or the
+  /// selection did with [SortType.selectedFirst].
   void replaceSources({
     List<ValueItem<T>>? listItems,
     List<ValueItem<T>>? selectedItems,
@@ -98,15 +106,13 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     final bool changed =
         (listItems != null && !identical(listItems, _listItems)) ||
         (selectedItems != null && !identical(selectedItems, _selectedItems));
-    if (!changed) {
-      return;
-    }
     _listItems = listItems ?? _listItems;
     _selectedItems = selectedItems ?? _selectedItems;
-    _engine.clearCache();
-    _rebuildBase();
-    _applyFilter();
-    _notify();
+    // Cached labels stay valid: equal items have equal labels.
+    final bool notified = _syncBase() && _applyFilter();
+    if (changed && !notified) {
+      _notify();
+    }
   }
 
   /// Called with [selectedItems] whenever the user changes the selection.
@@ -193,10 +199,15 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// The current search text.
   String get query => _query;
 
-  /// Filters the items by [text].
+  /// Filters the current [listItems] by [text].
   void search(String text) {
+    final bool queryChanged = text != _query;
     _query = text;
-    _applyFilter();
+    _syncBase();
+    // The add row reads the query, even when the results stay the same.
+    if (!_applyFilter() && queryChanged) {
+      _notify();
+    }
   }
 
   /// Clears the search and re-reads [listItems] (call when the list opens).
@@ -206,36 +217,77 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     _applyFilter();
   }
 
-  void _rebuildBase() {
-    _engine.retainOnly(listItems);
-    _base
-      ..clear()
-      ..addAll(
-        _engine.sorted(
-          listItems,
-          _sort,
-          selected: selectedItems.isEmpty ? null : selectedItems.first,
-        ),
-      );
+  /// The [listItems] entries behind [_base], by identity.
+  final List<ValueItem<T>> _seen = <ValueItem<T>>[];
+
+  /// The selected item pinned to the top of [_base] (selectedFirst).
+  ValueItem<T>? _seenPinned;
+
+  ValueItem<T>? get _pinned => _sort == SortType.selectedFirst
+      ? (selectedItems.isEmpty ? null : selectedItems.first)
+      : null;
+
+  /// Whether [listItems] (compared by identity, so in O(n) without `==`) or
+  /// the pinned selection changed since [_base] was built.
+  bool _sourceChanged() {
+    if (!identical(_pinned, _seenPinned)) {
+      return true;
+    }
+    final List<ValueItem<T>> live = listItems;
+    if (live.length != _seen.length) {
+      return true;
+    }
+    for (int i = 0; i < live.length; i++) {
+      if (!identical(live[i], _seen[i])) {
+        return true;
+      }
+    }
+    return false;
   }
 
-  void _applyFilter() {
+  /// Rebuilds [_base] when the source changed; returns whether it did.
+  bool _syncBase() {
+    if (!_sourceChanged()) {
+      return false;
+    }
+    _rebuildBase();
+    return true;
+  }
+
+  void _rebuildBase() {
+    _engine.retainOnly(listItems);
+    _seen
+      ..clear()
+      ..addAll(listItems);
+    _seenPinned = _pinned;
+    _base
+      ..clear()
+      ..addAll(_engine.sorted(listItems, _sort, selected: _seenPinned));
+  }
+
+  /// Refilters [_base] by [query]. Returns whether [filteredItems] changed
+  /// (listeners were then notified). The same results with other instances
+  /// (e.g. a refreshed item whose value `==` only compares an id) are swapped
+  /// in without calling [onFilterUpdated].
+  bool _applyFilter() {
     final List<ValueItem<T>> next = _engine.filter(_base, _query);
-    if (listEquals(next, _filtered)) {
-      return;
+    final bool equal = listEquals(next, _filtered);
+    if (equal && _sameInstances(next, _filtered)) {
+      return false;
     }
     _filtered
       ..clear()
       ..addAll(next);
     if (_disposed) {
-      return;
+      return true;
     }
     final void Function()? onUpdated = onFilterUpdated;
-    if (onUpdated != null) {
+    if (onUpdated != null && !equal) {
       // User callbacks often call setState; never run them during a build.
       _runOutsideBuild(onUpdated);
     }
     _notify();
+    return true;
   }
 
   /// Whether the add row should be offered for the current [query].
@@ -264,11 +316,16 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       }
       updateSelectedItems?.call(selection);
     });
-    if (_sort == SortType.selectedFirst) {
-      _rebuildBase();
+    _resync();
+    _notify();
+  }
+
+  /// Redraws from the live [listItems] (7.x re-read it on every tap) and
+  /// re-pins the selection for [SortType.selectedFirst].
+  void _resync() {
+    if (_syncBase()) {
       _applyFilter();
     }
-    _notify();
   }
 
   /// Selects the item whose label is [label] (exact first, then normalized).
@@ -295,6 +352,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     selectedItems
       ..clear()
       ..addAll(next);
+    _resync();
     _notify();
   }
 
@@ -304,6 +362,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     _deliver(
       (List<ValueItem<T>> selection) => updateSelectedItems?.call(selection),
     );
+    _resync();
     _notify();
   }
 
@@ -315,6 +374,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       updateSelectedItems?.call(selection);
       onClearList?.call();
     });
+    _resync();
     _notify();
   }
 
@@ -473,6 +533,15 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     _rebuildBase();
     _applyFilter();
     _notify();
+  }
+
+  static bool _sameInstances<E>(List<E> a, List<E> b) {
+    for (int i = 0; i < a.length; i++) {
+      if (!identical(a[i], b[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /// The current entries of [listItems], by identity, taken before a

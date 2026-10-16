@@ -16,7 +16,8 @@ import 'package:simple_search_dropdown/src/core/shared_list.dart';
 ///
 /// Items come from either:
 /// * [listItems] — your own list, shared by reference. Changes you make to it
-///   show up the next time the list opens.
+///   show up on the next search, the next time the list opens or on
+///   [filterList].
 /// * `items` — copied once; the controller owns the copy.
 ///
 /// Either way add/edit/delete keep the list in sync after your callback
@@ -278,9 +279,29 @@ class SearchDropDownController<T> extends ChangeNotifier {
     _applyFilter();
   }
 
+  /// The [listItems] entries behind [_base], by identity.
+  final List<ValueItem<T>> _seen = <ValueItem<T>>[];
+
+  /// Whether [listItems] changed since [_base] was built, compared by
+  /// identity (O(n), without calling `==`).
+  bool _sourceChanged() {
+    if (listItems.length != _seen.length) {
+      return true;
+    }
+    for (int i = 0; i < listItems.length; i++) {
+      if (!identical(listItems[i], _seen[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   void _rebuildBase() {
     _lastQuery = null;
     _engine.retainOnly(listItems);
+    _seen
+      ..clear()
+      ..addAll(listItems);
     _base
       ..clear()
       ..addAll(switch (_sort) {
@@ -293,12 +314,23 @@ class SearchDropDownController<T> extends ChangeNotifier {
   void _applyFilter() => _filterBy(_query);
 
   /// Normalized query behind [_filtered]; `null` when it is not a narrowing
-  /// base (e.g. after the items changed).
+  /// base (e.g. after the items changed). Invariant: when not `null`,
+  /// [_filtered] is [_base] filtered by it, so anything that changes [_base]
+  /// goes through [_rebuildBase], which resets it.
   String? _lastQuery;
 
   void _filterBy(String text) {
+    // A shared list changed from outside: start again from it (7.x).
+    if (_sourceChanged()) {
+      _rebuildBase();
+    }
     final String query = _engine.normalize(text);
     final String? last = _lastQuery;
+    // Same query on the same items (caret, selection or IME composing
+    // change): the results are already right (7.x skipped these too).
+    if (query == last) {
+      return;
+    }
     // Typing more characters can only narrow the previous results.
     final List<ValueItem<T>> source =
         last != null && last.isNotEmpty && query.startsWith(last)
@@ -311,8 +343,13 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Whether a [results] notification is queued for after the frame.
   bool _resultsQueued = false;
 
+  /// Whether the queued [results] notification carries new results (and so
+  /// calls [onFilterUpdated]), not only fresh instances of the same ones.
+  bool _resultsChanged = false;
+
   void _show(List<ValueItem<T>> next) {
-    if (listEquals(next, _filtered)) {
+    final bool equal = listEquals(next, _filtered);
+    if (equal && _sameInstances(next, _filtered)) {
       return;
     }
     // Applied at once, as in 7.x: reads made in the same build (Enter,
@@ -321,20 +358,39 @@ class SearchDropDownController<T> extends ChangeNotifier {
     _filtered
       ..clear()
       ..addAll(next);
-    _highlight.reset();
+    // The same results with fresh instances (e.g. a refreshed item whose
+    // value `==` only compares an id) are handed out without counting as new
+    // results: the highlight stays and onFilterUpdated is not called (7.x).
+    if (!equal) {
+      _highlight.reset();
+      _resultsChanged = true;
+    }
     if (_resultsQueued) {
       return;
     }
     _resultsQueued = true;
     _runOutsideBuild(() {
       _resultsQueued = false;
+      final bool changed = _resultsChanged;
+      _resultsChanged = false;
       if (_disposed) {
         return;
       }
       _highlight.flush();
       _results.fire();
-      onFilterUpdated?.call();
+      if (changed) {
+        onFilterUpdated?.call();
+      }
     });
+  }
+
+  static bool _sameInstances<E>(List<E> a, List<E> b) {
+    for (int i = 0; i < a.length; i++) {
+      if (!identical(a[i], b[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 
   /// Runs [callback] now, or after the frame when called during a build
@@ -351,7 +407,9 @@ class SearchDropDownController<T> extends ChangeNotifier {
     }
   }
 
-  /// Filters by [text] immediately (ignores whether the view is open).
+  /// Filters the current [listItems] by [text] immediately (ignores whether
+  /// the view is open). Changes made to a shared `listItems:` list are picked
+  /// up; an empty [text] shows every item.
   void filterList(String text) => _filterBy(text);
 
   /// Sorts [listItems] in place by [sortType] (0 none, 1 A-Z, 2 Z-A,

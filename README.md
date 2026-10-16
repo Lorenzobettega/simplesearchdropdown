@@ -66,7 +66,11 @@ PageUp/PageDown jump to the first/last item and Enter selects.
 - `items:` — the controller keeps its own copy. Add/edit/delete change the copy;
   your callbacks are notifications (e.g. to persist).
 - `listItems:` — your list, shared by reference (7.x behaviour). Changes you make
-  to it show up the next time the list opens. Unlike 7.x, after an
+  to it show up in the single dropdown on the next search, open or
+  `filterList`, and in the multiple dropdown on the next keystroke, tap or
+  rebuild of your widget. With `items:`, a multiple controller copies
+  `selectedItems` too; with `listItems:` it updates yours in place, so pass a
+  growable list. Unlike 7.x, after an
   add/edit/delete callback the controller adds, replaces or removes the item in
   your list, unless your callback already stored it: the list holds that item,
   an equal one, or a new entry with the same label (your own copy, e.g. with a

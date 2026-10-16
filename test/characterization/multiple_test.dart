@@ -1153,6 +1153,133 @@ void main() {
     }); // M8: fixed in 8.0
   });
 
+  group('data: listItems is the caller list (external mutation, N31)', () {
+    testWidgets('typing re-reads listItems changed while the list is open', (
+      tester,
+    ) async {
+      final items = _items();
+      await tester.pumpWidget(
+        _app(
+          _dropdown(items: items, selected: [], probe: _Probe(), addMode: true),
+        ),
+      );
+      await openMultiple(tester);
+
+      items
+        ..add(const ValueItem(label: 'Kiwi', value: 4))
+        ..removeWhere((e) => e.label == 'Banana');
+      await _type(tester, 'kiwi');
+
+      expect(_rowLabels(tester), ['Kiwi']);
+      expect(find.byType(DefaultAddListItem), findsNothing);
+      expect(_inList(find.text('Criar')), findsNothing);
+      await _type(tester, '');
+      expect(_rowLabels(tester), ['Cherry', 'apple', 'Kiwi']);
+    });
+
+    testWidgets('a parent rebuild with the same list shows in-place changes', (
+      tester,
+    ) async {
+      final items = _items();
+      final selected = <ValueItem<int>>[];
+      final probe = _Probe();
+      late StateSetter rebuild;
+      await tester.pumpWidget(
+        _app(
+          StatefulBuilder(
+            builder: (context, set) {
+              rebuild = set;
+              // Same list instances on every build (the 7.x pattern).
+              return _dropdown(items: items, selected: selected, probe: probe);
+            },
+          ),
+        ),
+      );
+      await openMultiple(tester);
+
+      items.add(const ValueItem(label: 'Kiwi', value: 4));
+      rebuild(() {});
+      await tester.pump();
+      await tester.pump();
+
+      expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
+    });
+
+    testWidgets('a tap redraws from the live list (7.x addItem setState)', (
+      tester,
+    ) async {
+      final items = _items();
+      await tester.pumpWidget(
+        _app(_dropdown(items: items, selected: [], probe: _Probe())),
+      );
+      await openMultiple(tester);
+
+      items.removeWhere((e) => e.label == 'Banana');
+      await _tapRow(tester, 'Cherry');
+
+      expect(_rowLabels(tester), ['Cherry', 'apple']);
+    });
+  });
+
+  group('add mode: typing key by key (N29)', () {
+    // Types like a keyboard: one change (and one frame) per key.
+    Future<void> typeKeys(WidgetTester tester, String text) async {
+      for (var i = 1; i <= text.length; i++) {
+        await tester.enterText(_searchField, text.substring(0, i));
+        await tester.pump();
+      }
+    }
+
+    testWidgets('the add row follows the full text', (tester) async {
+      final probe = _Probe();
+      final items = _items();
+      await tester.pumpWidget(
+        _app(
+          _dropdown(items: items, selected: [], probe: probe, addMode: true),
+        ),
+      );
+      await openMultiple(tester);
+
+      await typeKeys(tester, 'Kiwi');
+      expect(
+        tester.widget<DefaultAddListItem>(find.byType(DefaultAddListItem)).text,
+        'Kiwi',
+      );
+      await tester.tap(_inList(find.text('Criar')));
+      await tester.pumpAndSettle();
+      expect(probe.added, [const ValueItem<int>(label: 'Kiwi', value: 99)]);
+    });
+
+    testWidgets('an empty list still offers the add row', (tester) async {
+      final probe = _Probe();
+      final items = <ValueItem<int>>[];
+      final selected = <ValueItem<int>>[];
+      await tester.pumpWidget(
+        _app(
+          _dropdown(
+            items: items,
+            selected: selected,
+            probe: probe,
+            addMode: true,
+          ),
+        ),
+      );
+      await openMultiple(tester);
+
+      await typeKeys(tester, 'Ki');
+      expect(find.byType(DefaultAddListItem), findsOneWidget);
+      expect(
+        tester.widget<DefaultAddListItem>(find.byType(DefaultAddListItem)).text,
+        'Ki',
+      );
+      await tester.tap(_inList(find.text('Criar')));
+      await tester.pumpAndSettle();
+      expect(probe.added, [const ValueItem<int>(label: 'Ki', value: 99)]);
+      expect(items, hasLength(1));
+      expect(selected, hasLength(1));
+    });
+  });
+
   group('add mode: add row (newValueItem/onAddItem)', () {
     testWidgets('text matching nothing shows the add row with "Criar"', (
       tester,
