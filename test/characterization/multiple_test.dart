@@ -770,7 +770,7 @@ void main() {
       expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
-    testWidgets('1: natural A-Z order (D2, 8.0)', (tester) async {
+    testWidgets('1: A-Z ignoring case and accents (D2, 8.0)', (tester) async {
       await openWith(tester, 1);
       expect(_rowLabels(tester), ['apple', 'Banana', 'Cherry']);
     });
@@ -782,7 +782,7 @@ void main() {
       expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
-    testWidgets('2: natural Z-A order (D2, 8.0)', (tester) async {
+    testWidgets('2: Z-A ignoring case and accents (D2, 8.0)', (tester) async {
       final items = await openWith(tester, 2);
       expect(_rowLabels(tester), ['Cherry', 'Banana', 'apple']);
       // M7 (8.0): the caller list keeps its order.

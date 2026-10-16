@@ -614,7 +614,7 @@ class _ViewListState<T> extends State<_ViewList<T>> {
             itemBuilder: (BuildContext context, int index) =>
                 index == items.length
                 ? _buildAddRow(context, text)
-                : _rows[index] ??= _buildRow(context, items[index], index),
+                : _rows[index] ??= _buildRow(items[index], index),
           );
         },
       ),
@@ -630,10 +630,11 @@ class _ViewListState<T> extends State<_ViewList<T>> {
         _controller.addItem(input, context, strings: widget.strings),
   );
 
-  Widget _buildRow(BuildContext context, ValueItem<T> item, int index) {
+  /// A cached row; the dialogs use the row's own (live) context.
+  Widget _buildRow(ValueItem<T> item, int index) {
     return ListenableBuilder(
       listenable: _rowInputs,
-      builder: (BuildContext context, _) => DefaultListTile<T>(
+      builder: (BuildContext rowContext, _) => DefaultListTile<T>(
         // The row state (its spinner) belongs to the item, not the index.
         key: ValueKey<ValueItem<T>>(item),
         deleteMode: _controller.deleteMode,
@@ -643,9 +644,9 @@ class _ViewListState<T> extends State<_ViewList<T>> {
         defaultAdditionalWidget: widget.defaultAdditionalWidget,
         strings: widget.strings,
         onDelete: (ValueItem<T> value) =>
-            _controller.deleteItem(value, context, strings: widget.strings),
+            _controller.deleteItem(value, rowContext, strings: widget.strings),
         onEdit: (ValueItem<T> value) =>
-            _controller.editItem(value, context, strings: widget.strings),
+            _controller.editItem(value, rowContext, strings: widget.strings),
         onPressed: _controller.selectItem,
         selected: _controller.isSelected(item),
         highlighted: index == _controller.highlightedIndex,

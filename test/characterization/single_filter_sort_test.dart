@@ -526,7 +526,7 @@ void main() {
   });
 
   group('sort: sortType 1 A-Z', () {
-    test('sorts naturally (D2) and mutates the caller list', () {
+    test('A-Z ignores case and accents (D2) and mutates the caller list', () {
       final items = fruitItems();
       final c = _controller(items, sortType: 1);
       addTearDown(c.dispose);
@@ -612,7 +612,7 @@ void main() {
   });
 
   group('sort: sortType 2 Z-A', () {
-    test('sorts descending naturally (D2) and mutates the caller list', () {
+    test('Z-A ignores case and accents (D2) and mutates the caller list', () {
       final items = fruitItems();
       final c = _controller(items, sortType: 2);
       addTearDown(c.dispose);

@@ -1,14 +1,17 @@
 ## [8.0.0] - 2026-10-15.
-Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecated` (removed in 9.0.0). See "Migrating from 7.x" in the README.
+Requires Flutter 3.32+. 7.x code keeps compiling (unless it declares a type with one of the new exported names, see Breaking): renamed members are `@Deprecated` (removed in 9.0.0). See "Migrating from 7.x" in the README.
+
+### Breaking
+- New exported names `SortType`, `SearchDropDownStrings`, `SearchDropDownStringsScope` and `MultipleSearchDropDownController` clash (`ambiguous_import`) with a type of the same name that your file imports from elsewhere: `import 'package:simple_search_dropdown/simple_search_dropdown.dart' hide SortType;` (or the clashing name), or use a prefixed import.
 
 ### Added
 - `SearchDropDownController` is a `ChangeNotifier`: change selection, items or `enabled` from code and the widget updates, no `GlobalKey` needed (#45).
 - `MultipleSearchDropDownController` (exported) and a `controller:` parameter on `MultipleSearchDropDown`.
-- `items:` on both controllers: the controller keeps its own copy (`listItems:` still shares your list).
+- `items:` on both controllers: the controller keeps its own copy, and a multiple controller also copies `selectedItems` (`listItems:` still shares your lists).
 - The single list opens scrolled to the selected item (#46) until you type a search, whose results then list from the top; PageUp/PageDown jump to the first/last item.
 - `SearchDropDownController.ownsSearchController`: whether the controller created its own `SearchController`.
 - `SearchDropDownStrings` (Portuguese defaults, `.en()`), per widget (`strings:`) or app-wide with `SearchDropDownStringsScope`, which also reaches the controllers' `addItem`/`addValue`/`editItem`/`deleteItem` dialogs and the exported dialogs and rows when they get no `strings:`.
-- `SortType` enum (`sort:`), A-Z/Z-A ordering that ignores case, accents and surrounding spaces, whatever `caseSensitive`/`latinize`/`trim` (both dropdowns).
+- `SortType` enum (`sort:`), A-Z/Z-A ordering that ignores case, accents and surrounding spaces, whatever `caseSensitive`/`latinize`/`trim` (both dropdowns); digits still compare as text, as in 7.x (`Item 10` before `Item 2`).
 - Multiple dropdown: edit mode works (it was a stub); `latinize`/`caseSensitive`/`trim` apply there too (on `MultipleSearchDropDownController`; the legacy `listItems:` widget keeps the 7.x matching, which does not trim: `' ana'` finds `Maria Ana`, not `Mariana`).
 - `MultipleSearchDropDownController.addMode`, `deleteMode`, `editMode`, `confirmDelete` and `sort` can be changed after creation (`sort` reorders the results, never your list).
 - Keyboard highlight is distinct from the selection (`highlightedItemBackgroundColor`, `highlightedItemBorderColor`); tooltips and semantics on buttons, rows, chips and spinners.
@@ -28,6 +31,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - A legacy `MultipleSearchDropDown` keeps one controller across parent rebuilds: its search and a pending add/edit/delete survive, and new list instances, mode flags, callbacks, `sort` and dialog settings are applied in place.
 - Multiple: `enabled = false` closes an open list, and the dimmed box, its chips and the clear button no longer take keyboard focus (7.x only blocked the pointer; Tab + Enter still opened it). Changes made from code still apply while disabled.
 - Multiple: while an async `onAddItem` runs the search field keeps the typed text, matching the filter and the add row, and it clears when the add is done (7.x cleared it at once, as the callback was not awaited); a failing callback leaves both as they were.
+- Multiple: sorting orders only the results and never reorders your `listItems:` (7.x sorted it in place, in `MultipleSearchDropDown` and `MultipleListView`). The single dropdown still sorts a `listItems:` list in place (when created, on `sortBy`/`sortList` and on `updateListItems`), as in 7.x.
 - `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
 - Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously. They are delivered even if the controller is disposed in that frame; listeners and `onFilterUpdated` are then skipped.
 - Items, sort or filter changes made to the single dropdown during a build: `filteredItems`, `selectedIndex`, `highlightedIndex` and Enter (`submit`, `handleEnterKey`) see the new list at once, as in 7.x, while the open list (left stale by 7.x), the `results`/`highlight` listeners and `onFilterUpdated` follow right after that frame, coalesced into one notification per frame (7.x called `onFilterUpdated` once per change).
@@ -41,40 +45,30 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Keyboard highlight could stay on a stale row; rows were marked selected just because the typed text equalled their label; Tab focus was dropped immediately.
 - Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected (also a row matched by label, e.g. values without `==`), keeping the list open as in 7.x.
 - `onFilterUpdated` missed changes with the same length/first/last item, and is never called during a build (safe to `setState` in it).
-- Controllers work without an initialized binding (plain `test()`, code before `runApp`), as in 7.x.
 - Keyboard highlight is cleared when the list reopens; selecting no longer re-filters the list while it closes.
-- Multiple: deleting an item cleared the whole selection; `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; sorting reordered the caller's list; the list leaked when the widget was removed; a rejected item stayed in the search field (#13); async callbacks were not awaited.
-- Legacy `listItems:` changes made from outside are picked up again as in 7.x: the single dropdown on the next search or `filterList` (it no longer filtered the list of the last open), the multiple dropdown on the next keystroke, tap or parent rebuild while the list is open.
-- Results kept the old `ValueItem` instances after a refresh with items that compare equal (e.g. a value whose `==` only checks an id), so a tap selected the stale object; the fresh ones are handed out (without `onFilterUpdated`, as the results did not change).
+- Multiple: deleting an item cleared the whole selection; `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; the list leaked when the widget was removed; a rejected item stayed in the search field (#13); async callbacks were not awaited.
 - Multiple: typing key by key froze the add row on the first text that matched nothing (it created that truncated item), and an empty list never offered the add row; `selectedFirst` did not re-pin after `resetSelection`, `clear` or `forceMultipleSelection`.
 - Single: Enter or the keyboard's done action right after reopening with a selection selected the first item instead of keeping the selection, and typing the selected label again did not filter.
 - Single: with duplicate labels every row with the selected label was marked selected; now only the row `==` to the selection is (the label still matches values without `==`).
-- Single: after the first open, text changes while the list is closed (`clearOnClose`, code writing `localSearchController.text`) update `filteredItems` and `onFilterUpdated` again, as in 7.x.
 - The confirm-delete, invalid-item and edit dialogs close their own route: under a nested navigator (go_router `ShellRoute`, `CupertinoTabView`) they popped the page behind them and stayed open, and a dialog opened from a row that left the list never closed.
 - Single: a rejected item whose warning closed after `dispose()` used the disposed search controller.
 - Single: several keys typed within one frame into a focused closed bar (e.g. a barcode scanner) opened stacked lists that stopped filtering and did not close on selection. Guarded on the controller's own `SearchController`; one you pass as `searchController` is used as is.
 - Single: Enter on a Tab-focused row or button of the open list also selected the highlighted or first item; arrows, PageUp/PageDown and Enter drive the list only from its search field (or with no control focused).
 - Single: arrows and PageUp/PageDown dropped the selection of the selected label, so typing appended to it instead of replacing it.
-- Single: the deprecated `SearchDropDownState.enableDisable/resetSelection/updateList` do nothing once the widget is unmounted again (7.x).
-- Single: after the parent swapped the controller while the list was open, the list's arrow threw instead of closing it and its clear button cleared the old controller.
 - A row's delete/edit spinner no longer moves to another item when the results change while the callback is pending (both dropdowns).
-- Single: the list honours `SearchViewThemeData.shrinkWrap` again (7.x), so a short list shrinks the view.
 - Multiple: a parent rebuild that changed a mode flag, `sort` or a callback while an add/edit/delete was pending left the open list and the chips stale (the item could be offered again); the search field disagreed with the filter after a failed add or an `addValue` from code; swapping `controller:` while the list was open showed every item under the typed text.
-- `MultipleSearchDropDownController(items:)` copies `selectedItems` too, so a `const []` or unmodifiable initial selection no longer throws on the first tap; with `listItems:` it stays your list, updated in place (7.x).
 - Rows: screen readers announce the selected row as selected (the flag sat on an unlabelled node); the keyboard highlight border also shows on the selected row; a highlighted row keeps your `selectedItemBackgroundColor` once you customise `selectedItemTextStyle` or `unselectedItemHoverColor` (dark palettes drew light text on the light hover fill), as in 7.x. Set `highlightedItemBackgroundColor` for a distinct fill.
 
 ### Deprecated
 - `SearchDropDownState.enableDisable/resetSelection/updateList` and the `MultipleSearchDropDownState` methods → use the controllers.
 - `sortType` → `sort`; `addAditionalWidget`/`defaultAditionalWidget`/`aditionalWidgetSpacing` → `*Additional*` (also on `DefaultListTile` and `DefaultAddListItem`).
-- `MultipleListView`'s 7.x parameters (`listItens`, `selectedItens`, `onItemSelected`, `onAddItem`, `onDeleteItem`, `onEditItem`, `addMode`/`editMode`/`deleteMode`, `sortType`, `newValueItem`, `*Aditional*`) → `MultipleSearchDropDown`, or `MultipleListView(controller:)`. Built the 7.x way it still only reads your lists and calls your callbacks (no dialogs, no trim), now sorting A-Z/Z-A ignoring case and accents without reordering your list; the 7.x fields cannot be read back from the widget.
+- `MultipleListView`'s 7.x parameters (`listItens`, `selectedItens`, `onItemSelected`, `onAddItem`, `onDeleteItem`, `onEditItem`, `addMode`/`editMode`/`deleteMode`, `sortType`, `newValueItem`, `*Aditional*`) → `MultipleSearchDropDown`, or `MultipleListView(controller:)`. Built the 7.x way it still only reads your lists and calls your callbacks (no dialogs, no trim); the 7.x fields cannot be read back from the widget.
 - `MultipleSearchDropDownState.aberto`/`enabled` setters and `overlayScreen` (still one instance whose `closeAll()`/`closeLast()` close the list; to know whether it is open, `overlayEntrys.isEmpty` → `!aberto`).
 
 ### Performance
 - One shared filter engine with a lazy label cache; typing more characters narrows the previous results. Typing "Item 99" over 10,000 items rebuilds 20 rows instead of 63; the bar still does not rebuild while typing.
 - Items whose label equals their value (e.g. `ValueItem.fromValue` on `String`) no longer all share one hash, so A-Z/Z-A sorting, filtering and `forceMultipleSelection` stay fast on large lists.
 - A list that is already in A-Z/Z-A order is not sorted again when the dropdown opens; the label cache only keeps items still in the list (a `listItems:` list refreshed in place no longer grows it).
-- Typing in the multiple dropdown no longer rebuilds the closed box: chips (and `boxMultiItemWidgetBuilder`) are rebuilt only when the selection or `enabled` changes, as in 7.x.
-- Caret, selection and IME composing changes no longer re-filter the single list; a legacy multiple parent that passes a new `selectedItems` list on each rebuild no longer re-normalizes and re-sorts every label (only `selectedFirst` re-pins).
 
 ## [7.8.0] - 2026-04-03.
 - Added `caseSensitive` parameter to the controller. It defines if the search should be case sensitive (default: `false`).

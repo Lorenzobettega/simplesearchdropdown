@@ -78,7 +78,9 @@ PageUp/PageDown jump to the first/last item and Enter selects.
   untouched gets the change applied, so refuse a delete with `confirmDelete`,
   not by keeping the item. An unmodifiable list (`const`, `List.unmodifiable`,
   freezed) is never written: pass the new list from your state (multiple), or
-  use `items:` and `updateListItems` (single).
+  use `items:` and `updateListItems` (single). With a `sort`, the single
+  controller sorts your list in place, as 7.x did; the multiple one only
+  orders its results.
 
 ### Add, edit and delete
 
@@ -182,7 +184,11 @@ wins over `strings`.
 ## Migrating from 7.x
 
 7.x code keeps compiling; renamed members are `@Deprecated` and will be removed
-in 9.0.0.
+in 9.0.0. The package now also exports `SortType`, `SearchDropDownStrings`,
+`SearchDropDownStringsScope` and `MultipleSearchDropDownController`. If your
+app declares a type with one of these names, hide it from the import
+(`import 'package:simple_search_dropdown/simple_search_dropdown.dart' hide SortType;`)
+or import the package with a prefix.
 
 | 7.x | 8.0 |
 |---|---|
@@ -194,7 +200,7 @@ in 9.0.0.
 | `MultipleListView(listItens: ..., onItemSelected: ...)` | `MultipleSearchDropDown`, or `MultipleListView(controller: ...)` |
 | `multipleState.overlayScreen.closeAll()` / `overlayEntrys.isEmpty` | `multipleState.hideOverlay()` / `!multipleState.aberto` |
 
-Behaviour changes worth knowing (see the CHANGELOG for all fixes):
+Behaviour changes worth knowing (see the CHANGELOG for all of them):
 
 - Reopening the single dropdown lists every item, scrolled to the selection
   (it used to show only the selected one); Enter keeps the selection.
@@ -203,12 +209,25 @@ Behaviour changes worth knowing (see the CHANGELOG for all fixes):
 - Single keyboard: Tab into the bar keeps the focus and Tab moves on to the
   next field; Enter on the closed bar selects nothing; a disabled dropdown
   cannot be focused.
-- A–Z / Z–A ignore case and accents (`abacaxi, Banana, Maçã`).
+- A disabled multiple dropdown cannot be focused either (its box, chips and
+  clear button) and closes its open list. Its controller's `addMode`,
+  `deleteMode`, `editMode`, `confirmDelete` and `sort` can be changed after
+  creation.
+- A–Z / Z–A ignore case and accents (`abacaxi, Banana, Maçã`); digits still
+  compare as text (`Item 10` before `Item 2`).
+- Sorting: the single dropdown sorts a `listItems:` list in place, as in 7.x;
+  the multiple dropdown and `MultipleListView` no longer do (7.x sorted your
+  list), they only order the results.
+- `listItems:` mode writes add/edit/delete back to your list (see "Items"
+  above).
+- An error thrown by `onAddItem`, `onEditItem` or `onDeleteItem` from a list
+  row is reported with `FlutterError.reportError` (crash reporters see it);
+  the item stays as it was.
 - The clear button shows after a selection by default: the controller's
   `showClearIcon` now defaults to `true` (pass `false` to hide it), and
   `SimpleSearchbarSettings.showClearIcon: false` hides it in the open list too.
-- Deleting an item in the multiple dropdown deselects only that item; sorting
-  never reorders your list.
+- Deleting an item in the multiple dropdown deselects only that item.
+- `ValueItem.hashCode` changed (equal items still hash alike).
 
 ## License
 

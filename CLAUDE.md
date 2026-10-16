@@ -18,7 +18,7 @@ Flutter package: `SearchDropDown` (single, built on `SearchAnchor`) and `Multipl
 ## Rules
 - No feature loss: every behaviour has a test; change a test only when the old behaviour is a confirmed bug.
 - `example/` must keep compiling unchanged across a release (only deprecation warnings allowed).
-- Never copy or reorder the caller's lists behind their back in legacy (`listItems:`) mode.
+- Never copy or reorder the caller's lists behind their back in legacy (`listItems:`) mode, except the single in-place sort inherited from 7.x.
 - Breaking changes go through `@Deprecated('Use X. Will be removed in 9.0.0')` + a CHANGELOG migration line.
 - Public API gets `///` docs (one line is fine); default UI strings stay Portuguese.
 - Keep defaults visually identical unless the change is intentional and goldens are updated.
