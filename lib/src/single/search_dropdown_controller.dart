@@ -307,9 +307,11 @@ class SearchDropDownController<T> extends ChangeNotifier {
     // is swapped together with its notifications: never a new list with the
     // item count of the old one.
     _runOutsideBuild(() {
-      if (identical(_pending, next)) {
-        _pending = null;
+      if (!identical(_pending, next)) {
+        // A newer result was already applied or is queued.
+        return;
       }
+      _pending = null;
       _filtered
         ..clear()
         ..addAll(next);

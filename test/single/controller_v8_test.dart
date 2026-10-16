@@ -288,6 +288,101 @@ void main() {
     );
 
     testWidgets(
+      'filters run during a build narrow and compare against the pending '
+      'results (F7)',
+      (tester) async {
+        final c = _ctrl(listItems: fruitItems());
+        addTearDown(c.dispose);
+        c.filterList('u'); // outside a build: applied now
+        expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
+        int step = 0;
+        final ValueNotifier<int> tick = ValueNotifier<int>(0);
+        addTearDown(tick.dispose);
+        await tester.pumpWidget(
+          host(
+            ValueListenableBuilder<int>(
+              valueListenable: tick,
+              builder: (context, v, _) {
+                if (v > step) {
+                  step = v;
+                  if (v == 1) {
+                    c
+                      ..filterList('b')
+                      ..filterList('ba'); // narrows the pending [Banana, ...]
+                  } else if (v == 2) {
+                    c
+                      ..filterList('u')
+                      ..filterList(''); // differs from the pending [Uva]
+                  }
+                }
+                return const SizedBox();
+              },
+            ),
+          ),
+        );
+
+        tick.value = 1;
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(c.filteredItems.map((e) => e.label), <String>[
+          'Banana',
+          'abacaxi',
+        ]);
+
+        c.filterList(''); // outside a build: applied now
+        expect(c.filteredItems, hasLength(5));
+        tick.value = 2;
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(c.filteredItems, hasLength(5));
+      },
+    );
+
+    testWidgets(
+      'a result deferred from a build never overwrites a newer one (F7)',
+      (tester) async {
+        final c = _ctrl(listItems: fruitItems());
+        addTearDown(c.dispose);
+        bool first = true;
+        bool second = true;
+        await tester.pumpWidget(
+          host(
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                Builder(
+                  builder: (context) {
+                    if (first) {
+                      first = false;
+                      // Registered before the deferred swap below, so it
+                      // runs first and applies a newer result.
+                      WidgetsBinding.instance.addPostFrameCallback(
+                        (_) => c.filterList('Banana'),
+                      );
+                    }
+                    return const SizedBox();
+                  },
+                ),
+                Builder(
+                  builder: (context) {
+                    if (second) {
+                      second = false;
+                      c.updateListItems(numberedItems(3) + fruitItems(), false);
+                    }
+                    return const SizedBox();
+                  },
+                ),
+              ],
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        expect(c.filteredItems.map((e) => e.label), <String>['Banana']);
+        c.filterList('Banan'); // narrows the right base
+        expect(c.filteredItems.map((e) => e.label), <String>['Banana']);
+      },
+    );
+    testWidgets(
       'updateSelectedItem from a reset during a descendant build is delivered '
       'after the frame (F18)',
       (tester) async {
@@ -378,6 +473,90 @@ void main() {
       },
     );
 
+    testWidgets(
+      'updateSelectedItem from clearSelectionAndNotify during a descendant '
+      'build is delivered after the frame (F18)',
+      (tester) async {
+        late StateSetter setScreen;
+        String shown = 'none';
+        bool mutate = false;
+        final c = SearchDropDownController<int>(
+          listItems: fruitItems(),
+          addMode: false,
+          deleteMode: false,
+          updateSelectedItem: (v) => setScreen(() => shown = '${v?.label}'),
+        );
+        addTearDown(c.dispose);
+        await tester.pumpWidget(
+          host(
+            StatefulBuilder(
+              builder: (context, setState) {
+                setScreen = setState;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text('sel:$shown'),
+                    Builder(
+                      builder: (context) {
+                        if (mutate) {
+                          mutate = false;
+                          c.clearSelectionAndNotify();
+                        }
+                        return SearchDropDown<int>(controller: c);
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+        c.forceSelection('Uva'); // outside a build
+        await tester.pump();
+        expect(find.text('sel:Uva'), findsOneWidget);
+
+        mutate = true;
+        setScreen(() {});
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        await tester.pump();
+        expect(c.selectedItem, isNull);
+        expect(find.text('sel:null'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'a callback deferred from a build is dropped when the controller is '
+      'disposed before it runs',
+      (tester) async {
+        final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
+        final c = _ctrl(
+          listItems: fruitItems(),
+          updateSelectedItem: selections.add,
+        );
+        bool mutate = true;
+        await tester.pumpWidget(
+          host(
+            Builder(
+              builder: (context) {
+                if (mutate) {
+                  mutate = false;
+                  // Runs before the deferred callback queued below.
+                  WidgetsBinding.instance.addPostFrameCallback(
+                    (_) => c.dispose(),
+                  );
+                  c.forceSelection('Uva');
+                }
+                return const SizedBox();
+              },
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        expect(c.selectedItem?.label, 'Uva');
+        expect(selections, isEmpty);
+      },
+    );
     test('async callbacks finishing after dispose are ignored', () async {
       final List<ValueItem<int>> mine = fruitItems();
       final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
