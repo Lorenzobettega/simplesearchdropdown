@@ -250,7 +250,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     } else {
       selectedItems.add(item);
     }
-    _runOutsideBuild(() {
+    _deliver(() {
       if (removed) {
         onClearItem?.call(item);
       }
@@ -293,7 +293,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Clears the selection and calls [updateSelectedItems].
   void resetSelection() {
     selectedItems.clear();
-    _runOutsideBuild(() => updateSelectedItems?.call(selectedItems));
+    _deliver(() => updateSelectedItems?.call(selectedItems));
     _notify();
   }
 
@@ -301,7 +301,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// and [onClearList].
   void clear() {
     selectedItems.clear();
-    _runOutsideBuild(() {
+    _deliver(() {
       updateSelectedItems?.call(selectedItems);
       onClearList?.call();
     });
@@ -486,6 +486,11 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// (user callbacks often call setState).
   void _runOutsideBuild(void Function() callback) =>
       runOutsideBuild(callback, () => _disposed);
+
+  /// Runs a selection callback like [_runOutsideBuild], but also once the
+  /// controller is disposed in that frame: the caller's state must still
+  /// learn about the change (7.x ran these synchronously).
+  void _deliver(void Function() callback) => runOutsideBuild(callback);
 
   /// Releases resources. Safe to call more than once.
   @override

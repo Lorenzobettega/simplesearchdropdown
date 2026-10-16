@@ -204,13 +204,18 @@ class SearchDropDownController<T> extends ChangeNotifier {
   final List<ValueItem<T>> _base = <ValueItem<T>>[];
   final List<ValueItem<T>> _filtered = <ValueItem<T>>[];
   final _Signal _results = _Signal();
-  final ValueNotifier<int> _highlight = ValueNotifier<int>(-1);
+  final _Highlight _highlight = _Highlight();
 
   /// The items matching the current search text.
+  ///
+  /// Always up to date, even right after a change made during a build; the
+  /// [results] and [highlight] listeners hear about such a change after that
+  /// frame.
   UnmodifiableListView<ValueItem<T>> get filteredItems =>
       UnmodifiableListView<ValueItem<T>>(_filtered);
 
-  /// Notifies when [filteredItems] changes.
+  /// Notifies when [filteredItems] changes (after the frame for a change
+  /// made during a build).
   Listenable get results => _results;
 
   /// The keyboard-highlighted index in [filteredItems] (-1 for none).
@@ -288,37 +293,36 @@ class SearchDropDownController<T> extends ChangeNotifier {
     // Typing more characters can only narrow the previous results.
     final List<ValueItem<T>> source =
         last != null && last.isNotEmpty && query.startsWith(last)
-        ? List<ValueItem<T>>.of(_pending ?? _filtered)
+        ? List<ValueItem<T>>.of(_filtered)
         : _base;
     _show(_engine.filter(source, text));
     _lastQuery = query;
   }
 
-  /// Results computed during a build that replace [_filtered] after the
-  /// frame.
-  List<ValueItem<T>>? _pending;
+  /// Whether a [results] notification is queued for after the frame.
+  bool _resultsQueued = false;
 
   void _show(List<ValueItem<T>> next) {
-    if (listEquals(next, _pending ?? _filtered)) {
+    if (listEquals(next, _filtered)) {
       return;
     }
-    _pending = next;
-    // The open view reads filteredItems lazily while laying out, so the list
-    // is swapped together with its notifications: never a new list with the
-    // item count of the old one.
+    // Applied at once, as in 7.x: reads made in the same build (Enter,
+    // filteredItems, selectedIndex) see the new list. The open view keeps a
+    // copy taken on each results notification, which a build defers.
+    _filtered
+      ..clear()
+      ..addAll(next);
+    _highlight.reset();
+    if (_resultsQueued) {
+      return;
+    }
+    _resultsQueued = true;
     _runOutsideBuild(() {
-      if (!identical(_pending, next)) {
-        // A newer result was already applied or is queued.
-        return;
-      }
-      _pending = null;
-      _filtered
-        ..clear()
-        ..addAll(next);
+      _resultsQueued = false;
       if (_disposed) {
         return;
       }
-      _highlight.value = -1;
+      _highlight.flush();
       _results.fire();
       onFilterUpdated?.call();
     });
@@ -329,11 +333,12 @@ class SearchDropDownController<T> extends ChangeNotifier {
   void _runOutsideBuild(void Function() callback) =>
       runOutsideBuild(callback, () => _disposed);
 
-  /// Calls [updateSelectedItem] with [item], outside a build.
+  /// Calls [updateSelectedItem] with [item], outside a build; also when the
+  /// controller is disposed in that frame (7.x called it synchronously).
   void _selectionChanged(ValueItem<T>? item) {
     final void Function(ValueItem<T>?)? callback = updateSelectedItem;
     if (callback != null) {
-      _runOutsideBuild(() => callback(item));
+      runOutsideBuild(() => callback(item));
     }
   }
 
@@ -706,4 +711,36 @@ class SearchDropDownController<T> extends ChangeNotifier {
 /// A [ChangeNotifier] that can be fired from outside.
 class _Signal extends ChangeNotifier {
   void fire() => notifyListeners();
+}
+
+/// The highlighted index. [reset] clears it at once but leaves the
+/// notification to [flush], sent together with the results.
+class _Highlight extends ChangeNotifier implements ValueListenable<int> {
+  int _value = -1;
+  bool _unsent = false;
+
+  @override
+  int get value => _value;
+  set value(int next) {
+    if (_value == next) {
+      return;
+    }
+    _value = next;
+    _unsent = false;
+    notifyListeners();
+  }
+
+  void reset() {
+    if (_value != -1) {
+      _value = -1;
+      _unsent = true;
+    }
+  }
+
+  void flush() {
+    if (_unsent) {
+      _unsent = false;
+      notifyListeners();
+    }
+  }
 }

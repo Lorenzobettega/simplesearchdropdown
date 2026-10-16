@@ -337,6 +337,12 @@ class _ViewListState<T> extends State<_ViewList<T>> {
   final ItemPositionsListener _positions = ItemPositionsListener.create();
   late final int _initialIndex;
 
+  /// The items shown: a copy of `filteredItems` taken on each results
+  /// notification. A change made during a build updates `filteredItems` at
+  /// once but notifies after the frame, and this frame's lazy layout must
+  /// keep reading the list its item count came from.
+  List<ValueItem<T>> _items = const [];
+
   /// Item rows by index. The list re-runs its item builder on every layout
   /// change (e.g. the view's open animation) and keystroke; handing back the
   /// same widget skips rebuilding the row. Cleared when the results change.
@@ -371,13 +377,19 @@ class _ViewListState<T> extends State<_ViewList<T>> {
       controller.localSearchController,
     ]);
     controller.highlight.addListener(_revealHighlight);
-    controller.results.addListener(_rows.clear);
+    controller.results.addListener(_onResults);
+    _onResults();
+  }
+
+  void _onResults() {
+    _items = List<ValueItem<T>>.of(_bound.filteredItems);
+    _rows.clear();
   }
 
   void _unbind() {
     if (!_bound.isDisposed) {
       _bound.highlight.removeListener(_revealHighlight);
-      _bound.results.removeListener(_rows.clear);
+      _bound.results.removeListener(_onResults);
     }
   }
 
@@ -453,9 +465,9 @@ class _ViewListState<T> extends State<_ViewList<T>> {
       child: ListenableBuilder(
         listenable: _listInputs,
         builder: (BuildContext context, _) {
-          final List<ValueItem<T>> items = _controller.filteredItems;
+          final List<ValueItem<T>> items = _items;
           final String text = _controller.localSearchController.text;
-          final bool addRow = widget.showAddRow(text);
+          final bool addRow = items.isEmpty && widget.showAddRow(text);
           return ScrollablePositionedList.builder(
             itemScrollController: _scroll,
             itemPositionsListener: _positions,

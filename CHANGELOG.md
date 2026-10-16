@@ -21,8 +21,8 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - `SearchDropDownController.dispose()` can be called more than once.
 - A legacy `MultipleSearchDropDown` keeps its search and pending add/delete across parent rebuilds; new list instances or dialog settings are applied in place.
 - `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
-- Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously.
-- The open single list follows items, sort or filter changes made during a build (7.x left it stale): the list and highlight update right after that frame, when no selection is reset.
+- Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously. They are delivered even if the controller is disposed in that frame; listeners and `onFilterUpdated` are then skipped.
+- Items, sort or filter changes made to the single dropdown during a build: `filteredItems`, `selectedIndex`, `highlightedIndex` and Enter (`submit`, `handleEnterKey`) see the new list at once, as in 7.x, while the open list (left stale by 7.x), the `results`/`highlight` listeners and `onFilterUpdated` follow right after that frame.
 
 ### Breaking
 - `MultipleListView` (exported helper) takes a `MultipleSearchDropDownController`; use `MultipleSearchDropDown` instead of building it directly.

@@ -2,16 +2,17 @@ import 'package:flutter/scheduler.dart';
 
 /// Runs [callback] now, or after the frame when called during a build (user
 /// callbacks and listeners often call `setState`). A deferred [callback] is
-/// skipped when [isDisposed] returns `true` by then.
+/// skipped when [isDisposed] returns `true` by then; without [isDisposed]
+/// (user selection callbacks, which 7.x ran synchronously) it always runs.
 ///
 /// Without an initialized binding (a plain `test()`, code before `runApp`) no
 /// frame can be building, so [callback] runs synchronously, as in 7.x.
-void runOutsideBuild(VoidCallback callback, bool Function() isDisposed) {
+void runOutsideBuild(VoidCallback callback, [bool Function()? isDisposed]) {
   final SchedulerBinding? binding = _bindingOrNull();
   if (binding != null &&
       binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
     binding.addPostFrameCallback((_) {
-      if (!isDisposed()) {
+      if (isDisposed == null || !isDisposed()) {
         callback();
       }
     });

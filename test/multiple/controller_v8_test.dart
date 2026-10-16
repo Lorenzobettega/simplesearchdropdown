@@ -278,5 +278,47 @@ void main() {
         'clearList',
       ]);
     });
+
+    testWidgets('are delivered even when the controller is disposed in that '
+        'frame', (tester) async {
+      final List<String> calls = <String>[];
+      final c = MultipleSearchDropDownController<int>(
+        items: fruitItems(),
+        selectedItems: fruitItems().take(2).toList(),
+        addMode: false,
+        deleteMode: false,
+        updateSelectedItems: (s) => calls.add('update:${s.length}'),
+        onClearItem: (item) => calls.add('clear:${item.label}'),
+        onClearList: () => calls.add('clearList'),
+      );
+      bool mutate = true;
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) {
+              if (mutate) {
+                mutate = false;
+                // Runs before the deferred callbacks queued below.
+                SchedulerBinding.instance.addPostFrameCallback(
+                  (_) => c.dispose(),
+                );
+                c
+                  ..toggle(c.selectedItems.first)
+                  ..clear();
+              }
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(c.isDisposed, isTrue);
+      expect(calls, <String>[
+        'clear:Maçã',
+        'update:0',
+        'update:0',
+        'clearList',
+      ]);
+    });
   });
 }

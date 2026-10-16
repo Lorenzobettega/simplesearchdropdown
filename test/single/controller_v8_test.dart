@@ -243,9 +243,8 @@ void main() {
                   } else if (v == 3) {
                     c.filterList('Item 1');
                   }
-                  // The open view reads filteredItems lazily during this
-                  // frame's layout: it must still be the list it was built
-                  // with.
+                  // Readable at once, as in 7.x; the open view keeps the
+                  // list it was built with until after this frame.
                   lengthsSeenInBuild.add(c.filteredItems.length);
                 }
                 return SearchDropDown<int>(controller: c);
@@ -261,7 +260,7 @@ void main() {
         tick.value = 1;
         await tester.pump();
         expect(tester.takeException(), isNull);
-        expect(lengthsSeenInBuild, <int>[5]);
+        expect(lengthsSeenInBuild, <int>[3]);
         expect(c.highlightedIndex, -1);
         expect(c.filteredItems.map((e) => e.label), <String>[
           'Item 0',
@@ -283,12 +282,51 @@ void main() {
         await tester.pump();
         expect(c.filteredItems.map((e) => e.label), <String>['Item 1']);
         expect(find.text('Item 0'), findsNothing);
-        expect(lengthsSeenInBuild, <int>[5, 3, 3]);
+        expect(lengthsSeenInBuild, <int>[3, 3, 1]);
       },
     );
 
     testWidgets(
-      'filters run during a build narrow and compare against the pending '
+      'changes made during a build are readable at once, as in 7.x (F7)',
+      (tester) async {
+        final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
+        final c = _ctrl(
+          listItems: fruitItems(),
+          updateSelectedItem: selections.add,
+        );
+        addTearDown(c.dispose);
+        c.highlightEdge(last: true); // outside a build: 'Pêra'
+        expect(c.highlightedIndex, 4);
+        final List<Object> seen = <Object>[];
+        bool mutate = true;
+        await tester.pumpWidget(
+          host(
+            Builder(
+              builder: (context) {
+                if (mutate) {
+                  mutate = false;
+                  c.filterList('uva');
+                  seen
+                    ..add(c.filteredItems.length)
+                    ..add(c.highlightedIndex);
+                  c.submit(); // the highlight was reset: the first result
+                  seen.add(c.selectedIndex);
+                  c.updateListItems(numberedItems(3), false);
+                  seen.add(c.filteredItems.length);
+                }
+                return const SizedBox();
+              },
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        expect(seen, <Object>[1, -1, 0, 3]);
+        expect(selections.map((e) => e?.label), <String?>['Uva', null]);
+      },
+    );
+
+    testWidgets(
+      'filters run during a build narrow and compare against the latest '
       'results (F7)',
       (tester) async {
         final c = _ctrl(listItems: fruitItems());
@@ -526,8 +564,8 @@ void main() {
     );
 
     testWidgets(
-      'a callback deferred from a build is dropped when the controller is '
-      'disposed before it runs',
+      'a selection callback deferred from a build is still delivered when the '
+      'controller is disposed before it runs',
       (tester) async {
         final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
         final c = _ctrl(
@@ -554,7 +592,8 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         expect(c.selectedItem?.label, 'Uva');
-        expect(selections, isEmpty);
+        // As in 7.x, where it ran synchronously; only listeners are skipped.
+        expect(selections.map((e) => e?.label), <String>['Uva']);
       },
     );
     test('async callbacks finishing after dispose are ignored', () async {
