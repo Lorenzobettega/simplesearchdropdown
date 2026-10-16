@@ -12,7 +12,8 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Keyboard highlight is distinct from the selection (`highlightedItemBackgroundColor`, `highlightedItemBorderColor`); tooltips and semantics on buttons, rows, chips and spinners.
 
 ### Changed
-- Reopening the single dropdown lists every item instead of only the selected one; the text is selected so typing replaces it.
+- Reopening the single dropdown lists every item instead of only the selected one; the text is selected so typing replaces it. Until you edit it the label is not a search: Enter keeps the selection.
+- Assigning `SearchDropDownController.selectedItem` shows the new label in the bar and updates the clear button (an open list stays open and lists every item); `null` clears the text only while it still shows the old label. It still does not call `updateSelectedItem` (7.x left the bar text stale).
 - The clear button follows `SimpleSearchbarSettings.showClearIcon` by default: controller `showClearIcon` defaults to `true` (7.x: `false`).
 - Legacy `listItems:` mode writes to your list (7.x never did on add/edit/delete): after an add/edit/delete callback the controller adds, replaces or removes the item unless the callback already stored it, i.e. the list holds that item, an equal one, or a new entry with the same label ignoring case/accents (your own copy, e.g. with a server id), which is then kept and selected instead of the `newValueItem` placeholder. A callback that leaves the list untouched gets the change applied (refuse a delete with `confirmDelete`). An unmodifiable list (`const`, `List.unmodifiable`, freezed) is never written and never throws: pass the new list from your state (multiple) or use `items:` + `updateListItems` (single).
 - `forceSelection` matches the exact label first, then ignoring case/accents (both dropdowns).
@@ -33,7 +34,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Opening the single list through the arrow did not filter while typing.
 - `SimpleSearchbarSettings.showClearIcon: false` hid the single clear button only in the bar; the open list showed it anyway (B14).
 - Keyboard highlight could stay on a stale row; rows were marked selected just because the typed text equalled their label; Tab focus was dropped immediately.
-- Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected.
+- Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected (also a row matched by label, e.g. values without `==`), keeping the list open as in 7.x.
 - `onFilterUpdated` missed changes with the same length/first/last item, and is never called during a build (safe to `setState` in it).
 - Controllers work without an initialized binding (plain `test()`, code before `runApp`), as in 7.x.
 - Keyboard highlight is cleared when the list reopens; selecting no longer re-filters the list while it closes; confirming the edit dialog unchanged keeps the item.
@@ -41,6 +42,9 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Legacy `listItems:` changes made from outside are picked up again as in 7.x: the single dropdown on the next search or `filterList` (it no longer filtered the list of the last open), the multiple dropdown on the next keystroke, tap or parent rebuild while the list is open.
 - Results kept the old `ValueItem` instances after a refresh with items that compare equal (e.g. a value whose `==` only checks an id), so a tap selected the stale object; the fresh ones are handed out (without `onFilterUpdated`, as the results did not change).
 - Multiple: typing key by key froze the add row on the first text that matched nothing (it created that truncated item), and an empty list never offered the add row; `selectedFirst` did not re-pin after `resetSelection`, `clear` or `forceMultipleSelection`.
+- Single: Enter or the keyboard's done action right after reopening with a selection selected the first item instead of keeping the selection, and typing the selected label again did not filter.
+- Single: with duplicate labels every row with the selected label was marked selected; now only the row `==` to the selection is (the label still matches values without `==`).
+- Single: after the first open, text changes while the list is closed (`clearOnClose`, code writing `localSearchController.text`) update `filteredItems` and `onFilterUpdated` again, as in 7.x.
 - `MultipleSearchDropDownController(items:)` copies `selectedItems` too, so a `const []` or unmodifiable initial selection no longer throws on the first tap; with `listItems:` it stays your list, updated in place (7.x).
 
 ### Deprecated

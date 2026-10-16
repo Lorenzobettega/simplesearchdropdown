@@ -157,6 +157,19 @@ class SearchDropDownController<T> extends ChangeNotifier {
   bool _disposed = false;
   bool _viewOpen = false;
 
+  /// The selected label the open view started with, until the user edits
+  /// the text. While it is shown it is no query: every item is listed (D1)
+  /// and Enter keeps the selection.
+  String? _untouchedLabel;
+
+  /// Whether text changes filter while the view is closed: after the first
+  /// open, selection or clear, as in 7.x.
+  bool _filterArmed = false;
+
+  /// Set while [selectItem] writes the label: the closing view keeps its
+  /// results.
+  bool _selecting = false;
+
   /// Ignore accents when filtering.
   bool get latinize => _engine.normalization.latinize;
 
@@ -173,14 +186,21 @@ class SearchDropDownController<T> extends ChangeNotifier {
 
   ValueItem<T>? _selectedItem;
 
-  /// The selected item, if any. Setting it does not call [updateSelectedItem];
-  /// use [selectItem] for a user-like selection.
+  /// The selected item, if any.
+  ///
+  /// Setting it shows its label in the bar and updates the clear button (an
+  /// open view stays open and lists every item); `null` clears the text only
+  /// while it still shows the old label. It does not call
+  /// [updateSelectedItem]; use [selectItem] for a user-like selection.
   ValueItem<T>? get selectedItem => _selectedItem;
   set selectedItem(ValueItem<T>? value) {
     if (_selectedItem == value) {
       return;
     }
+    final ValueItem<T>? previous = _selectedItem;
     _selectedItem = value;
+    _clearVisible = value != null && showClearIcon;
+    _showSelectedLabel(value, previous, replaceTyped: true);
     _notify();
   }
 
@@ -215,7 +235,8 @@ class SearchDropDownController<T> extends ChangeNotifier {
   final _Signal _results = _Signal();
   final _Highlight _highlight = _Highlight();
 
-  /// The items matching the current search text.
+  /// The items matching the current search text (also while the view is
+  /// closed, once it has opened); the selected label matches every item.
   ///
   /// Always up to date, even right after a change made during a build; the
   /// [results] and [highlight] listeners hear about such a change after that
@@ -246,32 +267,78 @@ class SearchDropDownController<T> extends ChangeNotifier {
         : _filtered.indexWhere((ValueItem<T> e) => e.label == selected.label);
   }
 
-  /// Whether [item] is the selected item. Items whose values cannot be
-  /// compared (no `==`) match by label, as in 7.x.
+  /// Whether [item] is the selected item: it is `==` to it or, when no item
+  /// in [filteredItems] is (values that cannot be compared, as in 7.x), has
+  /// its label.
   bool isSelected(ValueItem<T> item) {
     final ValueItem<T>? selected = _selectedItem;
     return selected != null &&
-        (item == selected || item.label == selected.label);
+        _selects(item, selected, exactInPool: _selectionInResults(selected));
+  }
+
+  /// The one selection rule, for rows and for edit; [selectedIndex] follows
+  /// it too (`==` first, then the label).
+  static bool _selects<E>(
+    ValueItem<E> item,
+    ValueItem<E> selected, {
+    required bool exactInPool,
+  }) => item == selected || (!exactInPool && item.label == selected.label);
+
+  /// Bumped whenever [_filtered] changes.
+  int _resultsVersion = 0;
+  ValueItem<T>? _exactFor;
+  int _exactVersion = -1;
+  bool _exactInResults = false;
+
+  /// Whether [_filtered] holds an item `==` to [selected]; cached per
+  /// results and selection, so marking each row is O(1).
+  bool _selectionInResults(ValueItem<T> selected) {
+    if (!identical(selected, _exactFor) || _exactVersion != _resultsVersion) {
+      _exactFor = selected;
+      _exactVersion = _resultsVersion;
+      _exactInResults = _filtered.contains(selected);
+    }
+    return _exactInResults;
   }
 
   // ------------------------------------------------------------- filtering
 
   void _onTextChanged() {
+    final String? untouched = _untouchedLabel;
+    if (untouched != null && localSearchController.text != untouched) {
+      _untouchedLabel = null;
+    }
+    _followText();
+  }
+
+  /// Re-filters by the field text: in the open view, or while closed once
+  /// filtering is armed (7.x), except for the label [selectItem] writes.
+  void _followText() {
     if (_viewOpen) {
       _applyFilter();
+    } else if (_filterArmed && !_selecting) {
+      _filterBy(_textQuery);
     }
   }
 
-  /// The text used as query. Only filters while the view is open, and the
-  /// selected label in the field is not a query.
-  String get _query {
-    if (!_viewOpen) {
-      return '';
-    }
+  /// The field text as a query. The selected label is no query while the
+  /// view is closed and, in the open view, until the user edits it.
+  String get _textQuery {
     final String text = localSearchController.text;
     final ValueItem<T>? selected = _selectedItem;
-    return selected != null && text == selected.label ? '' : text;
+    final bool showsSelection =
+        selected != null &&
+        text == selected.label &&
+        (!_viewOpen || text == _untouchedLabel);
+    return showsSelection ? '' : text;
   }
+
+  /// Whether the open view still shows the selected label it opened with.
+  bool get _showsUntouchedLabel =>
+      _viewOpen && _textQuery.isEmpty && _untouchedLabel != null;
+
+  /// The query of the open view (`''` while closed, for refreshes).
+  String get _query => _viewOpen ? _textQuery : '';
 
   /// Rebuilds the sorted base from [listItems] and re-applies the filter.
   void _refresh() {
@@ -358,6 +425,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     _filtered
       ..clear()
       ..addAll(next);
+    _resultsVersion++;
     // The same results with fresh instances (e.g. a refreshed item whose
     // value `==` only compares an id) are handed out without counting as new
     // results: the highlight stays and onFilterUpdated is not called (7.x).
@@ -466,8 +534,20 @@ class SearchDropDownController<T> extends ChangeNotifier {
     }
   }
 
-  /// Selects the first filtered item, if any.
+  /// Selects the first filtered item, if any. Right after the view opened
+  /// with the selected label (every item listed), keeps the selection, or
+  /// selects the first item matching its label (7.x).
   void handleEnterKey() {
+    if (_showsUntouchedLabel) {
+      final int index = selectedIndex;
+      final List<ValueItem<T>> matches = index != -1
+          ? <ValueItem<T>>[_filtered[index]]
+          : _engine.filter(_base, localSearchController.text);
+      if (matches.isNotEmpty) {
+        selectItem(matches.first);
+      }
+      return;
+    }
     if (_filtered.isNotEmpty) {
       selectItem(_filtered.first);
     }
@@ -487,14 +567,22 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Selects [item] like a user would: fills the text, closes the view and
   /// calls [updateSelectedItem].
   void selectItem(ValueItem<T> item) {
+    final ValueItem<T>? previous = _selectedItem;
     _selectedItem = item;
     // The view is closing: writing the label must not re-filter the list.
     _viewOpen = false;
-    if (localSearchController.isAttached && localSearchController.isOpen) {
-      localSearchController.closeView(item.label);
-    } else {
-      localSearchController.text = item.label;
+    _untouchedLabel = null;
+    _selecting = true;
+    try {
+      if (localSearchController.isAttached && localSearchController.isOpen) {
+        localSearchController.closeView(item.label);
+      } else {
+        _showSelectedLabel(item, previous, replaceTyped: true);
+      }
+    } finally {
+      _selecting = false;
     }
+    _filterArmed = true;
     _selectionChanged(item);
     _clearVisible = showClearIcon;
     _notify();
@@ -512,11 +600,15 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Clears the selection and the text, then calls [updateSelectedItem].
   void clearSelectionAndNotify() {
     _clearSelection();
+    _filterArmed = true;
     _selectionChanged(null);
   }
 
   /// Clears the selection and the text without calling [updateSelectedItem].
-  void clearSelection() => _clearSelection();
+  void clearSelection() {
+    _clearSelection();
+    _filterArmed = true;
+  }
 
   void _clearSelection() {
     _selectedItem = null;
@@ -524,6 +616,28 @@ class SearchDropDownController<T> extends ChangeNotifier {
     localSearchController.text = '';
     _applyFilter();
     _notify();
+  }
+
+  /// Shows [item] (the new selection, [previous] the old one) in the field.
+  /// Its label is no query, so an open view lists every item. Text the user
+  /// typed is kept unless [replaceTyped]; without [item] only the old label
+  /// is cleared.
+  void _showSelectedLabel(
+    ValueItem<T>? item,
+    ValueItem<T>? previous, {
+    required bool replaceTyped,
+  }) {
+    final bool showsPrevious =
+        previous != null && localSearchController.text == previous.label;
+    if (showsPrevious || (item != null && replaceTyped)) {
+      final String label = item?.label ?? '';
+      if (_viewOpen) {
+        _untouchedLabel = item == null ? null : label;
+      }
+      localSearchController.text = label;
+    }
+    // Also when the text stayed: the new selection changes what is a query.
+    _followText();
   }
 
   /// Selects the item whose label matches [label] (exact first, then
@@ -700,6 +814,12 @@ class SearchDropDownController<T> extends ChangeNotifier {
     final ValueItem<T>? stored = _engine.storedFor(listItems, before, newValue);
     final int index = listItems.indexOf(item);
     final bool replace = index != -1 && (stored == null || newValue == item);
+    // The row the user saw as selected, with the rule of [isSelected] over
+    // the list before it is written.
+    final ValueItem<T>? selected = _selectedItem;
+    final bool wasSelected =
+        selected != null &&
+        _selects(item, selected, exactInPool: listItems.contains(selected));
     writeShared(() {
       if (replace) {
         listItems[index] = newValue;
@@ -710,11 +830,25 @@ class SearchDropDownController<T> extends ChangeNotifier {
       }
     });
     _engine.forget(item);
-    final bool wasSelected = _selectedItem == item;
     _refresh();
     if (wasSelected) {
-      selectItem(replace || stored == null ? newValue : stored);
+      _reselectEdited(replace || stored == null ? newValue : stored);
     }
+  }
+
+  /// Selects the edited item in place of the old one; an open view stays
+  /// open (as in 7.x) and keeps a query the user typed.
+  void _reselectEdited(ValueItem<T> next) {
+    if (!_viewOpen) {
+      selectItem(next);
+      return;
+    }
+    final ValueItem<T>? previous = _selectedItem;
+    _selectedItem = next;
+    _clearVisible = showClearIcon;
+    _showSelectedLabel(next, previous, replaceTyped: false);
+    _selectionChanged(next);
+    _notify();
   }
 
   // ------------------------------------------------------------ open/close
@@ -723,11 +857,14 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// [listItems] and shows every item (the selected label is not a query).
   void onSearchOpen() {
     _viewOpen = true;
+    _filterArmed = true;
     _highlight.value = -1;
-    _refresh();
     final ValueItem<T>? selected = _selectedItem;
     final String text = localSearchController.text;
-    if (selected != null && text == selected.label) {
+    final bool showsSelection = selected != null && text == selected.label;
+    _untouchedLabel = showsSelection ? text : null;
+    _refresh();
+    if (showsSelection) {
       // Typing replaces the selected label instead of appending to it.
       localSearchController.selection = TextSelection(
         baseOffset: 0,
@@ -739,6 +876,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Restores or clears the text when the search view closes.
   void onSearchClose(bool clearOnClose) {
     _viewOpen = false;
+    _untouchedLabel = null;
     if (!_disposed) {
       _highlight.value = -1;
     }

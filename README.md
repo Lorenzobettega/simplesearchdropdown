@@ -196,7 +196,9 @@ in 9.0.0.
 Behaviour changes worth knowing (see the CHANGELOG for all fixes):
 
 - Reopening the single dropdown lists every item, scrolled to the selection
-  (it used to show only the selected one).
+  (it used to show only the selected one); Enter keeps the selection.
+- Assigning `controller.selectedItem` updates the bar text and clear button
+  (still without calling `updateSelectedItem`).
 - A–Z / Z–A ignore case and accents (`abacaxi, Banana, Maçã`).
 - The clear button shows after a selection by default: the controller's
   `showClearIcon` now defaults to `true` (pass `false` to hide it), and

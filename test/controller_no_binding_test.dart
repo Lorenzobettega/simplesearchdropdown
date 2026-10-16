@@ -39,7 +39,9 @@ void main() {
       ..selectedItem = null
       ..clearVisible = false
       ..resetSelection();
-    expect(notified, 6);
+    // selectedItem = null already hides the clear button (N33), so the
+    // clearVisible = false that follows changes nothing and does not notify.
+    expect(notified, 5);
     expect(selections.last, isNull);
 
     c
