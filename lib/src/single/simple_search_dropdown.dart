@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
@@ -51,7 +52,9 @@ class SearchDropDown<T> extends StatefulWidget {
   @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
   Widget? get defaultAditionalWidget => defaultAdditionalWidget;
 
-  /// Dispose [controller] together with this widget (default: `true`).
+  /// Dispose [controller] together with this widget when it owns its
+  /// SearchController (default: `true`). A controller built with
+  /// `searchController:` is left to you and can be mounted again, as in 7.x.
   final bool disposeController;
 
   /// Remove the focus from the bar after the list closes (default: `true`).
@@ -78,30 +81,62 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
 
   SearchDropDownController<T> get _controller => widget.controller;
 
+  /// The current controller, for the open view's trailing icons: SearchAnchor
+  /// keeps the widgets it opened with.
+  late final ValueNotifier<SearchDropDownController<T>> _current =
+      ValueNotifier<SearchDropDownController<T>>(widget.controller);
+
+  @override
+  void didUpdateWidget(covariant SearchDropDown<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.controller, widget.controller)) {
+      // Not during this build: the open view is another route.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          _current.value = widget.controller;
+        }
+      });
+    }
+  }
+
   @override
   void dispose() {
     _unfocusWindow?.cancel();
-    if (widget.disposeController) {
-      // As in 7.x: only the current controller; a swapped-out one may still
-      // be used by its owner (or by a view that is closing).
+    if (widget.disposeController && _controller.ownsSearchController) {
+      // As in 7.x: only the current controller, and only when it owns its
+      // SearchController; with one passed in, the caller keeps the
+      // controller and may mount it again. A swapped-out controller may
+      // still be used by its owner (or by a view that is closing).
       _controller.dispose();
     }
+    _current.dispose();
     _focusNode.dispose();
     super.dispose();
   }
 
-  /// Toggles enabled/disabled.
+  /// Toggles enabled/disabled. Does nothing once unmounted (as in 7.x).
   @Deprecated('Use controller.toggleEnabled(). Will be removed in 9.0.0')
-  void enableDisable() => _controller.toggleEnabled();
+  void enableDisable() {
+    if (mounted) {
+      _controller.toggleEnabled();
+    }
+  }
 
-  /// Clears the selection.
+  /// Clears the selection. Does nothing once unmounted (as in 7.x).
   @Deprecated('Use controller.resetSelection(). Will be removed in 9.0.0')
-  void resetSelection() => _controller.resetSelection();
+  void resetSelection() {
+    if (mounted) {
+      _controller.resetSelection();
+    }
+  }
 
-  /// Replaces the items.
+  /// Replaces the items. Does nothing once unmounted (as in 7.x).
   @Deprecated('Use controller.updateListItems(). Will be removed in 9.0.0')
-  void updateList(List<ValueItem<T>> newList, {bool shouldreset = true}) =>
+  void updateList(List<ValueItem<T>> newList, {bool shouldreset = true}) {
+    if (mounted) {
       _controller.updateListItems(newList, shouldreset);
+    }
+  }
 
   void _onOpen() {
     _unfocusWindow?.cancel();
@@ -175,7 +210,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         dividerColor: bar.showDivider ? null : viewBackground,
         viewTrailing: <Widget>[
           _ViewTrailing<T>(
-            controller: _controller,
+            controller: _current,
             settings: bar,
             strings: strings,
             showClear: _clearEnabled,
@@ -275,8 +310,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       _controller.filteredItems.isEmpty;
 }
 
-/// Trailing icons of the open view; rebuilt from the controller because
-/// [SearchAnchor] keeps the widgets it was opened with.
+/// Trailing icons of the open view. [SearchAnchor] keeps the widgets it was
+/// opened with, so this follows the current controller through [controller]
+/// and rebuilds when it notifies.
 class _ViewTrailing<T> extends StatelessWidget {
   const _ViewTrailing({
     required this.controller,
@@ -285,41 +321,47 @@ class _ViewTrailing<T> extends StatelessWidget {
     required this.showClear,
   });
 
-  final SearchDropDownController<T> controller;
+  final ValueListenable<SearchDropDownController<T>> controller;
   final SimpleSearchbarSettings settings;
   final SearchDropDownStrings strings;
   final bool showClear;
 
+  void _close() {
+    final SearchController search = controller.value.localSearchController;
+    search.closeView(search.text);
+  }
+
   @override
   Widget build(BuildContext context) {
-    final SearchController search = controller.localSearchController;
-    return ListenableBuilder(
-      listenable: controller,
-      builder: (BuildContext context, _) => Row(
-        mainAxisSize: MainAxisSize.min,
-        children: <Widget>[
-          if (settings.showArrow)
-            IconButton(
-              tooltip: strings.closeTooltip,
-              onPressed:
-                  settings.dropdownOpenedIconFunction ??
-                  () => search.closeView(search.text),
-              icon: Icon(
-                settings.dropdownOpenedArrowIcon,
-                color: settings.outsideIconColor,
-                size: settings.outsideIconSize,
-              ),
+    return ValueListenableBuilder<SearchDropDownController<T>>(
+      valueListenable: controller,
+      builder: (BuildContext context, SearchDropDownController<T> current, _) =>
+          ListenableBuilder(
+            listenable: current,
+            builder: (BuildContext context, _) => Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                if (settings.showArrow)
+                  IconButton(
+                    tooltip: strings.closeTooltip,
+                    onPressed: settings.dropdownOpenedIconFunction ?? _close,
+                    icon: Icon(
+                      settings.dropdownOpenedArrowIcon,
+                      color: settings.outsideIconColor,
+                      size: settings.outsideIconSize,
+                    ),
+                  ),
+                if (showClear)
+                  ClearButton(
+                    visible: current.clearVisible,
+                    onPressed: () => controller.value.resetSelection(),
+                    iconColor: settings.clearIconColor,
+                    iconSize: settings.outsideIconSize,
+                    tooltip: strings.clearTooltip,
+                  ),
+              ],
             ),
-          if (showClear)
-            ClearButton(
-              visible: controller.clearVisible,
-              onPressed: controller.resetSelection,
-              iconColor: settings.clearIconColor,
-              iconSize: settings.outsideIconSize,
-              tooltip: strings.clearTooltip,
-            ),
-        ],
-      ),
+          ),
     );
   }
 }
@@ -352,6 +394,12 @@ class _ViewListState<T> extends State<_ViewList<T>> {
   final ItemPositionsListener _positions = ItemPositionsListener.create();
   late final int _initialIndex;
 
+  /// Whether the list is still anchored at the selection it opened with
+  /// (D1). The first typed query drops the anchor for the rest of this open,
+  /// so results then list from the top (7.x); the list is keyed on it
+  /// because the anchor is only read when the list is created.
+  bool _anchored = false;
+
   /// The items shown: a copy of `filteredItems` taken on each results
   /// notification. A change made during a build updates `filteredItems` at
   /// once but notifies after the frame, and this frame's lazy layout must
@@ -378,6 +426,7 @@ class _ViewListState<T> extends State<_ViewList<T>> {
     final int selected = _controller.selectedIndex;
     _initialIndex = selected < 0 ? 0 : selected;
     _bind(_controller);
+    _anchored = _initialIndex > 0 && _showsSelection();
     HardwareKeyboard.instance.addHandler(_handleKey);
   }
 
@@ -399,6 +448,15 @@ class _ViewListState<T> extends State<_ViewList<T>> {
   void _onResults() {
     _items = List<ValueItem<T>>.of(_bound.filteredItems);
     _rows.clear();
+    // Results that follow a typed query drop the anchor; an edit, a delete
+    // or a cleared selection keep it.
+    _anchored = _anchored && _showsSelection();
+  }
+
+  /// Whether the field shows no query: it is empty or shows the selection.
+  bool _showsSelection() {
+    final String text = _bound.localSearchController.text;
+    return text.isEmpty || text == _bound.selectedItem?.label;
   }
 
   void _unbind() {
@@ -527,6 +585,7 @@ class _ViewListState<T> extends State<_ViewList<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final bool shrinkWrap = SearchViewTheme.of(context).shrinkWrap ?? false;
     return MediaQuery.removePadding(
       context: context,
       removeTop: true,
@@ -537,11 +596,17 @@ class _ViewListState<T> extends State<_ViewList<T>> {
           final String text = _controller.localSearchController.text;
           final bool addRow = items.isEmpty && widget.showAddRow(text);
           return ScrollablePositionedList.builder(
+            key: ValueKey<bool>(_anchored),
             itemScrollController: _scroll,
             itemPositionsListener: _positions,
-            initialScrollIndex: _initialIndex < items.length
+            initialScrollIndex: _anchored && _initialIndex < items.length
                 ? _initialIndex
                 : 0,
+            // SearchAnchor applies the theme's shrinkWrap only to the list it
+            // builds itself (7.x used that list).
+            shrinkWrap: shrinkWrap,
+            // Same padding as SearchAnchor's own suggestions list (upstream
+            // since Flutter 3.33); not a keyboard-height bug to "fix".
             padding: EdgeInsets.only(
               bottom: MediaQuery.viewInsetsOf(context).bottom,
             ),
@@ -569,6 +634,8 @@ class _ViewListState<T> extends State<_ViewList<T>> {
     return ListenableBuilder(
       listenable: _rowInputs,
       builder: (BuildContext context, _) => DefaultListTile<T>(
+        // The row state (its spinner) belongs to the item, not the index.
+        key: ValueKey<ValueItem<T>>(item),
         deleteMode: _controller.deleteMode,
         editMode: _controller.editMode,
         item: item,

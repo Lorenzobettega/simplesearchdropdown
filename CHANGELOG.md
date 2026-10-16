@@ -5,7 +5,8 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - `SearchDropDownController` is a `ChangeNotifier`: change selection, items or `enabled` from code and the widget updates, no `GlobalKey` needed (#45).
 - `MultipleSearchDropDownController` (exported) and a `controller:` parameter on `MultipleSearchDropDown`.
 - `items:` on both controllers: the controller keeps its own copy (`listItems:` still shares your list).
-- The single list opens scrolled to the selected item (#46); PageUp/PageDown jump to the first/last item.
+- The single list opens scrolled to the selected item (#46) until you type a search, whose results then list from the top; PageUp/PageDown jump to the first/last item.
+- `SearchDropDownController.ownsSearchController`: whether the controller created its own `SearchController`.
 - `SearchDropDownStrings` (Portuguese defaults, `.en()`), per widget (`strings:`) or app-wide with `SearchDropDownStringsScope`, which also reaches the controllers' `addItem`/`addValue`/`editItem`/`deleteItem` dialogs and the exported dialogs and rows when they get no `strings:`.
 - `SortType` enum (`sort:`), A-Z/Z-A ordering that ignores case, accents and surrounding spaces, whatever `caseSensitive`/`latinize`/`trim` (both dropdowns).
 - Multiple dropdown: edit mode works (it was a stub); `latinize`/`caseSensitive`/`trim` apply there too.
@@ -20,6 +21,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - The multiple list is drawn with `OverlayPortal`: it follows parent rebuilds, is removed with the widget and stays below dialogs (confirm/verify dialogs are now regular modal dialogs).
 - Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) still read as before, but a value you do not set now comes from `SearchDropDownStrings`; `customHint`, `customAddItemHint`, `customEditHint` tell whether one was set explicitly.
 - `SearchDropDownController.dispose()` can be called more than once.
+- `SearchDropDown(disposeController: true)` (default) disposes the whole controller when the widget is removed, but only when the controller created its own `SearchController` (7.x disposed just that one); a controller built with `searchController:` is left to you and can be mounted again, as in 7.x.
 - An error thrown by `onAddItem`, `onEditItem` or `onDeleteItem` started from a list row is reported with `FlutterError.reportError` (library `simple_search_dropdown`, so crash reporters see it) instead of escaping as an uncaught error (7.x silently dropped delete errors); the item stays as it was and the row's button comes back. Awaiting the controller's `addItem`/`editItem`/`deleteItem` yourself still gets the error.
 - Confirming the edit dialog with the label unchanged does nothing: `onEditItem` is not called and the original item stays in the list and the selection (7.x single called `onEditItem`).
 - A legacy `MultipleSearchDropDown` keeps its search and pending add/delete across parent rebuilds; new list instances or dialog settings are applied in place.
@@ -53,6 +55,10 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Single: several keys typed within one frame into a focused closed bar (e.g. a barcode scanner) opened stacked lists that stopped filtering and did not close on selection. Guarded on the controller's own `SearchController`; one you pass as `searchController` is used as is.
 - Single: Enter on a Tab-focused row or button of the open list also selected the highlighted or first item; arrows, PageUp/PageDown and Enter drive the list only from its search field (or with no control focused).
 - Single: arrows and PageUp/PageDown dropped the selection of the selected label, so typing appended to it instead of replacing it.
+- Single: the deprecated `SearchDropDownState.enableDisable/resetSelection/updateList` do nothing once the widget is unmounted again (7.x).
+- Single: after the parent swapped the controller while the list was open, the list's arrow threw instead of closing it and its clear button cleared the old controller.
+- A row's delete/edit spinner no longer moves to another item when the results change while the callback is pending (both dropdowns).
+- Single: the list honours `SearchViewThemeData.shrinkWrap` again (7.x), so a short list shrinks the view.
 - `MultipleSearchDropDownController(items:)` copies `selectedItems` too, so a `const []` or unmodifiable initial selection no longer throws on the first tap; with `listItems:` it stays your list, updated in place (7.x).
 
 ### Deprecated

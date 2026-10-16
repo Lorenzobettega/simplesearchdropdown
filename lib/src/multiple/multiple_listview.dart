@@ -155,6 +155,9 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                         }
                         final ValueItem<T> item = items[index];
                         return DefaultListTile<T>(
+                          // The row state (its spinner) belongs to the
+                          // item, not the index.
+                          key: ValueKey<ValueItem<T>>(item),
                           deleteMode: _controller.deleteMode,
                           editMode: _controller.editMode,
                           item: item,

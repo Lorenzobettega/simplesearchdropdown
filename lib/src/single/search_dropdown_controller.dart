@@ -104,6 +104,10 @@ class SearchDropDownController<T> extends ChangeNotifier {
   final SearchController localSearchController;
   final bool _ownsSearchController;
 
+  /// Whether [localSearchController] was created here (no `searchController`
+  /// passed) and is disposed with this controller.
+  bool get ownsSearchController => _ownsSearchController;
+
   /// The items shown by the dropdown (your list when created with
   /// `listItems`, the controller's copy when created with `items`).
   final List<ValueItem<T>> listItems;
