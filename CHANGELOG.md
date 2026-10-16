@@ -33,9 +33,6 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Items, sort or filter changes made to the single dropdown during a build: `filteredItems`, `selectedIndex`, `highlightedIndex` and Enter (`submit`, `handleEnterKey`) see the new list at once, as in 7.x, while the open list (left stale by 7.x), the `results`/`highlight` listeners and `onFilterUpdated` follow right after that frame, coalesced into one notification per frame (7.x called `onFilterUpdated` once per change).
 - Single keyboard and focus: Tab/Shift+Tab move past the bar to the next field (with `removeFocus: false` 7.x cycled inside the bar); Enter or the keyboard's done key on the focused closed bar does nothing (7.x with `removeFocus: false` selected the first item); a disabled dropdown cannot take the focus and drops it when disabled.
 
-### Breaking
-- `MultipleListView` (exported helper) takes a `MultipleSearchDropDownController`; use `MultipleSearchDropDown` instead of building it directly.
-
 ### Fixed
 - Crash when filtering after deleting/editing with a callback that does not change the list, or after the shared list grew from outside (e.g. an item added through the multiple dropdown).
 - `updateListItems` with the same list instance emptied it.
@@ -69,6 +66,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 ### Deprecated
 - `SearchDropDownState.enableDisable/resetSelection/updateList` and the `MultipleSearchDropDownState` methods → use the controllers.
 - `sortType` → `sort`; `addAditionalWidget`/`defaultAditionalWidget`/`aditionalWidgetSpacing` → `*Additional*` (also on `DefaultListTile` and `DefaultAddListItem`).
+- `MultipleListView`'s 7.x parameters (`listItens`, `selectedItens`, `onItemSelected`, `onAddItem`, `onDeleteItem`, `onEditItem`, `addMode`/`editMode`/`deleteMode`, `sortType`, `newValueItem`, `*Aditional*`) → `MultipleSearchDropDown`, or `MultipleListView(controller:)`. Built the 7.x way it still only reads your lists and calls your callbacks (no dialogs, no trim), now sorting A-Z/Z-A ignoring case and accents without reordering your list; the 7.x fields cannot be read back from the widget.
 - `MultipleSearchDropDownState.aberto`/`enabled` setters and `overlayScreen` (still one instance whose `closeAll()`/`closeLast()` close the list; to know whether it is open, `overlayEntrys.isEmpty` → `!aberto`).
 
 ### Performance

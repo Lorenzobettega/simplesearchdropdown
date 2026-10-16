@@ -191,6 +191,7 @@ in 9.0.0.
 | `sortType: 0..3` | `sort: SortType.none / alphabetical / reverseAlphabetical / selectedFirst` |
 | `addAditionalWidget`, `defaultAditionalWidget`, `aditionalWidgetSpacing` | `addAdditionalWidget`, `defaultAdditionalWidget`, `additionalWidgetSpacing` |
 | `hint: 'Pesquisar'`, `addItemHint: 'Criar'`, dialog button texts | `SearchDropDownStrings` (settings texts still win when set) |
+| `MultipleListView(listItens: ..., onItemSelected: ...)` | `MultipleSearchDropDown`, or `MultipleListView(controller: ...)` |
 | `multipleState.overlayScreen.closeAll()` / `overlayEntrys.isEmpty` | `multipleState.hideOverlay()` / `!multipleState.aberto` |
 
 Behaviour changes worth knowing (see the CHANGELOG for all fixes):
