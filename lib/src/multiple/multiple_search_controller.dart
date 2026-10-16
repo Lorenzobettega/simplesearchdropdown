@@ -2,9 +2,9 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
+import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 
 /// State of a [MultipleSearchDropDown]: items, selected items, search text and
 /// filtering. Changes notify listeners, so the widget updates without a
@@ -225,16 +225,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     final void Function()? onUpdated = onFilterUpdated;
     if (onUpdated != null) {
       // User callbacks often call setState; never run them during a build.
-      final SchedulerBinding binding = SchedulerBinding.instance;
-      if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
-        binding.addPostFrameCallback((_) {
-          if (!_disposed) {
-            onUpdated();
-          }
-        });
-      } else {
-        onUpdated();
-      }
+      _runOutsideBuild(onUpdated);
     }
     _notify();
   }
@@ -250,15 +241,21 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Selects [item], or deselects it (calling [onClearItem]) when it is
   /// already selected. With [forced] an already selected item stays selected.
   void toggle(ValueItem<T> item, {bool forced = false}) {
+    bool removed = false;
     if (selectedItems.contains(item)) {
       if (!forced) {
         selectedItems.remove(item);
-        onClearItem?.call(item);
+        removed = true;
       }
     } else {
       selectedItems.add(item);
     }
-    updateSelectedItems?.call(selectedItems);
+    _runOutsideBuild(() {
+      if (removed) {
+        onClearItem?.call(item);
+      }
+      updateSelectedItems?.call(selectedItems);
+    });
     if (_sort == SortType.selectedFirst) {
       _rebuildBase();
       _applyFilter();
@@ -296,7 +293,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Clears the selection and calls [updateSelectedItems].
   void resetSelection() {
     selectedItems.clear();
-    updateSelectedItems?.call(selectedItems);
+    _runOutsideBuild(() => updateSelectedItems?.call(selectedItems));
     _notify();
   }
 
@@ -304,8 +301,10 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// and [onClearList].
   void clear() {
     selectedItems.clear();
-    updateSelectedItems?.call(selectedItems);
-    onClearList?.call();
+    _runOutsideBuild(() {
+      updateSelectedItems?.call(selectedItems);
+      onClearList?.call();
+    });
     _notify();
   }
 
@@ -480,17 +479,13 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    final SchedulerBinding binding = SchedulerBinding.instance;
-    if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
-      binding.addPostFrameCallback((_) {
-        if (!_disposed) {
-          notifyListeners();
-        }
-      });
-    } else {
-      notifyListeners();
-    }
+    _runOutsideBuild(notifyListeners);
   }
+
+  /// Runs [callback] now, or after the frame when called during a build
+  /// (user callbacks often call setState).
+  void _runOutsideBuild(void Function() callback) =>
+      runOutsideBuild(callback, () => _disposed);
 
   /// Releases resources. Safe to call more than once.
   @override

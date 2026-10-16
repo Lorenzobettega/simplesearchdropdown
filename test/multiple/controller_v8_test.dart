@@ -213,4 +213,70 @@ void main() {
       },
     );
   });
+
+  group('multiple controller: selection callbacks during a build (F18)', () {
+    testWidgets('are delivered after the frame, in order', (tester) async {
+      late StateSetter setScreen;
+      late StateSetter setChild;
+      final List<String> calls = <String>[];
+      String mutation = 'force';
+      late final MultipleSearchDropDownController<int> c;
+      c = MultipleSearchDropDownController<int>(
+        items: fruitItems(),
+        addMode: false,
+        deleteMode: false,
+        // An ancestor setState throws when called during a build.
+        updateSelectedItems: (s) =>
+            setScreen(() => calls.add('update:${s.length}')),
+        onClearItem: (item) =>
+            setScreen(() => calls.add('clear:${item.label}')),
+        onClearList: () => setScreen(() => calls.add('clearList')),
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(
+        host(
+          StatefulBuilder(
+            builder: (context, setState) {
+              setScreen = setState;
+              return StatefulBuilder(
+                builder: (context, setState) {
+                  setChild = setState;
+                  switch (mutation) {
+                    case 'force':
+                      c.forceSelection('Banana');
+                    case 'toggle':
+                      c.toggle(c.selectedItems.first);
+                    case 'reset':
+                      c.resetSelection();
+                    case 'clear':
+                      c.clear();
+                  }
+                  mutation = '';
+                  return MultipleSearchDropDown<int>(controller: c);
+                },
+              );
+            },
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      await tester.pump();
+      expect(calls, <String>['update:1']);
+
+      for (final String next in <String>['toggle', 'reset', 'clear']) {
+        setChild(() => mutation = next);
+        await tester.pump();
+        expect(tester.takeException(), isNull, reason: next);
+        await tester.pump();
+      }
+      expect(calls, <String>[
+        'update:1',
+        'clear:Banana',
+        'update:0',
+        'update:0',
+        'update:0',
+        'clearList',
+      ]);
+    });
+  });
 }

@@ -2,9 +2,9 @@ import 'dart:collection';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
+import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 
 /// State of a [SearchDropDown]: items, selection, search text and filtering.
 ///
@@ -288,42 +288,50 @@ class SearchDropDownController<T> extends ChangeNotifier {
     // Typing more characters can only narrow the previous results.
     final List<ValueItem<T>> source =
         last != null && last.isNotEmpty && query.startsWith(last)
-        ? List<ValueItem<T>>.of(_filtered)
+        ? List<ValueItem<T>>.of(_pending ?? _filtered)
         : _base;
     _show(_engine.filter(source, text));
     _lastQuery = query;
   }
 
+  /// Results computed during a build that replace [_filtered] after the
+  /// frame.
+  List<ValueItem<T>>? _pending;
+
   void _show(List<ValueItem<T>> next) {
-    if (listEquals(next, _filtered)) {
+    if (listEquals(next, _pending ?? _filtered)) {
       return;
     }
-    _filtered
-      ..clear()
-      ..addAll(next);
-    if (_disposed) {
-      return;
-    }
-    _highlight.value = -1;
-    _results.fire();
-    final void Function()? onUpdated = onFilterUpdated;
-    if (onUpdated != null) {
-      _runOutsideBuild(onUpdated);
-    }
+    _pending = next;
+    // The open view reads filteredItems lazily while laying out, so the list
+    // is swapped together with its notifications: never a new list with the
+    // item count of the old one.
+    _runOutsideBuild(() {
+      if (identical(_pending, next)) {
+        _pending = null;
+      }
+      _filtered
+        ..clear()
+        ..addAll(next);
+      if (_disposed) {
+        return;
+      }
+      _highlight.value = -1;
+      _results.fire();
+      onFilterUpdated?.call();
+    });
   }
 
   /// Runs [callback] now, or after the frame when called during a build
   /// (user callbacks often call setState).
-  void _runOutsideBuild(void Function() callback) {
-    final SchedulerBinding binding = SchedulerBinding.instance;
-    if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
-      binding.addPostFrameCallback((_) {
-        if (!_disposed) {
-          callback();
-        }
-      });
-    } else {
-      callback();
+  void _runOutsideBuild(void Function() callback) =>
+      runOutsideBuild(callback, () => _disposed);
+
+  /// Calls [updateSelectedItem] with [item], outside a build.
+  void _selectionChanged(ValueItem<T>? item) {
+    final void Function(ValueItem<T>?)? callback = updateSelectedItem;
+    if (callback != null) {
+      _runOutsideBuild(() => callback(item));
     }
   }
 
@@ -413,7 +421,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     } else {
       localSearchController.text = item.label;
     }
-    updateSelectedItem?.call(item);
+    _selectionChanged(item);
     _clearVisible = showClearIcon ?? true;
     _notify();
   }
@@ -424,13 +432,13 @@ class SearchDropDownController<T> extends ChangeNotifier {
     if (highlight) {
       resetHighlight();
     }
-    updateSelectedItem?.call(null);
+    _selectionChanged(null);
   }
 
   /// Clears the selection and the text, then calls [updateSelectedItem].
   void clearSelectionAndNotify() {
     _clearSelection();
-    updateSelectedItem?.call(null);
+    _selectionChanged(null);
   }
 
   /// Clears the selection and the text without calling [updateSelectedItem].
@@ -673,16 +681,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     if (_disposed) {
       return;
     }
-    final SchedulerBinding binding = SchedulerBinding.instance;
-    if (binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
-      binding.addPostFrameCallback((_) {
-        if (!_disposed) {
-          notifyListeners();
-        }
-      });
-    } else {
-      notifyListeners();
-    }
+    _runOutsideBuild(notifyListeners);
   }
 
   /// Releases resources. Safe to call more than once.

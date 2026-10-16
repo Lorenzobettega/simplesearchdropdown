@@ -219,6 +219,165 @@ void main() {
       },
     );
 
+    testWidgets(
+      'changes made during build while the view is open are delivered after '
+      'the frame (F7)',
+      (tester) async {
+        final c = _ctrl(listItems: fruitItems());
+        final ValueNotifier<int> tick = ValueNotifier<int>(0);
+        addTearDown(tick.dispose);
+        int applied = 0;
+        final List<int> lengthsSeenInBuild = <int>[];
+        await tester.pumpWidget(
+          host(
+            ValueListenableBuilder<int>(
+              valueListenable: tick,
+              builder: (context, v, _) {
+                if (v > applied) {
+                  applied = v;
+                  if (v == 1) {
+                    // No selection, no text: the path 7.x handled silently.
+                    c.updateListItems(numberedItems(3), false);
+                  } else if (v == 2) {
+                    c.sortBy(SortType.reverseAlphabetical);
+                  } else if (v == 3) {
+                    c.filterList('Item 1');
+                  }
+                  // The open view reads filteredItems lazily during this
+                  // frame's layout: it must still be the list it was built
+                  // with.
+                  lengthsSeenInBuild.add(c.filteredItems.length);
+                }
+                return SearchDropDown<int>(controller: c);
+              },
+            ),
+          ),
+        );
+        await openSingle(tester);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pump();
+        expect(c.highlightedIndex, 0, reason: 'so the reset really notifies');
+
+        tick.value = 1;
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(lengthsSeenInBuild, <int>[5]);
+        expect(c.highlightedIndex, -1);
+        expect(c.filteredItems.map((e) => e.label), <String>[
+          'Item 0',
+          'Item 1',
+          'Item 2',
+        ]);
+        await tester.pump();
+        expect(find.text('Maçã'), findsNothing);
+        expect(find.text('Item 2'), findsOneWidget);
+
+        tick.value = 2;
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(c.filteredItems.first.label, 'Item 2');
+
+        tick.value = 3;
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        await tester.pump();
+        expect(c.filteredItems.map((e) => e.label), <String>['Item 1']);
+        expect(find.text('Item 0'), findsNothing);
+        expect(lengthsSeenInBuild, <int>[5, 3, 3]);
+      },
+    );
+
+    testWidgets(
+      'updateSelectedItem from a reset during a descendant build is delivered '
+      'after the frame (F18)',
+      (tester) async {
+        late StateSetter setScreen;
+        String shown = 'Banana';
+        bool mutate = true;
+        final c = SearchDropDownController<int>(
+          listItems: fruitItems(),
+          addMode: false,
+          deleteMode: false,
+          // An ancestor setState throws when called during a build.
+          updateSelectedItem: (v) => setScreen(() => shown = '${v?.label}'),
+        );
+        addTearDown(c.dispose);
+        await tester.pumpWidget(
+          host(
+            StatefulBuilder(
+              builder: (context, setState) {
+                setScreen = setState;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text('sel:$shown'),
+                    Builder(
+                      builder: (context) {
+                        if (mutate) {
+                          mutate = false;
+                          c.updateListItems(numberedItems(2), true);
+                        }
+                        return SearchDropDown<int>(controller: c);
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pump();
+        expect(c.filteredItems, hasLength(2));
+        expect(find.text('sel:null'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'updateSelectedItem from a selection during a descendant build is '
+      'delivered after the frame (F18)',
+      (tester) async {
+        late StateSetter setScreen;
+        String shown = 'none';
+        bool mutate = true;
+        final c = SearchDropDownController<int>(
+          listItems: fruitItems(),
+          addMode: false,
+          deleteMode: false,
+          updateSelectedItem: (v) => setScreen(() => shown = '${v?.label}'),
+        );
+        addTearDown(c.dispose);
+        await tester.pumpWidget(
+          host(
+            StatefulBuilder(
+              builder: (context, setState) {
+                setScreen = setState;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: <Widget>[
+                    Text('sel:$shown'),
+                    Builder(
+                      builder: (context) {
+                        if (mutate) {
+                          mutate = false;
+                          c.forceSelection('Uva');
+                        }
+                        return SearchDropDown<int>(controller: c);
+                      },
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        await tester.pump();
+        expect(c.selectedItem?.label, 'Uva');
+        expect(find.text('sel:Uva'), findsOneWidget);
+      },
+    );
+
     test('async callbacks finishing after dispose are ignored', () async {
       final List<ValueItem<int>> mine = fruitItems();
       final List<ValueItem<int>?> selections = <ValueItem<int>?>[];

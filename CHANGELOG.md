@@ -21,6 +21,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - `SearchDropDownController.dispose()` can be called more than once.
 - A legacy `MultipleSearchDropDown` keeps its search and pending add/delete across parent rebuilds; new list instances or dialog settings are applied in place.
 - `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
+- Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously.
 
 ### Breaking
 - `MultipleListView` (exported helper) takes a `MultipleSearchDropDownController`; use `MultipleSearchDropDown` instead of building it directly.
@@ -34,6 +35,8 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Keyboard highlight could stay on a stale row; rows were marked selected just because the typed text equalled their label; Tab focus was dropped immediately.
 - Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected.
 - `onFilterUpdated` missed changes with the same length/first/last item, and is never called during a build (safe to `setState` in it).
+- Changing the items, sort or filter of the single dropdown during a build while its list is open threw "setState() called during build"; the list and highlight now update right after that frame.
+- Controllers work without an initialized binding (plain `test()`, code before `runApp`), as in 7.x.
 - Keyboard highlight is cleared when the list reopens; selecting no longer re-filters the list while it closes; confirming the edit dialog unchanged keeps the item.
 - Multiple: deleting an item cleared the whole selection; `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; sorting reordered the caller's list; the list leaked when the widget was removed; a rejected item stayed in the search field (#13); async callbacks were not awaited.
 
