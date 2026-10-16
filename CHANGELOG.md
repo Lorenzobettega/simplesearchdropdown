@@ -26,6 +26,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
 - Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously. They are delivered even if the controller is disposed in that frame; listeners and `onFilterUpdated` are then skipped.
 - Items, sort or filter changes made to the single dropdown during a build: `filteredItems`, `selectedIndex`, `highlightedIndex` and Enter (`submit`, `handleEnterKey`) see the new list at once, as in 7.x, while the open list (left stale by 7.x), the `results`/`highlight` listeners and `onFilterUpdated` follow right after that frame, coalesced into one notification per frame (7.x called `onFilterUpdated` once per change).
+- Single keyboard and focus: Tab/Shift+Tab move past the bar to the next field (with `removeFocus: false` 7.x cycled inside the bar); Enter or the keyboard's done key on the focused closed bar does nothing (7.x with `removeFocus: false` selected the first item); a disabled dropdown cannot take the focus and drops it when disabled.
 
 ### Breaking
 - `MultipleListView` (exported helper) takes a `MultipleSearchDropDownController`; use `MultipleSearchDropDown` instead of building it directly.
@@ -49,6 +50,9 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Single: after the first open, text changes while the list is closed (`clearOnClose`, code writing `localSearchController.text`) update `filteredItems` and `onFilterUpdated` again, as in 7.x.
 - The confirm-delete, invalid-item and edit dialogs close their own route: under a nested navigator (go_router `ShellRoute`, `CupertinoTabView`) they popped the page behind them and stayed open, and a dialog opened from a row that left the list never closed.
 - Single: a rejected item whose warning closed after `dispose()` used the disposed search controller.
+- Single: several keys typed within one frame into a focused closed bar (e.g. a barcode scanner) opened stacked lists that stopped filtering and did not close on selection. Guarded on the controller's own `SearchController`; one you pass as `searchController` is used as is.
+- Single: Enter on a Tab-focused row or button of the open list also selected the highlighted or first item; arrows, PageUp/PageDown and Enter drive the list only from its search field (or with no control focused).
+- Single: arrows and PageUp/PageDown dropped the selection of the selected label, so typing appended to it instead of replacing it.
 - `MultipleSearchDropDownController(items:)` copies `selectedItems` too, so a `const []` or unmodifiable initial selection no longer throws on the first tap; with `listItems:` it stays your list, updated in place (7.x).
 
 ### Deprecated

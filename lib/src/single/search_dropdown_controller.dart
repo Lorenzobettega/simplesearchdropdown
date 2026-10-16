@@ -71,7 +71,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
          (editMode && onEditItem != null && newValueItem != null) || !editMode,
          'editMode can only be used with onEditItem != null && newValueItem != null',
        ),
-       localSearchController = searchController ?? SearchController(),
+       localSearchController = searchController ?? _SingleViewController(),
        _ownsSearchController = searchController == null,
        showClearIcon = showClearIcon ?? true,
        listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
@@ -96,6 +96,11 @@ class SearchDropDownController<T> extends ChangeNotifier {
   }
 
   /// The [SearchController] of the underlying `SearchAnchor`.
+  ///
+  /// The one created when no `searchController` is passed ignores
+  /// `openView()` while the view is open, so keys typed into a focused bar
+  /// before the view's first frame do not stack a second view. A
+  /// `searchController` you pass is used as is.
   final SearchController localSearchController;
   final bool _ownsSearchController;
 
@@ -969,5 +974,18 @@ class _Highlight extends ChangeNotifier implements ValueListenable<int> {
       _unsent = false;
       notifyListeners();
     }
+  }
+}
+
+/// `SearchAnchor.bar` calls `openView()` on every change of the bar's text;
+/// keys that arrive before the view's first frame (e.g. a barcode scanner
+/// typing into a Tab-focused bar) would push one view per key.
+class _SingleViewController extends SearchController {
+  @override
+  void openView() {
+    if (isAttached && isOpen) {
+      return;
+    }
+    super.openView();
   }
 }

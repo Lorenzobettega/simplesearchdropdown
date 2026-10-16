@@ -199,6 +199,9 @@ Behaviour changes worth knowing (see the CHANGELOG for all fixes):
   (it used to show only the selected one); Enter keeps the selection.
 - Assigning `controller.selectedItem` updates the bar text and clear button
   (still without calling `updateSelectedItem`).
+- Single keyboard: Tab into the bar keeps the focus and Tab moves on to the
+  next field; Enter on the closed bar selects nothing; a disabled dropdown
+  cannot be focused.
 - A–Z / Z–A ignore case and accents (`abacaxi, Banana, Maçã`).
 - The clear button shows after a selection by default: the controller's
   `showClearIcon` now defaults to `true` (pass `false` to hide it), and

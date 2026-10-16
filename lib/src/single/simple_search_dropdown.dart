@@ -69,7 +69,11 @@ class SearchDropDown<T> extends StatefulWidget {
 /// Prefer the [SearchDropDownController] API; the methods here only forward
 /// to it and remain for `GlobalKey` users.
 class SearchDropDownState<T> extends State<SearchDropDown<T>> {
-  final FocusScopeNode _focusNode = FocusScopeNode();
+  // parentScope: Tab/Shift+Tab at the bar's last/first control move on in
+  // the page instead of cycling inside the bar (no keyboard trap).
+  final FocusScopeNode _focusNode = FocusScopeNode(
+    traversalEdgeBehavior: TraversalEdgeBehavior.parentScope,
+  );
   Timer? _unfocusWindow;
 
   SearchDropDownController<T> get _controller => widget.controller;
@@ -126,12 +130,17 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   Widget build(BuildContext context) {
     final SearchDropDownStrings strings =
         widget.strings ?? SearchDropDownStrings.of(context);
-    return FocusScope(
-      node: _focusNode,
-      onFocusChange: _onFocusChange,
-      child: ListenableBuilder(
-        listenable: _controller,
-        builder: (BuildContext context, _) => _buildAnchor(strings),
+    return ListenableBuilder(
+      listenable: _controller,
+      builder: (BuildContext context, _) => ExcludeFocus(
+        // SearchAnchor only blocks the pointer when disabled; keep Tab and
+        // keys out too (focus leaves the bar when it gets disabled).
+        excluding: !_controller.enabled,
+        child: FocusScope(
+          node: _focusNode,
+          onFocusChange: _onFocusChange,
+          child: _buildAnchor(strings),
+        ),
       ),
     );
   }
@@ -155,7 +164,13 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
         ),
         onOpen: _onOpen,
         onClose: _onClose,
-        onSubmitted: (_) => _controller.submit(),
+        onSubmitted: (_) {
+          // SearchAnchor.bar also hands this to the closed bar, which keeps
+          // Tab focus: Enter there must not select the first item.
+          if (search.isAttached && search.isOpen) {
+            _controller.submit();
+          }
+        },
         viewHeaderHeight: bar.dropdownHeight,
         dividerColor: bar.showDivider ? null : viewBackground,
         viewTrailing: <Widget>[
@@ -420,7 +435,18 @@ class _ViewListState<T> extends State<_ViewList<T>> {
     if (_controller.localSearchController.value.composing.isValid) {
       return false;
     }
+    final bool? fieldFocused = _viewFieldFocused();
+    if (fieldFocused == false) {
+      // A focused row or button handles its own keys (Enter activates it).
+      return false;
+    }
     final LogicalKeyboardKey key = event.logicalKey;
+    if (key == LogicalKeyboardKey.enter ||
+        key == LogicalKeyboardKey.numpadEnter) {
+      _controller.submit();
+      return true;
+    }
+    final bool keepLabelSelected = fieldFocused == true && _labelSelected();
     if (key == LogicalKeyboardKey.arrowDown) {
       _controller.highlightNext();
     } else if (key == LogicalKeyboardKey.arrowUp) {
@@ -429,13 +455,55 @@ class _ViewListState<T> extends State<_ViewList<T>> {
       _controller.highlightEdge(last: true);
     } else if (key == LogicalKeyboardKey.pageUp) {
       _controller.highlightEdge(last: false);
-    } else if (key == LogicalKeyboardKey.enter ||
-        key == LogicalKeyboardKey.numpadEnter) {
-      _controller.submit();
     } else {
       return false;
     }
+    if (keepLabelSelected) {
+      // The focused field gets this key too, after this handler, and
+      // collapses the selection; select the label again so typing still
+      // replaces it.
+      scheduleMicrotask(_selectLabel);
+    }
     return true;
+  }
+
+  /// Whether the view's own field has the focus: `true` if it does, `false`
+  /// if another control (a row, a button) does, `null` if no control does
+  /// (e.g. a desktop click outside the field), where the keys still drive
+  /// the list.
+  bool? _viewFieldFocused() {
+    final FocusNode? focus = FocusManager.instance.primaryFocus;
+    if (focus == null || focus is FocusScopeNode) {
+      return null;
+    }
+    final EditableText? field = focus.context
+        ?.findAncestorWidgetOfExactType<EditableText>();
+    return identical(field?.controller, _controller.localSearchController);
+  }
+
+  /// Whether the whole selected label is selected (as when the view opens).
+  bool _labelSelected() {
+    final TextEditingValue value = _controller.localSearchController.value;
+    final String? label = _controller.selectedItem?.label;
+    return label != null &&
+        label.isNotEmpty &&
+        value.text == label &&
+        value.selection.start == 0 &&
+        value.selection.end == label.length;
+  }
+
+  void _selectLabel() {
+    if (!mounted || _controller.isDisposed) {
+      return;
+    }
+    final SearchController search = _controller.localSearchController;
+    if (search.text != _controller.selectedItem?.label) {
+      return;
+    }
+    search.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: search.text.length,
+    );
   }
 
   void _revealHighlight() {
