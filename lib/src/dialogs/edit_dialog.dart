@@ -9,7 +9,7 @@ class EditDialog extends StatefulWidget {
     required this.label,
     this.settings,
     required this.returnFunction,
-    this.strings = const SearchDropDownStrings(),
+    this.strings,
   });
 
   /// Label of the item being edited.
@@ -21,8 +21,9 @@ class EditDialog extends StatefulWidget {
   /// Called with `(true, newText)` on confirm or `(false, '')` on cancel.
   final void Function(bool, String) returnFunction;
 
-  /// Source of the default texts.
-  final SearchDropDownStrings strings;
+  /// Source of the default texts; `null` uses [SearchDropDownStringsScope]
+  /// (Portuguese without one).
+  final SearchDropDownStrings? strings;
 
   @override
   State<EditDialog> createState() => _EditDialogState();
@@ -47,11 +48,13 @@ class _EditDialogState extends State<EditDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final SearchDropDownStrings texts =
+        widget.strings ?? SearchDropDownStrings.of(context);
     return AlertDialog(
       title:
           dialogSettings.title ??
           Text(
-            widget.strings.editTitle,
+            texts.editTitle,
             style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
             textAlign: TextAlign.center,
           ),
@@ -71,7 +74,7 @@ class _EditDialogState extends State<EditDialog> {
               const SizedBox(height: 20),
               InputField(
                 controle: controller,
-                hint: dialogSettings.customEditHint ?? widget.strings.editHint,
+                hint: dialogSettings.customEditHint ?? texts.editHint,
               ),
             ],
           ),
@@ -86,7 +89,7 @@ class _EditDialogState extends State<EditDialog> {
       actions: [
         DialogButton(
           function: () => widget.returnFunction(false, ''),
-          buttonSettings: dialogSettings.cancelButton(widget.strings),
+          buttonSettings: dialogSettings.cancelButton(texts),
         ),
         DialogButton(
           function: () {
@@ -94,7 +97,7 @@ class _EditDialogState extends State<EditDialog> {
               widget.returnFunction(true, controller.text);
             }
           },
-          buttonSettings: dialogSettings.editButton(widget.strings),
+          buttonSettings: dialogSettings.editButton(texts),
         ),
       ],
     );

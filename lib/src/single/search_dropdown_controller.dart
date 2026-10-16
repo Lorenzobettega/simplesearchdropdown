@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
+import 'package:simple_search_dropdown/src/core/package_dialog.dart';
 import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 import 'package:simple_search_dropdown/src/core/shared_list.dart';
 
@@ -680,10 +681,12 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Creates an item from [text] (after [verifyInputItem]), awaits
   /// [onAddItem], adds it to [listItems] unless the callback stored it, and
   /// selects it (or the copy the callback stored).
+  /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
+  /// above [context].
   Future<void> addItem(
     String text,
     BuildContext context, {
-    SearchDropDownStrings strings = const SearchDropDownStrings(),
+    SearchDropDownStrings? strings,
   }) async {
     final ValueItem<T> Function(String)? create = newValueItem;
     if (!addMode || create == null) {
@@ -692,19 +695,20 @@ class SearchDropDownController<T> extends ChangeNotifier {
     final ValueItem<T> item = create(text);
     final bool Function(ValueItem<T>)? verify = verifyInputItem;
     if (verify != null && !verify(item)) {
-      await sendDialog<void>(
+      final SearchDropDownStrings texts =
+          strings ?? SearchDropDownStrings.of(context);
+      await showPackageDialog(
         context,
-        WarningDialog(
+        (VoidCallback close) => WarningDialog(
           confirmDialog: false,
-          returnFunction: (_) {
-            if (context.mounted) {
-              Navigator.of(context).pop();
-            }
-          },
+          returnFunction: (_) => close(),
           settings: verifyDialogSettings,
-          strings: strings,
+          strings: texts,
         ),
       );
+      if (_disposed) {
+        return;
+      }
       localSearchController.clear();
       return;
     }
@@ -740,10 +744,12 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Deletes [item] (after confirmation when [confirmDelete]), awaiting
   /// [onDeleteItem] and removing the item from [listItems] if the callback
   /// did not.
+  /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
+  /// above [context].
   Future<void> deleteItem(
     ValueItem<T> item,
     BuildContext context, {
-    SearchDropDownStrings strings = const SearchDropDownStrings(),
+    SearchDropDownStrings? strings,
   }) async {
     if (!deleteMode) {
       return;
@@ -752,17 +758,17 @@ class SearchDropDownController<T> extends ChangeNotifier {
       return _proceedWithDeletion(item);
     }
     bool confirmed = false;
-    await sendDialog<void>(
+    final SearchDropDownStrings texts =
+        strings ?? SearchDropDownStrings.of(context);
+    await showPackageDialog(
       context,
-      WarningDialog(
+      (VoidCallback close) => WarningDialog(
         returnFunction: (bool result) {
           confirmed = result;
-          if (context.mounted) {
-            Navigator.of(context).pop();
-          }
+          close();
         },
         settings: deleteDialogSettings,
-        strings: strings,
+        strings: texts,
       ),
     );
     if (confirmed) {
@@ -774,35 +780,39 @@ class SearchDropDownController<T> extends ChangeNotifier {
 
   /// Opens the edit dialog for [item]; on confirm awaits [onEditItem] and
   /// replaces the item in [listItems] unless the callback stored the new one
-  /// (then the item the callback stored is the one selected).
+  /// (then the item the callback stored is the one selected). A confirm with
+  /// an unchanged label does nothing.
+  /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
+  /// above [context].
   Future<void> editItem(
     ValueItem<T> item,
     BuildContext context, {
-    SearchDropDownStrings strings = const SearchDropDownStrings(),
+    SearchDropDownStrings? strings,
   }) async {
     final ValueItem<T> Function(String)? create = newValueItem;
     if (!editMode || create == null) {
       return;
     }
     String? newText;
-    await sendDialog<void>(
+    final SearchDropDownStrings texts =
+        strings ?? SearchDropDownStrings.of(context);
+    await showPackageDialog(
       context,
-      EditDialog(
+      (VoidCallback close) => EditDialog(
         label: item.label,
         returnFunction: (bool ok, String text) {
           if (ok) {
             newText = text;
           }
-          if (context.mounted) {
-            Navigator.of(context).pop();
-          }
+          close();
         },
         settings: editDialogSettings,
-        strings: strings,
+        strings: texts,
       ),
     );
     final String? text = newText;
-    if (text == null) {
+    // An unchanged label is not an edit: the item and selection stay.
+    if (text == null || text == item.label) {
       return;
     }
     final ValueItem<T> newValue = create(text);

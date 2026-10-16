@@ -6,7 +6,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - `MultipleSearchDropDownController` (exported) and a `controller:` parameter on `MultipleSearchDropDown`.
 - `items:` on both controllers: the controller keeps its own copy (`listItems:` still shares your list).
 - The single list opens scrolled to the selected item (#46); PageUp/PageDown jump to the first/last item.
-- `SearchDropDownStrings` (Portuguese defaults, `.en()`), per widget (`strings:`) or app-wide with `SearchDropDownStringsScope`.
+- `SearchDropDownStrings` (Portuguese defaults, `.en()`), per widget (`strings:`) or app-wide with `SearchDropDownStringsScope`, which also reaches the controllers' `addItem`/`addValue`/`editItem`/`deleteItem` dialogs and the exported dialogs and rows when they get no `strings:`.
 - `SortType` enum (`sort:`), A-Z/Z-A ordering that ignores case, accents and surrounding spaces, whatever `caseSensitive`/`latinize`/`trim` (both dropdowns).
 - Multiple dropdown: edit mode works (it was a stub); `latinize`/`caseSensitive`/`trim` apply there too.
 - Keyboard highlight is distinct from the selection (`highlightedItemBackgroundColor`, `highlightedItemBorderColor`); tooltips and semantics on buttons, rows, chips and spinners.
@@ -20,6 +20,8 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - The multiple list is drawn with `OverlayPortal`: it follows parent rebuilds, is removed with the widget and stays below dialogs (confirm/verify dialogs are now regular modal dialogs).
 - Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) still read as before, but a value you do not set now comes from `SearchDropDownStrings`; `customHint`, `customAddItemHint`, `customEditHint` tell whether one was set explicitly.
 - `SearchDropDownController.dispose()` can be called more than once.
+- An error thrown by `onAddItem`, `onEditItem` or `onDeleteItem` started from a list row is reported with `FlutterError.reportError` (library `simple_search_dropdown`, so crash reporters see it) instead of escaping as an uncaught error (7.x silently dropped delete errors); the item stays as it was and the row's button comes back. Awaiting the controller's `addItem`/`editItem`/`deleteItem` yourself still gets the error.
+- Confirming the edit dialog with the label unchanged does nothing: `onEditItem` is not called and the original item stays in the list and the selection (7.x single called `onEditItem`).
 - A legacy `MultipleSearchDropDown` keeps its search and pending add/delete across parent rebuilds; new list instances or dialog settings are applied in place.
 - `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
 - Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously. They are delivered even if the controller is disposed in that frame; listeners and `onFilterUpdated` are then skipped.
@@ -37,7 +39,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected (also a row matched by label, e.g. values without `==`), keeping the list open as in 7.x.
 - `onFilterUpdated` missed changes with the same length/first/last item, and is never called during a build (safe to `setState` in it).
 - Controllers work without an initialized binding (plain `test()`, code before `runApp`), as in 7.x.
-- Keyboard highlight is cleared when the list reopens; selecting no longer re-filters the list while it closes; confirming the edit dialog unchanged keeps the item.
+- Keyboard highlight is cleared when the list reopens; selecting no longer re-filters the list while it closes.
 - Multiple: deleting an item cleared the whole selection; `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; sorting reordered the caller's list; the list leaked when the widget was removed; a rejected item stayed in the search field (#13); async callbacks were not awaited.
 - Legacy `listItems:` changes made from outside are picked up again as in 7.x: the single dropdown on the next search or `filterList` (it no longer filtered the list of the last open), the multiple dropdown on the next keystroke, tap or parent rebuild while the list is open.
 - Results kept the old `ValueItem` instances after a refresh with items that compare equal (e.g. a value whose `==` only checks an id), so a tap selected the stale object; the fresh ones are handed out (without `onFilterUpdated`, as the results did not change).
@@ -45,6 +47,8 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Single: Enter or the keyboard's done action right after reopening with a selection selected the first item instead of keeping the selection, and typing the selected label again did not filter.
 - Single: with duplicate labels every row with the selected label was marked selected; now only the row `==` to the selection is (the label still matches values without `==`).
 - Single: after the first open, text changes while the list is closed (`clearOnClose`, code writing `localSearchController.text`) update `filteredItems` and `onFilterUpdated` again, as in 7.x.
+- The confirm-delete, invalid-item and edit dialogs close their own route: under a nested navigator (go_router `ShellRoute`, `CupertinoTabView`) they popped the page behind them and stayed open, and a dialog opened from a row that left the list never closed.
+- Single: a rejected item whose warning closed after `dispose()` used the disposed search controller.
 - `MultipleSearchDropDownController(items:)` copies `selectedItems` too, so a `const []` or unmodifiable initial selection no longer throws on the first tap; with `listItems:` it stays your list, updated in place (7.x).
 
 ### Deprecated

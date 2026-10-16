@@ -864,6 +864,41 @@ void main() {
       expect(c.highlightedIndex, -1);
     });
   });
+
+  group('dialogs that finish after dispose (F9)', () {
+    testWidgets('a rejected add whose dialog closes after dispose leaves the '
+        'disposed SearchController alone', (tester) async {
+      final c = SearchDropDownController<int>(
+        listItems: fruitItems(),
+        deleteMode: false,
+        newValueItem: (s) => ValueItem<int>(label: s, value: 99),
+        onAddItem: (_) {},
+        verifyInputItem: (_) => false,
+      );
+      late BuildContext ctx;
+      await tester.pumpWidget(
+        host(
+          Builder(
+            builder: (context) {
+              ctx = context;
+              return const SizedBox();
+            },
+          ),
+        ),
+      );
+      // Non-empty, so clearing it would notify the disposed controller.
+      c.localSearchController.text = 'Kiwi';
+      final Future<void> done = expectLater(c.addItem('Kiwi', ctx), completes);
+      await tester.pumpAndSettle();
+      expect(find.byType(AlertDialog), findsOneWidget);
+      c.dispose();
+      await tester.tap(find.text('OK'));
+      await tester.pumpAndSettle();
+      await done;
+      expect(find.byType(AlertDialog), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  });
 }
 
 class _FakeContext extends Fake implements BuildContext {

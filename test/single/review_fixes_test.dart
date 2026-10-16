@@ -107,6 +107,39 @@ void main() {
       c.filterList('Item 1');
       expect(c.filteredItems, hasLength(111));
     });
+
+    testWidgets('an unchanged edit keeps the original instance and skips '
+        'onEditItem (N45)', (tester) async {
+      const ValueItem<int> apple = ValueItem(label: 'Apple', value: 1);
+      const ValueItem<int> banana = ValueItem(label: 'Banana', value: 2);
+      final List<ValueItem<int>> items = <ValueItem<int>>[apple, banana];
+      int fresh = 100;
+      final List<List<ValueItem<int>>> edits = <List<ValueItem<int>>>[];
+      final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
+      final c = SearchDropDownController<int>(
+        listItems: items,
+        initialSelectedItem: apple,
+        addMode: false,
+        deleteMode: false,
+        editMode: true,
+        onEditItem: (o, n) => edits.add(<ValueItem<int>>[o, n]),
+        updateSelectedItem: selections.add,
+        newValueItem: (s) => ValueItem(label: s, value: fresh++),
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
+      await openSingle(tester);
+      await tester.tap(find.byIcon(Icons.edit).first);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Editar'));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(EditDialog), findsNothing);
+      expect(edits, isEmpty);
+      expect(selections, isEmpty);
+      expect(fresh, 100);
+      expect(identical(items.first, apple), isTrue);
+      expect(identical(c.selectedItem, apple), isTrue);
+    });
   });
 
   group('legacy listItems write-back (F1/F2)', () {
@@ -117,11 +150,13 @@ void main() {
       Function(ValueItem<int>)? onAddItem,
       Function(ValueItem<int>)? onDeleteItem,
       Function(ValueItem<int>, ValueItem<int>)? onEditItem,
+      ValueItem<int> Function(String)? newValueItem,
       ValueItem<int>? initial,
     }) => SearchDropDownController<int>(
       listItems: list,
       addMode: addMode,
-      newValueItem: (s) => ValueItem<int>(label: s, value: s.length),
+      newValueItem:
+          newValueItem ?? (s) => ValueItem<int>(label: s, value: s.length),
       onAddItem: onAddItem ?? (_) {},
       deleteMode: onDeleteItem != null,
       onDeleteItem: onDeleteItem,
@@ -299,9 +334,8 @@ void main() {
       expect(c.selectedItem, same(items[1]));
     });
 
-    testWidgets('F2: an unchanged edit selects the instance now in the list', (
-      tester,
-    ) async {
+    testWidgets('F2: an edit that recreates an equal item selects the '
+        'instance now in the list', (tester) async {
       final List<ValueItem<int>> items = <ValueItem<int>>[
         // A distinct instance on purpose; 'Banana' has 6 letters, so the
         // edited item equals the old one.
@@ -315,10 +349,13 @@ void main() {
         editMode: true,
         initial: old,
         onEditItem: (_, _) {},
+        // A new label that newValueItem turns back into the old item.
+        newValueItem: (s) =>
+            ValueItem<int>(label: s.trim(), value: s.trim().length),
       );
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
-      await submitEdit(tester, 'Banana', 'Banana');
+      await submitEdit(tester, 'Banana', 'Banana ');
 
       expect(items, hasLength(1));
       expect(items.single, isNot(same(old)));

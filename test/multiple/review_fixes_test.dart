@@ -253,6 +253,40 @@ void main() {
       expect(a.isDisposed, isFalse);
       expect(b.isDisposed, isTrue);
     });
+
+    testWidgets('an unchanged edit keeps the original instance and skips '
+        'onEditItem (N45)', (tester) async {
+      const ValueItem<int> apple = ValueItem(label: 'Apple', value: 1);
+      const ValueItem<int> banana = ValueItem(label: 'Banana', value: 2);
+      final List<ValueItem<int>> items = <ValueItem<int>>[apple, banana];
+      int fresh = 100;
+      final List<List<ValueItem<int>>> edits = <List<ValueItem<int>>>[];
+      int updates = 0;
+      final c = MultipleSearchDropDownController<int>(
+        listItems: items,
+        selectedItems: <ValueItem<int>>[apple],
+        addMode: false,
+        deleteMode: false,
+        editMode: true,
+        onEditItem: (o, n) => edits.add(<ValueItem<int>>[o, n]),
+        updateSelectedItems: (_) => updates++,
+        newValueItem: (s) => ValueItem(label: s, value: fresh++),
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
+      await openMultiple(tester);
+      await tester.tap(find.byIcon(Icons.edit).first);
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.tap(find.text('Editar'));
+      await tester.pump(const Duration(milliseconds: 500));
+      expect(find.byType(EditDialog), findsNothing);
+      expect(edits, isEmpty);
+      expect(updates, 0);
+      expect(fresh, 100);
+      expect(identical(items.first, apple), isTrue);
+      expect(items, <ValueItem<int>>[apple, banana]);
+      expect(identical(c.selectedItems.single, apple), isTrue);
+    });
   });
 
   group('review fixes: 7.x public members keep their types (R11/R13)', () {
@@ -310,11 +344,12 @@ void main() {
       Function(ValueItem<int>)? onAddItem,
       Function(ValueItem<int>)? onDeleteItem,
       Function(ValueItem<int>, ValueItem<int>)? onEditItem,
+      ValueItem<int> Function(String)? newValueItem,
     }) => MultipleSearchDropDownController<int>(
       listItems: list,
       selectedItems: selected,
       addMode: addMode,
-      newValueItem: (s) => ValueItem<int>(label: s, value: 99),
+      newValueItem: newValueItem ?? (s) => ValueItem<int>(label: s, value: 99),
       onAddItem: onAddItem ?? (_) {},
       deleteMode: onDeleteItem != null,
       onDeleteItem: onDeleteItem,
@@ -443,9 +478,8 @@ void main() {
       expect(selected.single, same(items[1]));
     });
 
-    testWidgets('F2: an unchanged edit selects the instance now in the list', (
-      tester,
-    ) async {
+    testWidgets('F2: an edit that recreates an equal item selects the '
+        'instance now in the list', (tester) async {
       final List<ValueItem<int>> items = <ValueItem<int>>[
         // Distinct instances on purpose.
         // ignore: prefer_const_constructors
@@ -459,11 +493,13 @@ void main() {
         addMode: false,
         editMode: true,
         onEditItem: (_, _) {},
+        // A new label that newValueItem turns back into the old item.
+        newValueItem: (s) => ValueItem<int>(label: s.trim(), value: 99),
       );
       addTearDown(c.dispose);
       await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
       await openMultiple(tester);
-      await submitEdit(tester, 'Banana', 'Banana');
+      await submitEdit(tester, 'Banana', 'Banana ');
 
       expect(items, hasLength(1));
       expect(items.single, isNot(same(old)));

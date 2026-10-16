@@ -12,7 +12,7 @@ class MultipleListView<T> extends StatefulWidget {
     required this.searchBarSettings,
     this.addAdditionalWidget,
     this.defaultAdditionalWidget,
-    this.strings = const SearchDropDownStrings(),
+    this.strings,
   });
 
   /// Source of items, selection and filtering.
@@ -30,8 +30,9 @@ class MultipleListView<T> extends StatefulWidget {
   /// Widget shown on every item row.
   final Widget? defaultAdditionalWidget;
 
-  /// Source of the default texts.
-  final SearchDropDownStrings strings;
+  /// Source of the default texts; `null` uses [SearchDropDownStringsScope]
+  /// (Portuguese without one).
+  final SearchDropDownStrings? strings;
 
   @override
   State<MultipleListView<T>> createState() => _MultipleListViewState<T>();
@@ -86,6 +87,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     final SimpleSearchbarSettings bar = widget.searchBarSettings;
     final SimpleOverlaySettings list = widget.overlayListSettings;
     final Color background = list.dialogBackgroundColor ?? bar.backgroundColor;
+    final SearchDropDownStrings texts =
+        widget.strings ?? SearchDropDownStrings.of(context);
     return Card(
       surfaceTintColor: background,
       color: background,
@@ -112,7 +115,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                 bar.backgroundColor,
               ),
               shape: WidgetStatePropertyAll<OutlinedBorder>(bar.border),
-              hintText: bar.customHint ?? widget.strings.searchHint,
+              hintText: bar.customHint ?? texts.searchHint,
               hintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
               textStyle: WidgetStatePropertyAll<TextStyle?>(
                 bar.searchBarTextStyle ?? bar.hintStyle,
@@ -146,7 +149,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                                   text: _controller.query,
                                   addAdditionalWidget:
                                       widget.addAdditionalWidget,
-                                  strings: widget.strings,
+                                  strings: texts,
                                 )
                               : const SizedBox.shrink();
                         }
@@ -171,7 +174,7 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
                           selected: _controller.isSelected(item),
                           defaultAdditionalWidget:
                               widget.defaultAdditionalWidget,
-                          strings: widget.strings,
+                          strings: texts,
                         );
                       },
                     );

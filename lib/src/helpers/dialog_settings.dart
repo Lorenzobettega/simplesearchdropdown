@@ -194,19 +194,22 @@ class DefaultDialogTitle extends StatelessWidget {
   const DefaultDialogTitle({
     super.key,
     required this.confirmDialog,
-    this.strings = const SearchDropDownStrings(),
+    this.strings,
   });
 
   /// Confirmation (delete) title when `true`, invalid-item title otherwise.
   final bool confirmDialog;
 
-  /// Source of the texts.
-  final SearchDropDownStrings strings;
+  /// Source of the texts; `null` uses [SearchDropDownStringsScope]
+  /// (Portuguese without one).
+  final SearchDropDownStrings? strings;
 
   @override
   Widget build(BuildContext context) {
+    final SearchDropDownStrings texts =
+        strings ?? SearchDropDownStrings.of(context);
     return Text(
-      confirmDialog ? strings.confirmDeleteTitle : strings.invalidItemTitle,
+      confirmDialog ? texts.confirmDeleteTitle : texts.invalidItemTitle,
       style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
       textAlign: TextAlign.center,
     );
@@ -219,19 +222,22 @@ class DefaultDialogContent extends StatelessWidget {
   const DefaultDialogContent({
     super.key,
     required this.confirmDialog,
-    this.strings = const SearchDropDownStrings(),
+    this.strings,
   });
 
   /// Confirmation (delete) content when `true`, invalid-item content otherwise.
   final bool confirmDialog;
 
-  /// Source of the texts.
-  final SearchDropDownStrings strings;
+  /// Source of the texts; `null` uses [SearchDropDownStringsScope]
+  /// (Portuguese without one).
+  final SearchDropDownStrings? strings;
 
   @override
   Widget build(BuildContext context) {
+    final SearchDropDownStrings texts =
+        strings ?? SearchDropDownStrings.of(context);
     return Text(
-      confirmDialog ? strings.confirmDeleteContent : strings.invalidItemContent,
+      confirmDialog ? texts.confirmDeleteContent : texts.invalidItemContent,
       style: const TextStyle(fontSize: 16),
       textAlign: TextAlign.center,
     );

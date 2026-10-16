@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/core/package_dialog.dart';
 
 ///The default widget that will be presented on the list.
 class DefaultListTile<T> extends StatefulWidget {
@@ -16,7 +17,7 @@ class DefaultListTile<T> extends StatefulWidget {
     Widget? defaultAdditionalWidget,
     @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
     Widget? defaultAditionalWidget,
-    this.strings = const SearchDropDownStrings(),
+    this.strings,
     this.highlighted = false,
     super.key,
   }) : defaultAdditionalWidget =
@@ -56,8 +57,9 @@ class DefaultListTile<T> extends StatefulWidget {
   @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
   Widget? get defaultAditionalWidget => defaultAdditionalWidget;
 
-  /// Source of tooltips and semantics labels.
-  final SearchDropDownStrings strings;
+  /// Source of tooltips and semantics labels; `null` uses [SearchDropDownStringsScope]
+  /// (Portuguese without one).
+  final SearchDropDownStrings? strings;
 
   @override
   State<DefaultListTile<T>> createState() => _DefaultListTileState<T>();
@@ -66,21 +68,18 @@ class DefaultListTile<T> extends StatefulWidget {
 class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
   bool _isLoading = false;
 
-  Future<void> _handleDeleteItem() async {
-    setState(() => _isLoading = true);
-    try {
-      await widget.onDelete(widget.item);
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
+  Future<void> _handleDeleteItem() => _run(widget.onDelete);
 
-  Future<void> _handleEditItem() async {
+  Future<void> _handleEditItem() => _run(widget.onEdit);
+
+  /// Shows the spinner while [action] runs. An error it throws is reported
+  /// and the row stays as it was.
+  Future<void> _run(Function(ValueItem<T> value) action) async {
     setState(() => _isLoading = true);
     try {
-      await widget.onEdit(widget.item);
+      await action(widget.item);
+    } catch (exception, stack) {
+      reportCallbackError(exception, stack);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -90,6 +89,8 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final SearchDropDownStrings texts =
+        widget.strings ?? SearchDropDownStrings.of(context);
     return Semantics(
       selected: widget.selected,
       child: Padding(
@@ -167,21 +168,21 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
                   height: widget.overlayListSettings.loadingSize,
                   child: Loading(
                     cor: widget.overlayListSettings.loadingColor,
-                    semanticsLabel: widget.strings.loadingLabel,
+                    semanticsLabel: texts.loadingLabel,
                   ),
                 ),
               )
             else ...[
               if (widget.editMode)
                 IconButton(
-                  tooltip: widget.strings.editItemTooltip,
+                  tooltip: texts.editItemTooltip,
                   onPressed: _handleEditItem,
                   icon: widget.overlayListSettings.dialogEditIcon,
                 ),
               if (widget.deleteMode)
                 widget.overlayListSettings.dialogActionWidget ??
                     IconButton(
-                      tooltip: widget.strings.deleteItemTooltip,
+                      tooltip: texts.deleteItemTooltip,
                       onPressed: _handleDeleteItem,
                       icon: widget.overlayListSettings.dialogDeleteIcon,
                     )

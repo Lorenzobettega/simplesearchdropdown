@@ -122,7 +122,9 @@ class SearchDropDownStrings {
       const SearchDropDownStrings();
 }
 
-/// Provides [SearchDropDownStrings] to every dropdown below it.
+/// Provides [SearchDropDownStrings] to every dropdown, controller
+/// add/edit/delete dialog and exported dialog or row below it. Put it in
+/// `MaterialApp.builder` so dialogs, which open above the pages, see it too.
 ///
 /// ```dart
 /// MaterialApp(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/core/package_dialog.dart';
 
 /// The "create" row shown when the typed text matches no item.
 class DefaultAddListItem extends StatefulWidget {
@@ -11,7 +12,7 @@ class DefaultAddListItem extends StatefulWidget {
     Widget? addAdditionalWidget,
     @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
     Widget? addAditionalWidget,
-    this.strings = const SearchDropDownStrings(),
+    this.strings,
     super.key,
   }) : addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget;
 
@@ -31,8 +32,9 @@ class DefaultAddListItem extends StatefulWidget {
   @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
   Widget? get addAditionalWidget => addAdditionalWidget;
 
-  /// Source of the default texts.
-  final SearchDropDownStrings strings;
+  /// Source of the default texts; `null` uses [SearchDropDownStringsScope]
+  /// (Portuguese without one).
+  final SearchDropDownStrings? strings;
 
   @override
   State<DefaultAddListItem> createState() => _DefaultAddListItemState();
@@ -46,6 +48,8 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
 
     try {
       await widget.itemAdded(widget.text);
+    } catch (exception, stack) {
+      reportCallbackError(exception, stack);
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -55,6 +59,8 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
 
   @override
   Widget build(BuildContext context) {
+    final SearchDropDownStrings texts =
+        widget.strings ?? SearchDropDownStrings.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
@@ -78,7 +84,7 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
                       height: widget.overlayListSettings.loadingSize,
                       child: Loading(
                         cor: widget.overlayListSettings.loadingColor,
-                        semanticsLabel: widget.strings.loadingLabel,
+                        semanticsLabel: texts.loadingLabel,
                       ),
                     ),
                   )
@@ -86,7 +92,7 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
                     onPressed: _handleItemAdded,
                     child: Text(
                       widget.overlayListSettings.customAddItemHint ??
-                          widget.strings.addItem,
+                          texts.addItem,
                       style: widget.overlayListSettings.addItemHintStyle,
                     ),
                   ),

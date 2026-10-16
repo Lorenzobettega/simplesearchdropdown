@@ -9,7 +9,7 @@ class WarningDialog extends StatelessWidget {
     this.settings,
     required this.returnFunction,
     this.confirmDialog = true,
-    this.strings = const SearchDropDownStrings(),
+    this.strings,
   });
 
   /// Visual customisation.
@@ -21,19 +21,22 @@ class WarningDialog extends StatelessWidget {
   /// Delete confirmation when `true`, invalid-item warning otherwise.
   final bool confirmDialog;
 
-  /// Source of the default texts.
-  final SearchDropDownStrings strings;
+  /// Source of the default texts; `null` uses [SearchDropDownStringsScope]
+  /// (Portuguese without one).
+  final SearchDropDownStrings? strings;
 
   @override
   Widget build(BuildContext context) {
     final dialogSettings = settings ?? const DialogSettings();
+    final SearchDropDownStrings texts =
+        strings ?? SearchDropDownStrings.of(context);
     return AlertDialog(
       title:
           dialogSettings.title ??
-          DefaultDialogTitle(confirmDialog: confirmDialog, strings: strings),
+          DefaultDialogTitle(confirmDialog: confirmDialog, strings: texts),
       content:
           dialogSettings.content ??
-          DefaultDialogContent(confirmDialog: confirmDialog, strings: strings),
+          DefaultDialogContent(confirmDialog: confirmDialog, strings: texts),
       contentPadding: dialogSettings.contentPadding,
       titlePadding: dialogSettings.titlePadding,
       actionsPadding: dialogSettings.actionsPadding,
@@ -46,17 +49,17 @@ class WarningDialog extends StatelessWidget {
           ? [
               DialogButton(
                 function: () => returnFunction(false),
-                buttonSettings: dialogSettings.cancelButton(strings),
+                buttonSettings: dialogSettings.cancelButton(texts),
               ),
               DialogButton(
                 function: () => returnFunction(true),
-                buttonSettings: dialogSettings.deleteButton(strings),
+                buttonSettings: dialogSettings.deleteButton(texts),
               ),
             ]
           : [
               DialogButton(
                 function: () => returnFunction(true),
-                buttonSettings: dialogSettings.okButton(strings),
+                buttonSettings: dialogSettings.okButton(texts),
               ),
             ],
     );
