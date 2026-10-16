@@ -199,6 +199,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   }
 
   void _rebuildBase() {
+    _engine.retainOnly(listItems);
     _base
       ..clear()
       ..addAll(

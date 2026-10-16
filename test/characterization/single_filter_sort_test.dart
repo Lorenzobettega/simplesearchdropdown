@@ -559,6 +559,20 @@ void main() {
       expect(_labels(c.filteredItems), <String>['abacaxi', 'Maçã']);
     });
 
+    test('caseSensitive/latinize do not change the A-Z order (N24, D2)', () {
+      final items = fruitItems();
+      final c = _controller(
+        items,
+        sortType: 1,
+        caseSensitive: true,
+        latinize: false,
+      );
+      addTearDown(c.dispose);
+
+      expect(_labels(c.filteredItems), _fruitAZ);
+      expect(_labels(items), _fruitAZ);
+    });
+
     test('throws UnsupportedError for an unmodifiable caller list', () {
       expect(
         () => _controller(

@@ -50,8 +50,21 @@ class FilterEngine<T> {
 
   final Map<ValueItem<T>, String> _labels = <ValueItem<T>, String>{};
 
+  /// A-Z/Z-A always ignore case, accents and surrounding spaces (D2),
+  /// whatever the filter options.
+  static const SearchNormalization _sortPolicy = SearchNormalization();
+
+  /// Sort keys, only used when [normalization] differs from [_sortPolicy].
+  final Map<ValueItem<T>, String> _sortKeys = <ValueItem<T>, String>{};
+
   /// Number of label normalizations performed (cache misses). For tests.
   int normalizeCount = 0;
+
+  /// Number of A-Z/Z-A sorts actually performed. For tests.
+  int sortCount = 0;
+
+  /// Number of cached labels and sort keys. For tests.
+  int get cachedLabelCount => _labels.length + _sortKeys.length;
 
   /// Normalizes [query] with this engine's policy.
   String normalize(String query) => normalization.apply(query);
@@ -67,10 +80,27 @@ class FilterEngine<T> {
   }
 
   /// Drops every cached label (call when the source list is replaced).
-  void clearCache() => _labels.clear();
+  void clearCache() {
+    _labels.clear();
+    _sortKeys.clear();
+  }
 
   /// Drops the cached label of [item].
-  void forget(ValueItem<T> item) => _labels.remove(item);
+  void forget(ValueItem<T> item) {
+    _labels.remove(item);
+    _sortKeys.remove(item);
+  }
+
+  /// Drops the cached labels of items that are no longer in [live].
+  void retainOnly(Iterable<ValueItem<T>> live) {
+    if (_labels.isEmpty && _sortKeys.isEmpty) {
+      return;
+    }
+    final Set<ValueItem<T>> keep = live.toSet();
+    bool gone(ValueItem<T> item, String _) => !keep.contains(item);
+    _labels.removeWhere(gone);
+    _sortKeys.removeWhere(gone);
+  }
 
   /// Items of [source] whose normalized label contains the normalized [query].
   ///
@@ -97,11 +127,34 @@ class FilterEngine<T> {
     return null;
   }
 
-  /// Orders two items by normalized label (case and accents ignored),
-  /// falling back to the raw label so the order is total.
+  bool get _sortMatchesFilter =>
+      normalization.latinize &&
+      !normalization.caseSensitive &&
+      normalization.trim;
+
+  String _sortKeyOf(ValueItem<T> item) => _sortMatchesFilter
+      ? labelOf(item)
+      : _sortKeys[item] ??= _sortPolicy.apply(item.label);
+
+  /// Orders two items by label ignoring case, accents and surrounding spaces,
+  /// whatever the filter options; falls back to the raw label so the order is
+  /// total.
   int compare(ValueItem<T> a, ValueItem<T> b) {
-    final int byNormalized = labelOf(a).compareTo(labelOf(b));
-    return byNormalized != 0 ? byNormalized : a.label.compareTo(b.label);
+    final int byKey = _sortKeyOf(a).compareTo(_sortKeyOf(b));
+    return byKey != 0 ? byKey : a.label.compareTo(b.label);
+  }
+
+  void _sort(
+    List<ValueItem<T>> list,
+    int Function(ValueItem<T>, ValueItem<T>) cmp,
+  ) {
+    for (int i = 1; i < list.length; i++) {
+      if (cmp(list[i - 1], list[i]) > 0) {
+        sortCount++;
+        list.sort(cmp);
+        return;
+      }
+    }
   }
 
   /// A sorted copy of [source] according to [type].
@@ -118,6 +171,8 @@ class FilterEngine<T> {
   }
 
   /// Sorts [list] in place according to [type].
+  ///
+  /// A list that is already in A-Z/Z-A order is left untouched.
   void sortInPlace(
     List<ValueItem<T>> list,
     SortType type, {
@@ -127,9 +182,9 @@ class FilterEngine<T> {
       case SortType.none:
         break;
       case SortType.alphabetical:
-        list.sort(compare);
+        _sort(list, compare);
       case SortType.reverseAlphabetical:
-        list.sort((a, b) => compare(b, a));
+        _sort(list, (a, b) => compare(b, a));
       case SortType.selectedFirst:
         if (selected != null) {
           final int index = list.indexOf(selected);

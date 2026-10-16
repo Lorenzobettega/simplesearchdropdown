@@ -266,6 +266,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
 
   void _rebuildBase() {
     _lastQuery = null;
+    _engine.retainOnly(listItems);
     _base
       ..clear()
       ..addAll(switch (_sort) {

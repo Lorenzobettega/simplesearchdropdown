@@ -85,7 +85,7 @@ class ValueItem<T> {
 
   /// Hashcode for [ValueItem]
   @override
-  int get hashCode => label.hashCode ^ value.hashCode;
+  int get hashCode => Object.hash(label, value);
 
   /// CopyWith method for [ValueItem]
   ValueItem<T> copyWith({String? label, T? value}) {

@@ -7,7 +7,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - `items:` on both controllers: the controller keeps its own copy (`listItems:` still shares your list).
 - The single list opens scrolled to the selected item (#46); PageUp/PageDown jump to the first/last item.
 - `SearchDropDownStrings` (Portuguese defaults, `.en()`), per widget (`strings:`) or app-wide with `SearchDropDownStringsScope`.
-- `SortType` enum (`sort:`), natural A-Z/Z-A ordering (ignores case and accents).
+- `SortType` enum (`sort:`), A-Z/Z-A ordering that ignores case, accents and surrounding spaces, whatever `caseSensitive`/`latinize`/`trim` (both dropdowns).
 - Multiple dropdown: edit mode works (it was a stub); `latinize`/`caseSensitive`/`trim` apply there too.
 - Keyboard highlight is distinct from the selection (`highlightedItemBackgroundColor`, `highlightedItemBorderColor`); tooltips and semantics on buttons, rows, chips and spinners.
 
@@ -20,6 +20,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) still read as before, but a value you do not set now comes from `SearchDropDownStrings`; `customHint`, `customAddItemHint`, `customEditHint` tell whether one was set explicitly.
 - `SearchDropDownController.dispose()` can be called more than once.
 - A legacy `MultipleSearchDropDown` keeps its search and pending add/delete across parent rebuilds; new list instances or dialog settings are applied in place.
+- `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
 
 ### Breaking
 - `MultipleListView` (exported helper) takes a `MultipleSearchDropDownController`; use `MultipleSearchDropDown` instead of building it directly.
@@ -43,6 +44,8 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 
 ### Performance
 - One shared filter engine with a lazy label cache; typing more characters narrows the previous results. Typing "Item 99" over 10,000 items rebuilds 20 rows instead of 63; the bar still does not rebuild while typing.
+- Items whose label equals their value (e.g. `ValueItem.fromValue` on `String`) no longer all share one hash, so A-Z/Z-A sorting, filtering and `forceMultipleSelection` stay fast on large lists.
+- A list that is already in A-Z/Z-A order is not sorted again when the dropdown opens; the label cache only keeps items still in the list (a `listItems:` list refreshed in place no longer grows it).
 
 ## [7.8.0] - 2026-04-03.
 - Added `caseSensitive` parameter to the controller. It defines if the search should be case sensitive (default: `false`).

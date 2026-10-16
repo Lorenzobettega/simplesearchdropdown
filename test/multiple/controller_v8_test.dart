@@ -64,6 +64,18 @@ void main() {
       expect(c.selectedItems, isEmpty);
     });
 
+    test('caseSensitive does not change the A-Z order (N24, D2)', () {
+      final c = MultipleSearchDropDownController<int>(
+        items: fruitItems(),
+        addMode: false,
+        deleteMode: false,
+        sort: SortType.alphabetical,
+        caseSensitive: true,
+      );
+      addTearDown(c.dispose);
+      expect(c.filteredItems.first.label, 'abacaxi');
+    });
+
     test('items are copied; sorting never reorders the caller list', () {
       final List<ValueItem<int>> mine = fruitItems();
       final c = _ctrl(items: mine, sort: SortType.alphabetical);

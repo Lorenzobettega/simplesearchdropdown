@@ -25,6 +25,18 @@ void main() {
       expect(a == const ValueItem<int>(label: 'A', value: 2), isFalse);
       expect(a == const ValueItem<num>(label: 'A', value: 1), isFalse);
     });
+
+    test('label == value items do not all share one hash (N25)', () {
+      final Set<int> hashes = <int>{
+        for (int i = 0; i < 100; i++)
+          ValueItem<String>.fromValue('Item $i').hashCode,
+      };
+      expect(hashes.length, greaterThan(90));
+      expect(
+        const ValueItem<String>(label: 'a', value: 'a').hashCode,
+        isNot(const ValueItem<String>(label: 'b', value: 'b').hashCode),
+      );
+    });
   });
 
   group('ValueItem: fromValue', () {
