@@ -694,6 +694,54 @@ void main() {
     });
   });
 
+  group('overlay search: surrounding whitespace is significant (7.x)', () {
+    List<ValueItem<int>> names() => <ValueItem<int>>[
+      const ValueItem(label: 'Maria Ana', value: 1),
+      const ValueItem(label: 'Mariana', value: 2),
+      const ValueItem(label: 'Ana', value: 3),
+      const ValueItem(label: 'Ana Paula', value: 4),
+    ];
+
+    testWidgets('a leading or trailing space narrows to word boundaries', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(_dropdown(items: names(), selected: [], probe: _Probe())),
+      );
+      await openMultiple(tester);
+
+      await _type(tester, ' ana');
+      expect(_rowLabels(tester), ['Maria Ana']);
+      await _type(tester, 'Ana ');
+      expect(_rowLabels(tester), ['Ana Paula']);
+      await _type(tester, ' ');
+      expect(_rowLabels(tester), ['Maria Ana', 'Ana Paula']);
+    });
+
+    testWidgets('a lone space with no spaced label offers the add row', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _app(
+          _dropdown(
+            items: _items(),
+            selected: [],
+            probe: _Probe(),
+            addMode: true,
+          ),
+        ),
+      );
+      await openMultiple(tester);
+
+      await _type(tester, ' ');
+      expect(_rowLabels(tester), isEmpty);
+      expect(
+        tester.widget<DefaultAddListItem>(find.byType(DefaultAddListItem)).text,
+        ' ',
+      );
+    });
+  });
+
   group('overlay sortType ordering (0/1/2/3)', () {
     Future<List<ValueItem<int>>> openWith(
       WidgetTester tester,

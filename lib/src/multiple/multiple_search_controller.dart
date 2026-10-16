@@ -32,12 +32,12 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     List<ValueItem<T>>? items,
     List<ValueItem<T>>? selectedItems,
     this.updateSelectedItems,
-    this.addMode = true,
+    bool addMode = true,
     this.newValueItem,
     this.onAddItem,
-    this.deleteMode = true,
+    bool deleteMode = true,
     this.onDeleteItem,
-    this.editMode = false,
+    bool editMode = false,
     this.onEditItem,
     this.editDialogSettings,
     this.onClearItem,
@@ -72,6 +72,9 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
        _selectedItems = items != null
            ? List<ValueItem<T>>.of(selectedItems ?? const [])
            : selectedItems ?? <ValueItem<T>>[],
+       _addMode = addMode,
+       _deleteMode = deleteMode,
+       _editMode = editMode,
        _sort = sort,
        _enabled = enabled,
        _engine = FilterEngine<T>(
@@ -119,8 +122,22 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Called with [selectedItems] whenever the user changes the selection.
   final void Function(List<ValueItem<T>>)? updateSelectedItems;
 
-  /// Allow the user to add new items.
-  final bool addMode;
+  bool _addMode;
+
+  /// Allow the user to add new items. Can be changed later; `true` needs
+  /// [newValueItem] and [onAddItem].
+  bool get addMode => _addMode;
+  set addMode(bool value) {
+    assert(
+      !value || (newValueItem != null && onAddItem != null),
+      'addMode can only be used with newValueItem != null && onAddItem != null',
+    );
+    if (_addMode == value) {
+      return;
+    }
+    _addMode = value;
+    _notify();
+  }
 
   /// Creates a `ValueItem<T>` from user input.
   final ValueItem<T> Function(String input)? newValueItem;
@@ -128,14 +145,42 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Called (and awaited) after the user creates an item.
   final Function(ValueItem<T>)? onAddItem;
 
-  /// Allow the user to delete items.
-  final bool deleteMode;
+  bool _deleteMode;
+
+  /// Allow the user to delete items. Can be changed later; `true` needs
+  /// [onDeleteItem].
+  bool get deleteMode => _deleteMode;
+  set deleteMode(bool value) {
+    assert(
+      !value || onDeleteItem != null,
+      'deleteMode can only be used with onDeleteItem != null',
+    );
+    if (_deleteMode == value) {
+      return;
+    }
+    _deleteMode = value;
+    _notify();
+  }
 
   /// Called (and awaited) after the user deletes an item.
   final Function(ValueItem<T>)? onDeleteItem;
 
-  /// Allow the user to edit items.
-  final bool editMode;
+  bool _editMode;
+
+  /// Allow the user to edit items. Can be changed later; `true` needs
+  /// [onEditItem] and [newValueItem].
+  bool get editMode => _editMode;
+  set editMode(bool value) {
+    assert(
+      !value || (onEditItem != null && newValueItem != null),
+      'editMode can only be used with onEditItem != null && newValueItem != null',
+    );
+    if (_editMode == value) {
+      return;
+    }
+    _editMode = value;
+    _notify();
+  }
 
   /// Called (and awaited) after the user edits `originalItem` into `newValue`.
   final Function(ValueItem<T> originalItem, ValueItem<T> newValue)? onEditItem;
@@ -149,8 +194,8 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Called when the user clears the whole selection.
   final Function()? onClearList;
 
-  /// Ask for confirmation before deleting.
-  final bool confirmDelete;
+  /// Ask for confirmation before deleting. Can be changed later.
+  bool confirmDelete;
 
   /// Settings of the delete confirmation dialog.
   DialogSettings? deleteDialogSettings;
@@ -165,16 +210,30 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   final void Function()? onFilterUpdated;
 
   final FilterEngine<T> _engine;
-  final SortType _sort;
+  SortType _sort;
   bool _disposed = false;
 
   /// How items are ordered. [SortType.selectedFirst] moves the first
-  /// selected item to the top.
+  /// selected item to the top. Setting it reorders [filteredItems], never
+  /// your [listItems].
   SortType get sort => _sort;
+  set sort(SortType value) {
+    if (_sort == value) {
+      return;
+    }
+    _sort = value;
+    // Always rebuild: the source check only compares identities and the pin.
+    _rebuildBase();
+    if (!_applyFilter()) {
+      _notify();
+    }
+  }
 
   bool _enabled;
 
-  /// Whether the dropdown accepts interaction.
+  /// Whether the user can interact with the dropdown. When `false` the box is
+  /// dimmed and ignores pointer and keyboard input, and an open list closes;
+  /// changes made from code (`toggle`, `clear`, ...) still apply.
   bool get enabled => _enabled;
   set enabled(bool value) {
     if (_enabled == value) {
@@ -425,8 +484,9 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     }
     final Set<ValueItem<T>> before = _snapshot();
     await onAddItem?.call(item);
-    // Shared lists are updated even if a parent rebuild replaced this
-    // controller while the callback ran; notifications are skipped then.
+    // Shared lists are updated even if this controller was disposed while
+    // the callback ran (e.g. the widget switched to another controller);
+    // notifications are skipped then.
     final ValueItem<T>? stored = _engine.storedFor(listItems, before, item);
     if (stored == null) {
       writeShared(() => listItems.add(item));
@@ -469,8 +529,9 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       }
     }
     await onDeleteItem?.call(item);
-    // Shared lists are updated even if a parent rebuild replaced this
-    // controller while the callback ran; notifications are skipped then.
+    // Shared lists are updated even if this controller was disposed while
+    // the callback ran (e.g. the widget switched to another controller);
+    // notifications are skipped then.
     writeShared(() => listItems.remove(item));
     _engine.forget(item);
     if (selectedItems.remove(item)) {
@@ -520,8 +581,9 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     final ValueItem<T> newValue = create(text);
     final Set<ValueItem<T>> before = _snapshot();
     await onEditItem?.call(item, newValue);
-    // Shared lists are updated even if a parent rebuild replaced this
-    // controller while the callback ran; notifications are skipped then.
+    // Shared lists are updated even if this controller was disposed while
+    // the callback ran (e.g. the widget switched to another controller);
+    // notifications are skipped then.
     final ValueItem<T>? stored = _engine.storedFor(listItems, before, newValue);
     final bool replaced = _replace(
       listItems,

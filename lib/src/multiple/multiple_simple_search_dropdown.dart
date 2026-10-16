@@ -235,58 +235,43 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     _controller.addListener(_onControllerChanged);
   }
 
-  /// Builds the controller behind the 7.x parameters. Callbacks read the
-  /// current widget when they run, so a parent rebuild with new closures
-  /// does not need a new controller.
+  /// Builds the controller behind the 7.x parameters. It lives as long as
+  /// this state: callbacks read the current widget when they run, and the
+  /// other parameters are applied in place (see [didUpdateWidget]), so a
+  /// parent rebuild never interrupts a search or a pending add/edit/delete.
   MultipleSearchDropDownController<T> _legacyController() {
     final MultipleSearchDropDown<T> w = widget;
-    final bool canCreate = w.newValueItem != null;
     return MultipleSearchDropDownController<T>(
       listItems: w._listItems,
       selectedItems: w._selectedItems,
       updateSelectedItems: (List<ValueItem<T>> selected) =>
           widget._updateSelectedItems?.call(selected),
-      addMode: w.addMode,
-      newValueItem: canCreate ? (String s) => widget.newValueItem!(s) : null,
-      onAddItem: w.onAddItem == null
-          ? null
-          : (ValueItem<T> item) => widget.onAddItem?.call(item),
+      addMode: _legacyAddMode,
+      newValueItem: (String s) => widget.newValueItem!(s),
+      onAddItem: (ValueItem<T> item) => widget.onAddItem?.call(item),
       deleteMode: w.deleteMode,
-      onDeleteItem: w.onDeleteItem == null
-          ? null
-          : (ValueItem<T> item) => widget.onDeleteItem?.call(item),
+      onDeleteItem: (ValueItem<T> item) => widget.onDeleteItem?.call(item),
+      editMode: _legacyEditMode,
       // 7.x never called onEditItem; 8.0 calls it with the edited item.
-      editMode: w.editMode && canCreate,
-      onEditItem: w.onEditItem == null
-          ? null
-          : (_, ValueItem<T> edited) => widget.onEditItem?.call(edited),
+      onEditItem: (_, ValueItem<T> edited) => widget.onEditItem?.call(edited),
       onClearItem: (ValueItem<T> item) => widget.onClearItem?.call(item),
       onClearList: () => widget.onClearList?.call(),
       confirmDelete: w.confirmDelete,
       deleteDialogSettings: w.deleteDialogSettings,
-      verifyInputItem: w.verifyInputItem == null
-          ? null
-          : (ValueItem<T> item) => widget.verifyInputItem?.call(item) ?? true,
+      verifyInputItem: (ValueItem<T> item) =>
+          widget.verifyInputItem?.call(item) ?? true,
       verifyDialogSettings: w.verifyDialogSettings,
       sort: w.sort,
       enabled: w.enabled,
+      // 7.x matched the raw text (main:multiple_listview.dart filtrarLista):
+      // ' ana' found 'Maria Ana' but not 'Mariana'.
+      trim: false,
     );
   }
 
-  /// Whether a 7.x parameter that shapes the controller changed. Lists and
-  /// dialog settings are updated in place instead (see [didUpdateWidget]).
-  bool _legacyShapeChanged(MultipleSearchDropDown<T> old) =>
-      old.controller != null ||
-      old.addMode != widget.addMode ||
-      old.deleteMode != widget.deleteMode ||
-      old.editMode != widget.editMode ||
-      old.confirmDelete != widget.confirmDelete ||
-      old.sort != widget.sort ||
-      (old.newValueItem == null) != (widget.newValueItem == null) ||
-      (old.verifyInputItem == null) != (widget.verifyInputItem == null) ||
-      (old.onAddItem == null) != (widget.onAddItem == null) ||
-      (old.onDeleteItem == null) != (widget.onDeleteItem == null) ||
-      (old.onEditItem == null) != (widget.onEditItem == null);
+  // Without newValueItem nothing can be created: no add row, no edit button.
+  bool get _legacyAddMode => widget.addMode && widget.newValueItem != null;
+  bool get _legacyEditMode => widget.editMode && widget.newValueItem != null;
 
   @override
   void didUpdateWidget(covariant MultipleSearchDropDown<T> oldWidget) {
@@ -295,23 +280,19 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
         oldWidget.controller ?? _ownController!;
     MultipleSearchDropDownController<T>? stale;
     if (widget.controller == null) {
-      if (_legacyShapeChanged(oldWidget)) {
-        stale = _ownController;
-        final MultipleSearchDropDownController<T> next = _legacyController();
-        // Keep what the user is doing (search text, toggled enabled state).
-        if (stale != null) {
-          next.search(stale.query);
-          if (oldWidget.enabled == widget.enabled) {
-            next.enabled = stale.enabled;
-          }
-        }
-        _ownController = next;
+      if (oldWidget.controller != null) {
+        _ownController = _legacyController();
       } else {
         final MultipleSearchDropDownController<T> own = _ownController!
           ..replaceSources(
             listItems: widget._listItems,
             selectedItems: widget._selectedItems,
           )
+          ..addMode = _legacyAddMode
+          ..deleteMode = widget.deleteMode
+          ..editMode = _legacyEditMode
+          ..confirmDelete = widget.confirmDelete
+          ..sort = widget.sort
           ..deleteDialogSettings = widget.deleteDialogSettings
           ..verifyDialogSettings = widget.verifyDialogSettings;
         if (oldWidget.enabled != widget.enabled) {
@@ -327,6 +308,15 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
       _controller.addListener(_onControllerChanged);
     }
     stale?.dispose();
+    // A swapped-in disabled controller sends no notification. The portal
+    // cannot be hidden during a build.
+    if (!_controller.enabled && _portal.isShowing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_controller.enabled) {
+          hideOverlay();
+        }
+      });
+    }
   }
 
   @override
@@ -337,9 +327,39 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   }
 
   void _onControllerChanged() {
-    if (mounted) {
-      setState(() {});
+    if (!mounted) {
+      return;
     }
+    final MultipleSearchDropDownController<T> controller = _controller;
+    if (!controller.enabled && _portal.isShowing) {
+      hideOverlay();
+      return;
+    }
+    // The box shows only the selection and the enabled state: changes of the
+    // results alone (typing) leave it alone, as in 7.x; the open list follows
+    // them through its own ListenableBuilder. Anything else the box reads
+    // from the controller must be compared here too.
+    if (controller.enabled == _shownEnabled &&
+        _isShownSelection(controller.selectedItems)) {
+      return;
+    }
+    setState(() {});
+  }
+
+  /// What the box last drew: the selection (by identity) and enabled state.
+  final List<ValueItem<T>> _shownSelection = <ValueItem<T>>[];
+  bool? _shownEnabled;
+
+  bool _isShownSelection(List<ValueItem<T>> selected) {
+    if (selected.length != _shownSelection.length) {
+      return false;
+    }
+    for (int i = 0; i < selected.length; i++) {
+      if (!identical(selected[i], _shownSelection[i])) {
+        return false;
+      }
+    }
+    return true;
   }
 
   // ------------------------------------------------- deprecated forwards
@@ -394,7 +414,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   }
 
   void _showOverlay() {
-    if (!_portal.isShowing) {
+    if (_controller.enabled && !_portal.isShowing) {
       setState(_portal.show);
     }
   }
@@ -459,76 +479,87 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     final bool isEnabled = controller.enabled;
     final bool showClear = hasSelection && bar.showClearIcon;
     final bool showArrow = !hasSelection && bar.showArrow && isEnabled;
+    _shownSelection
+      ..clear()
+      ..addAll(selected);
+    _shownEnabled = isEnabled;
     return Opacity(
       opacity: isEnabled ? 1 : 0.38,
-      child: IgnorePointer(
-        ignoring: !isEnabled,
-        child: CompositedTransformTarget(
-          link: _layerLink,
-          child: SizedBox(
-            height: bar.dropdownHeight,
-            width: bar.dropdownWidth,
-            child: InkWell(
-              onTap: _toggleOverlay,
-              child: Stack(
-                children: <Widget>[
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      color: bar.backgroundColor,
-                      border: Border.all(style: BorderStyle.none),
-                      boxShadow: <BoxShadow>[
-                        BoxShadow(
-                          color: Colors.grey.withAlpha(
-                            bar.elevation != 0 ? 125 : 0,
-                          ),
-                          spreadRadius: 0.5,
-                          blurRadius: bar.elevation,
-                          offset: Offset(0, 0.5 * bar.elevation),
+      // Disabled: no pointer and no keyboard (7.x only blocked the pointer).
+      child: ExcludeFocus(
+        excluding: !isEnabled,
+        child: IgnorePointer(
+          ignoring: !isEnabled,
+          child: CompositedTransformTarget(
+            link: _layerLink,
+            child: SizedBox(
+              height: bar.dropdownHeight,
+              width: bar.dropdownWidth,
+              child: InkWell(
+                onTap: _toggleOverlay,
+                child: Stack(
+                  children: <Widget>[
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(10),
                         ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: hasSelection
-                                ? _buildChips(selected)
-                                : Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: <Widget>[
-                                      Text(
-                                        bar.customHint ?? _strings.searchHint,
-                                        textAlign: TextAlign.start,
-                                        style: bar.hintStyle,
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                          if (showClear)
-                            _trailing(
-                              Icons.clear,
-                              controller.clear,
-                              _strings.clearTooltip,
-                            )
-                          else if (showArrow)
-                            _trailing(
-                              aberto
-                                  ? bar.dropdownOpenedArrowIcon
-                                  : bar.dropdownClosedArrowIcon,
-                              _toggleOverlay,
-                              aberto
-                                  ? _strings.closeTooltip
-                                  : _strings.openTooltip,
+                        color: bar.backgroundColor,
+                        border: Border.all(style: BorderStyle.none),
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: Colors.grey.withAlpha(
+                              bar.elevation != 0 ? 125 : 0,
                             ),
+                            spreadRadius: 0.5,
+                            blurRadius: bar.elevation,
+                            offset: Offset(0, 0.5 * bar.elevation),
+                          ),
                         ],
                       ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: hasSelection
+                                  ? _buildChips(selected)
+                                  : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          bar.customHint ?? _strings.searchHint,
+                                          textAlign: TextAlign.start,
+                                          style: bar.hintStyle,
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                            if (showClear)
+                              _trailing(
+                                Icons.clear,
+                                controller.clear,
+                                _strings.clearTooltip,
+                              )
+                            else if (showArrow)
+                              _trailing(
+                                aberto
+                                    ? bar.dropdownOpenedArrowIcon
+                                    : bar.dropdownClosedArrowIcon,
+                                _toggleOverlay,
+                                aberto
+                                    ? _strings.closeTooltip
+                                    : _strings.openTooltip,
+                              ),
+                          ],
+                        ),
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
           ),

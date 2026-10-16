@@ -4,7 +4,9 @@ import 'package:stringr/stringr.dart';
 
 /// How labels and queries are normalized before matching.
 class SearchNormalization {
-  /// Creates a normalization policy. Defaults match 7.x behaviour.
+  /// Creates a normalization policy. Defaults match the 7.x single dropdown;
+  /// a legacy `MultipleSearchDropDown(listItems:)` uses `trim: false`, as the
+  /// 7.x multiple did.
   const SearchNormalization({
     this.latinize = true,
     this.caseSensitive = false,

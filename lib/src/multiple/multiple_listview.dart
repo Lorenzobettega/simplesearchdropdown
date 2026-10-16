@@ -49,14 +49,55 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
   @override
   void initState() {
     super.initState();
-    _controller.refresh();
+    _controller
+      ..refresh()
+      ..addListener(_syncField);
+    WidgetsBinding.instance.addPostFrameCallback((_) => _goToSelected());
+  }
+
+  @override
+  void didUpdateWidget(covariant MultipleListView<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final MultipleSearchDropDownController<T> old = oldWidget.controller;
+    if (identical(old, _controller)) {
+      return;
+    }
+    // The parent may have disposed the old controller already.
+    if (!old.isDisposed) {
+      old.removeListener(_syncField);
+    }
+    // A swapped-in controller opens fresh (re-reads its items, like
+    // initState) but keeps what the user typed, so field and list agree.
+    _controller
+      ..refresh()
+      ..addListener(_syncField);
+    if (_search.text.isNotEmpty) {
+      _controller.search(_search.text);
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) => _goToSelected());
   }
 
   @override
   void dispose() {
+    if (!_controller.isDisposed) {
+      _controller.removeListener(_syncField);
+    }
     _search.dispose();
     super.dispose();
+  }
+
+  /// Shows the controller's query in the field: an add clears both once it
+  /// is done (a rejected item at once, #13), a failed one keeps both.
+  /// Assigning the value does not fire `onChanged`, and typing already makes
+  /// them equal, so this never loops nor touches an IME composition.
+  void _syncField() {
+    final String query = _controller.query;
+    if (_search.text != query) {
+      _search.value = TextEditingValue(
+        text: query,
+        selection: TextSelection.collapsed(offset: query.length),
+      );
+    }
   }
 
   /// Scrolls to the first selected item when the list (re)opens.
@@ -76,11 +117,8 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     }
   }
 
-  Future<void> _add(String text) async {
-    // Clear right away: a rejected item must not linger in the field (#13).
-    _search.clear();
-    await _controller.addItem(text, context, strings: widget.strings);
-  }
+  Future<void> _add(String text) =>
+      _controller.addItem(text, context, strings: widget.strings);
 
   @override
   Widget build(BuildContext context) {
