@@ -60,6 +60,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 - A row's delete/edit spinner no longer moves to another item when the results change while the callback is pending (both dropdowns).
 - Single: the list honours `SearchViewThemeData.shrinkWrap` again (7.x), so a short list shrinks the view.
 - `MultipleSearchDropDownController(items:)` copies `selectedItems` too, so a `const []` or unmodifiable initial selection no longer throws on the first tap; with `listItems:` it stays your list, updated in place (7.x).
+- Rows: screen readers announce the selected row as selected (the flag sat on an unlabelled node); the keyboard highlight border also shows on the selected row; a highlighted row keeps your `selectedItemBackgroundColor` once you customise `selectedItemTextStyle` or `unselectedItemHoverColor` (dark palettes drew light text on the light hover fill), as in 7.x. Set `highlightedItemBackgroundColor` for a distinct fill.
 
 ### Deprecated
 - `SearchDropDownState.enableDisable/resetSelection/updateList` and the `MultipleSearchDropDownState` methods → use the controllers.

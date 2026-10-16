@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/package_dialog.dart';
 
+/// The stock settings, to tell a customised selected style from the default.
+const SimpleOverlaySettings _stock = SimpleOverlaySettings();
+
 ///The default widget that will be presented on the list.
 class DefaultListTile<T> extends StatefulWidget {
   /// Creates a row for [item].
@@ -91,53 +94,61 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
   Widget build(BuildContext context) {
     final SearchDropDownStrings texts =
         widget.strings ?? SearchDropDownStrings.of(context);
-    return Semantics(
-      selected: widget.selected,
-      child: Padding(
-        padding: widget.overlayListSettings.itemsPadding,
-        child: Row(
-          children: [
-            Expanded(
-              child: TextButton(
-                style: ButtonStyle(
-                  backgroundColor: WidgetStateProperty.resolveWith<Color>((
-                    Set<WidgetState> states,
-                  ) {
-                    if (widget.selected) {
-                      return widget
-                          .overlayListSettings
-                          .selectedItemBackgroundColor;
-                    }
-                    if (widget.highlighted) {
-                      return widget
-                              .overlayListSettings
-                              .highlightedItemBackgroundColor ??
-                          widget.overlayListSettings.unselectedItemHoverColor;
-                    }
-                    return Colors.transparent;
-                  }),
-                  shape: WidgetStateProperty.all<OutlinedBorder>(
-                    RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                      side: widget.highlighted && !widget.selected
-                          ? BorderSide(
-                              color: widget
-                                  .overlayListSettings
-                                  .highlightedItemBorderColor,
-                            )
-                          : BorderSide.none,
-                    ),
+    final SimpleOverlaySettings settings = widget.overlayListSettings;
+    return Padding(
+      padding: settings.itemsPadding,
+      child: Row(
+        children: [
+          Expanded(
+            child: TextButton(
+              style: ButtonStyle(
+                backgroundColor: WidgetStateProperty.resolveWith<Color>((
+                  Set<WidgetState> states,
+                ) {
+                  if (widget.selected) {
+                    return widget
+                        .overlayListSettings
+                        .selectedItemBackgroundColor;
+                  }
+                  if (widget.highlighted) {
+                    // The stock text style pairs with the hover fill; a
+                    // customised one keeps the selected background (7.x).
+                    final bool stockPair =
+                        settings.selectedItemTextStyle ==
+                            _stock.selectedItemTextStyle &&
+                        settings.unselectedItemHoverColor ==
+                            _stock.unselectedItemHoverColor;
+                    return settings.highlightedItemBackgroundColor ??
+                        (stockPair
+                            ? settings.unselectedItemHoverColor
+                            : settings.selectedItemBackgroundColor);
+                  }
+                  return Colors.transparent;
+                }),
+                shape: WidgetStateProperty.all<OutlinedBorder>(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                    side: widget.highlighted
+                        ? BorderSide(
+                            color: widget
+                                .overlayListSettings
+                                .highlightedItemBorderColor,
+                          )
+                        : BorderSide.none,
                   ),
-                  overlayColor: WidgetStateProperty.resolveWith<Color>((
-                    Set<WidgetState> states,
-                  ) {
-                    if (widget.selected) {
-                      return widget.overlayListSettings.selectedItemHoverColor;
-                    }
-                    return widget.overlayListSettings.unselectedItemHoverColor;
-                  }),
                 ),
-                onPressed: () => widget.onPressed(widget.item),
+                overlayColor: WidgetStateProperty.resolveWith<Color>((
+                  Set<WidgetState> states,
+                ) {
+                  if (widget.selected) {
+                    return widget.overlayListSettings.selectedItemHoverColor;
+                  }
+                  return widget.overlayListSettings.unselectedItemHoverColor;
+                }),
+              ),
+              onPressed: () => widget.onPressed(widget.item),
+              child: Semantics(
+                selected: widget.selected,
                 child: widget.overlayListSettings.itemWidgetBuilder != null
                     ? widget.overlayListSettings.itemWidgetBuilder!(widget.item)
                     : Align(
@@ -155,42 +166,40 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>> {
                       ),
               ),
             ),
-            if (widget.defaultAdditionalWidget != null) ...[
-              widget.defaultAdditionalWidget!,
-              SizedBox(
-                width: widget.overlayListSettings.additionalWidgetSpacing,
-              ),
-            ],
-            if (_isLoading)
-              Padding(
-                padding: const EdgeInsets.only(left: 6, right: 6),
-                child: SizedBox(
-                  height: widget.overlayListSettings.loadingSize,
-                  child: Loading(
-                    cor: widget.overlayListSettings.loadingColor,
-                    semanticsLabel: texts.loadingLabel,
-                  ),
-                ),
-              )
-            else ...[
-              if (widget.editMode)
-                IconButton(
-                  tooltip: texts.editItemTooltip,
-                  onPressed: _handleEditItem,
-                  icon: widget.overlayListSettings.dialogEditIcon,
-                ),
-              if (widget.deleteMode)
-                widget.overlayListSettings.dialogActionWidget ??
-                    IconButton(
-                      tooltip: texts.deleteItemTooltip,
-                      onPressed: _handleDeleteItem,
-                      icon: widget.overlayListSettings.dialogDeleteIcon,
-                    )
-              else
-                const SizedBox.shrink(),
-            ],
+          ),
+          if (widget.defaultAdditionalWidget != null) ...[
+            widget.defaultAdditionalWidget!,
+            SizedBox(width: widget.overlayListSettings.additionalWidgetSpacing),
           ],
-        ),
+          if (_isLoading)
+            Padding(
+              padding: const EdgeInsets.only(left: 6, right: 6),
+              child: SizedBox(
+                height: widget.overlayListSettings.loadingSize,
+                child: Loading(
+                  cor: widget.overlayListSettings.loadingColor,
+                  semanticsLabel: texts.loadingLabel,
+                ),
+              ),
+            )
+          else ...[
+            if (widget.editMode)
+              IconButton(
+                tooltip: texts.editItemTooltip,
+                onPressed: _handleEditItem,
+                icon: widget.overlayListSettings.dialogEditIcon,
+              ),
+            if (widget.deleteMode)
+              widget.overlayListSettings.dialogActionWidget ??
+                  IconButton(
+                    tooltip: texts.deleteItemTooltip,
+                    onPressed: _handleDeleteItem,
+                    icon: widget.overlayListSettings.dialogDeleteIcon,
+                  )
+            else
+              const SizedBox.shrink(),
+          ],
+        ],
       ),
     );
   }

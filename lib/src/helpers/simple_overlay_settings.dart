@@ -69,11 +69,15 @@ class SimpleOverlaySettings {
   ///The hover color of the unselected items of the list.
   final Color unselectedItemHoverColor;
 
-  ///Background of the row highlighted with the keyboard arrows
-  ///(default: [unselectedItemHoverColor]).
+  ///Background of the row highlighted with the keyboard arrows (default:
+  ///[unselectedItemHoverColor] with the stock [selectedItemTextStyle] and
+  ///[unselectedItemHoverColor]; once you customise either one,
+  ///[selectedItemBackgroundColor], so the row keeps your selected pair as in 7.x).
+  ///A selected row stays [selectedItemBackgroundColor] and gets the border.
   final Color? highlightedItemBackgroundColor;
 
-  ///Border of the row highlighted with the keyboard arrows (default: `Colors.black26`).
+  ///Border of the row highlighted with the keyboard arrows, the selected row
+  ///included (default: `Colors.black26`).
   final Color highlightedItemBorderColor;
 
   ///The delete Icon in dropdown listview (default:red trash)
