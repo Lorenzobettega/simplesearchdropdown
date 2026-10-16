@@ -13,7 +13,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 
 ### Changed
 - Reopening the single dropdown lists every item instead of only the selected one; the text is selected so typing replaces it.
-- The clear button follows `SimpleSearchbarSettings.showClearIcon` by default (controller `showClearIcon` is now `bool?`).
+- The clear button follows `SimpleSearchbarSettings.showClearIcon` by default: controller `showClearIcon` defaults to `true` (7.x: `false`).
 - After add/edit/delete callbacks the item list is kept in sync if the callback did not change it.
 - `forceSelection` matches the exact label first, then ignoring case/accents (both dropdowns).
 - The multiple list is drawn with `OverlayPortal`: it follows parent rebuilds, is removed with the widget and stays below dialogs (confirm/verify dialogs are now regular modal dialogs).
@@ -26,13 +26,12 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 
 ### Breaking
 - `MultipleListView` (exported helper) takes a `MultipleSearchDropDownController`; use `MultipleSearchDropDown` instead of building it directly.
-- `SearchDropDownController.showClearIcon` is `bool?` (`null` = follow the search bar settings).
-- `MultipleSearchDropDown.listItems`, `selectedItems` and `updateSelectedItems` are nullable (a `controller` can replace them); code reading them from the widget needs `!`.
 
 ### Fixed
 - Crash when filtering after deleting/editing with a callback that does not change the list, or after the shared list grew from outside (e.g. an item added through the multiple dropdown).
 - `updateListItems` with the same list instance emptied it.
 - Opening the single list through the arrow did not filter while typing.
+- `SimpleSearchbarSettings.showClearIcon: false` hid the single clear button only in the bar; the open list showed it anyway (B14).
 - Keyboard highlight could stay on a stale row; rows were marked selected just because the typed text equalled their label; Tab focus was dropped immediately.
 - Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected.
 - `onFilterUpdated` missed changes with the same length/first/last item, and is never called during a build (safe to `setState` in it).
@@ -43,7 +42,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 ### Deprecated
 - `SearchDropDownState.enableDisable/resetSelection/updateList` and the `MultipleSearchDropDownState` methods → use the controllers.
 - `sortType` → `sort`; `addAditionalWidget`/`defaultAditionalWidget`/`aditionalWidgetSpacing` → `*Additional*` (also on `DefaultListTile` and `DefaultAddListItem`).
-- `MultipleSearchDropDownState.aberto`/`enabled` setters and `overlayScreen`.
+- `MultipleSearchDropDownState.aberto`/`enabled` setters and `overlayScreen` (still one instance whose `closeAll()`/`closeLast()` close the list; to know whether it is open, `overlayEntrys.isEmpty` → `!aberto`).
 
 ### Performance
 - One shared filter engine with a lazy label cache; typing more characters narrows the previous results. Typing "Item 99" over 10,000 items rebuilds 20 rows instead of 63; the bar still does not rebuild while typing.

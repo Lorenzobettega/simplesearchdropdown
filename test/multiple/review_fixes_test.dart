@@ -116,6 +116,59 @@ void main() {
       expect(state.enabled, isFalse);
       expect(state.overlayScreen, isA<OverlayScreen>());
     });
+
+    testWidgets('7.x overlayScreen is one stable instance that closes the '
+        'list (F10)', (tester) async {
+      await tester.pumpWidget(host(_Host(items: fruitItems())));
+      final MultipleSearchDropDownState<int> state = tester
+          .state<_HostState>(find.byType(_Host))
+          .key
+          .currentState!;
+      expect(identical(state.overlayScreen, state.overlayScreen), isTrue);
+
+      // A caller's own entry survives between accesses.
+      final OverlayEntry entry = OverlayEntry(
+        builder: (_) => const Text('custom-entry'),
+      );
+      state.overlayScreen.show(entry);
+      await tester.pump();
+      expect(find.text('custom-entry'), findsOneWidget);
+      expect(state.overlayScreen.overlayEntrys, hasLength(1));
+      state.overlayScreen.updateLast();
+      state.overlayScreen.closeLast();
+      await tester.pump();
+      expect(find.text('custom-entry'), findsNothing);
+      expect(state.overlayScreen.overlayEntrys, isEmpty);
+
+      // 7.x closeLast()/closeAll() closed the list (its entry was on top).
+      state.aberto = true;
+      await tester.pump();
+      expect(find.byType(MultipleListView<int>), findsOneWidget);
+      state.overlayScreen
+        ..updateLast()
+        ..closeLast();
+      await tester.pump();
+      expect(state.aberto, isFalse);
+      expect(find.byType(MultipleListView<int>), findsNothing);
+
+      state.aberto = true;
+      await tester.pump();
+      state.overlayScreen.show(entry);
+      await tester.pump();
+      state.overlayScreen.closeAll();
+      await tester.pump();
+      expect(state.aberto, isFalse);
+      expect(find.byType(MultipleListView<int>), findsNothing);
+      expect(find.text('custom-entry'), findsNothing);
+
+      // Nothing open: no StateError.
+      state.overlayScreen
+        ..closeLast()
+        ..closeAll()
+        ..updateLast();
+      await tester.pump();
+      expect(tester.takeException(), isNull);
+    });
   });
 
   group('final review fixes', () {

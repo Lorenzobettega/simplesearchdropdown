@@ -39,7 +39,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     this.updateSelectedItem,
     this.verifyInputItem,
     this.verifyDialogSettings,
-    this.showClearIcon,
+    bool? showClearIcon,
     ValueItem<T>? initialSelectedItem,
     @Deprecated('Use sort. Will be removed in 9.0.0') int? sortType,
     SortType sort = SortType.none,
@@ -66,6 +66,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
        ),
        localSearchController = searchController ?? SearchController(),
        _ownsSearchController = searchController == null,
+       showClearIcon = showClearIcon ?? true,
        listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
        _enabled = enabled,
        _sort = sortType != null ? SortType.fromLegacy(sortType) : sort,
@@ -79,7 +80,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     if (initialSelectedItem != null && this.listItems.isNotEmpty) {
       _selectedItem = initialSelectedItem;
       localSearchController.text = initialSelectedItem.label;
-      _clearVisible = showClearIcon ?? true;
+      _clearVisible = this.showClearIcon;
     }
     _engine.sortInPlace(this.listItems, _sort, selected: _selectedItem);
     _rebuildBase();
@@ -137,9 +138,9 @@ class SearchDropDownController<T> extends ChangeNotifier {
 
   /// Whether a selection makes the clear ("X") button visible.
   ///
-  /// `null` (default) follows `SimpleSearchbarSettings.showClearIcon`;
-  /// `false` never shows it.
-  final bool? showClearIcon;
+  /// `true` (default) shows it where `SimpleSearchbarSettings.showClearIcon`
+  /// allows it (the bar and the open list); `false` never shows it.
+  final bool showClearIcon;
 
   /// Called when [filteredItems] changes; for changes made during a build,
   /// once after that frame however many there were.
@@ -192,7 +193,8 @@ class SearchDropDownController<T> extends ChangeNotifier {
   bool _clearVisible = false;
 
   /// Whether the clear button is currently shown (a selection exists and
-  /// [showClearIcon] is not `false`).
+  /// [showClearIcon] is `true`); it is only built where
+  /// `SimpleSearchbarSettings.showClearIcon` allows it.
   bool get clearVisible => _clearVisible;
   set clearVisible(bool value) {
     if (_clearVisible == value) {
@@ -431,7 +433,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
       localSearchController.text = item.label;
     }
     _selectionChanged(item);
-    _clearVisible = showClearIcon ?? true;
+    _clearVisible = showClearIcon;
     _notify();
   }
 

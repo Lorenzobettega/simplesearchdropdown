@@ -468,9 +468,12 @@ void main() {
     });
 
     testWidgets(
-      'controller.showClearIcon true + settings.showClearIcon false: no '
-      'clear in the bar nor in the open view (8.0)',
+      'B14: controller.showClearIcon true + settings.showClearIcon false: '
+      'no clear in the bar nor in the open view (8.0)',
       (tester) async {
+        // B14: 7.7.2 ("Fix hide clear on both") hid the X for
+        // settings.showClearIcon false only in the bar; 7.8 still showed it
+        // in the open view.
         final c = _ctrl(
           numberedItems(3),
           showClearIcon: true,
@@ -488,7 +491,7 @@ void main() {
         await openSingle(tester);
         expect(find.byIcon(Icons.clear), findsNothing);
       },
-    );
+    ); // B14: fixed in 8.0
 
     testWidgets('controller.showClearIcon false: clear never appears after '
         'selecting', (tester) async {

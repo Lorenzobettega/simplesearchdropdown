@@ -16,7 +16,7 @@ export './src/helpers/dialog_settings.dart';
 export './src/helpers/extensions.dart';
 export './src/helpers/input_field.dart';
 export './src/helpers/loading.dart';
-export './src/helpers/overlay_screen.dart';
+export './src/helpers/overlay_screen.dart' hide overlayScreenWithList;
 export './src/helpers/simple_overlay_settings.dart';
 export './src/helpers/simple_searchbar_settings.dart';
 export './src/helpers/value_item.dart';

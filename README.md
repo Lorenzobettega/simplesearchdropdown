@@ -180,14 +180,16 @@ in 9.0.0.
 | `sortType: 0..3` | `sort: SortType.none / alphabetical / reverseAlphabetical / selectedFirst` |
 | `addAditionalWidget`, `defaultAditionalWidget`, `aditionalWidgetSpacing` | `addAdditionalWidget`, `defaultAdditionalWidget`, `additionalWidgetSpacing` |
 | `hint: 'Pesquisar'`, `addItemHint: 'Criar'`, dialog button texts | `SearchDropDownStrings` (settings texts still win when set) |
+| `multipleState.overlayScreen.closeAll()` / `overlayEntrys.isEmpty` | `multipleState.hideOverlay()` / `!multipleState.aberto` |
 
 Behaviour changes worth knowing (see the CHANGELOG for all fixes):
 
 - Reopening the single dropdown lists every item, scrolled to the selection
   (it used to show only the selected one).
 - A–Z / Z–A ignore case and accents (`abacaxi, Banana, Maçã`).
-- The clear button follows `SimpleSearchbarSettings.showClearIcon` by default
-  (set the controller's `showClearIcon: false` to hide it).
+- The clear button shows after a selection by default: the controller's
+  `showClearIcon` now defaults to `true` (pass `false` to hide it), and
+  `SimpleSearchbarSettings.showClearIcon: false` hides it in the open list too.
 - Deleting an item in the multiple dropdown deselects only that item; sorting
   never reorders your list.
 

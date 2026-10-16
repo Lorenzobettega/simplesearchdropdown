@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/helpers/overlay_screen.dart';
 
 /// A multiple-selection dropdown: selected items show as chips in the box and
 /// the list opens below it with a search field.
@@ -12,7 +13,7 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   const MultipleSearchDropDown({
     super.key,
     this.controller,
-    this.listItems,
+    List<ValueItem<T>>? listItems,
     this.addMode = true,
     this.onAddItem,
     this.newValueItem,
@@ -22,11 +23,11 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.onEditItem,
     this.onClearItem,
     this.onClearList,
-    this.updateSelectedItems,
+    Function(List<ValueItem<T>>)? updateSelectedItems,
     @Deprecated('Use sort. Will be removed in 9.0.0') int? sortType,
     SortType sort = SortType.none,
     this.confirmDelete = false,
-    this.selectedItems,
+    List<ValueItem<T>>? selectedItems,
     this.deleteDialogSettings,
     this.verifyInputItem,
     this.verifyDialogSettings,
@@ -40,7 +41,10 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     Widget? defaultAditionalWidget,
     this.enabled = true,
     this.strings,
-  }) : _legacySortType = sortType,
+  }) : _listItems = listItems,
+       _selectedItems = selectedItems,
+       _updateSelectedItems = updateSelectedItems,
+       _legacySortType = sortType,
        _sort = sort,
        addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
        defaultAdditionalWidget =
@@ -73,14 +77,28 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   /// below are ignored.
   final MultipleSearchDropDownController<T>? controller;
 
-  ///List of the items to be presented on the dropdown.
-  final List<ValueItem<T>>? listItems;
+  final List<ValueItem<T>>? _listItems;
+  final List<ValueItem<T>>? _selectedItems;
+  final Function(List<ValueItem<T>>)? _updateSelectedItems;
 
-  ///List of the items already selected on the dropdown (updated in place).
-  final List<ValueItem<T>>? selectedItems;
+  ///List of the items to be presented on the dropdown (the [controller]'s
+  ///list when one is set).
+  List<ValueItem<T>> get listItems => controller?.listItems ?? _listItems!;
 
-  ///Function to update the list of selected items on change.
-  final Function(List<ValueItem<T>>)? updateSelectedItems;
+  ///List of the items already selected on the dropdown (updated in place;
+  ///the [controller]'s selection when one is set).
+  List<ValueItem<T>> get selectedItems =>
+      controller?.selectedItems ?? _selectedItems!;
+
+  ///Function to update the list of selected items on change (the
+  ///[controller]'s callback when one is set; a no-op when there is none).
+  Function(List<ValueItem<T>>) get updateSelectedItems =>
+      (controller != null
+          ? controller!.updateSelectedItems
+          : _updateSelectedItems) ??
+      _ignoreSelection;
+
+  static void _ignoreSelection(List<ValueItem<Object?>> _) {}
 
   ///Allow the user to add items to the list.
   final bool addMode;
@@ -195,11 +213,17 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   @Deprecated('Use controller.enabled. Will be removed in 9.0.0')
   set enabled(bool value) => _controller.enabled = value;
 
-  /// The 7.x overlay helper. The list no longer uses it.
+  /// The 7.x overlay helper (one instance per state). The list is no longer
+  /// one of its entries, but `closeAll()`, and `closeLast()` once no entry of
+  /// yours is left, still close it, as in 7.x.
   @Deprecated(
-    'No longer used: the list is an OverlayPortal. Will be removed in 9.0.0',
+    'The list is an OverlayPortal: use hideOverlay() and aberto. '
+    'Will be removed in 9.0.0',
   )
-  OverlayScreen get overlayScreen => OverlayScreen.of(context);
+  late OverlayScreen overlayScreen = overlayScreenWithList(
+    context,
+    closeList: hideOverlay,
+  );
 
   SearchDropDownStrings get _strings =>
       widget.strings ?? SearchDropDownStrings.of(context);
@@ -218,10 +242,10 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     final MultipleSearchDropDown<T> w = widget;
     final bool canCreate = w.newValueItem != null;
     return MultipleSearchDropDownController<T>(
-      listItems: w.listItems,
-      selectedItems: w.selectedItems,
+      listItems: w._listItems,
+      selectedItems: w._selectedItems,
       updateSelectedItems: (List<ValueItem<T>> selected) =>
-          widget.updateSelectedItems?.call(selected),
+          widget._updateSelectedItems?.call(selected),
       addMode: w.addMode,
       newValueItem: canCreate ? (String s) => widget.newValueItem!(s) : null,
       onAddItem: w.onAddItem == null
@@ -285,8 +309,8 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
       } else {
         final MultipleSearchDropDownController<T> own = _ownController!
           ..replaceSources(
-            listItems: widget.listItems,
-            selectedItems: widget.selectedItems,
+            listItems: widget._listItems,
+            selectedItems: widget._selectedItems,
           )
           ..deleteDialogSettings = widget.deleteDialogSettings
           ..verifyDialogSettings = widget.verifyDialogSettings;
