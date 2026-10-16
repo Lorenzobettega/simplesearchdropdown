@@ -6,6 +6,7 @@ const Color darkGreen = Color.fromARGB(255, 0, 67, 0);
 
 ///Class to hold all the customizations of the simple search overlay list.
 class SimpleOverlaySettings {
+  /// Creates list settings; every field has a default.
   const SimpleOverlaySettings({
     this.dialogHeight = 200,
     this.dialogBackgroundColor,
@@ -15,30 +16,32 @@ class SimpleOverlaySettings {
     this.selectedItemTextStyle = const TextStyle(color: Colors.black),
     this.unselectedItemTextStyle = const TextStyle(color: Colors.black45),
     this.unselectedItemHoverColor = const Color.fromRGBO(245, 245, 245, 1),
+    this.highlightedItemBackgroundColor,
+    this.highlightedItemBorderColor = Colors.black26,
     this.dialogDeleteIcon = const Icon(
       Icons.delete,
       color: Color.fromRGBO(183, 28, 28, 1),
       size: 20,
     ),
-    this.dialogEditIcon = const Icon(
-      Icons.edit,
-      color: Colors.black,
-      size: 20,
-    ),
+    this.dialogEditIcon = const Icon(Icons.edit, color: Colors.black, size: 20),
     this.dialogActionWidget,
     this.separatorHeight = 1,
     this.animationDuration = const Duration(milliseconds: 100),
-    this.addItemHint = 'Criar',
+    String? addItemHint,
     this.addItemHintStyle,
     this.itemWidgetBuilder,
     this.reOpenedScrollDuration = const Duration(seconds: 1),
     this.offsetHeight = 3,
     this.offsetWidth = 0,
-    this.aditionalWidgetSpacing = 5,
+    double? additionalWidgetSpacing,
+    @Deprecated('Use additionalWidgetSpacing. Will be removed in 9.0.0')
+    double? aditionalWidgetSpacing,
     this.openFullScreen = false,
     this.loadingColor = darkGreen,
     this.loadingSize = 28,
-  });
+  }) : customAddItemHint = addItemHint,
+       additionalWidgetSpacing =
+           additionalWidgetSpacing ?? aditionalWidgetSpacing ?? 5;
 
   ///Dropdown Container height (default:`200`).
   final double dialogHeight;
@@ -66,6 +69,17 @@ class SimpleOverlaySettings {
   ///The hover color of the unselected items of the list.
   final Color unselectedItemHoverColor;
 
+  ///Background of the row highlighted with the keyboard arrows (default:
+  ///[unselectedItemHoverColor] with the stock [selectedItemTextStyle] and
+  ///[unselectedItemHoverColor]; once you customise either one,
+  ///[selectedItemBackgroundColor], so the row keeps your selected pair as in 7.x).
+  ///A selected row stays [selectedItemBackgroundColor] and gets the border.
+  final Color? highlightedItemBackgroundColor;
+
+  ///Border of the row highlighted with the keyboard arrows, the selected row
+  ///included (default: `Colors.black26`).
+  final Color highlightedItemBorderColor;
+
   ///The delete Icon in dropdown listview (default:red trash)
   final Icon dialogDeleteIcon;
 
@@ -81,8 +95,13 @@ class SimpleOverlaySettings {
   ///The duration of the dropdown opening animation (default:`Duration(milliseconds: 100)`).
   final Duration animationDuration;
 
-  ///The text of the add button when user is allowed to add items in the list (default: `'Criar'`).
-  final String addItemHint;
+  ///The add button text set explicitly, or `null` to use
+  ///[SearchDropDownStrings.addItem].
+  final String? customAddItemHint;
+
+  ///The text of the add button (default: `'Criar'`).
+  String get addItemHint =>
+      customAddItemHint ?? const SearchDropDownStrings().addItem;
 
   ///The style of the add button when user is allowed to add items in the list.
   final TextStyle? addItemHintStyle;
@@ -99,10 +118,14 @@ class SimpleOverlaySettings {
   ///The width of the offset from the left of the search bar (default:`0`).
   final double offsetWidth;
 
-  ///The width of the space between the aditional widget and the delete one (default:`5`).
-  final double aditionalWidgetSpacing;
+  ///The width of the space between the additional widget and the delete one (default:`5`).
+  final double additionalWidgetSpacing;
 
-  //The drop widget will open full screen in true condition
+  ///The width of the space between the additional widget and the delete one.
+  @Deprecated('Use additionalWidgetSpacing. Will be removed in 9.0.0')
+  double get aditionalWidgetSpacing => additionalWidgetSpacing;
+
+  ///Opens the list full screen (default: `false`).
   final bool openFullScreen;
 
   ///Loading widget default color (default:`Color.fromARGB(255, 0, 67, 0)`)

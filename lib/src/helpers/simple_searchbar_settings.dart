@@ -3,20 +3,19 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 ///Class to hold all the customizations of the simple search bar.
 class SimpleSearchbarSettings {
+  /// Creates search bar settings; every field has a default.
   const SimpleSearchbarSettings({
     this.dropdownWidth = 300,
     this.dropdownHeight = 50,
     this.elevation = 2,
     this.backgroundColor = Colors.white,
     this.border = const RoundedRectangleBorder(
-      borderRadius: BorderRadius.all(
-        Radius.circular(10),
-      ),
+      borderRadius: BorderRadius.all(Radius.circular(10)),
     ),
     this.clearIconColor,
     this.searchBarTextStyle,
     this.actions,
-    this.hint = 'Pesquisar',
+    String? hint,
     this.hintStyle = const TextStyle(fontSize: 14),
     this.hoverColor = const Color.fromRGBO(245, 245, 245, 1),
     this.showArrow = true,
@@ -31,15 +30,19 @@ class SimpleSearchbarSettings {
     this.boxMultiSelectedClearIconSize = 20,
     this.boxMultiSelectedClearIconColor,
     this.boxMultiItemWidgetBuilder,
-    this.boxMultiSelectedBackgroundColor =
-        const Color.fromRGBO(224, 224, 224, 1),
+    this.boxMultiSelectedBackgroundColor = const Color.fromRGBO(
+      224,
+      224,
+      224,
+      1,
+    ),
     this.boxMultiSelectedTextStyle,
     this.searchBarPadding,
     this.showKeyboardOnTap = true,
     this.keyboardType,
     this.textInputAction,
     this.showDivider = false,
-  });
+  }) : customHint = hint;
 
   ///Main/outside Container height(default:50)
   final double dropdownHeight;
@@ -68,8 +71,11 @@ class SimpleSearchbarSettings {
   ///The style of searchbar text when something is typed (default:hintStyle)
   final TextStyle? searchBarTextStyle;
 
-  ///The text to be presented on the hint of the searchbar.
-  final String hint;
+  ///The hint set explicitly, or `null` to use [SearchDropDownStrings.searchHint].
+  final String? customHint;
+
+  ///The hint of the searchbar (default: `'Pesquisar'`).
+  String get hint => customHint ?? const SearchDropDownStrings().searchHint;
 
   ///The style of the hint of the searchbar.
   final TextStyle? hintStyle;
@@ -122,10 +128,10 @@ class SimpleSearchbarSettings {
   ///If true, the keyboard will appear when you tap the searchbar (default:true).
   final bool showKeyboardOnTap;
 
-  //The keyboard type of search bar
+  ///The keyboard type of the search bar.
   final TextInputType? keyboardType;
 
-  //The keyboard reaction on enter and input
+  ///The keyboard action button of the search bar.
   final TextInputAction? textInputAction;
 
   ///If true, a divider between the searchbar and the list of items will appear (default:false).

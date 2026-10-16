@@ -1,5 +1,4 @@
 # Flutter/Dart
-# -----------------------
 .dart_tool/
 .flutter-plugins
 .flutter-plugins-dependencies
@@ -7,26 +6,35 @@
 .pub-cache/
 .pub/
 build/
+coverage/
 
-# Android-specific
-# -----------------------
-android/**/generated/
-android/key.properties   # Contains sensitive signing info
+# Test artefacts
+**/failures/
 
-# iOS/macOS-specific
-# -----------------------
-ios/Flutter/Generated.xcconfig
-ios/Flutter/flutter_export_environment.sh
-ios/ServiceDefinitions.json
-**/*.xcworkspace
-!**/Runner.xcworkspace   # Do NOT ignore the main workspace
+# Android
+**/android/**/generated/
+**/android/.gradle/
+**/android/app/.cxx/
+**/android/local.properties
+**/android/key.properties
+*.jks
+*.keystore
 
-# Web-specific
-# -----------------------
+# iOS/macOS
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/ServiceDefinitions.json
+**/Pods/
+
+# Web
 web/index.html.gz
 
-# IDE/Editor-specific
-# -----------------------
-.idea/                   # IntelliJ/Android Studio
-.vscode/                 # VS Code
+# Secrets
+.env
+.env.*
+
+# IDE/OS
+.idea/
+.vscode/
 *.iml
+.DS_Store

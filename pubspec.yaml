@@ -1,11 +1,20 @@
 name: simple_search_dropdown
-description: A dropdown that offers a search bar, multiple and single selections.
-homepage: https://github.com/Lorenzobettega/searchdropdown
+description: Single and multiple selection dropdowns with search, add/edit/delete of items, keyboard navigation and localizable texts.
+homepage: https://github.com/Lorenzobettega/simplesearchdropdown
+repository: https://github.com/Lorenzobettega/simplesearchdropdown
+issue_tracker: https://github.com/Lorenzobettega/simplesearchdropdown/issues
+topics:
+  - dropdown
+  - search
+  - autocomplete
+  - select
+  - widget
 
-version: 7.8.0
+version: 8.0.0
 
 environment:
-  sdk: '>=3.0.0 < 4.0.0'
+  sdk: '>=3.8.0 <4.0.0'
+  flutter: '>=3.32.0'
 
 dependencies:
   flutter:

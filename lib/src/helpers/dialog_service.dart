@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 
-Future<T?> sendDialog<T>(BuildContext context, Widget child,
-    {barrierDismissible = false}) async {
+/// Shows [child] as a dialog (not dismissible by tapping outside by default).
+Future<T?> sendDialog<T>(
+  BuildContext context,
+  Widget child, {
+  barrierDismissible = false,
+}) async {
   return showDialog(
     context: context,
     barrierDismissible: barrierDismissible,

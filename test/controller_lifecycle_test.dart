@@ -1,3 +1,6 @@
+// Legacy tests exercise the deprecated 7.x API on purpose.
+// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
+
 // test/search_dropdown_controller_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -103,8 +106,7 @@ void main() {
   });
 
   group('SearchDropDownController – dispose', () {
-    test('dispose deve ser chamado uma única vez; segunda chamada lança erro',
-        () {
+    test('dispose pode ser chamado mais de uma vez (8.0)', () {
       final c = SearchDropDownController<int>(
         listItems: const [],
         addMode: false,
@@ -112,24 +114,39 @@ void main() {
       );
 
       expect(() => c.dispose(), returnsNormally);
-      expect(() => c.dispose(),
-          throwsA(isA<FlutterError>())); // segunda chamada deve falhar
+      expect(() => c.dispose(), returnsNormally);
+      expect(c.isDisposed, isTrue);
     });
-// ajuste no teste de lifecycle para validar o contrato correto pós-dispose
-    testWidgets('SearchDropDown respeita disposeController=true/false',
-        (tester) async {
+    // ajuste no teste de lifecycle para validar o contrato correto pós-dispose
+    testWidgets('SearchDropDown respeita disposeController=true/false', (
+      tester,
+    ) async {
       final cTrue = SearchDropDownController<String>(
-          listItems: const [], addMode: false, deleteMode: false);
+        listItems: const [],
+        addMode: false,
+        deleteMode: false,
+      );
       final cFalse = SearchDropDownController<String>(
-          listItems: const [], addMode: false, deleteMode: false);
+        listItems: const [],
+        addMode: false,
+        deleteMode: false,
+      );
 
-      await tester.pumpWidget(MaterialApp(
-        home: Column(children: [
-          SearchDropDown<String>(
-              controller: cTrue), // disposeController default = true
-          SearchDropDown<String>(controller: cFalse, disposeController: false),
-        ]),
-      ));
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Column(
+            children: [
+              SearchDropDown<String>(
+                controller: cTrue,
+              ), // disposeController default = true
+              SearchDropDown<String>(
+                controller: cFalse,
+                disposeController: false,
+              ),
+            ],
+          ),
+        ),
+      );
       await tester.pump();
 
       await tester.pumpWidget(const SizedBox.shrink());
@@ -154,11 +171,14 @@ void main() {
         const ValueItem(label: 'Sao Tome', value: 2),
         const ValueItem(label: 'Porto Alegre', value: 3),
       ];
-      final c = SearchDropDownController<int>(
-          listItems: items, addMode: false, deleteMode: false)
-
-        // Filtro "sao" deve encontrar 'São Paulo' e 'Sao Tome'
-        ..filterList('sao');
+      final c =
+          SearchDropDownController<int>(
+              listItems: items,
+              addMode: false,
+              deleteMode: false,
+            )
+            // Filtro "sao" deve encontrar 'São Paulo' e 'Sao Tome'
+            ..filterList('sao');
       expect(
         c.filteredItems.map((e) => e.label),
         containsAll(['São Paulo', 'Sao Tome']),
