@@ -14,7 +14,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling: renamed members are `@Deprecat
 ### Changed
 - Reopening the single dropdown lists every item instead of only the selected one; the text is selected so typing replaces it.
 - The clear button follows `SimpleSearchbarSettings.showClearIcon` by default: controller `showClearIcon` defaults to `true` (7.x: `false`).
-- After add/edit/delete callbacks the item list is kept in sync if the callback did not change it.
+- Legacy `listItems:` mode writes to your list (7.x never did on add/edit/delete): after an add/edit/delete callback the controller adds, replaces or removes the item unless the callback already stored it, i.e. the list holds that item, an equal one, or a new entry with the same label ignoring case/accents (your own copy, e.g. with a server id), which is then kept and selected instead of the `newValueItem` placeholder. A callback that leaves the list untouched gets the change applied (refuse a delete with `confirmDelete`). An unmodifiable list (`const`, `List.unmodifiable`, freezed) is never written and never throws: pass the new list from your state (multiple) or use `items:` + `updateListItems` (single).
 - `forceSelection` matches the exact label first, then ignoring case/accents (both dropdowns).
 - The multiple list is drawn with `OverlayPortal`: it follows parent rebuilds, is removed with the widget and stays below dialogs (confirm/verify dialogs are now regular modal dialogs).
 - Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) still read as before, but a value you do not set now comes from `SearchDropDownStrings`; `customHint`, `customAddItemHint`, `customEditHint` tell whether one was set explicitly.

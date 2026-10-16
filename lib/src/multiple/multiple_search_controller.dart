@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
 import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
+import 'package:simple_search_dropdown/src/core/shared_list.dart';
 
 /// State of a [MultipleSearchDropDown]: items, selected items, search text and
 /// filtering. Changes notify listeners, so the widget updates without a
@@ -13,6 +14,13 @@ import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 /// Items come from [listItems] (your list, shared by reference) or `items`
 /// (copied once). [selectedItems] is your list when passed (it is updated in
 /// place, as in 7.x) or a list owned by the controller.
+///
+/// Add/edit/delete keep [listItems] in sync after your callback returns,
+/// unless the callback already stored the item: the list holds it, an equal
+/// item, or a new entry with the same label (e.g. your copy with a server
+/// id), which is then the one selected. An unmodifiable [listItems] (`const`,
+/// `List.unmodifiable`, freezed) is never written: pass the new list from
+/// your state instead.
 class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Creates a controller. Pass exactly one of [listItems] or `items`.
   MultipleSearchDropDownController({
@@ -354,15 +362,17 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       );
       return;
     }
+    final Set<ValueItem<T>> before = _snapshot();
     await onAddItem?.call(item);
     // Shared lists are updated even if a parent rebuild replaced this
     // controller while the callback ran; notifications are skipped then.
-    if (!listItems.contains(item)) {
-      listItems.add(item);
+    final ValueItem<T>? stored = _engine.storedFor(listItems, before, item);
+    if (stored == null) {
+      writeShared(() => listItems.add(item));
     }
     _query = '';
     _rebuildBase();
-    toggle(item, forced: true);
+    toggle(stored ?? item, forced: true);
     _applyFilter();
   }
 
@@ -398,7 +408,7 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     await onDeleteItem?.call(item);
     // Shared lists are updated even if a parent rebuild replaced this
     // controller while the callback ran; notifications are skipped then.
-    listItems.remove(item);
+    writeShared(() => listItems.remove(item));
     _engine.forget(item);
     if (selectedItems.remove(item)) {
       updateSelectedItems?.call(selectedItems);
@@ -441,13 +451,22 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       return;
     }
     final ValueItem<T> newValue = create(text);
+    final Set<ValueItem<T>> before = _snapshot();
     await onEditItem?.call(item, newValue);
     // Shared lists are updated even if a parent rebuild replaced this
     // controller while the callback ran; notifications are skipped then.
-    _replace(listItems, item, newValue);
+    final ValueItem<T>? stored = _engine.storedFor(listItems, before, newValue);
+    final bool replaced = _replace(
+      listItems,
+      item,
+      newValue,
+      stored: stored,
+      shared: true,
+    );
     final int selectedIndex = selectedItems.indexOf(item);
     if (selectedIndex != -1) {
-      _replace(selectedItems, item, newValue);
+      final ValueItem<T> to = replaced || stored == null ? newValue : stored;
+      _replace(selectedItems, item, to);
       updateSelectedItems?.call(selectedItems);
     }
     _engine.forget(item);
@@ -456,20 +475,37 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     _notify();
   }
 
-  static void _replace<T>(
+  /// The current entries of [listItems], by identity, taken before a
+  /// callback runs so its own copy of an item can be told apart.
+  Set<ValueItem<T>> _snapshot() =>
+      HashSet<ValueItem<T>>.identity()..addAll(listItems);
+
+  /// Puts [to] where [from] is in [list], unless [list] already holds
+  /// [stored] (the entry for [to], found with `contains` when omitted).
+  /// Returns whether [from]'s slot is the one meant to hold [to]. A [shared]
+  /// list (the caller's [listItems]) that cannot change is left as is.
+  static bool _replace<T>(
     List<ValueItem<T>> list,
     ValueItem<T> from,
-    ValueItem<T> to,
-  ) {
+    ValueItem<T> to, {
+    ValueItem<T>? stored,
+    bool shared = false,
+  }) {
     final int index = list.indexOf(from);
-    final bool hasNew = list.contains(to);
-    if (index != -1 && (!hasNew || to == from)) {
-      list[index] = to;
-    } else if (index != -1) {
-      list.removeAt(index);
-    } else if (!hasNew) {
-      list.add(to);
+    final bool hasNew = stored != null || list.contains(to);
+    final bool replace = index != -1 && (!hasNew || to == from);
+    void write() {
+      if (replace) {
+        list[index] = to;
+      } else if (index != -1) {
+        list.removeAt(index);
+      } else if (!hasNew) {
+        list.add(to);
+      }
     }
+
+    shared ? writeShared(write) : write();
+    return replace;
   }
 
   // ------------------------------------------------------------- lifecycle

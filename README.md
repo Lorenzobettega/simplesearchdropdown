@@ -66,8 +66,15 @@ PageUp/PageDown jump to the first/last item and Enter selects.
 - `items:` — the controller keeps its own copy. Add/edit/delete change the copy;
   your callbacks are notifications (e.g. to persist).
 - `listItems:` — your list, shared by reference (7.x behaviour). Changes you make
-  to it show up the next time the list opens. After an add/edit/delete callback
-  the controller updates the list only if your callback did not.
+  to it show up the next time the list opens. Unlike 7.x, after an
+  add/edit/delete callback the controller adds, replaces or removes the item in
+  your list, unless your callback already stored it: the list holds that item,
+  an equal one, or a new entry with the same label (your own copy, e.g. with a
+  server id), which is then kept and selected. A callback that leaves the list
+  untouched gets the change applied, so refuse a delete with `confirmDelete`,
+  not by keeping the item. An unmodifiable list (`const`, `List.unmodifiable`,
+  freezed) is never written: pass the new list from your state (multiple), or
+  use `items:` and `updateListItems` (single).
 
 ### Add, edit and delete
 

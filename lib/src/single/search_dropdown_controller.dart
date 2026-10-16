@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
 import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
+import 'package:simple_search_dropdown/src/core/shared_list.dart';
 
 /// State of a [SearchDropDown]: items, selection, search text and filtering.
 ///
@@ -19,7 +20,11 @@ import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 /// * `items` — copied once; the controller owns the copy.
 ///
 /// Either way add/edit/delete keep the list in sync after your callback
-/// returns: if the callback already changed the list nothing is done twice.
+/// returns, unless the callback already stored the item: the list holds it,
+/// an equal item, or a new entry with the same label (e.g. your copy with a
+/// server id), which is then kept and selected. An unmodifiable [listItems]
+/// (`const`, `List.unmodifiable`, freezed) is never written; to keep such a
+/// list in sync, use `items` and [updateListItems].
 class SearchDropDownController<T> extends ChangeNotifier {
   /// Creates a controller. Pass exactly one of [listItems] or `items`.
   SearchDropDownController({
@@ -501,8 +506,8 @@ class SearchDropDownController<T> extends ChangeNotifier {
   // ---------------------------------------------------------- add / delete
 
   /// Creates an item from [text] (after [verifyInputItem]), awaits
-  /// [onAddItem], adds it to [listItems] if the callback did not, and selects
-  /// it.
+  /// [onAddItem], adds it to [listItems] unless the callback stored it, and
+  /// selects it (or the copy the callback stored).
   Future<void> addItem(
     String text,
     BuildContext context, {
@@ -531,23 +536,30 @@ class SearchDropDownController<T> extends ChangeNotifier {
       localSearchController.clear();
       return;
     }
+    final Set<ValueItem<T>> before = _snapshot();
     await onAddItem?.call(item);
     if (_disposed) {
       return;
     }
-    if (!listItems.contains(item)) {
-      listItems.add(item);
+    final ValueItem<T>? stored = _engine.storedFor(listItems, before, item);
+    if (stored == null) {
+      writeShared(() => listItems.add(item));
     }
     _refresh();
-    selectItem(item);
+    selectItem(stored ?? item);
   }
+
+  /// The current entries of [listItems], by identity, taken before a
+  /// callback runs so its own copy of an item can be told apart.
+  Set<ValueItem<T>> _snapshot() =>
+      HashSet<ValueItem<T>>.identity()..addAll(listItems);
 
   Future<void> _proceedWithDeletion(ValueItem<T> item) async {
     await onDeleteItem?.call(item);
     if (_disposed) {
       return;
     }
-    listItems.remove(item);
+    writeShared(() => listItems.remove(item));
     _engine.forget(item);
     _refresh();
     resetSelection(highlight: true);
@@ -589,7 +601,8 @@ class SearchDropDownController<T> extends ChangeNotifier {
   // ------------------------------------------------------------------ edit
 
   /// Opens the edit dialog for [item]; on confirm awaits [onEditItem] and
-  /// replaces the item in [listItems] if the callback did not.
+  /// replaces the item in [listItems] unless the callback stored the new one
+  /// (then the item the callback stored is the one selected).
   Future<void> editItem(
     ValueItem<T> item,
     BuildContext context, {
@@ -621,24 +634,28 @@ class SearchDropDownController<T> extends ChangeNotifier {
       return;
     }
     final ValueItem<T> newValue = create(text);
+    final Set<ValueItem<T>> before = _snapshot();
     await onEditItem?.call(item, newValue);
     if (_disposed) {
       return;
     }
+    final ValueItem<T>? stored = _engine.storedFor(listItems, before, newValue);
     final int index = listItems.indexOf(item);
-    final bool hasNew = listItems.contains(newValue);
-    if (index != -1 && (!hasNew || newValue == item)) {
-      listItems[index] = newValue;
-    } else if (index != -1) {
-      listItems.removeAt(index);
-    } else if (!hasNew) {
-      listItems.add(newValue);
-    }
+    final bool replace = index != -1 && (stored == null || newValue == item);
+    writeShared(() {
+      if (replace) {
+        listItems[index] = newValue;
+      } else if (index != -1) {
+        listItems.removeAt(index);
+      } else if (stored == null) {
+        listItems.add(newValue);
+      }
+    });
     _engine.forget(item);
     final bool wasSelected = _selectedItem == item;
     _refresh();
     if (wasSelected) {
-      selectItem(newValue);
+      selectItem(replace || stored == null ? newValue : stored);
     }
   }
 

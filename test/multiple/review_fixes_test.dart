@@ -39,6 +39,38 @@ class _HostState extends State<_Host> {
   );
 }
 
+/// A BLoC/freezed-style parent: every change emits a new unmodifiable list.
+class _FrozenHost extends StatefulWidget {
+  const _FrozenHost();
+
+  @override
+  State<_FrozenHost> createState() => _FrozenHostState();
+}
+
+class _FrozenHostState extends State<_FrozenHost> {
+  List<ValueItem<int>> items = List<ValueItem<int>>.unmodifiable(fruitItems());
+  final List<ValueItem<int>> selected = <ValueItem<int>>[fruitItems()[1]];
+
+  @override
+  Widget build(BuildContext context) => MultipleSearchDropDown<int>(
+    listItems: items,
+    selectedItems: selected,
+    updateSelectedItems: (_) => setState(() {}),
+    newValueItem: (s) => ValueItem<int>(label: s, value: 99),
+    onAddItem: (item) => setState(
+      () => items = List<ValueItem<int>>.unmodifiable(<ValueItem<int>>[
+        ...items,
+        item,
+      ]),
+    ),
+    onDeleteItem: (item) => setState(
+      () => items = List<ValueItem<int>>.unmodifiable(
+        items.where((e) => e != item),
+      ),
+    ),
+  );
+}
+
 void main() {
   group('review fixes: multiple', () {
     testWidgets('a parent rebuild keeps the active search (R4/R10)', (
@@ -266,6 +298,210 @@ void main() {
       );
       expect(find.text('extra-row'), findsOneWidget);
       expect(find.text('extra-add'), findsOneWidget);
+    });
+  });
+
+  group('legacy listItems write-back: multiple (F1/F2)', () {
+    MultipleSearchDropDownController<int> legacy(
+      List<ValueItem<int>> list, {
+      List<ValueItem<int>>? selected,
+      bool addMode = true,
+      bool editMode = false,
+      Function(ValueItem<int>)? onAddItem,
+      Function(ValueItem<int>)? onDeleteItem,
+      Function(ValueItem<int>, ValueItem<int>)? onEditItem,
+    }) => MultipleSearchDropDownController<int>(
+      listItems: list,
+      selectedItems: selected,
+      addMode: addMode,
+      newValueItem: (s) => ValueItem<int>(label: s, value: 99),
+      onAddItem: onAddItem ?? (_) {},
+      deleteMode: onDeleteItem != null,
+      onDeleteItem: onDeleteItem,
+      editMode: editMode,
+      onEditItem: onEditItem,
+    );
+
+    Future<void> submitEdit(
+      WidgetTester tester,
+      String label,
+      String text,
+    ) async {
+      await tester.tap(
+        find.descendant(
+          of: find.widgetWithText(DefaultListTile<int>, label),
+          matching: find.byIcon(Icons.edit),
+        ),
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(EditDialog),
+          matching: find.byType(TextField),
+        ),
+        text,
+      );
+      await tester.tap(find.text('Editar'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('F1: delete and add with an unmodifiable list from state', (
+      tester,
+    ) async {
+      await tester.pumpWidget(host(const _FrozenHost()));
+      final _FrozenHostState state = tester.state(find.byType(_FrozenHost));
+      await openMultiple(tester);
+      await tester.tap(
+        find.descendant(
+          of: find.widgetWithText(DefaultListTile<int>, 'Banana'),
+          matching: find.byIcon(Icons.delete),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(state.selected.map((e) => e.label), isNot(contains('Banana')));
+      expect(find.widgetWithText(DefaultListTile<int>, 'Banana'), findsNothing);
+      expect(state.items, hasLength(4));
+
+      await tester.enterText(find.byType(TextField).last, 'Kiwi');
+      await tester.pump();
+      await tester.tap(find.text('Criar'));
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(state.selected.map((e) => e.label), contains('Kiwi'));
+      expect(state.items.map((e) => e.label), contains('Kiwi'));
+    });
+
+    testWidgets('F1: edit finishes with an unmodifiable list', (tester) async {
+      final List<ValueItem<int>> selected = <ValueItem<int>>[fruitItems()[1]];
+      final c = legacy(
+        List<ValueItem<int>>.unmodifiable(fruitItems()),
+        selected: selected,
+        addMode: false,
+        editMode: true,
+        onEditItem: (_, _) {},
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
+      await openMultiple(tester);
+      await submitEdit(tester, 'Banana', 'Kiwi');
+
+      expect(tester.takeException(), isNull);
+      expect(c.listItems[1].label, 'Banana');
+      expect(selected, <ValueItem<int>>[
+        const ValueItem<int>(label: 'Kiwi', value: 99),
+      ]);
+    });
+
+    testWidgets('F2: an add whose callback stores its own copy is not '
+        'duplicated and the copy is selected', (tester) async {
+      final List<ValueItem<int>> items = fruitItems();
+      final c = legacy(
+        items,
+        onAddItem: (i) => items.add(ValueItem<int>(label: i.label, value: 42)),
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
+      await openMultiple(tester);
+      await tester.enterText(find.byType(TextField).last, 'Kiwi');
+      await tester.pump();
+      await tester.tap(find.text('Criar'));
+      await tester.pumpAndSettle();
+
+      expect(items.where((e) => e.label == 'Kiwi'), hasLength(1));
+      expect(c.selectedItems, <ValueItem<int>>[
+        const ValueItem<int>(label: 'Kiwi', value: 42),
+      ]);
+      expect(c.selectedItems.single, same(items.last));
+    });
+
+    testWidgets('F2: an edit whose callback swaps in its own copy is not '
+        'duplicated and the copy stays selected', (tester) async {
+      final List<ValueItem<int>> items = fruitItems();
+      final List<ValueItem<int>> selected = <ValueItem<int>>[items[1]];
+      final c = legacy(
+        items,
+        selected: selected,
+        addMode: false,
+        editMode: true,
+        onEditItem: (old, nw) {
+          items[items.indexOf(old)] = ValueItem<int>(
+            label: nw.label,
+            value: 42,
+          );
+        },
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
+      await openMultiple(tester);
+      await submitEdit(tester, 'Banana', 'Banana2');
+
+      expect(items.where((e) => e.label == 'Banana2'), hasLength(1));
+      expect(items[1], const ValueItem<int>(label: 'Banana2', value: 42));
+      expect(selected.single, same(items[1]));
+    });
+
+    testWidgets('F2: an unchanged edit selects the instance now in the list', (
+      tester,
+    ) async {
+      final List<ValueItem<int>> items = <ValueItem<int>>[
+        // Distinct instances on purpose.
+        // ignore: prefer_const_constructors
+        ValueItem<int>(label: 'Banana', value: 99),
+      ];
+      final ValueItem<int> old = items.single;
+      final List<ValueItem<int>> selected = <ValueItem<int>>[old];
+      final c = legacy(
+        items,
+        selected: selected,
+        addMode: false,
+        editMode: true,
+        onEditItem: (_, _) {},
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
+      await openMultiple(tester);
+      await submitEdit(tester, 'Banana', 'Banana');
+
+      expect(items, hasLength(1));
+      expect(items.single, isNot(same(old)));
+      expect(selected.single, same(items.single));
+    });
+
+    testWidgets('F1: only listItems is spared; an unmodifiable selectedItems '
+        'still reports the write, as 7.x toggling did', (tester) async {
+      final List<ValueItem<int>> items = fruitItems();
+      final c = legacy(
+        items,
+        selected: List<ValueItem<int>>.unmodifiable(<ValueItem<int>>[items[1]]),
+        addMode: false,
+        editMode: true,
+        onEditItem: (_, _) {},
+      );
+      addTearDown(c.dispose);
+      await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
+      final Future<void> edit = expectLater(
+        c.editItem(
+          items[1],
+          tester.element(find.byType(MultipleSearchDropDown<int>)),
+        ),
+        throwsUnsupportedError,
+      );
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.enterText(
+        find.descendant(
+          of: find.byType(EditDialog),
+          matching: find.byType(TextField),
+        ),
+        'Kiwi',
+      );
+      await tester.tap(find.text('Editar'));
+      await tester.pump(const Duration(milliseconds: 500));
+
+      await edit;
+      expect(items[1].label, 'Kiwi');
     });
   });
 }
