@@ -290,6 +290,7 @@ void main() {
         updateSelectedItems: (s) => calls.add('update:${s.length}'),
         onClearItem: (item) => calls.add('clear:${item.label}'),
         onClearList: () => calls.add('clearList'),
+        onFilterUpdated: () => calls.add('filter'),
       );
       bool mutate = true;
       await tester.pumpWidget(
@@ -304,7 +305,8 @@ void main() {
                 );
                 c
                   ..toggle(c.selectedItems.first)
-                  ..clear();
+                  ..clear()
+                  ..search('uva');
               }
               return const SizedBox();
             },
@@ -313,9 +315,11 @@ void main() {
       );
       expect(tester.takeException(), isNull);
       expect(c.isDisposed, isTrue);
+      // The values 7.x passed synchronously: 1 of 2 left after the toggle.
+      // onFilterUpdated, like listeners, is skipped after dispose.
       expect(calls, <String>[
         'clear:Maçã',
-        'update:0',
+        'update:1',
         'update:0',
         'clearList',
       ]);

@@ -8,10 +8,8 @@ import 'package:flutter/scheduler.dart';
 /// Without an initialized binding (a plain `test()`, code before `runApp`) no
 /// frame can be building, so [callback] runs synchronously, as in 7.x.
 void runOutsideBuild(VoidCallback callback, [bool Function()? isDisposed]) {
-  final SchedulerBinding? binding = _bindingOrNull();
-  if (binding != null &&
-      binding.schedulerPhase == SchedulerPhase.persistentCallbacks) {
-    binding.addPostFrameCallback((_) {
+  if (isBuilding()) {
+    SchedulerBinding.instance.addPostFrameCallback((_) {
       if (isDisposed == null || !isDisposed()) {
         callback();
       }
@@ -20,6 +18,10 @@ void runOutsideBuild(VoidCallback callback, [bool Function()? isDisposed]) {
     callback();
   }
 }
+
+/// Whether a frame is being built, i.e. [runOutsideBuild] would defer.
+bool isBuilding() =>
+    _bindingOrNull()?.schedulerPhase == SchedulerPhase.persistentCallbacks;
 
 SchedulerBinding? _bindingOrNull() {
   try {

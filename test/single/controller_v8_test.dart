@@ -14,6 +14,7 @@ SearchDropDownController<int> _ctrl({
   Function(ValueItem<int>)? onAddItem,
   Function(ValueItem<int>)? onDeleteItem,
   void Function(ValueItem<int>?)? updateSelectedItem,
+  void Function()? onFilterUpdated,
 }) => SearchDropDownController<int>(
   listItems: listItems,
   items: items,
@@ -23,6 +24,7 @@ SearchDropDownController<int> _ctrl({
   onAddItem: onAddItem,
   onDeleteItem: onDeleteItem,
   updateSelectedItem: updateSelectedItem,
+  onFilterUpdated: onFilterUpdated,
   newValueItem: (s) => ValueItem<int>(label: s, value: s.length),
 );
 
@@ -326,6 +328,122 @@ void main() {
     );
 
     testWidgets(
+      'changes made during a build notify results and onFilterUpdated once '
+      'after the frame',
+      (tester) async {
+        int filterUpdates = 0;
+        final c = _ctrl(
+          listItems: fruitItems(),
+          onFilterUpdated: () => filterUpdates++,
+        );
+        addTearDown(c.dispose);
+        int resultNotes = 0;
+        c.results.addListener(() => resultNotes++);
+        bool mutate = true;
+        await tester.pumpWidget(
+          host(
+            Builder(
+              builder: (context) {
+                if (mutate) {
+                  mutate = false;
+                  c
+                    ..filterList('ba')
+                    ..filterList('uva');
+                  expect(filterUpdates, 0);
+                }
+                return const SizedBox();
+              },
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
+        expect(filterUpdates, 1);
+        expect(resultNotes, 1);
+      },
+    );
+
+    testWidgets(
+      'a highlight reset made during a build notifies highlight listeners '
+      'after the frame (F7)',
+      (tester) async {
+        final c = _ctrl(listItems: fruitItems());
+        addTearDown(c.dispose);
+        c.highlightEdge(last: true); // outside a build
+        final List<int> heard = <int>[];
+        c.highlight.addListener(() => heard.add(c.highlightedIndex));
+        bool mutate = true;
+        await tester.pumpWidget(
+          host(
+            Builder(
+              builder: (context) {
+                if (mutate) {
+                  mutate = false;
+                  c.filterList('uva');
+                  expect(heard, isEmpty); // never during the build
+                }
+                return const SizedBox();
+              },
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull);
+        expect(heard, <int>[-1]);
+      },
+    );
+
+    testWidgets(
+      'the open list never adds the add row to the list it still shows while '
+      'a change from a build is pending (F7)',
+      (tester) async {
+        final c = _ctrl(
+          listItems: fruitItems(),
+          addMode: true,
+          onAddItem: (_) {},
+        );
+        addTearDown(c.dispose);
+        final ValueNotifier<int> tick = ValueNotifier<int>(0);
+        addTearDown(tick.dispose);
+        int applied = 0;
+        await tester.pumpWidget(
+          MaterialApp(
+            // Above the navigator: built before the open view in a frame.
+            builder: (context, child) => ValueListenableBuilder<int>(
+              valueListenable: tick,
+              builder: (context, v, _) {
+                if (v > applied) {
+                  applied = v;
+                  // Nothing matches the typed 'Ma' any more.
+                  c.updateListItems(numberedItems(3), false);
+                }
+                return child!;
+              },
+            ),
+            home: Scaffold(
+              body: Center(child: SearchDropDown<int>(controller: c)),
+            ),
+          ),
+        );
+        await openSingle(tester);
+        await typeInSingle(tester, 'M');
+        expect(find.text('Maçã'), findsWidgets);
+        expect(find.byType(DefaultAddListItem), findsNothing);
+
+        // The typed text rebuilds the open list in the frame whose build
+        // empties the results.
+        c.localSearchController.text = 'Ma';
+        tick.value = 1;
+        await tester.pump();
+        expect(tester.takeException(), isNull);
+        expect(c.filteredItems, isEmpty);
+        expect(find.byType(DefaultAddListItem), findsNothing);
+
+        await tester.pump();
+        expect(find.byType(DefaultAddListItem), findsOneWidget);
+      },
+    );
+
+    testWidgets(
       'filters run during a build narrow and compare against the latest '
       'results (F7)',
       (tester) async {
@@ -420,6 +538,7 @@ void main() {
         expect(c.filteredItems.map((e) => e.label), <String>['Banana']);
       },
     );
+
     testWidgets(
       'updateSelectedItem from a reset during a descendant build is delivered '
       'after the frame (F18)',
@@ -568,9 +687,11 @@ void main() {
       'controller is disposed before it runs',
       (tester) async {
         final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
+        int filterUpdates = 0;
         final c = _ctrl(
           listItems: fruitItems(),
           updateSelectedItem: selections.add,
+          onFilterUpdated: () => filterUpdates++,
         );
         bool mutate = true;
         await tester.pumpWidget(
@@ -579,11 +700,13 @@ void main() {
               builder: (context) {
                 if (mutate) {
                   mutate = false;
-                  // Runs before the deferred callback queued below.
+                  // Runs before the deferred callbacks queued below.
                   WidgetsBinding.instance.addPostFrameCallback(
                     (_) => c.dispose(),
                   );
-                  c.forceSelection('Uva');
+                  c
+                    ..forceSelection('Uva')
+                    ..filterList('uva');
                 }
                 return const SizedBox();
               },
@@ -592,10 +715,13 @@ void main() {
         );
         expect(tester.takeException(), isNull);
         expect(c.selectedItem?.label, 'Uva');
-        // As in 7.x, where it ran synchronously; only listeners are skipped.
+        // As in 7.x, where it ran synchronously; only listeners and
+        // onFilterUpdated are skipped.
         expect(selections.map((e) => e?.label), <String>['Uva']);
+        expect(filterUpdates, 0);
       },
     );
+
     test('async callbacks finishing after dispose are ignored', () async {
       final List<ValueItem<int>> mine = fruitItems();
       final List<ValueItem<int>?> selections = <ValueItem<int>?>[];

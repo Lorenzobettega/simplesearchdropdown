@@ -141,7 +141,8 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// `false` never shows it.
   final bool? showClearIcon;
 
-  /// Called when [filteredItems] changes.
+  /// Called when [filteredItems] changes; for changes made during a build,
+  /// once after that frame however many there were.
   final void Function()? onFilterUpdated;
 
   final FilterEngine<T> _engine;
@@ -214,8 +215,9 @@ class SearchDropDownController<T> extends ChangeNotifier {
   UnmodifiableListView<ValueItem<T>> get filteredItems =>
       UnmodifiableListView<ValueItem<T>>(_filtered);
 
-  /// Notifies when [filteredItems] changes (after the frame for a change
-  /// made during a build).
+  /// Notifies when [filteredItems] changes. Changes made during a build are
+  /// coalesced into one notification after that frame (so is a change made
+  /// in a post-frame callback while that notification is still pending).
   Listenable get results => _results;
 
   /// The keyboard-highlighted index in [filteredItems] (-1 for none).

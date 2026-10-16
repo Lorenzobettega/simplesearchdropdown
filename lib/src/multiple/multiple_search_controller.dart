@@ -250,11 +250,11 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     } else {
       selectedItems.add(item);
     }
-    _deliver(() {
+    _deliver((List<ValueItem<T>> selection) {
       if (removed) {
         onClearItem?.call(item);
       }
-      updateSelectedItems?.call(selectedItems);
+      updateSelectedItems?.call(selection);
     });
     if (_sort == SortType.selectedFirst) {
       _rebuildBase();
@@ -293,7 +293,9 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Clears the selection and calls [updateSelectedItems].
   void resetSelection() {
     selectedItems.clear();
-    _deliver(() => updateSelectedItems?.call(selectedItems));
+    _deliver(
+      (List<ValueItem<T>> selection) => updateSelectedItems?.call(selection),
+    );
     _notify();
   }
 
@@ -301,8 +303,8 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// and [onClearList].
   void clear() {
     selectedItems.clear();
-    _deliver(() {
-      updateSelectedItems?.call(selectedItems);
+    _deliver((List<ValueItem<T>> selection) {
+      updateSelectedItems?.call(selection);
       onClearList?.call();
     });
     _notify();
@@ -489,8 +491,15 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
 
   /// Runs a selection callback like [_runOutsideBuild], but also once the
   /// controller is disposed in that frame: the caller's state must still
-  /// learn about the change (7.x ran these synchronously).
-  void _deliver(void Function() callback) => runOutsideBuild(callback);
+  /// learn about the change (7.x ran these synchronously). [callback] gets
+  /// [selectedItems] itself when run at once, or, when deferred, a copy taken
+  /// now: the value 7.x passed, whatever happens later in that frame.
+  void _deliver(void Function(List<ValueItem<T>> selection) callback) {
+    final List<ValueItem<T>> selection = isBuilding()
+        ? List<ValueItem<T>>.of(selectedItems)
+        : selectedItems;
+    runOutsideBuild(() => callback(selection));
+  }
 
   /// Releases resources. Safe to call more than once.
   @override
