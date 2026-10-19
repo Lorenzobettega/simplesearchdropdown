@@ -1,6 +1,3 @@
-// Characterization tests exercise the legacy (deprecated) API on purpose.
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
 // Characterization tests for the single-selection SearchDropDown widget
 // (interaction surface). They lock the behaviour of v7.8.0 before the 8.0
 // refactor. Tests named 'B<n>: ...' assert the CORRECT behaviour of a known
@@ -44,7 +41,7 @@ Widget _dropdown(
   Key? key,
   SimpleSearchbarSettings settings = defaultSearchBarSettings,
   SimpleOverlaySettings overlay = _tallOverlay,
-  Widget? defaultAditionalWidget,
+  Widget? defaultAdditionalWidget,
   bool disposeController = true,
   bool removeFocus = true,
 }) => SearchDropDown<int>(
@@ -52,7 +49,7 @@ Widget _dropdown(
   controller: controller,
   searchBarSettings: settings,
   overlayListSettings: overlay,
-  defaultAditionalWidget: defaultAditionalWidget,
+  defaultAdditionalWidget: defaultAdditionalWidget,
   disposeController: disposeController,
   removeFocus: removeFocus,
 );
@@ -594,7 +591,7 @@ void main() {
     });
   });
 
-  group('single: enabled / enableDisable() / resetSelection()', () {
+  group('single: enabled / toggleEnabled() / resetSelection()', () {
     testWidgets('enabled false disables the bar; tapping does not open', (
       tester,
     ) async {
@@ -609,20 +606,17 @@ void main() {
       expect(find.byType(DefaultListTile<int>), findsNothing);
     });
 
-    testWidgets('SearchDropDownState.enableDisable() toggles enabled', (
-      tester,
-    ) async {
-      final key = GlobalKey<SearchDropDownState<int>>();
+    testWidgets('controller.toggleEnabled() toggles enabled', (tester) async {
       final c = _ctrl(numberedItems(3));
-      await _pump(tester, _dropdown(c, key: key));
+      await _pump(tester, _dropdown(c));
 
-      key.currentState!.enableDisable();
+      c.toggleEnabled();
       await tester.pump();
       expect(c.enabled, isFalse);
       expect(_anchor(tester).enabled, isFalse);
       expect(find.byIcon(Icons.arrow_drop_down), findsNothing);
 
-      key.currentState!.enableDisable();
+      c.toggleEnabled();
       await tester.pump();
       expect(c.enabled, isTrue);
       expect(_anchor(tester).enabled, isTrue);
@@ -631,29 +625,25 @@ void main() {
       expect(_rowLabels(tester), hasLength(3));
     });
 
-    testWidgets(
-      'SearchDropDownState.resetSelection() clears selection and text and '
-      'notifies null',
-      (tester) async {
-        final key = GlobalKey<SearchDropDownState<int>>();
-        final calls = <ValueItem<int>?>[];
-        final c = _ctrl(numberedItems(3), calls: calls);
-        await _pump(tester, _dropdown(c, key: key));
-        await openSingle(tester);
-        await _tapRow(tester, 'Item 2');
+    testWidgets('controller.resetSelection() clears selection and text and '
+        'notifies null', (tester) async {
+      final calls = <ValueItem<int>?>[];
+      final c = _ctrl(numberedItems(3), calls: calls);
+      await _pump(tester, _dropdown(c));
+      await openSingle(tester);
+      await _tapRow(tester, 'Item 2');
 
-        key.currentState!.resetSelection();
-        await tester.pump();
+      c.resetSelection();
+      await tester.pump();
 
-        expect(c.selectedItem, isNull);
-        expect(c.localSearchController.text, '');
-        expect(_barField(tester).controller.text, '');
-        expect(calls, <ValueItem<int>?>[
-          const ValueItem(label: 'Item 2', value: 2),
-          null,
-        ]);
-      },
-    );
+      expect(c.selectedItem, isNull);
+      expect(c.localSearchController.text, '');
+      expect(_barField(tester).controller.text, '');
+      expect(calls, <ValueItem<int>?>[
+        const ValueItem(label: 'Item 2', value: 2),
+        null,
+      ]);
+    });
   });
 
   group('single: keyboard arrow navigation', () {
@@ -1059,13 +1049,13 @@ void main() {
     });
   });
 
-  group('single: defaultAditionalWidget', () {
+  group('single: defaultAdditionalWidget', () {
     testWidgets('rendered once in each row', (tester) async {
       await _pump(
         tester,
         _dropdown(
           _ctrl(numberedItems(3)),
-          defaultAditionalWidget: const Icon(Icons.star),
+          defaultAdditionalWidget: const Icon(Icons.star),
         ),
       );
       await openSingle(tester);

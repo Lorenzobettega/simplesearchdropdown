@@ -48,7 +48,6 @@ class SearchDropDownController<T> extends ChangeNotifier {
     this.verifyDialogSettings,
     bool? showClearIcon,
     ValueItem<T>? initialSelectedItem,
-    @Deprecated('Use sort. Will be removed in 9.0.0') int? sortType,
     SortType sort = SortType.none,
     bool enabled = true,
     this.onFilterUpdated,
@@ -76,7 +75,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
        showClearIcon = showClearIcon ?? true,
        listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
        _enabled = enabled,
-       _sort = sortType != null ? SortType.fromLegacy(sortType) : sort,
+       _sort = sort,
        _engine = FilterEngine<T>(
          normalization: SearchNormalization(
            latinize: latinize,
@@ -489,10 +488,6 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// the view is open). Changes made to a shared `listItems:` list are picked
   /// up; an empty [text] shows every item.
   void filterList(String text) => _filterBy(text);
-
-  /// Sorts [listItems] in place by [sortType] (0 none, 1 A-Z, 2 Z-A,
-  /// 3 selected first) and refreshes the results.
-  void sortList(int sortType) => sortBy(SortType.fromLegacy(sortType));
 
   /// Sorts [listItems] in place by [type] and refreshes the results.
   void sortBy(SortType type) {

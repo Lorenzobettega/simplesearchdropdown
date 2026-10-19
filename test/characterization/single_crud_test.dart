@@ -1,6 +1,3 @@
-// Characterization tests exercise the legacy (deprecated) API on purpose.
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
 // Characterization tests for the add / edit / delete (CRUD) surface of the
 // single-selection SearchDropDown. They lock the behaviour of v7.8.0 before
 // the 8.0 refactor. Tests named 'B<n>: ...' assert the CORRECT behaviour of a
@@ -60,13 +57,13 @@ Future<void> _pump(
   WidgetTester tester,
   SearchDropDownController<int> controller, {
   SimpleOverlaySettings? overlay,
-  Widget? addAditionalWidget,
+  Widget? addAdditionalWidget,
 }) => tester.pumpWidget(
   host(
     SearchDropDown<int>(
       controller: controller,
       overlayListSettings: overlay ?? _tall,
-      addAditionalWidget: addAditionalWidget,
+      addAdditionalWidget: addAdditionalWidget,
     ),
   ),
 );
@@ -204,13 +201,13 @@ void main() {
       expect(find.text('Criar'), findsNothing);
     });
 
-    testWidgets('addAditionalWidget is rendered inside the add row', (
+    testWidgets('addAdditionalWidget is rendered inside the add row', (
       tester,
     ) async {
       await _pump(
         tester,
         _ctrl(fruitItems(), addMode: true),
-        addAditionalWidget: const Text('extra'),
+        addAdditionalWidget: const Text('extra'),
       );
       await openSingle(tester);
       await typeInSingle(tester, 'Kiwi');

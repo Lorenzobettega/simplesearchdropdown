@@ -899,6 +899,64 @@ void main() {
       expect(tester.takeException(), isNull);
     });
   });
+  group('public API surface (moved from the 7.x compile test)', () {
+    test('controller.showClearIcon is a bool (default true) (F14)', () {
+      final SearchDropDownController<int> c = SearchDropDownController<int>(
+        listItems: <ValueItem<int>>[const ValueItem(label: 'A', value: 1)],
+        addMode: false,
+        deleteMode: false,
+      );
+      addTearDown(c.dispose);
+      final bool v = c.showClearIcon;
+      expect(v, isTrue);
+
+      final SearchDropDownController<int> off = SearchDropDownController<int>(
+        listItems: <ValueItem<int>>[],
+        addMode: false,
+        deleteMode: false,
+        showClearIcon: false,
+      );
+      addTearDown(off.dispose);
+      expect(off.showClearIcon ? 1 : 0, 0);
+    });
+
+    test('controller fields and methods keep their types', () {
+      final List<ValueItem<int>> items = fruitItems();
+      final List<ValueItem<int>?> calls = <ValueItem<int>?>[];
+      final SearchDropDownController<int> c = SearchDropDownController<int>(
+        listItems: items,
+        addMode: false,
+        deleteMode: false,
+        sort: SortType.alphabetical,
+        updateSelectedItem: calls.add,
+      );
+      addTearDown(c.dispose);
+      final List<ValueItem<int>> l = c.listItems;
+      final bool latinize = c.latinize;
+      final bool caseSensitive = c.caseSensitive;
+      final bool trim = c.trim;
+      final int highlighted = c.highlightedIndex;
+      expect(identical(l, items), isTrue);
+      expect(<bool>[latinize, caseSensitive, trim], <bool>[true, false, true]);
+      expect(highlighted, -1);
+      c
+        ..enabled = false
+        ..enabled = true
+        ..sortBy(SortType.reverseAlphabetical)
+        ..filterList('a')
+        ..forceSelection('Uva');
+      final ValueItem<int>? selected = c.selectedItem;
+      final bool clear = c.clearVisible;
+      expect(selected?.label, 'Uva');
+      expect(clear, isTrue);
+      c
+        ..clearVisible = false
+        ..selectedItem = null
+        ..resetSelection()
+        ..updateListItems(fruitItems(), true);
+      expect(calls.last, isNull);
+    });
+  });
 }
 
 class _FakeContext extends Fake implements BuildContext {

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import 'package:simple_search_dropdown/src/helpers/overlay_screen.dart';
 
 /// A multiple-selection dropdown: selected items show as chips in the box and
 /// the list opens below it with a search field.
@@ -24,8 +23,7 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.onClearItem,
     this.onClearList,
     Function(List<ValueItem<T>>)? updateSelectedItems,
-    @Deprecated('Use sort. Will be removed in 9.0.0') int? sortType,
-    SortType sort = SortType.none,
+    this.sort = SortType.none,
     this.confirmDelete = false,
     List<ValueItem<T>>? selectedItems,
     this.deleteDialogSettings,
@@ -33,22 +31,13 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
     this.verifyDialogSettings,
     this.searchBarSettings = defaultSearchBarSettings,
     this.overlayListSettings = defaultOverlaySettings,
-    Widget? addAdditionalWidget,
-    Widget? defaultAdditionalWidget,
-    @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
-    Widget? addAditionalWidget,
-    @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
-    Widget? defaultAditionalWidget,
+    this.addAdditionalWidget,
+    this.defaultAdditionalWidget,
     this.enabled = true,
     this.strings,
   }) : _listItems = listItems,
        _selectedItems = selectedItems,
        _updateSelectedItems = updateSelectedItems,
-       _legacySortType = sortType,
-       _sort = sort,
-       addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
-       defaultAdditionalWidget =
-           defaultAdditionalWidget ?? defaultAditionalWidget,
        assert(
          controller != null ||
              (listItems != null &&
@@ -141,18 +130,8 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   ///The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
 
-  final int? _legacySortType;
-  final SortType _sort;
-
   ///How the items are ordered.
-  SortType get sort {
-    final int? legacy = _legacySortType;
-    return legacy != null ? SortType.fromLegacy(legacy) : _sort;
-  }
-
-  ///The legacy `int` sort type (0-3).
-  @Deprecated('Use sort. Will be removed in 9.0.0')
-  int get sortType => sort.legacyValue;
+  final SortType sort;
 
   ///Function to check if the item added is valid or not.
   final bool Function(ValueItem<T>)? verifyInputItem;
@@ -166,14 +145,6 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   ///A custom additional widget to be inserted on the default item cell.
   final Widget? defaultAdditionalWidget;
 
-  /// Deprecated alias of [addAdditionalWidget].
-  @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
-  Widget? get addAditionalWidget => addAdditionalWidget;
-
-  /// Deprecated alias of [defaultAdditionalWidget].
-  @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
-  Widget? get defaultAditionalWidget => defaultAdditionalWidget;
-
   ///A parameter to define if the widget is enabled or disabled (default: `true`).
   final bool enabled;
 
@@ -185,10 +156,9 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
       MultipleSearchDropDownState<T>();
 }
 
-/// State of [MultipleSearchDropDown].
-///
-/// Prefer the [MultipleSearchDropDownController] API; the methods here only
-/// forward to it and remain for `GlobalKey` users.
+/// State of [MultipleSearchDropDown]. Drive the dropdown through its
+/// [MultipleSearchDropDownController]; the state only reports whether the
+/// list is open ([aberto]) and can close it ([hideOverlay]).
 class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   final LayerLink _layerLink = LayerLink();
   final OverlayPortalController _portal = OverlayPortalController();
@@ -199,31 +169,6 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
 
   /// Whether the list is open.
   bool get aberto => _portal.isShowing;
-
-  /// Opens (`true`) or closes (`false`) the list.
-  @Deprecated(
-    'Use the open/close behaviour of the widget. Will be removed in 9.0.0',
-  )
-  set aberto(bool open) => open ? _showOverlay() : hideOverlay();
-
-  /// Whether the dropdown accepts interaction.
-  bool get enabled => _controller.enabled;
-
-  /// Enables or disables the dropdown.
-  @Deprecated('Use controller.enabled. Will be removed in 9.0.0')
-  set enabled(bool value) => _controller.enabled = value;
-
-  /// The 7.x overlay helper (one instance per state). The list is no longer
-  /// one of its entries, but `closeAll()`, and `closeLast()` once no entry of
-  /// yours is left, still close it, as in 7.x.
-  @Deprecated(
-    'The list is an OverlayPortal: use hideOverlay() and aberto. '
-    'Will be removed in 9.0.0',
-  )
-  late OverlayScreen overlayScreen = overlayScreenWithList(
-    context,
-    closeList: hideOverlay,
-  );
 
   SearchDropDownStrings get _strings =>
       widget.strings ?? SearchDropDownStrings.of(context);
@@ -361,46 +306,6 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     }
     return true;
   }
-
-  // ------------------------------------------------- deprecated forwards
-
-  /// Toggles [val] in the selection.
-  @Deprecated('Use controller.toggle(). Will be removed in 9.0.0')
-  void onItemSelected(ValueItem<T> val, {bool forced = false}) =>
-      _controller.toggle(val, forced: forced);
-
-  /// Clears the selection.
-  @Deprecated('Use controller.resetSelection(). Will be removed in 9.0.0')
-  void resetSelection() => _controller.resetSelection();
-
-  /// Selects the item with [label].
-  @Deprecated('Use controller.forceSelection(). Will be removed in 9.0.0')
-  void forceSelection(String label) => _controller.forceSelection(label);
-
-  /// Replaces the selection with [values].
-  @Deprecated(
-    'Use controller.forceMultipleSelection(). Will be removed in 9.0.0',
-  )
-  void forceMultipleSelection(List<ValueItem<T>> values) =>
-      _controller.forceMultipleSelection(values);
-
-  /// Toggles enabled/disabled.
-  @Deprecated('Use controller.toggleEnabled(). Will be removed in 9.0.0')
-  void enableDisable() => _controller.toggleEnabled();
-
-  /// Adds `item` (after verification) and selects it.
-  @Deprecated('Use controller.addValue(). Will be removed in 9.0.0')
-  void handleAddItem(ValueItem<T> item, BuildContext context) =>
-      _controller.addValue(item, context, strings: _strings);
-
-  /// Deletes `item` (after confirmation when enabled).
-  @Deprecated('Use controller.deleteItem(). Will be removed in 9.0.0')
-  void handleDeleteItem(ValueItem<T> item, BuildContext context) =>
-      _controller.deleteItem(item, context, strings: _strings);
-
-  /// Clears the selection like the clear button.
-  @Deprecated('Use controller.clear(). Will be removed in 9.0.0')
-  void onClear() => _controller.clear();
 
   // ---------------------------------------------------------------- overlay
 

@@ -1,5 +1,4 @@
-// Exercises 7.x API on purpose (compat findings).
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package, cascade_invocations
+// ignore_for_file: cascade_invocations
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -21,13 +20,10 @@ class _Host extends StatefulWidget {
 
 class _HostState extends State<_Host> {
   final List<ValueItem<int>> selected = <ValueItem<int>>[];
-  final GlobalKey<MultipleSearchDropDownState<int>> key = GlobalKey();
-
   void rebuild() => setState(() {});
 
   @override
   Widget build(BuildContext context) => MultipleSearchDropDown<int>(
-    key: key,
     listItems: widget.items,
     selectedItems: selected,
     updateSelectedItems: (_) => setState(() {}),
@@ -193,76 +189,27 @@ void main() {
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('7.x State setters aberto / enabled still work (R8/R14)', (
-      tester,
-    ) async {
-      await tester.pumpWidget(host(_Host(items: fruitItems())));
-      final MultipleSearchDropDownState<int> state = tester
-          .state<_HostState>(find.byType(_Host))
-          .key
-          .currentState!;
-      state.aberto = true;
-      await tester.pump();
-      expect(find.byType(MultipleListView<int>), findsOneWidget);
-      state.enabled = false;
-      await tester.pump();
-      expect(state.enabled, isFalse);
-      // Disabling closes the list (N58).
-      expect(find.byType(MultipleListView<int>), findsNothing);
-      expect(state.overlayScreen, isA<OverlayScreen>());
-    });
-
-    testWidgets('7.x overlayScreen is one stable instance that closes the '
-        'list (F10)', (tester) async {
-      await tester.pumpWidget(host(_Host(items: fruitItems())));
-      final MultipleSearchDropDownState<int> state = tester
-          .state<_HostState>(find.byType(_Host))
-          .key
-          .currentState!;
-      expect(identical(state.overlayScreen, state.overlayScreen), isTrue);
-
-      // A caller's own entry survives between accesses.
-      final OverlayEntry entry = OverlayEntry(
-        builder: (_) => const Text('custom-entry'),
+    testWidgets('the State reports the list open; disabling closes it '
+        '(R8/R14, N58)', (tester) async {
+      final GlobalKey<MultipleSearchDropDownState<int>> key = GlobalKey();
+      final c = MultipleSearchDropDownController<int>(
+        listItems: fruitItems(),
+        addMode: false,
+        deleteMode: false,
       );
-      state.overlayScreen.show(entry);
-      await tester.pump();
-      expect(find.text('custom-entry'), findsOneWidget);
-      expect(state.overlayScreen.overlayEntrys, hasLength(1));
-      state.overlayScreen.updateLast();
-      state.overlayScreen.closeLast();
-      await tester.pump();
-      expect(find.text('custom-entry'), findsNothing);
-      expect(state.overlayScreen.overlayEntrys, isEmpty);
-
-      // 7.x closeLast()/closeAll() closed the list (its entry was on top).
-      state.aberto = true;
-      await tester.pump();
+      addTearDown(c.dispose);
+      await tester.pumpWidget(
+        host(MultipleSearchDropDown<int>(key: key, controller: c)),
+      );
+      final MultipleSearchDropDownState<int> state = key.currentState!;
+      await openMultiple(tester);
+      expect(state.aberto, isTrue);
       expect(find.byType(MultipleListView<int>), findsOneWidget);
-      state.overlayScreen
-        ..updateLast()
-        ..closeLast();
+      c.enabled = false;
       await tester.pump();
+      // Disabling closes the list (N58).
       expect(state.aberto, isFalse);
       expect(find.byType(MultipleListView<int>), findsNothing);
-
-      state.aberto = true;
-      await tester.pump();
-      state.overlayScreen.show(entry);
-      await tester.pump();
-      state.overlayScreen.closeAll();
-      await tester.pump();
-      expect(state.aberto, isFalse);
-      expect(find.byType(MultipleListView<int>), findsNothing);
-      expect(find.text('custom-entry'), findsNothing);
-
-      // Nothing open: no StateError.
-      state.overlayScreen
-        ..closeLast()
-        ..closeAll()
-        ..updateLast();
-      await tester.pump();
-      expect(tester.takeException(), isNull);
     });
   });
 
@@ -367,7 +314,7 @@ void main() {
       );
     });
 
-    testWidgets('tiles accept the 7.x misspelled parameters', (tester) async {
+    testWidgets('tiles render their additional widgets', (tester) async {
       await tester.pumpWidget(
         host(
           Column(
@@ -381,13 +328,13 @@ void main() {
                 onPressed: (_) {},
                 overlayListSettings: defaultOverlaySettings,
                 selected: false,
-                defaultAditionalWidget: const Text('extra-row'),
+                defaultAdditionalWidget: const Text('extra-row'),
               ),
               DefaultAddListItem(
                 text: 'x',
                 overlayListSettings: defaultOverlaySettings,
                 itemAdded: (_) {},
-                addAditionalWidget: const Text('extra-add'),
+                addAdditionalWidget: const Text('extra-add'),
               ),
             ],
           ),

@@ -1,6 +1,3 @@
-// Characterization tests exercise the legacy (deprecated) API on purpose.
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
 // Characterization tests for the MultipleSearchDropDown widget (v7.8.0).
 // They lock the CURRENT behaviour before the 8.0 refactor, through the public
 // API and the user-visible widgets. Tests named 'M<n>: ...' assert the
@@ -60,13 +57,13 @@ MultipleSearchDropDown<int> _dropdown({
   bool editMode = false,
   bool confirmDelete = false,
   bool addToList = true,
-  int sortType = 0,
+  SortType sort = SortType.none,
   bool enabled = true,
   bool Function(ValueItem<int>)? verifyInputItem,
   SimpleSearchbarSettings settings = defaultSearchBarSettings,
   SimpleOverlaySettings overlay = _tallOverlay,
-  Widget? addAditionalWidget,
-  Widget? defaultAditionalWidget,
+  Widget? addAdditionalWidget,
+  Widget? defaultAdditionalWidget,
 }) => MultipleSearchDropDown<int>(
   key: key,
   listItems: items,
@@ -90,13 +87,37 @@ MultipleSearchDropDown<int> _dropdown({
   editMode: editMode,
   onEditItem: probe.edited.add,
   confirmDelete: confirmDelete,
-  sortType: sortType,
+  sort: sort,
   enabled: enabled,
   verifyInputItem: verifyInputItem,
   searchBarSettings: settings,
   overlayListSettings: overlay,
-  addAditionalWidget: addAditionalWidget,
-  defaultAditionalWidget: defaultAditionalWidget,
+  addAdditionalWidget: addAdditionalWidget,
+  defaultAdditionalWidget: defaultAdditionalWidget,
+);
+
+// The same wiring as [_dropdown], on a controller the test drives directly.
+MultipleSearchDropDownController<int> _controller({
+  required List<ValueItem<int>> items,
+  required List<ValueItem<int>> selected,
+  required _Probe probe,
+  bool enabled = true,
+}) => MultipleSearchDropDownController<int>(
+  listItems: items,
+  selectedItems: selected,
+  updateSelectedItems: probe.updates.add,
+  onClearItem: probe.clearedItems.add,
+  onClearList: () => probe.clearList++,
+  addMode: false,
+  deleteMode: false,
+  enabled: enabled,
+);
+
+MultipleSearchDropDown<int> _controlled(
+  MultipleSearchDropDownController<int> controller,
+) => MultipleSearchDropDown<int>(
+  controller: controller,
+  overlayListSettings: _tallOverlay,
 );
 
 // The closed box only (8.0 draws the open list as an OverlayPortal child,
@@ -502,7 +523,7 @@ void main() {
     Future<List<ValueItem<int>>> openScrolled(
       WidgetTester tester, {
       required List<int> selectedIdx,
-      int sortType = 0,
+      SortType sort = SortType.none,
     }) async {
       final items = numberedItems(50);
       await tester.pumpWidget(
@@ -511,7 +532,7 @@ void main() {
             items: items,
             selected: [for (final i in selectedIdx) items[i]],
             probe: _Probe(),
-            sortType: sortType,
+            sort: sort,
           ),
         ),
       );
@@ -556,10 +577,14 @@ void main() {
       expect(tester.getRect(_row('Item 0')).top, greaterThan(0));
     });
 
-    testWidgets('sortType 3 puts the selection at index 0: no scroll', (
+    testWidgets('selectedFirst puts the selection at index 0: no scroll', (
       tester,
     ) async {
-      await openScrolled(tester, selectedIdx: [40], sortType: 3);
+      await openScrolled(
+        tester,
+        selectedIdx: [40],
+        sort: SortType.selectedFirst,
+      );
       expect(_rowLabels(tester).take(2), ['Item 40', 'Item 0']);
     });
   });
@@ -661,14 +686,14 @@ void main() {
       expect(_rowLabels(tester), ['Maçã', 'Banana', 'Uva', 'abacaxi', 'Pêra']);
     });
 
-    testWidgets('filtered rows keep the sortType ordering', (tester) async {
+    testWidgets('filtered rows keep the sort ordering', (tester) async {
       await tester.pumpWidget(
         _app(
           _dropdown(
             items: fruitItems(),
             selected: [],
             probe: _Probe(),
-            sortType: 1,
+            sort: SortType.alphabetical,
           ),
         ),
       );
@@ -742,10 +767,10 @@ void main() {
     });
   });
 
-  group('overlay sortType ordering (0/1/2/3)', () {
+  group('overlay sort ordering (0 none/1 A-Z/2 Z-A/3 selectedFirst)', () {
     Future<List<ValueItem<int>>> openWith(
       WidgetTester tester,
-      int sortType, {
+      SortType sort, {
       List<int> selectedIdx = const <int>[],
     }) async {
       final items = _items();
@@ -756,7 +781,7 @@ void main() {
             items: items,
             selected: selected,
             probe: _Probe(),
-            sortType: sortType,
+            sort: sort,
           ),
         ),
       );
@@ -765,39 +790,43 @@ void main() {
     }
 
     testWidgets('0: original order, caller list untouched', (tester) async {
-      final items = await openWith(tester, 0);
+      final items = await openWith(tester, SortType.none);
       expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
       expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('1: A-Z ignoring case and accents (D2, 8.0)', (tester) async {
-      await openWith(tester, 1);
+      await openWith(tester, SortType.alphabetical);
       expect(_rowLabels(tester), ['apple', 'Banana', 'Cherry']);
     });
 
     testWidgets('1: the caller listItems is not reordered (M7, 8.0)', (
       tester,
     ) async {
-      final items = await openWith(tester, 1);
+      final items = await openWith(tester, SortType.alphabetical);
       expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('2: Z-A ignoring case and accents (D2, 8.0)', (tester) async {
-      final items = await openWith(tester, 2);
+      final items = await openWith(tester, SortType.reverseAlphabetical);
       expect(_rowLabels(tester), ['Cherry', 'Banana', 'apple']);
       // M7 (8.0): the caller list keeps its order.
       expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('3 without selection: original order', (tester) async {
-      await openWith(tester, 3);
+      await openWith(tester, SortType.selectedFirst);
       expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets(
       '3: first selected item moved to the top (not the caller list)',
       (tester) async {
-        final items = await openWith(tester, 3, selectedIdx: [2, 1]);
+        final items = await openWith(
+          tester,
+          SortType.selectedFirst,
+          selectedIdx: [2, 1],
+        );
         expect(_rowLabels(tester), ['Banana', 'Cherry', 'apple']);
         // M7 (8.0): the caller list keeps its order.
         expect(_labels(items), ['Cherry', 'apple', 'Banana']);
@@ -805,7 +834,7 @@ void main() {
     );
 
     testWidgets('3: tapping a row re-sorts immediately', (tester) async {
-      await openWith(tester, 3);
+      await openWith(tester, SortType.selectedFirst);
       await _tapRow(tester, 'Banana');
       expect(_rowLabels(tester), ['Banana', 'Cherry', 'apple']);
     });
@@ -939,21 +968,22 @@ void main() {
     });
   });
 
-  group('State API: forceSelection(label)', () {
+  group('controller API: forceSelection(label)', () {
     testWidgets('selects by exact label, notifies and rebuilds chips', (
       tester,
     ) async {
-      final key = GlobalKey<MultipleSearchDropDownState<int>>();
       final probe = _Probe();
       final items = _items();
       final List<ValueItem<int>> selected = [];
-      await tester.pumpWidget(
-        _app(
-          _dropdown(key: key, items: items, selected: selected, probe: probe),
-        ),
+      final controller = _controller(
+        items: items,
+        selected: selected,
+        probe: probe,
       );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(_controlled(controller)));
 
-      key.currentState!.forceSelection('apple');
+      controller.forceSelection('apple');
       await tester.pump();
 
       expect(selected, [items[1]]);
@@ -964,17 +994,18 @@ void main() {
     testWidgets('already selected: no duplicate but still notifies', (
       tester,
     ) async {
-      final key = GlobalKey<MultipleSearchDropDownState<int>>();
       final probe = _Probe();
       final items = _items();
       final List<ValueItem<int>> selected = [items[1]];
-      await tester.pumpWidget(
-        _app(
-          _dropdown(key: key, items: items, selected: selected, probe: probe),
-        ),
+      final controller = _controller(
+        items: items,
+        selected: selected,
+        probe: probe,
       );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(_controlled(controller)));
 
-      key.currentState!.forceSelection('apple');
+      controller.forceSelection('apple');
       await tester.pump();
 
       expect(selected, [items[1]]);
@@ -985,49 +1016,46 @@ void main() {
     testWidgets(
       'unknown label is ignored; a differently-cased one matches (8.0)',
       (tester) async {
-        final key = GlobalKey<MultipleSearchDropDownState<int>>();
         final probe = _Probe();
         final List<ValueItem<int>> selected = [];
-        await tester.pumpWidget(
-          _app(
-            _dropdown(
-              key: key,
-              items: _items(),
-              selected: selected,
-              probe: probe,
-            ),
-          ),
+        final controller = _controller(
+          items: _items(),
+          selected: selected,
+          probe: probe,
         );
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(_app(_controlled(controller)));
 
-        key.currentState!.forceSelection('Kiwi');
+        controller.forceSelection('Kiwi');
         await tester.pump();
         expect(selected, isEmpty);
         expect(probe.updates, isEmpty);
 
         // Like the single dropdown: exact first, then case/accent-insensitive.
-        key.currentState!.forceSelection('Apple');
+        controller.forceSelection('Apple');
         await tester.pump();
         expect(_labels(selected), ['apple']);
       },
     );
   });
 
-  group('State API: forceMultipleSelection(values)', () {
+  group('controller API: forceMultipleSelection(values)', () {
     testWidgets(
       'replaces selection in place with values found in listItems and '
       'rebuilds (M3, 8.0), without notify',
       (tester) async {
-        final key = GlobalKey<MultipleSearchDropDownState<int>>();
         final probe = _Probe();
         final items = _items();
         final List<ValueItem<int>> selected = [items[0]];
-        await tester.pumpWidget(
-          _app(
-            _dropdown(key: key, items: items, selected: selected, probe: probe),
-          ),
+        final controller = _controller(
+          items: items,
+          selected: selected,
+          probe: probe,
         );
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(_app(_controlled(controller)));
 
-        key.currentState!.forceMultipleSelection([
+        controller.forceMultipleSelection([
           const ValueItem(label: 'Banana', value: 2),
           const ValueItem(label: 'Ghost', value: 7),
           items[1],
@@ -1047,13 +1075,16 @@ void main() {
     testWidgets('M3: forceMultipleSelection rebuilds chips immediately', (
       tester,
     ) async {
-      final key = GlobalKey<MultipleSearchDropDownState<int>>();
       final items = _items();
-      await tester.pumpWidget(
-        _app(_dropdown(key: key, items: items, selected: [], probe: _Probe())),
+      final controller = _controller(
+        items: items,
+        selected: [],
+        probe: _Probe(),
       );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(_controlled(controller)));
 
-      key.currentState!.forceMultipleSelection([items[0], items[2]]);
+      controller.forceMultipleSelection([items[0], items[2]]);
       await tester.pump();
 
       expect(_inBox(find.text('Cherry')), findsOneWidget);
@@ -1061,21 +1092,22 @@ void main() {
     }); // M3: fixed in 8.0
   });
 
-  group('State API: resetSelection()', () {
+  group('controller API: resetSelection()', () {
     testWidgets(
       'clears in place, rebuilds and calls updateSelectedItems (M2)',
       (tester) async {
-        final key = GlobalKey<MultipleSearchDropDownState<int>>();
         final probe = _Probe();
         final items = _items();
         final List<ValueItem<int>> selected = [items[0], items[1]];
-        await tester.pumpWidget(
-          _app(
-            _dropdown(key: key, items: items, selected: selected, probe: probe),
-          ),
+        final controller = _controller(
+          items: items,
+          selected: selected,
+          probe: probe,
         );
+        addTearDown(controller.dispose);
+        await tester.pumpWidget(_app(_controlled(controller)));
 
-        key.currentState!.resetSelection();
+        controller.resetSelection();
         await tester.pump();
 
         expect(selected, isEmpty);
@@ -1088,16 +1120,17 @@ void main() {
     );
 
     testWidgets('M2: resetSelection calls updateSelectedItems', (tester) async {
-      final key = GlobalKey<MultipleSearchDropDownState<int>>();
       final probe = _Probe();
       final items = _items();
-      await tester.pumpWidget(
-        _app(
-          _dropdown(key: key, items: items, selected: [items[0]], probe: probe),
-        ),
+      final controller = _controller(
+        items: items,
+        selected: [items[0]],
+        probe: probe,
       );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(_controlled(controller)));
 
-      key.currentState!.resetSelection();
+      controller.resetSelection();
       await tester.pump();
 
       expect(probe.updates, hasLength(1));
@@ -1105,22 +1138,23 @@ void main() {
     }); // M2: fixed in 8.0
   });
 
-  group('State API: enableDisable() (opacity 0.38 + IgnorePointer)', () {
+  group('controller API: toggleEnabled() (opacity 0.38 + IgnorePointer)', () {
     testWidgets('toggles opacity and pointer ignoring', (tester) async {
-      final key = GlobalKey<MultipleSearchDropDownState<int>>();
-      await tester.pumpWidget(
-        _app(
-          _dropdown(key: key, items: _items(), selected: [], probe: _Probe()),
-        ),
+      final controller = _controller(
+        items: _items(),
+        selected: [],
+        probe: _Probe(),
       );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(_controlled(controller)));
       expect(_opacity(tester), 1);
       expect(_ignoring(tester), isFalse);
 
-      key.currentState!.enableDisable();
+      controller.toggleEnabled();
       await tester.pump();
       expect(_opacity(tester), 0.38);
       expect(_ignoring(tester), isTrue);
-      expect(key.currentState!.enabled, isFalse);
+      expect(controller.enabled, isFalse);
 
       await tester.tap(_inBox(find.byType(InkWell)).first, warnIfMissed: false);
       await tester.pumpAndSettle();
@@ -1128,7 +1162,7 @@ void main() {
       // 8.0: the arrow follows the enabled state.
       expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsNothing);
 
-      key.currentState!.enableDisable();
+      controller.toggleEnabled();
       await tester.pump();
       expect(_opacity(tester), 1);
       expect(_ignoring(tester), isFalse);
@@ -1886,7 +1920,7 @@ void main() {
 
   group('overlay: additional widgets (default/add rows)', () {
     testWidgets(
-      'defaultAditionalWidget per row, addAditionalWidget on add row',
+      'defaultAdditionalWidget per row, addAdditionalWidget on add row',
       (tester) async {
         await tester.pumpWidget(
           _app(
@@ -1895,8 +1929,8 @@ void main() {
               selected: [],
               probe: _Probe(),
               addMode: true,
-              defaultAditionalWidget: const Text('extra'),
-              addAditionalWidget: const Text('extra-add'),
+              defaultAdditionalWidget: const Text('extra'),
+              addAdditionalWidget: const Text('extra-add'),
             ),
           ),
         );
@@ -1952,23 +1986,19 @@ void main() {
       expect(_inBox(find.text('Cherry')), findsOneWidget);
     });
 
-    testWidgets('enableDisable() re-enables taps and shows the arrow (8.0)', (
+    testWidgets('toggleEnabled() re-enables taps and shows the arrow (8.0)', (
       tester,
     ) async {
-      final key = GlobalKey<MultipleSearchDropDownState<int>>();
-      await tester.pumpWidget(
-        _app(
-          _dropdown(
-            key: key,
-            items: _items(),
-            selected: [],
-            probe: _Probe(),
-            enabled: false,
-          ),
-        ),
+      final controller = _controller(
+        items: _items(),
+        selected: [],
+        probe: _Probe(),
+        enabled: false,
       );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(_controlled(controller)));
 
-      key.currentState!.enableDisable();
+      controller.toggleEnabled();
       await tester.pump();
 
       expect(_opacity(tester), 1);

@@ -9,12 +9,10 @@ class DefaultAddListItem extends StatefulWidget {
     required this.text,
     required this.overlayListSettings,
     required this.itemAdded,
-    Widget? addAdditionalWidget,
-    @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
-    Widget? addAditionalWidget,
+    this.addAdditionalWidget,
     this.strings,
     super.key,
-  }) : addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget;
+  });
 
   ///Function to be executed after the item was added.
   final Function(String value) itemAdded;
@@ -27,10 +25,6 @@ class DefaultAddListItem extends StatefulWidget {
 
   /// Widget shown between the text and the create button.
   final Widget? addAdditionalWidget;
-
-  /// Deprecated alias of [addAdditionalWidget].
-  @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
-  Widget? get addAditionalWidget => addAdditionalWidget;
 
   /// Source of the default texts; `null` uses [SearchDropDownStringsScope]
   /// (Portuguese without one).

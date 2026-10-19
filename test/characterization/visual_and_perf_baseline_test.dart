@@ -1,6 +1,3 @@
-// Characterization tests exercise the legacy (deprecated) API on purpose.
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
 // Visual (golden) and deterministic performance baselines for
 // simple_search_dropdown v7.8.0, recorded before the 8.0 refactor.
 //

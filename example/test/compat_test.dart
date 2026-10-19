@@ -1,8 +1,5 @@
-// Characterization tests exercise the legacy (deprecated) API on purpose.
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
-// Backwards-compat fixture: drives the UNCHANGED example app through the
-// user journeys that simple_search_dropdown 8.0 must keep working.
+// Drives the example app through the user journeys that
+// simple_search_dropdown 8.0 must keep working.
 //
 // The example keeps its data in global mutable lists (lib/listitems.dart);
 // every test restores a snapshot of them in setUp so tests stay independent.
@@ -200,7 +197,7 @@ void main() {
     });
 
     testWidgets(
-        'sortType 3 of the first single moves "Teste" to the top of '
+        'selectedFirst sort of the first single moves "Teste" to the top of '
         'the shared list', (tester) async {
       await _pumpApp(tester);
 

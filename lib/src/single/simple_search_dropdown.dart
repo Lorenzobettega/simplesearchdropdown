@@ -16,18 +16,12 @@ class SearchDropDown<T> extends StatefulWidget {
     required this.controller,
     this.searchBarSettings = defaultSearchBarSettings,
     this.overlayListSettings = defaultOverlaySettings,
-    Widget? addAdditionalWidget,
-    Widget? defaultAdditionalWidget,
-    @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
-    Widget? addAditionalWidget,
-    @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
-    Widget? defaultAditionalWidget,
+    this.addAdditionalWidget,
+    this.defaultAdditionalWidget,
     this.disposeController = true,
     this.removeFocus = true,
     this.strings,
-  }) : addAdditionalWidget = addAdditionalWidget ?? addAditionalWidget,
-       defaultAdditionalWidget =
-           defaultAdditionalWidget ?? defaultAditionalWidget;
+  });
 
   /// Holds items, selection and search text.
   final SearchDropDownController<T> controller;
@@ -44,14 +38,6 @@ class SearchDropDown<T> extends StatefulWidget {
   /// Widget shown on every item row, between the text and the delete button.
   final Widget? defaultAdditionalWidget;
 
-  /// Deprecated alias of [addAdditionalWidget].
-  @Deprecated('Use addAdditionalWidget. Will be removed in 9.0.0')
-  Widget? get addAditionalWidget => addAdditionalWidget;
-
-  /// Deprecated alias of [defaultAdditionalWidget].
-  @Deprecated('Use defaultAdditionalWidget. Will be removed in 9.0.0')
-  Widget? get defaultAditionalWidget => defaultAdditionalWidget;
-
   /// Dispose [controller] together with this widget when it owns its
   /// SearchController (default: `true`). A controller built with
   /// `searchController:` is left to you and can be mounted again, as in 7.x.
@@ -67,10 +53,8 @@ class SearchDropDown<T> extends StatefulWidget {
   State<SearchDropDown<T>> createState() => SearchDropDownState<T>();
 }
 
-/// State of [SearchDropDown].
-///
-/// Prefer the [SearchDropDownController] API; the methods here only forward
-/// to it and remain for `GlobalKey` users.
+/// State of [SearchDropDown]. Drive the dropdown through its
+/// [SearchDropDownController].
 class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   // parentScope: Tab/Shift+Tab at the bar's last/first control move on in
   // the page instead of cycling inside the bar (no keyboard trap).
@@ -112,30 +96,6 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     _current.dispose();
     _focusNode.dispose();
     super.dispose();
-  }
-
-  /// Toggles enabled/disabled. Does nothing once unmounted (as in 7.x).
-  @Deprecated('Use controller.toggleEnabled(). Will be removed in 9.0.0')
-  void enableDisable() {
-    if (mounted) {
-      _controller.toggleEnabled();
-    }
-  }
-
-  /// Clears the selection. Does nothing once unmounted (as in 7.x).
-  @Deprecated('Use controller.resetSelection(). Will be removed in 9.0.0')
-  void resetSelection() {
-    if (mounted) {
-      _controller.resetSelection();
-    }
-  }
-
-  /// Replaces the items. Does nothing once unmounted (as in 7.x).
-  @Deprecated('Use controller.updateListItems(). Will be removed in 9.0.0')
-  void updateList(List<ValueItem<T>> newList, {bool shouldreset = true}) {
-    if (mounted) {
-      _controller.updateListItems(newList, shouldreset);
-    }
   }
 
   void _onOpen() {

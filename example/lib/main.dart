@@ -36,14 +36,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   late final SearchDropDownController singleSearchController;
   late final SearchDropDownController<Custom> customSearchController;
-  final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
-  final GlobalKey<SearchDropDownState> searchKey = GlobalKey();
-  final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
+  late final MultipleSearchDropDownController multipleSearchController;
   ValueItem<Custom>? selectedSingleCustom =
       ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134));
   List<ValueItem> selectedMultipleItems = [];
   ValueItem? selectedSingleItem = listitems[1];
-  final GlobalKey<SearchDropDownState> newsingleSearchKey = GlobalKey();
 
   @override
   void initState() {
@@ -64,7 +61,7 @@ class _MyHomePageState extends State<MyHomePage> {
       updateSelectedItem: (item) => selectedSingleItem = item,
       verifyInputItem: (item) => item.label != 'name',
       newValueItem: (input) => ValueItem(label: input, value: input),
-      sortType: 3,
+      sort: SortType.selectedFirst,
       enabled: false,
       showClearIcon: true,
     );
@@ -79,9 +76,27 @@ class _MyHomePageState extends State<MyHomePage> {
       verifyInputItem: (item) => item.label != 'name',
       newValueItem: (input) =>
           ValueItem(label: input, value: Custom(input, getRandomInt(4))),
-      sortType: 3,
+      sort: SortType.selectedFirst,
       addMode: false,
     );
+
+    multipleSearchController = MultipleSearchDropDownController(
+      listItems: listitems,
+      confirmDelete: true,
+      onDeleteItem: (item) => listitems.remove(item),
+      onAddItem: (item) => listitems.add(item),
+      onClearList: onClearMultipleSelection,
+      onClearItem: onClearItemMultipleSelection,
+      selectedItems: selectedMultipleItems,
+      updateSelectedItems: updateSelectedItems,
+      newValueItem: (input) => ValueItem(label: input, value: input),
+    );
+  }
+
+  @override
+  void dispose() {
+    multipleSearchController.dispose();
+    super.dispose();
   }
 
   void updateSelectedItems(List<ValueItem> newSelectedItems) {
@@ -89,7 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void clearMultipleSelection() {
-    multipleSearchKey.currentState?.resetSelection();
+    multipleSearchController.resetSelection();
   }
 
   void onClearMultipleSelection() {
@@ -101,7 +116,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void clearCustomSelection() {
-    customSearchKey.currentState?.resetSelection();
+    customSearchController.resetSelection();
   }
 
   void force() {
@@ -109,18 +124,18 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void forceMultiple() {
-    multipleSearchKey.currentState?.forceSelection('one more');
+    multipleSearchController.forceSelection('one more');
   }
 
   void enableSingle() {
-    searchKey.currentState?.enableDisable();
+    singleSearchController.toggleEnabled();
   }
 
   void resetCustom() {
-    customSearchKey.currentState?.updateList(<ValueItem<Custom>>[
+    customSearchController.updateListItems(<ValueItem<Custom>>[
       ValueItem(label: 'Reset 1', value: Custom('Reset 1', 80)),
       ValueItem(label: 'Reset 2', value: Custom('Reset 2', 90)),
-    ]);
+    ], true);
   }
 
   void printNewSingleSelection() {
@@ -148,7 +163,6 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
             const SizedBox(height: 20),
             SearchDropDown(
-              key: searchKey,
               controller: singleSearchController,
               searchBarSettings: const SimpleSearchbarSettings(
                 showKeyboardOnTap: false,
@@ -166,21 +180,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
             ),
             const SizedBox(height: 20),
-            MultipleSearchDropDown(
-              key: multipleSearchKey,
-              listItems: listitems,
-              confirmDelete: true,
-              onDeleteItem: (item) => listitems.remove(item),
-              onAddItem: (item) => listitems.add(item),
-              onClearList: onClearMultipleSelection,
-              onClearItem: onClearItemMultipleSelection,
-              selectedItems: selectedMultipleItems,
-              updateSelectedItems: updateSelectedItems,
-              newValueItem: (input) => ValueItem(label: input, value: input),
-            ),
+            MultipleSearchDropDown(controller: multipleSearchController),
             const SizedBox(height: 20),
             SearchDropDown<Custom>(
-              key: customSearchKey,
               controller: customSearchController,
               searchBarSettings:
                   const SimpleSearchbarSettings(showArrow: false),
@@ -209,7 +211,7 @@ class _MyHomePageState extends State<MyHomePage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 TextButton(
-                  onPressed: () => searchKey.currentState?.resetSelection(),
+                  onPressed: singleSearchController.resetSelection,
                   child: const Text('Clear Single Selection'),
                 ),
                 const SizedBox(width: 10),

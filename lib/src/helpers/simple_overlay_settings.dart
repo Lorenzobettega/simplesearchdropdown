@@ -33,15 +33,11 @@ class SimpleOverlaySettings {
     this.reOpenedScrollDuration = const Duration(seconds: 1),
     this.offsetHeight = 3,
     this.offsetWidth = 0,
-    double? additionalWidgetSpacing,
-    @Deprecated('Use additionalWidgetSpacing. Will be removed in 9.0.0')
-    double? aditionalWidgetSpacing,
+    this.additionalWidgetSpacing = 5,
     this.openFullScreen = false,
     this.loadingColor = darkGreen,
     this.loadingSize = 28,
-  }) : customAddItemHint = addItemHint,
-       additionalWidgetSpacing =
-           additionalWidgetSpacing ?? aditionalWidgetSpacing ?? 5;
+  }) : customAddItemHint = addItemHint;
 
   ///Dropdown Container height (default:`200`).
   final double dialogHeight;
@@ -120,10 +116,6 @@ class SimpleOverlaySettings {
 
   ///The width of the space between the additional widget and the delete one (default:`5`).
   final double additionalWidgetSpacing;
-
-  ///The width of the space between the additional widget and the delete one.
-  @Deprecated('Use additionalWidgetSpacing. Will be removed in 9.0.0')
-  double get aditionalWidgetSpacing => additionalWidgetSpacing;
 
   ///Opens the list full screen (default: `false`).
   final bool openFullScreen;

@@ -1,7 +1,30 @@
 ## [8.0.0] - 2026-10-15.
-Requires Flutter 3.32+. 7.x code keeps compiling (unless it declares a type with one of the new exported names, see Breaking): renamed members are `@Deprecated` (removed in 9.0.0). See "Migrating from 7.x" in the README.
+Requires Flutter 3.32+. A major release: the 7.x members listed under Breaking are gone, each with its replacement. See "Migrating from 7.x" in the README.
 
 ### Breaking
+| 7.x | 8.0 |
+|---|---|
+| `addAditionalWidget:` / `.addAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `MultipleListView`, `DefaultAddListItem`) | `addAdditionalWidget` |
+| `defaultAditionalWidget:` / `.defaultAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `MultipleListView`, `DefaultListTile`) | `defaultAdditionalWidget` |
+| `SimpleOverlaySettings.aditionalWidgetSpacing` | `additionalWidgetSpacing` |
+| `sortType: int` (`SearchDropDownController`, `MultipleSearchDropDown`) and `MultipleSearchDropDown.sortType` | `sort: SortType` (`SortType.values[n]` maps an old `int`) |
+| `SearchDropDownController.sortList(int)` | `sortBy(SortType)` |
+| `SearchDropDownState.enableDisable()` | `controller.toggleEnabled()` |
+| `SearchDropDownState.resetSelection()` | `controller.resetSelection()` |
+| `SearchDropDownState.updateList(list, shouldreset:)` | `controller.updateListItems(list, shouldReset)` |
+| `MultipleSearchDropDownState.aberto = open` | tap the box to open, `hideOverlay()` to close (`aberto` stays as a read-only getter) |
+| `MultipleSearchDropDownState.enabled` (getter and setter) | `controller.enabled` |
+| `MultipleSearchDropDownState.onItemSelected(item)` | `controller.toggle(item)` |
+| `MultipleSearchDropDownState.resetSelection()` | `controller.resetSelection()` |
+| `MultipleSearchDropDownState.forceSelection(label)` | `controller.forceSelection(label)` |
+| `MultipleSearchDropDownState.forceMultipleSelection(values)` | `controller.forceMultipleSelection(values)` |
+| `MultipleSearchDropDownState.enableDisable()` | `controller.toggleEnabled()` |
+| `MultipleSearchDropDownState.handleAddItem(item, context)` | `controller.addValue(item, context)` |
+| `MultipleSearchDropDownState.handleDeleteItem(item, context)` | `controller.deleteItem(item, context)` |
+| `MultipleSearchDropDownState.onClear()` | `controller.clear()` |
+| `MultipleSearchDropDownState.overlayScreen` and the exported `OverlayScreen` class | removed: close the list with `hideOverlay()`; show your own overlays with `Overlay.of(context)` |
+| `MultipleListView(listItens:, selectedItens:, onItemSelected:, onAddItem:, onDeleteItem:, onEditItem:, addMode:, editMode:, deleteMode:, sortType:, newValueItem:)` and the matching getters | `MultipleListView(controller:)` (now required), or `MultipleSearchDropDown` |
+
 - New exported names `SortType`, `SearchDropDownStrings`, `SearchDropDownStringsScope` and `MultipleSearchDropDownController` clash (`ambiguous_import`) with a type of the same name that your file imports from elsewhere: `import 'package:simple_search_dropdown/simple_search_dropdown.dart' hide SortType;` (or the clashing name), or use a prefixed import.
 
 ### Added
@@ -31,7 +54,7 @@ Requires Flutter 3.32+. 7.x code keeps compiling (unless it declares a type with
 - A legacy `MultipleSearchDropDown` keeps one controller across parent rebuilds: its search and a pending add/edit/delete survive, and new list instances, mode flags, callbacks, `sort` and dialog settings are applied in place.
 - Multiple: `enabled = false` closes an open list, and the dimmed box, its chips and the clear button no longer take keyboard focus (7.x only blocked the pointer; Tab + Enter still opened it). Changes made from code still apply while disabled.
 - Multiple: while an async `onAddItem` runs the search field keeps the typed text, matching the filter and the add row, and it clears when the add is done (7.x cleared it at once, as the callback was not awaited); a failing callback leaves both as they were.
-- Multiple: sorting orders only the results and never reorders your `listItems:` (7.x sorted it in place, in `MultipleSearchDropDown` and `MultipleListView`). The single dropdown still sorts a `listItems:` list in place (when created, on `sortBy`/`sortList` and on `updateListItems`), as in 7.x.
+- Multiple: sorting orders only the results and never reorders your `listItems:` (7.x sorted it in place, in `MultipleSearchDropDown` and `MultipleListView`). The single dropdown still sorts a `listItems:` list in place (when created, on `sortBy` and on `updateListItems`), as in 7.x.
 - `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
 - Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously. They are delivered even if the controller is disposed in that frame; listeners and `onFilterUpdated` are then skipped.
 - Items, sort or filter changes made to the single dropdown during a build: `filteredItems`, `selectedIndex`, `highlightedIndex` and Enter (`submit`, `handleEnterKey`) see the new list at once, as in 7.x, while the open list (left stale by 7.x), the `results`/`highlight` listeners and `onFilterUpdated` follow right after that frame, coalesced into one notification per frame (7.x called `onFilterUpdated` once per change).
@@ -58,12 +81,6 @@ Requires Flutter 3.32+. 7.x code keeps compiling (unless it declares a type with
 - A row's delete/edit spinner no longer moves to another item when the results change while the callback is pending (both dropdowns).
 - Multiple: a parent rebuild that changed a mode flag, `sort` or a callback while an add/edit/delete was pending left the open list and the chips stale (the item could be offered again); the search field disagreed with the filter after a failed add or an `addValue` from code; swapping `controller:` while the list was open showed every item under the typed text.
 - Rows: screen readers announce the selected row as selected (the flag sat on an unlabelled node); the keyboard highlight border also shows on the selected row; a highlighted row keeps your `selectedItemBackgroundColor` once you customise `selectedItemTextStyle` or `unselectedItemHoverColor` (dark palettes drew light text on the light hover fill), as in 7.x. Set `highlightedItemBackgroundColor` for a distinct fill.
-
-### Deprecated
-- `SearchDropDownState.enableDisable/resetSelection/updateList` and the `MultipleSearchDropDownState` methods → use the controllers.
-- `sortType` → `sort`; `addAditionalWidget`/`defaultAditionalWidget`/`aditionalWidgetSpacing` → `*Additional*` (also on `DefaultListTile` and `DefaultAddListItem`).
-- `MultipleListView`'s 7.x parameters (`listItens`, `selectedItens`, `onItemSelected`, `onAddItem`, `onDeleteItem`, `onEditItem`, `addMode`/`editMode`/`deleteMode`, `sortType`, `newValueItem`, `*Aditional*`) → `MultipleSearchDropDown`, or `MultipleListView(controller:)`. Built the 7.x way it still only reads your lists and calls your callbacks (no dialogs, no trim); the 7.x fields read back as `@Deprecated` getters (the controller's value when one is set).
-- `MultipleSearchDropDownState.aberto`/`enabled` setters and `overlayScreen` (still one instance whose `closeAll()`/`closeLast()` close the list; to know whether it is open, `overlayEntrys.isEmpty` → `!aberto`).
 
 ### Performance
 - One shared filter engine with a lazy label cache; typing more characters narrows the previous results. Typing "Item 99" over 10,000 items rebuilds 20 rows instead of 63; the bar still does not rebuild while typing.

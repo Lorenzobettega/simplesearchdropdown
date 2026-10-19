@@ -1,6 +1,5 @@
 // Lifecycle, controller swap and list behaviour of the single dropdown (C10:
-// F20, N44, N54, F16, F11, N43), plus the row key of the multiple list (F11).
-// ignore_for_file: deprecated_member_use_from_same_package
+// F20, N54, F16, F11, N43), plus the row key of the multiple list (F11).
 
 import 'dart:async';
 
@@ -84,78 +83,6 @@ void main() {
         () => c.localSearchController.addListener(() {}),
         throwsFlutterError,
       );
-    });
-  });
-
-  group('N44: deprecated SearchDropDownState methods after unmount', () {
-    testWidgets('resetSelection does nothing (7.x)', (tester) async {
-      final GlobalKey<SearchDropDownState<int>> key = GlobalKey();
-      final List<ValueItem<int>?> calls = <ValueItem<int>?>[];
-      final SearchDropDownController<int> c = _ctrl(
-        numberedItems(3),
-        calls: calls,
-      );
-      await tester.pumpWidget(
-        host(SearchDropDown<int>(key: key, controller: c)),
-      );
-      c.selectItem(c.listItems[2]);
-      await tester.pump();
-      final SearchDropDownState<int> state = key.currentState!;
-      await tester.pumpWidget(host(const SizedBox()));
-
-      expect(state.resetSelection, returnsNormally);
-      expect(calls, <ValueItem<int>?>[
-        const ValueItem<int>(label: 'Item 2', value: 2),
-      ]);
-      expect(c.selectedItem?.value, 2);
-    });
-
-    testWidgets('updateList leaves the caller list untouched', (tester) async {
-      final GlobalKey<SearchDropDownState<int>> key = GlobalKey();
-      final List<ValueItem<int>> items = numberedItems(3);
-      final SearchDropDownController<int> c = _ctrl(items);
-      addTearDown(c.dispose);
-      await tester.pumpWidget(
-        host(
-          SearchDropDown<int>(
-            key: key,
-            controller: c,
-            disposeController: false,
-          ),
-        ),
-      );
-      final SearchDropDownState<int> state = key.currentState!;
-      await tester.pumpWidget(host(const SizedBox()));
-
-      expect(
-        () => state.updateList(numberedItems(1), shouldreset: false),
-        returnsNormally,
-      );
-      expect(items.map((ValueItem<int> e) => e.label), <String>[
-        'Item 0',
-        'Item 1',
-        'Item 2',
-      ]);
-    });
-
-    testWidgets('enableDisable does nothing', (tester) async {
-      final GlobalKey<SearchDropDownState<int>> key = GlobalKey();
-      final SearchDropDownController<int> c = _ctrl(numberedItems(3));
-      addTearDown(c.dispose);
-      await tester.pumpWidget(
-        host(
-          SearchDropDown<int>(
-            key: key,
-            controller: c,
-            disposeController: false,
-          ),
-        ),
-      );
-      final SearchDropDownState<int> state = key.currentState!;
-      await tester.pumpWidget(host(const SizedBox()));
-
-      state.enableDisable();
-      expect(c.enabled, isTrue);
     });
   });
 

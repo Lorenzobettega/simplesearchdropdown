@@ -192,13 +192,6 @@ void main() {
       );
     });
 
-    test('legacy int maps to SortType and back', () {
-      for (int i = 0; i < 4; i++) {
-        expect(SortType.fromLegacy(i).legacyValue, i);
-      }
-      expect(SortType.fromLegacy(42), SortType.none);
-    });
-
     test('sorted returns a copy in the requested order', () {
       expect(_labels(FilterEngine<int>().sorted(source, SortType.none)), [
         'b',

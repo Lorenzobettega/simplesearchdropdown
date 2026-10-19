@@ -183,8 +183,8 @@ wins over `strings`.
 
 ## Migrating from 7.x
 
-7.x code keeps compiling; renamed members are `@Deprecated` and will be removed
-in 9.0.0. The package now also exports `SortType`, `SearchDropDownStrings`,
+8.0 is a major release: the 7.x members below were removed, so replace
+them as the table shows. The package now also exports `SortType`, `SearchDropDownStrings`,
 `SearchDropDownStringsScope` and `MultipleSearchDropDownController`. If your
 app declares a type with one of these names, hide it from the import
 (`import 'package:simple_search_dropdown/simple_search_dropdown.dart' hide SortType;`)

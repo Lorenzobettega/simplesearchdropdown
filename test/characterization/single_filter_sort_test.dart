@@ -1,6 +1,3 @@
-// Characterization tests exercise the legacy (deprecated) API on purpose.
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
 // Characterization tests for SearchDropDownController + SearchDropDown
 // (single selection): filtering, sorting and list data management.
 //
@@ -52,7 +49,7 @@ const ValueItem<int> _figo = ValueItem<int>(label: 'Figo', value: 11);
 SearchDropDownController<int> _controller(
   List<ValueItem<int>> items, {
   ValueItem<int>? initialSelectedItem,
-  int sortType = 0,
+  SortType sort = SortType.none,
   bool showClearIcon = false,
   bool latinize = true,
   bool caseSensitive = false,
@@ -64,7 +61,7 @@ SearchDropDownController<int> _controller(
   addMode: false,
   deleteMode: false,
   initialSelectedItem: initialSelectedItem,
-  sortType: sortType,
+  sort: sort,
   showClearIcon: showClearIcon,
   latinize: latinize,
   caseSensitive: caseSensitive,
@@ -507,7 +504,7 @@ void main() {
     );
   });
 
-  group('sort: sortType 0 keeps original order', () {
+  group('sort: none keeps original order', () {
     test('filteredItems and listItems keep insertion order', () {
       final items = fruitItems();
       final c = _controller(items);
@@ -525,10 +522,10 @@ void main() {
     });
   });
 
-  group('sort: sortType 1 A-Z', () {
+  group('sort: alphabetical A-Z', () {
     test('A-Z ignores case and accents (D2) and mutates the caller list', () {
       final items = fruitItems();
-      final c = _controller(items, sortType: 1);
+      final c = _controller(items, sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
       // 8.0 (D2): case and accents are ignored ('abacaxi' first).
@@ -542,14 +539,14 @@ void main() {
         const ValueItem(label: 'Pêra', value: 1),
         const ValueItem(label: 'Pzz', value: 2),
         const ValueItem(label: 'Pera', value: 3),
-      ], sortType: 1);
+      ], sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
       expect(_labels(c.filteredItems), <String>['Pera', 'Pêra', 'Pzz']);
     });
 
     test('filter results keep the sorted order', () {
-      final c = _controller(fruitItems(), sortType: 1);
+      final c = _controller(fruitItems(), sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
       c.onSearchOpen();
@@ -563,7 +560,7 @@ void main() {
       final items = fruitItems();
       final c = _controller(
         items,
-        sortType: 1,
+        sort: SortType.alphabetical,
         caseSensitive: true,
         latinize: false,
       );
@@ -577,7 +574,7 @@ void main() {
       expect(
         () => _controller(
           List<ValueItem<int>>.unmodifiable(fruitItems()),
-          sortType: 1,
+          sort: SortType.alphabetical,
         ),
         throwsUnsupportedError,
       );
@@ -586,7 +583,7 @@ void main() {
     test('items appended to the live caller list are sorted into the view '
         'without re-sorting the caller list (F13)', () {
       final items = fruitItems();
-      final c = _controller(items, sortType: 1);
+      final c = _controller(items, sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
       items.add(const ValueItem(label: 'Abacate', value: 12));
@@ -603,7 +600,7 @@ void main() {
         const ValueItem(label: 'Item 10', value: 10),
         const ValueItem(label: 'Item 1', value: 1),
       ];
-      final c = _controller(items, sortType: 1);
+      final c = _controller(items, sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
       expect(_labels(c.filteredItems), <String>['Item 1', 'Item 10', 'Item 2']);
@@ -611,10 +608,10 @@ void main() {
     });
   });
 
-  group('sort: sortType 2 Z-A', () {
+  group('sort: reverseAlphabetical Z-A', () {
     test('Z-A ignores case and accents (D2) and mutates the caller list', () {
       final items = fruitItems();
-      final c = _controller(items, sortType: 2);
+      final c = _controller(items, sort: SortType.reverseAlphabetical);
       addTearDown(c.dispose);
 
       expect(_labels(c.filteredItems), _fruitZA);
@@ -622,7 +619,7 @@ void main() {
     });
 
     test('filter results keep the sorted order', () {
-      final c = _controller(fruitItems(), sortType: 2);
+      final c = _controller(fruitItems(), sort: SortType.reverseAlphabetical);
       addTearDown(c.dispose);
 
       c.onSearchOpen();
@@ -631,13 +628,13 @@ void main() {
     });
   });
 
-  group('sort: sortType 3 moves initialSelectedItem first', () {
+  group('sort: selectedFirst moves initialSelectedItem first', () {
     test('selected item moved to index 0, rest keep order, caller mutated', () {
       final items = fruitItems();
       final c = _controller(
         items,
         initialSelectedItem: const ValueItem<int>(label: 'Uva', value: 3),
-        sortType: 3,
+        sort: SortType.selectedFirst,
       );
       addTearDown(c.dispose);
 
@@ -651,7 +648,11 @@ void main() {
       final uva = const ValueItem<int>(label: 'Uva', value: 3).copyWith();
       expect(identical(uva, items[2]), isFalse);
 
-      final c = _controller(items, initialSelectedItem: uva, sortType: 3);
+      final c = _controller(
+        items,
+        initialSelectedItem: uva,
+        sort: SortType.selectedFirst,
+      );
       addTearDown(c.dispose);
 
       expect(_labels(items).first, 'Uva');
@@ -661,7 +662,7 @@ void main() {
 
     test('no initialSelectedItem: order unchanged', () {
       final items = fruitItems();
-      final c = _controller(items, sortType: 3);
+      final c = _controller(items, sort: SortType.selectedFirst);
       addTearDown(c.dispose);
 
       expect(_labels(c.filteredItems), _fruitOrder);
@@ -672,7 +673,11 @@ void main() {
       'initialSelectedItem not in list: order unchanged, still selected',
       () {
         final items = fruitItems();
-        final c = _controller(items, initialSelectedItem: _kiwi, sortType: 3);
+        final c = _controller(
+          items,
+          initialSelectedItem: _kiwi,
+          sort: SortType.selectedFirst,
+        );
         addTearDown(c.dispose);
 
         expect(_labels(c.filteredItems), _fruitOrder);
@@ -681,13 +686,13 @@ void main() {
     );
   });
 
-  group('sort: sortList() public method', () {
+  group('sort: sortBy() public method', () {
     test('mutates listItems and refreshes filteredItems immediately', () {
       final items = fruitItems();
       final c = _controller(items);
       addTearDown(c.dispose);
 
-      c.sortList(2);
+      c.sortBy(SortType.reverseAlphabetical);
       expect(_labels(items), _fruitZA);
       // 8.0: filteredItems follows immediately.
       expect(_labels(c.filteredItems), _fruitZA);
@@ -695,8 +700,8 @@ void main() {
       expect(_labels(c.filteredItems), _fruitZA);
     });
 
-    test('sortType is re-applied by updateListItems', () {
-      final c = _controller(fruitItems(), sortType: 1);
+    test('sort is re-applied by updateListItems', () {
+      final c = _controller(fruitItems(), sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
       final newList = <ValueItem<int>>[
@@ -1018,17 +1023,14 @@ void main() {
     );
   });
 
-  group('updateList: SearchDropDownState.updateList via GlobalKey', () {
-    testWidgets('default shouldreset true clears text and notifies', (
-      tester,
-    ) async {
-      final key = GlobalKey<SearchDropDownState<int>>();
+  group('updateListItems on a mounted dropdown', () {
+    testWidgets('shouldreset true clears text and notifies', (tester) async {
       final selected = <ValueItem<int>?>[];
       final c = _controller(fruitItems(), updateSelectedItem: selected.add);
-      await _pump(tester, c, key: key);
+      await _pump(tester, c);
 
       c.localSearchController.text = 'Ban';
-      key.currentState!.updateList(_newList());
+      c.updateListItems(_newList(), true);
       await tester.pump();
 
       expect(_barText(tester), '');
@@ -1040,13 +1042,12 @@ void main() {
     testWidgets('shouldreset false without selection keeps text', (
       tester,
     ) async {
-      final key = GlobalKey<SearchDropDownState<int>>();
       final selected = <ValueItem<int>?>[];
       final c = _controller(fruitItems(), updateSelectedItem: selected.add);
-      await _pump(tester, c, key: key);
+      await _pump(tester, c);
 
       c.localSearchController.text = 'Ban';
-      key.currentState!.updateList(_newList(), shouldreset: false);
+      c.updateListItems(_newList(), false);
       await tester.pump();
 
       expect(_barText(tester), 'Ban');
@@ -1057,11 +1058,10 @@ void main() {
     testWidgets('shouldreset false with a selection still resets', (
       tester,
     ) async {
-      final key = GlobalKey<SearchDropDownState<int>>();
       final c = _controller(fruitItems(), initialSelectedItem: _banana);
-      await _pump(tester, c, key: key);
+      await _pump(tester, c);
 
-      key.currentState!.updateList(_newList(), shouldreset: false);
+      c.updateListItems(_newList(), false);
       await tester.pump();
 
       expect(c.selectedItem, isNull);

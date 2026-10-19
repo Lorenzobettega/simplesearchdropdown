@@ -1,6 +1,3 @@
-// Legacy tests exercise the deprecated 7.x API on purpose.
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
 // test/search_dropdown_controller_test.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -28,7 +25,7 @@ void main() {
       );
     });
 
-    test('ordenação respeita sortType (0=none,1=asc,2=desc)', () {
+    test('ordenação respeita sort (none, A-Z, Z-A)', () {
       final base = <ValueItem<int>>[
         const ValueItem(label: 'c', value: 1),
         const ValueItem(label: 'a', value: 2),
@@ -39,7 +36,7 @@ void main() {
         listItems: List<ValueItem<int>>.of(base),
         addMode: false,
         deleteMode: false,
-        sortType: 1,
+        sort: SortType.alphabetical,
       );
       expect(cAsc.filteredItems.map((e) => e.label).toList(), ['a', 'b', 'c']);
 
@@ -47,7 +44,7 @@ void main() {
         listItems: List<ValueItem<int>>.of(base),
         addMode: false,
         deleteMode: false,
-        sortType: 2,
+        sort: SortType.reverseAlphabetical,
       );
       expect(cDesc.filteredItems.map((e) => e.label).toList(), ['c', 'b', 'a']);
 

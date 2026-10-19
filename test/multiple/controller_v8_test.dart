@@ -123,14 +123,6 @@ void main() {
       }
       expect(find.byType(MultipleListView<int>), findsNothing);
       expect(c.selectedItems.map((e) => e.label), <String>['Banana']);
-      // The deprecated State opener is blocked too.
-      final MultipleSearchDropDownState<int> state = tester.state(
-        find.byType(MultipleSearchDropDown<int>),
-      );
-      // ignore: deprecated_member_use_from_same_package
-      state.aberto = true;
-      await tester.pump();
-      expect(find.byType(MultipleListView<int>), findsNothing);
     });
 
     test('toggle, search and filtering use the shared engine', () {
@@ -510,6 +502,96 @@ void main() {
         'update:0',
         'clearList',
       ]);
+    });
+  });
+  group('public API surface (moved from the 7.x compile test)', () {
+    test('MultipleSearchDropDown listItems/selectedItems/updateSelectedItems '
+        'read as non-null (F14)', () {
+      final List<ValueItem<int>> items = fruitItems();
+      final List<ValueItem<int>> sel = <ValueItem<int>>[];
+      final List<List<ValueItem<int>>> calls = <List<ValueItem<int>>>[];
+      final MultipleSearchDropDown<int> w = MultipleSearchDropDown<int>(
+        listItems: items,
+        selectedItems: sel,
+        updateSelectedItems: calls.add,
+        addMode: false,
+        deleteMode: false,
+      );
+      final List<ValueItem<int>> l = w.listItems;
+      final List<ValueItem<int>> s = w.selectedItems;
+      final Function(List<ValueItem<int>>) update = w.updateSelectedItems;
+      expect(identical(l, items), isTrue);
+      expect(identical(s, sel), isTrue);
+      update(sel);
+      expect(calls, hasLength(1));
+      expect(w.selectedItems.isEmpty, isTrue);
+
+      // Controller mode: the getters read the controller.
+      final List<List<ValueItem<int>>> ctrlCalls = <List<ValueItem<int>>>[];
+      final MultipleSearchDropDownController<int> mc =
+          MultipleSearchDropDownController<int>(
+            items: fruitItems(),
+            updateSelectedItems: ctrlCalls.add,
+            addMode: false,
+            deleteMode: false,
+          );
+      addTearDown(mc.dispose);
+      final MultipleSearchDropDown<int> cw = MultipleSearchDropDown<int>(
+        controller: mc,
+      );
+      expect(identical(cw.listItems, mc.listItems), isTrue);
+      expect(identical(cw.selectedItems, mc.selectedItems), isTrue);
+      cw.updateSelectedItems(mc.selectedItems);
+      expect(ctrlCalls, hasLength(1));
+      // The controller wins over the list parameters passed alongside it.
+      final MultipleSearchDropDown<int> both = MultipleSearchDropDown<int>(
+        controller: mc,
+        listItems: items,
+        selectedItems: sel,
+        updateSelectedItems: calls.add,
+      );
+      expect(identical(both.listItems, mc.listItems), isTrue);
+      expect(identical(both.selectedItems, mc.selectedItems), isTrue);
+      both.updateSelectedItems(mc.selectedItems);
+      expect(ctrlCalls, hasLength(2));
+      expect(calls, hasLength(1));
+      // Without a callback the getter is a no-op, never null.
+      final MultipleSearchDropDownController<int> silent =
+          MultipleSearchDropDownController<int>(
+            items: fruitItems(),
+            addMode: false,
+            deleteMode: false,
+          );
+      addTearDown(silent.dispose);
+      MultipleSearchDropDown<int>(
+        controller: silent,
+      ).updateSelectedItems(silent.selectedItems);
+    });
+
+    testWidgets('state members: aberto reads false, hideOverlay on a closed '
+        'list is a no-op (F10)', (tester) async {
+      final GlobalKey<MultipleSearchDropDownState<int>> key = GlobalKey();
+      final List<ValueItem<int>> sel = <ValueItem<int>>[];
+      await tester.pumpWidget(
+        host(
+          MultipleSearchDropDown<int>(
+            key: key,
+            listItems: fruitItems(),
+            selectedItems: sel,
+            updateSelectedItems: (_) {},
+            addMode: false,
+            deleteMode: false,
+            sort: SortType.alphabetical,
+          ),
+        ),
+      );
+      final MultipleSearchDropDownState<int> state = key.currentState!;
+      final bool open = state.aberto;
+      expect(open, isFalse);
+      state.hideOverlay();
+      await tester.pump();
+      expect(sel, isEmpty);
+      expect(tester.takeException(), isNull);
     });
   });
 }

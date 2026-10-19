@@ -1,6 +1,3 @@
-// Legacy tests exercise the deprecated 7.x API on purpose.
-// ignore_for_file: deprecated_member_use, deprecated_member_use_from_same_package
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
@@ -8,7 +5,7 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 Widget _wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
 
 void main() {
-  testWidgets('MultipleSearchDropDown respeita sortType', (tester) async {
+  testWidgets('MultipleSearchDropDown respeita sort', (tester) async {
     final items = <ValueItem<int>>[
       const ValueItem(label: 'c', value: 1),
       const ValueItem(label: 'a', value: 2),
@@ -23,7 +20,7 @@ void main() {
           key: key,
           listItems: items,
           selectedItems: selected,
-          sortType: 1,
+          sort: SortType.alphabetical,
           updateSelectedItems: (v) => selected = List<ValueItem<int>>.from(v),
           addMode: false,
           deleteMode: false,
