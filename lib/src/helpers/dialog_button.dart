@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/src/helpers/dialog_settings.dart';
 
+/// A button of the package dialogs, styled by [DialogButtonSettings].
 class DialogButton extends StatelessWidget {
+  /// Creates a dialog button.
   const DialogButton({
     super.key,
     required this.function,
     required this.buttonSettings,
   });
+
+  /// Called when pressed.
   final Function function;
+
+  /// Visual settings and label.
   final DialogButtonSettings buttonSettings;
 
   @override
@@ -17,8 +23,9 @@ class DialogButton extends StatelessWidget {
       style: TextStyle(
         fontSize: buttonSettings.fontSize,
         color: buttonSettings.textColor,
-        fontWeight:
-            buttonSettings.mediumFont ? FontWeight.w500 : FontWeight.normal,
+        fontWeight: buttonSettings.mediumFont
+            ? FontWeight.w500
+            : FontWeight.normal,
       ),
     );
     return Container(
@@ -35,8 +42,9 @@ class DialogButton extends StatelessWidget {
           padding: buttonSettings.padding,
           backgroundColor: buttonSettings.backgroundColor,
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.all(Radius.circular(buttonSettings.radius)),
+            borderRadius: BorderRadius.all(
+              Radius.circular(buttonSettings.radius),
+            ),
           ),
         ),
         onPressed: () => function(),
@@ -51,9 +59,7 @@ class DialogButton extends StatelessWidget {
                     color: buttonSettings.textColor,
                     size: buttonSettings.iconsize,
                   ),
-                  const SizedBox(
-                    width: 10,
-                  ),
+                  const SizedBox(width: 10),
                   text,
                 ],
               ),

@@ -1,84 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/core/item_list.dart';
+import 'package:simple_search_dropdown/src/multiple/multiple_listview.dart';
 
-///This creates a multiple selection dropdown widget.
+/// A multiple-selection dropdown: selected items show as chips in the box and
+/// the list opens below it with a search field.
+///
+/// Items, selection, modes and callbacks live in its [controller].
 class MultipleSearchDropDown<T> extends StatefulWidget {
+  /// Creates a multiple-selection dropdown driven by [controller].
   const MultipleSearchDropDown({
     super.key,
-    required this.listItems,
-    this.addMode = true,
-    this.onAddItem,
-    this.newValueItem,
-    this.deleteMode = true,
-    this.onDeleteItem,
-    this.editMode = false,
-    this.onEditItem,
-    this.onClearItem,
-    this.onClearList,
-    required this.updateSelectedItems,
-    this.sortType = 0,
-    this.confirmDelete = false,
-    required this.selectedItems,
-    this.deleteDialogSettings,
-    this.verifyInputItem,
-    this.verifyDialogSettings,
+    required this.controller,
     this.searchBarSettings = defaultSearchBarSettings,
     this.overlayListSettings = defaultOverlaySettings,
-    this.addAditionalWidget,
-    this.defaultAditionalWidget,
-    this.enabled = true,
-  })  : assert(
-            (addMode && (newValueItem != null && onAddItem != null)) ||
-                !addMode,
-            'addMode can only be used with newValueItem != null && onAddItem != null'),
-        assert((deleteMode && onDeleteItem != null) || !deleteMode,
-            'deleteMode can only be used with onDeleteItem != null'),
-        assert((editMode && onEditItem != null) || !editMode,
-            'editMode can only be used with onEditItem != null');
+    this.addAdditionalWidget,
+    this.defaultAdditionalWidget,
+    this.strings,
+  });
 
-  ///List of the items to be presented on the dropdown.
-  final List<ValueItem<T>> listItems;
-
-  ///List of the items already selected on the dropdown.
-  final List<ValueItem<T>> selectedItems;
-
-  ///Function to update the list of selected items on change
-  final Function(List<ValueItem<T>>) updateSelectedItems;
-
-  ///Allow the user to add items to the list.
-  final bool addMode;
-
-  ///Function to be executed after the item was added.
-  final Function(ValueItem<T>)? onAddItem;
-
-  ///Function that defines how the user input transforms into a new ValueItem on the list.
-  ///
-  ///Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
-  final ValueItem<T> Function(String input)? newValueItem;
-
-  ///Allow the user to delete items of the list.
-  final bool deleteMode;
-
-  ///Function to be executed after the item was deleted.
-  final Function(ValueItem<T>)? onDeleteItem;
-
-  ///Allow the user to edit items to the list.
-  final bool editMode;
-
-  ///Function to be executed after the item was added.
-  final Function(ValueItem<T>)? onEditItem;
-
-  ///Function to be executed after clear list.
-  final Function()? onClearList;
-
-  ///Function to be executed after clear an item.
-  final Function(ValueItem<T>)? onClearItem;
-
-  ///Force the user to confirm delete
-  final bool confirmDelete;
-
-  ///Visual delete dialog settings
-  final DialogSettings? deleteDialogSettings;
+  /// Holds items, selection, search, modes and callbacks.
+  final MultipleSearchDropDownController<T> controller;
 
   ///The SearchBarSettings.
   final SimpleSearchbarSettings searchBarSettings;
@@ -86,391 +28,324 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   ///The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
 
-  ///The way the items should be sorted.
-  ///
-  ///If `0`(default), no sort will be applied
-  ///
-  ///If `1`, the items will be sorted on alphabetical order.
-  ///
-  ///If `2`, the items will be sorted on reverse alphabetical order.
-  ///
-  ///If `3`, the selected item will be put on first position.
-  final int sortType;
+  ///A custom additional widget to be inserted on the add item cell.
+  final Widget? addAdditionalWidget;
 
-  ///Function to check if the item added is valid or not.
-  final bool Function(ValueItem<T>)? verifyInputItem;
+  ///A custom additional widget to be inserted on the default item cell.
+  final Widget? defaultAdditionalWidget;
 
-  ///Visual verify dialog settings
-  final DialogSettings? verifyDialogSettings;
-
-  ///A custom aditional widget to be inserted on the add item cell.
-  final Widget? addAditionalWidget;
-
-  ///A custom aditional widget to be inserted on the default item cell.
-  final Widget? defaultAditionalWidget;
-
-  ///A parameter to define if the widget is enabled or disabled (default: `true`).
-  final bool enabled;
+  /// Texts used by this dropdown. Defaults to [SearchDropDownStrings.of].
+  final SearchDropDownStrings? strings;
 
   @override
   State<MultipleSearchDropDown<T>> createState() =>
       MultipleSearchDropDownState<T>();
 }
 
+/// State of [MultipleSearchDropDown]. Drive the dropdown through its
+/// [MultipleSearchDropDownController]; the state only reports whether the
+/// list is open ([aberto]) and can close it ([hideOverlay]).
 class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
-  bool aberto = false;
-  late bool enabled;
-  late OverlayScreen overlayScreen;
   final LayerLink _layerLink = LayerLink();
+  final OverlayPortalController _portal = OverlayPortalController();
+
+  MultipleSearchDropDownController<T> get _controller => widget.controller;
+
+  /// Whether the list is open.
+  bool get aberto => _portal.isShowing;
+
+  SearchDropDownStrings get _strings =>
+      widget.strings ?? SearchDropDownStrings.of(context);
 
   @override
   void initState() {
     super.initState();
-    enabled = widget.enabled;
-    overlayScreen = OverlayScreen.of(context);
+    _controller.addListener(_onControllerChanged);
   }
 
-  void onItemSelected(ValueItem<T> val, {bool forced = false}) {
-    setState(() {
-      if (widget.selectedItems.contains(val)) {
-        if (!forced) {
-          widget.selectedItems.remove(val);
-          if (widget.onClearItem != null) {
-            widget.onClearItem!(val);
-          }
+  @override
+  void didUpdateWidget(covariant MultipleSearchDropDown<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    final MultipleSearchDropDownController<T> previous = oldWidget.controller;
+    if (identical(previous, _controller)) {
+      return;
+    }
+    previous.removeListener(_onControllerChanged);
+    _controller.addListener(_onControllerChanged);
+    // A swapped-in disabled controller sends no notification. The portal
+    // cannot be hidden during a build.
+    if (!_controller.enabled && _portal.isShowing) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && !_controller.enabled) {
+          hideOverlay();
         }
-      } else {
-        widget.selectedItems.add(val);
-      }
-      widget.updateSelectedItems(widget.selectedItems);
-    });
-  }
-
-  void resetSelection() {
-    setState(() {
-      widget.selectedItems.clear();
-    });
-  }
-
-  void forceSelection(String label) {
-    final ValueItem<T>? val =
-        widget.listItems.where((element) => element.label == label).firstOrNull;
-    if (val != null) {
-      onItemSelected(val, forced: true);
+      });
     }
   }
 
-  void forceMultipleSelection(List<ValueItem<T>> values) {
-    final Set<ValueItem<T>> referenceSet = widget.listItems.toSet();
-    final List<ValueItem<T>> listaFinal =
-        values.where((item) => referenceSet.contains(item)).toList();
-    widget.selectedItems.clear();
-    widget.selectedItems.addAll(listaFinal);
+  @override
+  void dispose() {
+    _controller.removeListener(_onControllerChanged);
+    super.dispose();
   }
 
-  void enableDisable() {
-    setState(() {
-      enabled = !enabled;
-    });
+  void _onControllerChanged() {
+    if (!mounted) {
+      return;
+    }
+    final MultipleSearchDropDownController<T> controller = _controller;
+    if (!controller.enabled && _portal.isShowing) {
+      hideOverlay();
+      return;
+    }
+    // The box shows only the selection and the enabled state: changes of the
+    // results alone (typing) leave it alone, as in 7.x; the open list follows
+    // them through its own ListenableBuilder. Anything else the box reads
+    // from the controller must be compared here too.
+    if (controller.enabled == _shownEnabled &&
+        sameInstances(controller.selectedItems, _shownSelection)) {
+      return;
+    }
+    setState(() {});
   }
 
-  void handleAddItem(ValueItem<T> item, BuildContext context) {
-    if (widget.addMode) {
-      if (widget.verifyInputItem != null) {
-        if (!widget.verifyInputItem!(item)) {
-          //TODO arrumar pra não parecer que o item foi adicionado
-          //TODO na pratica o item é visualmente adicionado e depois removido. Ajustar pra nem adicionar.
-          return overlayScreen.show(
-            OverlayEntry(
-              builder: (context) => WarningDialog(
-                confirmDialog: false,
-                returnFunction: (result) {
-                  overlayScreen.closeLast();
-                },
-                settings: widget.verifyDialogSettings,
+  /// What the box last drew: the selection (by identity) and enabled state.
+  final List<ValueItem<T>> _shownSelection = <ValueItem<T>>[];
+  bool? _shownEnabled;
+
+  // ---------------------------------------------------------------- overlay
+
+  /// Closes the list. Does nothing when it is already closed.
+  void hideOverlay() {
+    if (!_portal.isShowing || !mounted) {
+      return;
+    }
+    setState(_portal.hide);
+    FocusScope.of(context).unfocus();
+  }
+
+  void _showOverlay() {
+    if (_controller.enabled && !_portal.isShowing) {
+      setState(_portal.show);
+    }
+  }
+
+  void _toggleOverlay() => _portal.isShowing ? hideOverlay() : _showOverlay();
+
+  // The list is an OverlayPortal child: drawn above this page but below the
+  // routes pushed later (dialogs), rebuilt with this widget and removed with
+  // it.
+  Widget _buildOverlay(BuildContext context) {
+    final SimpleSearchbarSettings bar = widget.searchBarSettings;
+    final SimpleOverlaySettings list = widget.overlayListSettings;
+    final Size size =
+        _layerLink.leaderSize ?? Size(bar.dropdownWidth, bar.dropdownHeight);
+    return Stack(
+      children: <Widget>[
+        Positioned.fill(
+          child: GestureDetector(
+            onTap: hideOverlay,
+            child: Container(color: Colors.transparent),
+          ),
+        ),
+        Positioned(
+          width: size.width,
+          child: CompositedTransformFollower(
+            link: _layerLink,
+            showWhenUnlinked: false,
+            offset: Offset(list.offsetWidth, size.height + list.offsetHeight),
+            child: Material(
+              color: Colors.transparent,
+              child: MultipleListView<T>(
+                controller: _controller,
+                overlayListSettings: list,
+                searchBarSettings: bar,
+                addAdditionalWidget: widget.addAdditionalWidget,
+                defaultAdditionalWidget: widget.defaultAdditionalWidget,
+                strings: _strings,
               ),
-            ),
-          );
-        }
-      }
-      widget.onAddItem!(item);
-      onItemSelected(item);
-    }
-  }
-
-  void handleDeleteItem(ValueItem<T> item, BuildContext context) {
-    if (widget.deleteMode) {
-      if (widget.confirmDelete) {
-        return overlayScreen.show(
-          OverlayEntry(
-            builder: (context) => WarningDialog(
-              returnFunction: (result) {
-                if (result) {
-                  widget.onDeleteItem!(item);
-                  resetSelection();
-                }
-                overlayScreen.closeLast();
-              },
-              settings: widget.deleteDialogSettings,
             ),
           ),
-        );
-      } else {
-        widget.onDeleteItem!(item);
-        resetSelection();
-        overlayScreen.updateLast();
-      }
-    }
+        ),
+      ],
+    );
   }
 
-  // TODO verificar como vai ser feito
-  // void handleEditItem(ValueItem<T> item, BuildContext context) {
-  //   if (widget.editMode) {
-  //     widget.onEditItem!(item);
-  //     resetSelection();
-  //     overlayScreen.updateLast();
-  //   }
-  // }
+  // ------------------------------------------------------------------ build
 
-  void _showOverlay(
-    BuildContext context,
-  ) {
-    final RenderBox renderBox = context.findRenderObject() as RenderBox;
-    final size = renderBox.size;
+  @override
+  Widget build(BuildContext context) {
+    return OverlayPortal(
+      controller: _portal,
+      overlayChildBuilder: _buildOverlay,
+      child: _buildBox(),
+    );
+  }
 
-    overlayScreen.show(
-      OverlayEntry(
-        builder: (context) => Stack(
-          children: [
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: hideOverlay,
-                child: Container(
-                  color: Colors.transparent,
+  Widget _buildBox() {
+    final SimpleSearchbarSettings bar = widget.searchBarSettings;
+    final MultipleSearchDropDownController<T> controller = _controller;
+    final List<ValueItem<T>> selected = controller.selectedItems;
+    final bool hasSelection = selected.isNotEmpty;
+    final bool isEnabled = controller.enabled;
+    final bool showClear = hasSelection && bar.showClearIcon;
+    final bool showArrow = !hasSelection && bar.showArrow && isEnabled;
+    _shownSelection
+      ..clear()
+      ..addAll(selected);
+    _shownEnabled = isEnabled;
+    return Opacity(
+      opacity: isEnabled ? 1 : 0.38,
+      // Disabled: no pointer and no keyboard (7.x only blocked the pointer).
+      child: ExcludeFocus(
+        excluding: !isEnabled,
+        child: IgnorePointer(
+          ignoring: !isEnabled,
+          child: CompositedTransformTarget(
+            link: _layerLink,
+            child: SizedBox(
+              height: bar.dropdownHeight,
+              width: bar.dropdownWidth,
+              child: InkWell(
+                onTap: _toggleOverlay,
+                child: Stack(
+                  children: <Widget>[
+                    Container(
+                      decoration: BoxDecoration(
+                        borderRadius: const BorderRadius.all(
+                          Radius.circular(10),
+                        ),
+                        color: bar.backgroundColor,
+                        border: Border.all(style: BorderStyle.none),
+                        boxShadow: <BoxShadow>[
+                          BoxShadow(
+                            color: Colors.grey.withAlpha(
+                              bar.elevation != 0 ? 125 : 0,
+                            ),
+                            spreadRadius: 0.5,
+                            blurRadius: bar.elevation,
+                            offset: Offset(0, 0.5 * bar.elevation),
+                          ),
+                        ],
+                      ),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 10),
+                        child: Row(
+                          children: <Widget>[
+                            Expanded(
+                              child: hasSelection
+                                  ? _buildChips(selected)
+                                  : Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: <Widget>[
+                                        Text(
+                                          bar.customHint ?? _strings.searchHint,
+                                          textAlign: TextAlign.start,
+                                          style: bar.hintStyle,
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                            if (showClear)
+                              _trailing(
+                                Icons.clear,
+                                controller.clear,
+                                _strings.clearTooltip,
+                              )
+                            else if (showArrow)
+                              _trailing(
+                                aberto
+                                    ? bar.dropdownOpenedArrowIcon
+                                    : bar.dropdownClosedArrowIcon,
+                                _toggleOverlay,
+                                aberto
+                                    ? _strings.closeTooltip
+                                    : _strings.openTooltip,
+                              ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-            Positioned(
-              width: size.width,
-              child: CompositedTransformFollower(
-                link: _layerLink,
-                showWhenUnlinked: false,
-                offset: Offset(widget.overlayListSettings.offsetWidth,
-                    size.height + widget.overlayListSettings.offsetHeight),
-                child: Material(
-                  color: Colors.transparent,
-                  child: MultipleListView(
-                    addMode: widget.addMode,
-                    deleteMode: widget.deleteMode,
-                    editMode: widget.editMode,
-                    listItens: widget.listItems,
-                    onAddItem: (val) => handleAddItem(val, context),
-                    onDeleteItem: (val) => handleDeleteItem(val, context),
-                    onEditItem: (val) => (), // TODO colocar função
-                    onItemSelected: onItemSelected,
-                    selectedItens: widget.selectedItems,
-                    sortType: widget.sortType,
-                    newValueItem: widget.newValueItem,
-                    overlayListSettings: widget.overlayListSettings,
-                    searchBarSettings: widget.searchBarSettings,
-                    addAditionalWidget: widget.addAditionalWidget,
-                    defaultAditionalWidget: widget.defaultAditionalWidget,
-                  ),
-                ),
-              ),
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
 
-  void hideOverlay() {
-    setState(() {
-      aberto = !aberto;
-    });
-    overlayScreen.closeAll();
-    FocusScope.of(context).unfocus();
-  }
-
-  void onClear() {
-    setState(() {
-      widget.selectedItems.clear();
-      widget.updateSelectedItems(widget.selectedItems);
-    });
-    if (widget.onClearList != null) {
-      widget.onClearList!();
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hasSelection = widget.selectedItems.isNotEmpty;
-    IconData? iconToDisplay;
-    if (hasSelection) {
-      if (widget.searchBarSettings.showClearIcon) {
-        iconToDisplay = Icons.clear;
-      }
-    } else {
-      if (widget.searchBarSettings.showArrow && widget.enabled) {
-        iconToDisplay = aberto
-            ? widget.searchBarSettings.dropdownOpenedArrowIcon
-            : widget.searchBarSettings.dropdownClosedArrowIcon;
-      }
-    }
-    return Opacity(
-      opacity: enabled ? 1 : 0.38,
-      child: IgnorePointer(
-        ignoring: !enabled,
-        child: CompositedTransformTarget(
-          link: _layerLink,
-          child: SizedBox(
-            height: widget.searchBarSettings.dropdownHeight,
-            width: widget.searchBarSettings.dropdownWidth,
-            child: InkWell(
-              onTap: () {
-                if (overlayScreen.overlayEntrys.isEmpty) {
-                  setState(() {
-                    aberto = !aberto;
-                  });
-                  _showOverlay(context);
-                } else {
-                  hideOverlay();
-                }
-              },
-              child: Stack(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      borderRadius: const BorderRadius.all(Radius.circular(10)),
-                      color: widget.searchBarSettings.backgroundColor,
-                      border: Border.all(style: BorderStyle.none),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.grey.withAlpha(
-                              widget.searchBarSettings.elevation != 0
-                                  ? 125
-                                  : 0),
-                          spreadRadius: 0.5,
-                          blurRadius: widget.searchBarSettings.elevation,
-                          offset: Offset(
-                              0, 0.5 * widget.searchBarSettings.elevation),
-                        ),
-                      ],
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: hasSelection
-                                ? ScrollConfiguration(
-                                    behavior: CustomScrollBehavior(),
-                                    child: ListView.separated(
-                                      scrollDirection: Axis.horizontal,
-                                      separatorBuilder: (context, index) =>
-                                          const SizedBox(width: 5),
-                                      itemCount: widget.selectedItems.length,
-                                      itemBuilder: (context, index) {
-                                        return widget.searchBarSettings
-                                                    .boxMultiItemWidgetBuilder !=
-                                                null
-                                            ? widget.searchBarSettings
-                                                    .boxMultiItemWidgetBuilder!(
-                                                widget.selectedItems[index])
-                                            : Padding(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                        vertical: 5),
-                                                child: Card(
-                                                  color: widget
-                                                      .searchBarSettings
-                                                      .boxMultiSelectedBackgroundColor,
-                                                  elevation: widget
-                                                      .searchBarSettings
-                                                      .elevation,
-                                                  child: Padding(
-                                                    padding: const EdgeInsets
-                                                        .symmetric(
-                                                        horizontal: 8),
-                                                    child: Row(
-                                                      mainAxisAlignment:
-                                                          MainAxisAlignment
-                                                              .spaceBetween,
-                                                      children: [
-                                                        Text(
-                                                            widget
-                                                                .selectedItems[
-                                                                    index]
-                                                                .label,
-                                                            style: widget
-                                                                .searchBarSettings
-                                                                .boxMultiSelectedTextStyle),
-                                                        InkWell(
-                                                          onTap: () =>
-                                                              onItemSelected(
-                                                                  widget.selectedItems[
-                                                                      index]),
-                                                          child: Icon(
-                                                            Icons.close,
-                                                            size: widget
-                                                                .searchBarSettings
-                                                                .boxMultiSelectedClearIconSize,
-                                                            color: widget
-                                                                .searchBarSettings
-                                                                .boxMultiSelectedClearIconColor,
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                ),
-                                              );
-                                      },
-                                    ),
-                                  )
-                                : Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        widget.searchBarSettings.hint,
-                                        textAlign: TextAlign.start,
-                                        style:
-                                            widget.searchBarSettings.hintStyle,
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                          if (iconToDisplay == null)
-                            const SizedBox.shrink()
-                          else
-                            Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                const SizedBox(width: 5),
-                                InkWell(
-                                  onTap: onClear,
-                                  child: Icon(
-                                    iconToDisplay,
-                                    size: widget
-                                        .searchBarSettings.outsideIconSize,
-                                    color: widget
-                                        .searchBarSettings.outsideIconColor,
-                                  ),
-                                ),
-                              ],
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+  Widget _trailing(IconData icon, VoidCallback onTap, String label) {
+    final SimpleSearchbarSettings bar = widget.searchBarSettings;
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: <Widget>[
+        const SizedBox(width: 5),
+        Semantics(
+          button: true,
+          label: label,
+          child: InkWell(
+            onTap: onTap,
+            child: Icon(
+              icon,
+              size: bar.outsideIconSize,
+              color: bar.outsideIconColor,
             ),
           ),
         ),
+      ],
+    );
+  }
+
+  Widget _buildChips(List<ValueItem<T>> selected) {
+    final SimpleSearchbarSettings bar = widget.searchBarSettings;
+    return ScrollConfiguration(
+      behavior: CustomScrollBehavior(),
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        separatorBuilder: (BuildContext context, int index) =>
+            const SizedBox(width: 5),
+        itemCount: selected.length,
+        itemBuilder: (BuildContext context, int index) {
+          final ValueItem<T> item = selected[index];
+          final Widget Function(ValueItem)? custom =
+              bar.boxMultiItemWidgetBuilder;
+          if (custom != null) {
+            return custom(item);
+          }
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Card(
+              color: bar.boxMultiSelectedBackgroundColor,
+              elevation: bar.elevation,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: <Widget>[
+                    Text(item.label, style: bar.boxMultiSelectedTextStyle),
+                    Semantics(
+                      button: true,
+                      label: '${_strings.removeChipTooltip} ${item.label}',
+                      child: InkWell(
+                        onTap: () => _controller.toggle(item),
+                        child: Icon(
+                          Icons.close,
+                          size: bar.boxMultiSelectedClearIconSize,
+                          color: bar.boxMultiSelectedClearIconColor,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
       ),
     );
   }

@@ -9,21 +9,21 @@ import 'dart:convert';
 
 class ValueItem<T> {
   /// Default constructor for [ValueItem]
-  const ValueItem({
-    required this.label,
-    this.value,
-  });
+  const ValueItem({required this.label, this.value});
 
   /// fromJson method for [ValueItem]
   ///
   /// [customValueFromMap] is an optional fromMap function to use if value is a custom class.
-  factory ValueItem.fromJson(String source,
-          dynamic Function(Map<String, dynamic>)? customValueFromMap) =>
-      ValueItem<T>._fromMap(json.decode(source), customValueFromMap);
+  factory ValueItem.fromJson(
+    String source,
+    dynamic Function(Map<String, dynamic>)? customValueFromMap,
+  ) => ValueItem<T>._fromMap(json.decode(source), customValueFromMap);
 
   /// fromMap method for [ValueItem]
-  factory ValueItem._fromMap(Map<String, dynamic> map,
-      dynamic Function(Map<String, dynamic>)? customValueFromMap) {
+  factory ValueItem._fromMap(
+    Map<String, dynamic> map,
+    dynamic Function(Map<String, dynamic>)? customValueFromMap,
+  ) {
     return ValueItem<T>(
       label: map['label'] ?? '',
       value: customValueFromMap != null
@@ -38,10 +38,7 @@ class ValueItem<T> {
     String Function(T value)? labelBuilder,
   }) {
     final builder = labelBuilder ?? (T v) => v.toString();
-    return ValueItem<T>(
-      label: builder(value),
-      value: value,
-    );
+    return ValueItem<T>(label: builder(value), value: value);
   }
 
   /// The label of the value item
@@ -58,7 +55,8 @@ class ValueItem<T> {
 
   /// toMap method for [ValueItem]
   Map<String, dynamic> _toMap(
-      Map<String, dynamic> Function(T? value)? customValueToMap) {
+    Map<String, dynamic> Function(T? value)? customValueToMap,
+  ) {
     return {
       'label': label,
       'value': customValueToMap != null ? customValueToMap(value) : value,
@@ -87,16 +85,10 @@ class ValueItem<T> {
 
   /// Hashcode for [ValueItem]
   @override
-  int get hashCode => label.hashCode ^ value.hashCode;
+  int get hashCode => Object.hash(label, value);
 
   /// CopyWith method for [ValueItem]
-  ValueItem<T> copyWith({
-    String? label,
-    T? value,
-  }) {
-    return ValueItem(
-      label: label ?? this.label,
-      value: value ?? this.value,
-    );
+  ValueItem<T> copyWith({String? label, T? value}) {
+    return ValueItem(label: label ?? this.label, value: value ?? this.value);
   }
 }

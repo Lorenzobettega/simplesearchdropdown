@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import '/custom.dart';
-import '/dialog_test.dart';
-import '/listitems.dart';
+import 'package:simple_search_dropdown_example/custom.dart';
+import 'package:simple_search_dropdown_example/dialog_test.dart';
+import 'package:simple_search_dropdown_example/listitems.dart';
 
 void main() {
   runApp(const MyApp());
@@ -33,98 +33,134 @@ class MyHomePage extends StatefulWidget {
   State<MyHomePage> createState() => _MyHomePageState();
 }
 
+/// Three dropdowns: a single and a multiple one over a list the app shares
+/// between them, and a single one over a custom value type.
+///
+/// Each controller keeps its own copy of the items. The app owns [items]:
+/// the add/edit/delete callbacks of one dropdown update it and hand it to
+/// the other dropdown with `updateListItems`.
 class _MyHomePageState extends State<MyHomePage> {
-  late final SearchDropDownController singleSearchController;
-  late final SearchDropDownController<Custom> customSearchController;
-  final GlobalKey<MultipleSearchDropDownState> multipleSearchKey = GlobalKey();
-  final GlobalKey<SearchDropDownState> searchKey = GlobalKey();
-  final GlobalKey<SearchDropDownState> customSearchKey = GlobalKey();
-  ValueItem<Custom>? selectedSingleCustom =
-      ValueItem(label: 'Lorenzo', value: Custom('Lorenzo', 134));
+  final List<ValueItem> items = List.of(initialItems);
+
+  late final SearchDropDownController singleController;
+  late final MultipleSearchDropDownController multipleController;
+  late final SearchDropDownController<Custom> customController;
+
+  ValueItem? selectedSingleItem = initialItems[1];
   List<ValueItem> selectedMultipleItems = [];
-  ValueItem? selectedSingleItem = listitems[1];
-  final GlobalKey<SearchDropDownState> newsingleSearchKey = GlobalKey();
+  ValueItem<Custom>? selectedCustomItem = initialCustomItems.first;
 
   @override
   void initState() {
     super.initState();
 
-    singleSearchController = SearchDropDownController(
-      listItems: listitems,
-      initialSelectedItem: listitems[1],
-      confirmDelete: true,
-      onDeleteItem: (item) async {
-        await Future.delayed(const Duration(seconds: 2));
-        listitems.remove(item);
-      },
+    singleController = SearchDropDownController(
+      items: items,
+      initialSelectedItem: selectedSingleItem,
+      newValueItem: (input) => ValueItem(label: input, value: input),
+      // Slow callbacks: the row shows a spinner until they complete.
       onAddItem: (item) async {
-        await Future.delayed(const Duration(seconds: 2));
-        listitems.add(item);
+        await Future<void>.delayed(const Duration(seconds: 2));
+        items.add(item);
+        syncMultiple();
+      },
+      onDeleteItem: (item) async {
+        await Future<void>.delayed(const Duration(seconds: 2));
+        items.remove(item);
+        syncMultiple();
+      },
+      confirmDelete: true,
+      editMode: true,
+      onEditItem: (item, edited) {
+        replaceItem(item, edited);
+        syncMultiple(edited: item, by: edited);
       },
       updateSelectedItem: (item) => selectedSingleItem = item,
       verifyInputItem: (item) => item.label != 'name',
-      newValueItem: (input) => ValueItem(label: input, value: input),
-      sortType: 3,
+      sort: SortType.selectedFirst,
       enabled: false,
-      showClearIcon: true,
     );
 
-    customSearchController = SearchDropDownController<Custom>(
-      listItems: customListitems,
-      initialSelectedItem: selectedSingleCustom,
+    multipleController = MultipleSearchDropDownController(
+      items: items,
+      selectedItems: selectedMultipleItems,
+      updateSelectedItems: (selected) => selectedMultipleItems = selected,
+      newValueItem: (input) => ValueItem(label: input, value: input),
+      onAddItem: (item) {
+        items.add(item);
+        syncSingle();
+      },
+      onDeleteItem: (item) {
+        items.remove(item);
+        syncSingle();
+      },
       confirmDelete: true,
-      onDeleteItem: (item) => customListitems.remove(item),
-      onAddItem: (item) => customListitems.add(item),
-      updateSelectedItem: (item) => selectedSingleCustom = item,
-      verifyInputItem: (item) => item.label != 'name',
-      newValueItem: (input) =>
-          ValueItem(label: input, value: Custom(input, getRandomInt(4))),
-      sortType: 3,
+      editMode: true,
+      onEditItem: (item, edited) {
+        replaceItem(item, edited);
+        syncSingle(edited: item, by: edited);
+      },
+      onClearList: () => print('clear'),
+      onClearItem: (item) => print('item clear'),
+    );
+
+    customController = SearchDropDownController<Custom>(
+      items: initialCustomItems,
+      initialSelectedItem: selectedCustomItem,
       addMode: false,
+      // Nothing else shows these items, so the controller's copy is enough.
+      onDeleteItem: (item) => print('deleted ${item.label}'),
+      confirmDelete: true,
+      updateSelectedItem: (item) => selectedCustomItem = item,
+      sort: SortType.selectedFirst,
     );
   }
 
-  void updateSelectedItems(List<ValueItem> newSelectedItems) {
-    selectedMultipleItems = newSelectedItems;
+  @override
+  void dispose() {
+    singleController.dispose();
+    multipleController.dispose();
+    customController.dispose();
+    super.dispose();
   }
 
-  void clearMultipleSelection() {
-    multipleSearchKey.currentState?.resetSelection();
+  void replaceItem(ValueItem item, ValueItem edited) {
+    final int index = items.indexOf(item);
+    if (index >= 0) {
+      items[index] = edited;
+    }
   }
 
-  void onClearMultipleSelection() {
-    print('clear');
+  /// Hands [items] to the single dropdown, keeping its selection (following
+  /// it when the selected item was [edited] into [by]).
+  void syncSingle({ValueItem? edited, ValueItem? by}) {
+    ValueItem? selected = singleController.selectedItem;
+    if (edited != null && selected == edited) {
+      selected = by;
+    }
+    // updateListItems resets a selection; select it again if it is still there.
+    singleController.updateListItems(items, false);
+    if (selected != null && items.contains(selected)) {
+      singleController.selectItem(selected);
+    }
   }
 
-  void onClearItemMultipleSelection(ValueItem<dynamic> item) {
-    print('item clear');
-  }
-
-  void clearCustomSelection() {
-    customSearchKey.currentState?.resetSelection();
-  }
-
-  void force() {
-    singleSearchController.forceSelection('one more');
-  }
-
-  void forceMultiple() {
-    multipleSearchKey.currentState?.forceSelection('one more');
-  }
-
-  void enableSingle() {
-    searchKey.currentState?.enableDisable();
+  /// Hands [items] to the multiple dropdown; a selected item that was
+  /// [edited] stays selected as [by].
+  void syncMultiple({ValueItem? edited, ValueItem? by}) {
+    final bool wasSelected =
+        edited != null && multipleController.isSelected(edited);
+    multipleController.updateListItems(items, false);
+    if (wasSelected && by != null) {
+      multipleController.toggle(by, forced: true);
+    }
   }
 
   void resetCustom() {
-    customSearchKey.currentState?.updateList(<ValueItem<Custom>>[
+    customController.updateListItems(<ValueItem<Custom>>[
       ValueItem(label: 'Reset 1', value: Custom('Reset 1', 80)),
       ValueItem(label: 'Reset 2', value: Custom('Reset 2', 90)),
-    ]);
-  }
-
-  void printNewSingleSelection() {
-    print(singleSearchController.selectedItem?.label);
+    ], true);
   }
 
   @override
@@ -136,147 +172,118 @@ class _MyHomePageState extends State<MyHomePage> {
           children: [
             const SizedBox(height: 70),
             TextButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (BuildContext context) {
-                    return const DialogTest();
-                  },
-                );
-              },
+              onPressed: () => showDialog<void>(
+                context: context,
+                builder: (BuildContext context) => DialogTest(items: items),
+              ),
               child: const Text('Open Dialog'),
             ),
             const SizedBox(height: 20),
             SearchDropDown(
-              key: searchKey,
-              controller: singleSearchController,
+              controller: singleController,
+              // This State creates and disposes the controllers.
+              disposeController: false,
               searchBarSettings: const SimpleSearchbarSettings(
                 showKeyboardOnTap: false,
                 actions: [Icon(Icons.abc)],
                 showDivider: true,
                 clearOnClose: true,
               ),
+              // A custom row: the edit and delete buttons stay beside it.
               overlayListSettings: SimpleOverlaySettings(
                 itemWidgetBuilder: (item) => Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 5,
+                  ),
                   color: Colors.blue,
                   child: Text(item.label),
                 ),
               ),
             ),
             const SizedBox(height: 20),
-            MultipleSearchDropDown(
-              key: multipleSearchKey,
-              listItems: listitems,
-              confirmDelete: true,
-              onDeleteItem: (item) => listitems.remove(item),
-              onAddItem: (item) => listitems.add(item),
-              onClearList: onClearMultipleSelection,
-              onClearItem: onClearItemMultipleSelection,
-              selectedItems: selectedMultipleItems,
-              updateSelectedItems: updateSelectedItems,
-              newValueItem: (input) => ValueItem(label: input, value: input),
-            ),
+            MultipleSearchDropDown(controller: multipleController),
             const SizedBox(height: 20),
             SearchDropDown<Custom>(
-              key: customSearchKey,
-              controller: customSearchController,
-              searchBarSettings:
-                  const SimpleSearchbarSettings(showArrow: false),
+              controller: customController,
+              disposeController: false,
+              searchBarSettings: const SimpleSearchbarSettings(
+                showArrow: false,
+              ),
             ),
             const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    print(selectedSingleItem);
-                    print(singleSearchController.localSearchController.text);
-                    print(singleSearchController.selectedItem);
-                  },
-                  child: const Text('Print Single Result'),
-                ),
-                const SizedBox(width: 10),
-                TextButton(
-                  onPressed: () => print(selectedMultipleItems),
-                  child: const Text('Print Multiple Result'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () => searchKey.currentState?.resetSelection(),
-                  child: const Text('Clear Single Selection'),
-                ),
-                const SizedBox(width: 10),
-                TextButton(
-                  onPressed: clearMultipleSelection,
-                  child: const Text('Clear Multiple Selection'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: () {
-                    print(selectedSingleCustom);
-                    if (selectedSingleCustom != null) {
-                      print('name: ${selectedSingleCustom!.value!.name}');
-                      print(selectedSingleCustom.runtimeType);
-                    }
-                  },
-                  child: const Text('Print Custom Result'),
-                ),
-                const SizedBox(width: 10),
-                TextButton(
-                  onPressed: clearCustomSelection,
-                  child: const Text('Clear Custom Selection'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: force,
-                  child: const Text('Force Single Selection'),
-                ),
-                const SizedBox(width: 10),
-                TextButton(
-                  onPressed: forceMultiple,
-                  child: const Text('Force Multiple Selection'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: enableSingle,
-              child: const Text('Enable/Disable Single Selection'),
-            ),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                TextButton(
-                  onPressed: printNewSingleSelection,
-                  child: const Text('Print new Single Selection'),
-                ),
-              ],
-            ),
-            const SizedBox(height: 20),
-            TextButton(
-              onPressed: resetCustom,
-              child: const Text('Reset custom list'),
-            ),
+            _buttons([
+              (
+                'Print Single Result',
+                () {
+                  print(selectedSingleItem);
+                  print(singleController.localSearchController.text);
+                  print(singleController.selectedItem);
+                },
+              ),
+              (
+                'Print Multiple Result',
+                () => print(selectedMultipleItems),
+              ),
+            ]),
+            _buttons([
+              ('Clear Single Selection', singleController.resetSelection),
+              ('Clear Multiple Selection', multipleController.resetSelection),
+            ]),
+            _buttons([
+              (
+                'Print Custom Result',
+                () {
+                  final ValueItem<Custom>? custom = selectedCustomItem;
+                  print(custom);
+                  if (custom != null) {
+                    print('name: ${custom.value!.name}');
+                    print(custom.runtimeType);
+                  }
+                },
+              ),
+              ('Clear Custom Selection', customController.resetSelection),
+            ]),
+            _buttons([
+              (
+                'Force Single Selection',
+                () => singleController.forceSelection('one more'),
+              ),
+              (
+                'Force Multiple Selection',
+                () => multipleController.forceSelection('one more'),
+              ),
+            ]),
+            _buttons([
+              (
+                'Enable/Disable Single Selection',
+                singleController.toggleEnabled,
+              ),
+            ]),
+            _buttons([
+              (
+                'Print new Single Selection',
+                () => print(singleController.selectedItem?.label),
+              ),
+            ]),
+            _buttons([('Reset custom list', resetCustom)]),
           ],
         ),
+      ),
+    );
+  }
+
+  /// A centred row of text buttons, followed by a gap.
+  Widget _buttons(List<(String, VoidCallback)> buttons) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Wrap(
+        alignment: WrapAlignment.center,
+        spacing: 10,
+        children: [
+          for (final (String label, VoidCallback onPressed) in buttons)
+            TextButton(onPressed: onPressed, child: Text(label)),
+        ],
       ),
     );
   }

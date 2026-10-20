@@ -1,0 +1,79 @@
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      pana:
+        description: Run pana (pub.dev score)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: Flutter ${{ matrix.flutter }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        # Pinned version used locally (tool/cloud_setup.sh) + supported floor.
+        flutter: ['3.47.7', '3.32.0']
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: ${{ matrix.flutter }}
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: flutter pub get
+        working-directory: example
+      - name: Format
+        if: matrix.flutter == '3.47.7'
+        run: dart format --output=none --set-exit-if-changed lib test example/lib example/test
+      - run: flutter analyze
+      - run: flutter analyze
+        working-directory: example
+      - name: Test (goldens only on the pinned version)
+        run: flutter test ${{ matrix.flutter != '3.47.7' && '--exclude-tags golden' || '' }}
+      - name: Upload golden failures
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: golden-failures-${{ matrix.flutter }}
+          path: test/**/failures/**
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Example tests
+        run: flutter test
+        working-directory: example
+      - name: Publish dry run
+        if: matrix.flutter == '3.47.7'
+        run: dart pub publish --dry-run
+
+  pana:
+    if: github.event_name == 'workflow_dispatch' && inputs.pana
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
+        with:
+          flutter-version: '3.47.7'
+          channel: stable
+      - run: dart pub global activate pana
+      - run: dart pub global run pana --no-warning --exit-code-threshold 40 .

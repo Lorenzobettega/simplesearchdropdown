@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/core/busy_row.dart';
 
+/// The "create" row shown when the typed text matches no item.
 class DefaultAddListItem extends StatefulWidget {
+  /// Creates the add row for [text].
   const DefaultAddListItem({
     required this.text,
     required this.overlayListSettings,
     required this.itemAdded,
-    required this.addAditionalWidget,
+    this.addAdditionalWidget,
+    this.strings,
     super.key,
   });
 
@@ -15,30 +19,30 @@ class DefaultAddListItem extends StatefulWidget {
 
   ///The overlay list of items settings.
   final SimpleOverlaySettings overlayListSettings;
+
+  /// The typed text that would become the new item.
   final String text;
-  final Widget? addAditionalWidget;
+
+  /// Widget shown between the text and the create button.
+  final Widget? addAdditionalWidget;
+
+  /// Source of the default texts; `null` uses [SearchDropDownStringsScope]
+  /// (Portuguese without one).
+  final SearchDropDownStrings? strings;
 
   @override
   State<DefaultAddListItem> createState() => _DefaultAddListItemState();
 }
 
-class _DefaultAddListItemState extends State<DefaultAddListItem> {
-  bool _isLoading = false;
-
-  Future<void> _handleItemAdded() async {
-    setState(() => _isLoading = true);
-
-    try {
-      await widget.itemAdded(widget.text);
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
+class _DefaultAddListItemState extends State<DefaultAddListItem>
+    with BusyRow<DefaultAddListItem> {
+  Future<void> _handleItemAdded() =>
+      runBusy(() => widget.itemAdded(widget.text));
 
   @override
   Widget build(BuildContext context) {
+    final SearchDropDownStrings texts =
+        widget.strings ?? SearchDropDownStrings.of(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
@@ -52,24 +56,19 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
               maxLines: 3,
             ),
           ),
-          if (widget.addAditionalWidget != null)
-            Flexible(
-              child: widget.addAditionalWidget!,
-            ),
+          if (widget.addAdditionalWidget != null)
+            Flexible(child: widget.addAdditionalWidget!),
           Flexible(
-            child: _isLoading
+            child: busy
                 ? Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: SizedBox(
-                      height: widget.overlayListSettings.loadingSize,
-                      child:
-                          Loading(cor: widget.overlayListSettings.loadingColor),
-                    ),
+                    child: spinner(widget.overlayListSettings, texts),
                   )
                 : TextButton(
                     onPressed: _handleItemAdded,
                     child: Text(
-                      widget.overlayListSettings.addItemHint,
+                      widget.overlayListSettings.customAddItemHint ??
+                          texts.addItem,
                       style: widget.overlayListSettings.addItemHintStyle,
                     ),
                   ),
