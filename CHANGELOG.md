@@ -60,6 +60,7 @@ Requires Flutter 3.32+. A major release: the 7.x members listed under Breaking a
 - Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously. They are delivered even if the controller is disposed in that frame; listeners and `onFilterUpdated` are then skipped.
 - Items, sort or filter changes made to the single dropdown during a build: `filteredItems`, `selectedIndex`, `highlightedIndex` and Enter (`submit`, `handleEnterKey`) see the new list at once, as in 7.x, while the open list (left stale by 7.x), the `results`/`highlight` listeners and `onFilterUpdated` follow right after that frame, coalesced into one notification per frame (7.x called `onFilterUpdated` once per change).
 - Single keyboard and focus: Tab/Shift+Tab move past the bar to the next field (with `removeFocus: false` 7.x cycled inside the bar); Enter or the keyboard's done key on the focused closed bar does nothing (7.x with `removeFocus: false` selected the first item); a disabled dropdown cannot take the focus and drops it when disabled.
+- The example app is written on the 8.0 API: controllers owned by the page, `sort: SortType.*`, controller methods instead of `GlobalKey`s, and one app-owned list kept in step between the dropdowns with their callbacks and `updateListItems`.
 
 ### Fixed
 - Crash when filtering after deleting/editing with a callback that does not change the list.

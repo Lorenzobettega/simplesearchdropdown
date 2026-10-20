@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import '/listitems.dart';
 
+/// A dialog with a read-only single dropdown over [items].
 class DialogTest extends StatefulWidget {
-  const DialogTest({super.key});
+  const DialogTest({required this.items, super.key});
+
+  /// The app's shared list, as it is when the dialog opens.
+  final List<ValueItem> items;
 
   @override
   State<DialogTest> createState() => _DialogTestState();
@@ -17,14 +20,17 @@ class _DialogTestState extends State<DialogTest> {
   void initState() {
     super.initState();
     dialogSearchController = SearchDropDownController(
-      items: listitems,
-      deleteMode: false,
+      items: widget.items,
       addMode: false,
-      initialSelectedItem: selectedSingleItem,
+      deleteMode: false,
       updateSelectedItem: (item) => selectedSingleItem = item,
-      verifyInputItem: (item) => item.label != 'name',
-      newValueItem: (input) => ValueItem(label: input, value: input),
     );
+  }
+
+  @override
+  void dispose() {
+    dialogSearchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -34,9 +40,7 @@ class _DialogTestState extends State<DialogTest> {
         height: 250,
         width: 350,
         child: Scaffold(
-          appBar: AppBar(
-            title: const Text('Dialog Test'),
-          ),
+          appBar: AppBar(title: const Text('Dialog Test')),
           body: Padding(
             padding: const EdgeInsets.all(16),
             child: Center(
@@ -46,16 +50,21 @@ class _DialogTestState extends State<DialogTest> {
                   const SizedBox(height: 20),
                   SearchDropDown(
                     controller: dialogSearchController,
+                    // This State disposes the controller.
+                    disposeController: false,
                     overlayListSettings: SimpleOverlaySettings(
                       itemWidgetBuilder: (item) => Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 5),
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
                         color: Colors.blue,
                         child: Text(item.label),
                       ),
                     ),
-                    searchBarSettings:
-                        const SimpleSearchbarSettings(showKeyboardOnTap: false),
+                    searchBarSettings: const SimpleSearchbarSettings(
+                      showKeyboardOnTap: false,
+                    ),
                   ),
                 ],
               ),
