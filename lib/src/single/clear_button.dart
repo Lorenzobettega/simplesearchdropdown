@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// The "X" button that clears the selection.
 class ClearButton extends StatelessWidget {
-  /// Creates a clear button; hidden (but laid out) when [visible] is false.
+  /// Creates a clear button; removed from the layout when [visible] is false.
   const ClearButton({
     super.key,
     required this.visible,
