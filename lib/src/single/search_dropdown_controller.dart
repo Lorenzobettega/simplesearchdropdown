@@ -20,6 +20,13 @@ import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 /// ([items]) and never reads or writes your list again: sorting orders the
 /// copy, and add/edit/delete change it only after your callback completes
 /// without throwing. Replace the items from outside with [updateListItems].
+///
+/// A callback may apply a server copy with [updateListItems] (e.g. the saved
+/// item with its database id); the controller then keeps the app's list
+/// instead of applying the change again: add selects the matching item from
+/// it (equal, else the same label) and appends nothing, edit selects the
+/// edited item from it and never brings back an item the list dropped, and
+/// delete leaves it as it is.
 class SearchDropDownController<T> extends DropDownControllerBase {
   /// Creates a controller over a copy of [items].
   ///
@@ -194,6 +201,10 @@ class SearchDropDownController<T> extends DropDownControllerBase {
   // ----------------------------------------------------------------- state
 
   ValueItem<T>? _selectedItem;
+
+  /// Bumped by [updateListItems]: a CRUD callback that changed it has
+  /// applied its own list, which the controller then keeps.
+  int _listGeneration = 0;
 
   /// The selected item, if any.
   ///
@@ -638,6 +649,7 @@ class SearchDropDownController<T> extends DropDownControllerBase {
       resetSelection();
     }
     final List<ValueItem<T>> copy = List<ValueItem<T>>.of(newList);
+    _listGeneration++;
     _items
       ..clear()
       ..addAll(copy);
@@ -652,7 +664,9 @@ class SearchDropDownController<T> extends DropDownControllerBase {
 
   /// Creates an item from [text] (after [verifyInputItem]), awaits
   /// [onAddItem] and, once it completes without throwing, adds the item to
-  /// [items] (unless an equal one is there) and selects it.
+  /// [items] (unless an equal one is there) and selects it. When the
+  /// callback applied its own list with [updateListItems], that list is kept
+  /// and its matching item (equal, else the same label) is selected.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> addItem(
@@ -671,8 +685,17 @@ class SearchDropDownController<T> extends DropDownControllerBase {
       _editText(localSearchController.clear);
       return;
     }
+    final int generation = _listGeneration;
     await onAddItem?.call(item);
     if (isDisposed) {
+      return;
+    }
+    if (generation != _listGeneration) {
+      // The callback applied its own list: select its copy, add nothing.
+      final ValueItem<T>? added = counterpartOf(_items, item, _engine);
+      if (added != null) {
+        selectItem(added);
+      }
       return;
     }
     if (!_items.contains(item)) {
@@ -715,6 +738,9 @@ class SearchDropDownController<T> extends DropDownControllerBase {
   /// once it completes without throwing, replaces the item in [items] (an
   /// equal item already there is kept instead of a duplicate) and reselects
   /// it when it was selected. A confirm with an unchanged label does nothing.
+  /// When the callback applied its own list with [updateListItems], that
+  /// list is kept: its edited item (equal, else the same label) is reselected,
+  /// and without one [item] is replaced only if the list still holds it.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> editItem(
@@ -736,20 +762,51 @@ class SearchDropDownController<T> extends DropDownControllerBase {
       return;
     }
     final ValueItem<T> newValue = create(text);
+    final int generation = _listGeneration;
+    final bool selectedBefore = _isSelectedRow(item);
     await onEditItem?.call(item, newValue);
     if (isDisposed) {
       return;
     }
+    if (generation != _listGeneration) {
+      _keepRefreshedEdit(item, newValue, wasSelected: selectedBefore);
+      return;
+    }
     // The row the user saw as selected, with the rule of [isSelected] over
     // the list before it is written.
-    final ValueItem<T>? selected = _selectedItem;
-    final bool wasSelected =
-        selected != null &&
-        _selects(item, selected, exactInPool: _items.contains(selected));
+    final bool wasSelected = _isSelectedRow(item);
     final ValueItem<T> edited = replaceItem(_items, item, newValue);
     _engine.forget(item);
     _refresh();
     if (wasSelected) {
+      _reselectEdited(edited);
+    }
+  }
+
+  /// Whether [item] is the row shown as selected, with the rule of
+  /// [isSelected] over the current list.
+  bool _isSelectedRow(ValueItem<T> item) {
+    final ValueItem<T>? selected = _selectedItem;
+    return selected != null &&
+        _selects(item, selected, exactInPool: _items.contains(selected));
+  }
+
+  /// Finishes an edit whose callback applied its own list: an edited item
+  /// that list holds stays as it is (reselected when [from] was selected);
+  /// without one, [from] is replaced only if the list still holds it, so an
+  /// item the list dropped never comes back.
+  void _keepRefreshedEdit(
+    ValueItem<T> from,
+    ValueItem<T> to, {
+    required bool wasSelected,
+  }) {
+    _engine.forget(from);
+    ValueItem<T>? edited = counterpartOf(_items, to, _engine);
+    if (edited == null && _items.contains(from)) {
+      edited = replaceItem(_items, from, to);
+      _refresh();
+    }
+    if (wasSelected && edited != null) {
       _reselectEdited(edited);
     }
   }

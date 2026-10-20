@@ -20,6 +20,13 @@ import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 /// items from outside with [updateListItems], the selection with
 /// [forceSelection], [forceMultipleSelection], [toggle] or [clear]; follow the
 /// selection with [updateSelectedItems] or a listener.
+///
+/// A callback may apply a server copy with [updateListItems] (e.g. the saved
+/// item with its database id); the controller then keeps the app's list
+/// instead of applying the change again: add selects the matching item from
+/// it (equal, else the same label) and appends nothing, edit selects the
+/// edited item from it and never brings back an item the list dropped, and
+/// delete leaves it as it is.
 class MultipleSearchDropDownController<T> extends DropDownControllerBase {
   /// Creates a controller over copies of [items] and [selectedItems].
   MultipleSearchDropDownController({
@@ -77,6 +84,10 @@ class MultipleSearchDropDownController<T> extends DropDownControllerBase {
 
   final List<ValueItem<T>> _items;
   final List<ValueItem<T>> _selectedItems;
+
+  /// Bumped by [updateListItems]: a CRUD callback that changed it has
+  /// applied its own list, which the controller then keeps.
+  int _listGeneration = 0;
 
   /// The controller's own items (a read-only view of its copy).
   UnmodifiableListView<ValueItem<T>> get items =>
@@ -358,9 +369,12 @@ class MultipleSearchDropDownController<T> extends DropDownControllerBase {
   /// [newList] instances. [updateSelectedItems] is called when the selection
   /// changes.
   void updateListItems(List<ValueItem<T>> newList, bool shouldReset) {
+    // A copy first: [newList] may be [items], a view of [_items].
+    final List<ValueItem<T>> copy = List<ValueItem<T>>.of(newList);
+    _listGeneration++;
     _items
       ..clear()
-      ..addAll(newList);
+      ..addAll(copy);
     _engine.clearCache();
     final Map<ValueItem<T>, ValueItem<T>> fresh =
         <ValueItem<T>, ValueItem<T>>{};
@@ -406,6 +420,9 @@ class MultipleSearchDropDownController<T> extends DropDownControllerBase {
   /// completes without throwing, adds the item to [items] (unless an equal
   /// one is there), selects it and clears the search. A rejected item shows
   /// the warning dialog and is not added.
+  /// When the callback applied its own list with [updateListItems], that
+  /// list is kept and its matching item (equal, else the same label) is
+  /// selected.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> addValue(
@@ -422,16 +439,26 @@ class MultipleSearchDropDownController<T> extends DropDownControllerBase {
       await showRejectedItemWarning(context, verifyDialogSettings, strings);
       return;
     }
+    final int generation = _listGeneration;
     await onAddItem?.call(item);
     if (isDisposed) {
       return;
     }
-    if (!_items.contains(item)) {
-      _items.add(item);
+    final ValueItem<T>? added;
+    if (generation != _listGeneration) {
+      // The callback applied its own list: select its copy, add nothing.
+      added = counterpartOf(_items, item, _engine);
+    } else {
+      added = item;
+      if (!_items.contains(item)) {
+        _items.add(item);
+      }
     }
     _query = '';
     _rebuildBase();
-    toggle(item, forced: true);
+    if (added != null) {
+      toggle(added, forced: true);
+    }
     _applyFilter();
   }
 
@@ -469,6 +496,10 @@ class MultipleSearchDropDownController<T> extends DropDownControllerBase {
   /// once it completes without throwing, replaces the item in [items] and
   /// [selectedItems] (an equal item already there is kept instead of a
   /// duplicate). A confirm with an unchanged label does nothing.
+  /// When the callback applied its own list with [updateListItems], that
+  /// list is kept: its edited item (equal, else the same label) takes the old
+  /// one's place in the selection, and without one [item] is replaced only
+  /// if the list still holds it.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> editItem(
@@ -490,18 +521,54 @@ class MultipleSearchDropDownController<T> extends DropDownControllerBase {
       return;
     }
     final ValueItem<T> newValue = create(text);
+    final int generation = _listGeneration;
+    final int selectedAt = _selectedItems.indexOf(item);
     await onEditItem?.call(item, newValue);
     if (isDisposed) {
       return;
     }
-    final ValueItem<T> edited = replaceItem(_items, item, newValue);
-    if (_selectedItems.contains(item)) {
-      replaceItem(_selectedItems, item, edited);
-      updateSelectedItems?.call(_selectionCopy());
+    if (generation != _listGeneration) {
+      _keepRefreshedEdit(item, newValue, selectedAt);
+    } else {
+      final ValueItem<T> edited = replaceItem(_items, item, newValue);
+      if (_selectedItems.contains(item)) {
+        replaceItem(_selectedItems, item, edited);
+        updateSelectedItems?.call(_selectionCopy());
+      }
     }
     _engine.forget(item);
     _refilter();
     notifyListeners();
+  }
+
+  /// Finishes an edit whose callback applied its own list: an edited item
+  /// that list holds stays as it is (and takes [from]'s place in the
+  /// selection when [from] was selected at [selectedAt]); without one,
+  /// [from] is replaced only if the list still holds it, so an item the
+  /// list dropped never comes back.
+  void _keepRefreshedEdit(ValueItem<T> from, ValueItem<T> to, int selectedAt) {
+    final ValueItem<T>? kept = counterpartOf(_items, to, _engine);
+    if (kept == null) {
+      if (!_items.contains(from)) {
+        return;
+      }
+      final ValueItem<T> edited = replaceItem(_items, from, to);
+      if (_selectedItems.contains(from)) {
+        replaceItem(_selectedItems, from, edited);
+        updateSelectedItems?.call(_selectionCopy());
+      }
+      return;
+    }
+    if (selectedAt == -1 || _selectedItems.contains(kept)) {
+      return;
+    }
+    final int at = _selectedItems.indexOf(from);
+    if (at != -1) {
+      _selectedItems[at] = kept;
+    } else {
+      _selectedItems.insert(selectedAt.clamp(0, _selectedItems.length), kept);
+    }
+    updateSelectedItems?.call(_selectionCopy());
   }
 
   /// A read-only copy of the selection, handed to [updateSelectedItems] so

@@ -1,4 +1,18 @@
+import 'package:simple_search_dropdown/src/core/filter_engine.dart';
 import 'package:simple_search_dropdown/src/helpers/value_item.dart';
+
+/// The entry of [list] that stands for [wanted]: the one `==` to it, else
+/// the first whose label matches [wanted]'s (exact, then with [engine]'s
+/// normalization); `null` when there is none. Used when a CRUD callback has
+/// replaced the list itself (a server copy may differ in its value).
+ValueItem<T>? counterpartOf<T>(
+  List<ValueItem<T>> list,
+  ValueItem<T> wanted,
+  FilterEngine<T> engine,
+) {
+  final int index = list.indexOf(wanted);
+  return index != -1 ? list[index] : engine.findByLabel(list, wanted.label);
+}
 
 /// Puts [to] where [from] is in [list] (a list the controller owns) and
 /// returns the entry that now stands for [to].

@@ -7,11 +7,11 @@ Requires Flutter 3.32+. A major release with no deprecation period: the 7.x memb
 | `addAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `DefaultAddListItem`) | `addAdditionalWidget` |
 | `defaultAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `DefaultListTile`) | `defaultAdditionalWidget` |
 | `SimpleOverlaySettings.aditionalWidgetSpacing` | `additionalWidgetSpacing` |
-| `sortType: int` (`SearchDropDownController`, `MultipleSearchDropDown`) | `sort: SortType` (`SortType.values[n]` maps an old `int`) |
+| `sortType: int` (`SearchDropDownController`, `MultipleSearchDropDown`) | `sort: SortType`: `0` → `SortType.none`, `1` → `alphabetical`, `2` → `reverseAlphabetical`, `3` → `selectedFirst`, any other value → `none` (as 7.x did; `SortType.values[n]` throws for those) |
 | `SearchDropDownController.sortList(int)` | `sortBy(SortType)` |
 | `SearchDropDownController(listItems: list)` and its `listItems` field (your list, read live and changed by the controller) | `items: list` (the controller keeps its own copy), the read-only `items` getter, and `updateListItems(list, shouldReset)` to replace them |
-| add/edit/delete callbacks that changed your list, one list shared by two dropdowns, the single `sort` reordering your list in place | your lists are never read again nor written: the controller sorts its copy and applies add/edit/delete to it once the callback completes without throwing; keep another dropdown in step from your callbacks with its `updateListItems` |
-| `MultipleSearchDropDown(listItems:, selectedItems:, updateSelectedItems:, addMode:, onAddItem:, newValueItem:, deleteMode:, onDeleteItem:, editMode:, onEditItem:, onClearItem:, onClearList:, sortType:, confirmDelete:, deleteDialogSettings:, verifyInputItem:, verifyDialogSettings:, enabled:)` | `MultipleSearchDropDown(controller: MultipleSearchDropDownController(items:, selectedItems:, ...))`: `controller:` is required and takes the same options (`onEditItem` gets `(old, edited)`) |
+| add/edit/delete callbacks that changed your list, one list shared by two dropdowns, the single `sort` reordering your list in place | your lists are never read again nor written: the controller sorts its copy and applies add/edit/delete to it once the callback completes without throwing; keep another dropdown in step from your callbacks with its `updateListItems`; a callback may also apply a server copy to its own controller with `updateListItems`, and the controller then keeps the app's list |
+| `MultipleSearchDropDown(listItems:, selectedItems:, updateSelectedItems:, addMode:, onAddItem:, newValueItem:, deleteMode:, onDeleteItem:, editMode:, onEditItem:, onClearItem:, onClearList:, sortType:, confirmDelete:, deleteDialogSettings:, verifyInputItem:, verifyDialogSettings:, enabled:)` | `MultipleSearchDropDown(controller: MultipleSearchDropDownController(items:, selectedItems:, ...))`: `controller:` is required and takes the same options (`onEditItem` gets `(old, edited)`; `editMode: true` also needs `newValueItem`, which builds the edited item) |
 | `MultipleSearchDropDown(selectedItems: list)` (your list, changed in place and passed to `updateSelectedItems`) | `selectedItems:` is copied; `controller.selectedItems` is a read-only view and `updateSelectedItems` gets a copy |
 | `SearchDropDownState.enableDisable()` (via `GlobalKey`) | `controller.toggleEnabled()` |
 | `SearchDropDownState.resetSelection()` | `controller.resetSelection()` |
@@ -65,6 +65,8 @@ Requires Flutter 3.32+. A major release with no deprecation period: the 7.x memb
 ### Fixed
 - Filtering after a delete or edit could crash (7.x, when the callback left the list unchanged).
 - `updateListItems` with the same list instance emptied it.
+- Multiple: `updateListItems(controller.items, …)` emptied the list (`items` is a view of the controller's own list).
+- A CRUD callback that refreshed its own controller with `updateListItems` got the change applied twice: add appended a duplicate (and selected the app's instance instead of the server copy), edit brought back an item the new list had dropped. The controller now keeps the list the callback applied: add selects the matching item from it (equal, else same label) and appends nothing, edit selects the edited item from it and replaces the old one only while the list still holds it, delete leaves it as it is.
 - Opening the single list through the arrow did not filter while typing.
 - `SimpleSearchbarSettings.showClearIcon: false` hid the single clear button only in the bar; the open list showed it anyway.
 - Keyboard highlight could stay on a stale row; rows were marked selected just because the typed text equalled their label; Tab focus was dropped immediately.

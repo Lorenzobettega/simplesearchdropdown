@@ -82,6 +82,13 @@ clears it when `shouldReset` is `true`, otherwise only the selected items that
 are no longer in `newList` leave the selection. To keep two dropdowns on one
 list, call `updateListItems` on the other controller from your callbacks.
 
+A callback may apply a server copy with `updateListItems` on its own
+controller (e.g. the saved item with its database id); the controller then
+keeps the app's list instead of applying the change again: add selects the
+matching item from it (equal, else the same label) and appends nothing, edit
+selects the edited item from it and never brings back an item the list
+dropped, and delete leaves it as it is.
+
 ### Add, edit and delete
 
 ```dart
@@ -216,11 +223,11 @@ removed. Replace them as the table shows (the CHANGELOG has the same table).
 | `addAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `DefaultAddListItem`) | `addAdditionalWidget` |
 | `defaultAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `DefaultListTile`) | `defaultAdditionalWidget` |
 | `SimpleOverlaySettings.aditionalWidgetSpacing` | `additionalWidgetSpacing` |
-| `sortType: int` (`SearchDropDownController`, `MultipleSearchDropDown`) | `sort: SortType` (`SortType.values[n]` maps an old `int`) |
+| `sortType: int` (`SearchDropDownController`, `MultipleSearchDropDown`) | `sort: SortType`: `0` → `SortType.none`, `1` → `alphabetical`, `2` → `reverseAlphabetical`, `3` → `selectedFirst`, any other value → `none` (as 7.x did; `SortType.values[n]` throws for those) |
 | `SearchDropDownController.sortList(int)` | `sortBy(SortType)` |
 | `SearchDropDownController(listItems: list)` and its `listItems` field (your list, read live and changed by the controller) | `items: list` (the controller keeps its own copy), the read-only `items` getter, and `updateListItems(list, shouldReset)` to replace them |
-| add/edit/delete callbacks that changed your list, one list shared by two dropdowns, the single `sort` reordering your list in place | your lists are never read again nor written: the controller sorts its copy and applies add/edit/delete to it once the callback completes without throwing; keep another dropdown in step from your callbacks with its `updateListItems` |
-| `MultipleSearchDropDown(listItems:, selectedItems:, updateSelectedItems:, addMode:, onAddItem:, newValueItem:, deleteMode:, onDeleteItem:, editMode:, onEditItem:, onClearItem:, onClearList:, sortType:, confirmDelete:, deleteDialogSettings:, verifyInputItem:, verifyDialogSettings:, enabled:)` | `MultipleSearchDropDown(controller: MultipleSearchDropDownController(items:, selectedItems:, ...))`: `controller:` is required and takes the same options (`onEditItem` gets `(old, edited)`) |
+| add/edit/delete callbacks that changed your list, one list shared by two dropdowns, the single `sort` reordering your list in place | your lists are never read again nor written: the controller sorts its copy and applies add/edit/delete to it once the callback completes without throwing; keep another dropdown in step from your callbacks with its `updateListItems`; a callback may also apply a server copy to its own controller with `updateListItems`, and the controller then keeps the app's list |
+| `MultipleSearchDropDown(listItems:, selectedItems:, updateSelectedItems:, addMode:, onAddItem:, newValueItem:, deleteMode:, onDeleteItem:, editMode:, onEditItem:, onClearItem:, onClearList:, sortType:, confirmDelete:, deleteDialogSettings:, verifyInputItem:, verifyDialogSettings:, enabled:)` | `MultipleSearchDropDown(controller: MultipleSearchDropDownController(items:, selectedItems:, ...))`: `controller:` is required and takes the same options (`onEditItem` gets `(old, edited)`; `editMode: true` also needs `newValueItem`, which builds the edited item) |
 | `MultipleSearchDropDown(selectedItems: list)` (your list, changed in place and passed to `updateSelectedItems`) | `selectedItems:` is copied; `controller.selectedItems` is a read-only view and `updateSelectedItems` gets a copy |
 | `SearchDropDownState.enableDisable()` (via `GlobalKey`) | `controller.toggleEnabled()` |
 | `SearchDropDownState.resetSelection()` | `controller.resetSelection()` |

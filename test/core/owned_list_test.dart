@@ -342,4 +342,273 @@ void main() {
       expect(n, 1);
     });
   });
+
+  group("updateListItems with the controller's own items", () {
+    test('single keeps the items', () {
+      final c = _single(fruitItems());
+      c.updateListItems(c.items, false);
+      expect(_labels(c.items), _fruitOrder);
+      expect(_labels(c.filteredItems), _fruitOrder);
+    });
+
+    test('multiple keeps the items and the selection', () {
+      final List<ValueItem<int>> items = fruitItems();
+      final c = _multiple(items, selected: <ValueItem<int>>[items[1]]);
+      c.updateListItems(c.items, false);
+      expect(_labels(c.items), _fruitOrder);
+      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(c.selectedItems, <ValueItem<int>>[items[1]]);
+    });
+  });
+
+  // A callback may apply a server copy with updateListItems; the controller
+  // then keeps the app's list instead of applying the change a second time.
+  group('single: a callback that refreshes the list itself', () {
+    const ValueItem<int> a = ValueItem(label: 'a', value: 1);
+
+    SearchDropDownController<int> server({
+      Function(ValueItem<int>)? onAddItem,
+      Function(ValueItem<int>)? onDeleteItem,
+      Function(ValueItem<int>, ValueItem<int>)? onEditItem,
+      ValueItem<int>? initial,
+      List<ValueItem<int>> items = const <ValueItem<int>>[a],
+    }) {
+      final c = SearchDropDownController<int>(
+        items: items,
+        newValueItem: (s) => ValueItem<int>(label: s, value: -1),
+        onAddItem: onAddItem ?? (_) {},
+        onDeleteItem: onDeleteItem ?? (_) {},
+        editMode: true,
+        onEditItem: onEditItem ?? (_, _) {},
+        initialSelectedItem: initial,
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    testWidgets('add selects the server copy instead of appending', (
+      tester,
+    ) async {
+      final BuildContext ctx = await _context(tester);
+      late final SearchDropDownController<int> c;
+      // ignore: prefer_const_constructors
+      final ValueItem<int> serverB = ValueItem<int>(label: 'b', value: 2);
+      c = server(
+        onAddItem: (i) async =>
+            c.updateListItems(<ValueItem<int>>[...c.items, serverB], false),
+      );
+
+      await c.addItem('b', ctx);
+
+      expect(c.items, <ValueItem<int>>[a, serverB]);
+      expect(c.selectedItem, same(serverB));
+    });
+
+    testWidgets('add selects the equal server item', (tester) async {
+      final BuildContext ctx = await _context(tester);
+      late final SearchDropDownController<int> c;
+      // ignore: prefer_const_constructors
+      final ValueItem<int> serverB = ValueItem<int>(label: 'b', value: -1);
+      c = server(
+        onAddItem: (i) async =>
+            c.updateListItems(<ValueItem<int>>[serverB, ...c.items], false),
+      );
+
+      await c.addItem('b', ctx);
+
+      expect(c.items, <ValueItem<int>>[serverB, a]);
+      expect(c.selectedItem, same(serverB));
+    });
+
+    testWidgets('add without the item in the new list adds nothing', (
+      tester,
+    ) async {
+      final BuildContext ctx = await _context(tester);
+      late final SearchDropDownController<int> c;
+      c = server(
+        onAddItem: (i) async => c.updateListItems(numberedItems(2), false),
+      );
+
+      await c.addItem('b', ctx);
+
+      expect(_labels(c.items), <String>['Item 0', 'Item 1']);
+      expect(c.selectedItem, isNull);
+    });
+
+    testWidgets('edit keeps the server list and selects its edited item', (
+      tester,
+    ) async {
+      final BuildContext ctx = await _context(tester);
+      const ValueItem<int> b = ValueItem(label: 'b', value: 2);
+      // ignore: prefer_const_constructors
+      final ValueItem<int> serverA2 = ValueItem<int>(label: 'a2', value: 1);
+      late final SearchDropDownController<int> c;
+      c = server(
+        items: const <ValueItem<int>>[a, b],
+        initial: a,
+        onEditItem: (from, to) async =>
+            c.updateListItems(<ValueItem<int>>[serverA2, b], false),
+      );
+
+      await _confirmEdit(tester, c.editItem(a, ctx), 'a2');
+
+      expect(c.items, <ValueItem<int>>[serverA2, b]);
+      expect(c.selectedItem, same(serverA2));
+    });
+
+    testWidgets('edit does not resurrect an item the server removed', (
+      tester,
+    ) async {
+      final BuildContext ctx = await _context(tester);
+      const ValueItem<int> b = ValueItem(label: 'b', value: 2);
+      late final SearchDropDownController<int> c;
+      c = server(
+        items: const <ValueItem<int>>[a, b],
+        initial: a,
+        onEditItem: (from, to) async =>
+            c.updateListItems(<ValueItem<int>>[b], false),
+      );
+
+      await _confirmEdit(tester, c.editItem(a, ctx), 'a2');
+
+      expect(c.items, <ValueItem<int>>[b]);
+      expect(c.selectedItem, isNull);
+    });
+
+    testWidgets('delete leaves the server list as it is', (tester) async {
+      final BuildContext ctx = await _context(tester);
+      const ValueItem<int> b = ValueItem(label: 'b', value: 2);
+      const ValueItem<int> c3 = ValueItem(label: 'c', value: 3);
+      late final SearchDropDownController<int> c;
+      c = server(
+        items: const <ValueItem<int>>[a, b],
+        onDeleteItem: (i) async =>
+            c.updateListItems(<ValueItem<int>>[b, c3], false),
+      );
+
+      await c.deleteItem(a, ctx);
+
+      expect(c.items, <ValueItem<int>>[b, c3]);
+    });
+  });
+
+  group('multiple: a callback that refreshes the list itself', () {
+    const ValueItem<int> a = ValueItem(label: 'a', value: 1);
+    const ValueItem<int> b = ValueItem(label: 'b', value: 2);
+
+    MultipleSearchDropDownController<int> server({
+      List<ValueItem<int>> items = const <ValueItem<int>>[a],
+      List<ValueItem<int>>? selected,
+      Function(ValueItem<int>)? onAddItem,
+      Function(ValueItem<int>)? onDeleteItem,
+      Function(ValueItem<int>, ValueItem<int>)? onEditItem,
+      void Function(List<ValueItem<int>>)? updateSelectedItems,
+    }) {
+      final c = MultipleSearchDropDownController<int>(
+        items: items,
+        selectedItems: selected,
+        updateSelectedItems: updateSelectedItems,
+        newValueItem: (s) => ValueItem<int>(label: s, value: -1),
+        onAddItem: onAddItem ?? (_) {},
+        onDeleteItem: onDeleteItem ?? (_) {},
+        editMode: true,
+        onEditItem: onEditItem ?? (_, _) {},
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    testWidgets('add selects the server copy instead of appending', (
+      tester,
+    ) async {
+      final BuildContext ctx = await _context(tester);
+      // ignore: prefer_const_constructors
+      final ValueItem<int> serverB = ValueItem<int>(label: 'B', value: 2);
+      late final MultipleSearchDropDownController<int> c;
+      c = server(
+        onAddItem: (i) async =>
+            c.updateListItems(<ValueItem<int>>[...c.items, serverB], false),
+      );
+
+      await c.addItem('b', ctx);
+
+      expect(c.items, <ValueItem<int>>[a, serverB]);
+      expect(c.selectedItems.single, same(serverB));
+    });
+
+    testWidgets('add without the item in the new list adds nothing', (
+      tester,
+    ) async {
+      final BuildContext ctx = await _context(tester);
+      late final MultipleSearchDropDownController<int> c;
+      c = server(
+        onAddItem: (i) async => c.updateListItems(<ValueItem<int>>[b], false),
+      );
+
+      await c.addItem('x', ctx);
+
+      expect(c.items, <ValueItem<int>>[b]);
+      expect(c.selectedItems, isEmpty);
+    });
+
+    testWidgets('edit does not resurrect an item the server removed', (
+      tester,
+    ) async {
+      final BuildContext ctx = await _context(tester);
+      late final MultipleSearchDropDownController<int> c;
+      c = server(
+        items: const <ValueItem<int>>[a, b],
+        selected: const <ValueItem<int>>[a],
+        onEditItem: (from, to) async =>
+            c.updateListItems(<ValueItem<int>>[b], false),
+      );
+
+      await _confirmEdit(tester, c.editItem(a, ctx), 'a2');
+
+      expect(c.items, <ValueItem<int>>[b]);
+      expect(c.selectedItems, isEmpty);
+    });
+
+    testWidgets('edit keeps the server list and selects its edited item', (
+      tester,
+    ) async {
+      final BuildContext ctx = await _context(tester);
+      // ignore: prefer_const_constructors
+      final ValueItem<int> serverA2 = ValueItem<int>(label: 'a2', value: 1);
+      final List<List<ValueItem<int>>> updates = <List<ValueItem<int>>>[];
+      late final MultipleSearchDropDownController<int> c;
+      c = server(
+        items: const <ValueItem<int>>[a, b],
+        selected: const <ValueItem<int>>[a, b],
+        updateSelectedItems: updates.add,
+        onEditItem: (from, to) async =>
+            c.updateListItems(<ValueItem<int>>[serverA2, b], false),
+      );
+
+      await _confirmEdit(tester, c.editItem(a, ctx), 'a2');
+      await tester.pump();
+
+      expect(c.items, <ValueItem<int>>[serverA2, b]);
+      expect(c.selectedItems, <ValueItem<int>>[serverA2, b]);
+      expect(c.selectedItems.first, same(serverA2));
+      expect(updates.last, <ValueItem<int>>[serverA2, b]);
+    });
+
+    testWidgets('delete leaves the server list as it is', (tester) async {
+      final BuildContext ctx = await _context(tester);
+      const ValueItem<int> c3 = ValueItem(label: 'c', value: 3);
+      late final MultipleSearchDropDownController<int> c;
+      c = server(
+        items: const <ValueItem<int>>[a, b],
+        selected: const <ValueItem<int>>[a],
+        onDeleteItem: (i) async =>
+            c.updateListItems(<ValueItem<int>>[b, c3], false),
+      );
+
+      await c.deleteItem(a, ctx);
+
+      expect(c.items, <ValueItem<int>>[b, c3]);
+      expect(c.selectedItems, isEmpty);
+    });
+  });
 }
