@@ -48,3 +48,19 @@ abstract class DropDownControllerBase extends ChangeNotifier {
     super.dispose();
   }
 }
+
+/// Whether [notifier] can still be used, i.e. it was not disposed: a
+/// SearchController passed in by the caller can be disposed before the
+/// dropdown is done with it (#49). Debug builds tell through
+/// [ChangeNotifier.debugAssertNotDisposed]; release builds cannot, but there
+/// a disposed notifier has no listeners left, so a write reaches no one.
+bool isUsable(ChangeNotifier notifier) {
+  try {
+    return ChangeNotifier.debugAssertNotDisposed(notifier);
+    // The debug check reports a disposed notifier with a FlutterError; only
+    // that check runs here.
+    // ignore: avoid_catching_errors
+  } on FlutterError {
+    return false;
+  }
+}

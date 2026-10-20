@@ -86,17 +86,17 @@ void main() {
     });
   });
 
-  group('N54: the open view follows a swapped controller', () {
-    testWidgets('the view arrow closes the view', (tester) async {
+  group('N54 (D5, #49): a swapped controller closes the open view; the next '
+      'view is the current controller', () {
+    testWidgets('the swap closes the view, without errors', (tester) async {
       final SearchDropDownController<int> a = _ctrl(fruitItems());
       addTearDown(a.dispose);
       final SearchDropDownController<int> b = _ctrl(numberedItems(3));
       await tester.pumpWidget(host(SearchDropDown<int>(controller: a)));
       await openSingle(tester);
+      expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
 
       await tester.pumpWidget(host(SearchDropDown<int>(controller: b)));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byIcon(Icons.arrow_drop_up));
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
@@ -104,9 +104,8 @@ void main() {
       expect(b.localSearchController.isOpen, isFalse);
     });
 
-    testWidgets('the view X follows and clears the current controller', (
-      tester,
-    ) async {
+    testWidgets('the arrow and X of the reopened view act on the current '
+        'controller', (tester) async {
       final List<ValueItem<int>?> aCalls = <ValueItem<int>?>[];
       final List<ValueItem<int>?> bCalls = <ValueItem<int>?>[];
       final SearchDropDownController<int> a = _ctrl(
@@ -125,6 +124,8 @@ void main() {
 
       await tester.pumpWidget(host(SearchDropDown<int>(controller: b)));
       await tester.pumpAndSettle();
+      await openSingle(tester);
+      expect(find.byType(DefaultListTile<int>), findsNWidgets(3));
       final Finder viewClear = find.descendant(
         of: find.byType(SearchBar).last,
         matching: find.byIcon(Icons.clear),
@@ -136,6 +137,10 @@ void main() {
       expect(b.selectedItem, isNull);
       expect(bCalls, <ValueItem<int>?>[null]);
       expect(aCalls, isEmpty);
+
+      await tester.tap(find.byIcon(Icons.arrow_drop_up));
+      await tester.pumpAndSettle();
+      expect(b.localSearchController.isOpen, isFalse);
     });
   });
 

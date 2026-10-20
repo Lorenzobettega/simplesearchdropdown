@@ -22,6 +22,11 @@ import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 /// without throwing. Replace the items from outside with [updateListItems].
 class SearchDropDownController<T> extends DropDownControllerBase {
   /// Creates a controller over a copy of [items].
+  ///
+  /// A [searchController] you pass stays yours: the controller never
+  /// disposes it, so dispose it after this controller (or together, in the
+  /// same `dispose`), never while the dropdown may still use it. Without
+  /// one the controller creates its own ([ownsSearchController]).
   SearchDropDownController({
     SearchController? searchController,
     required List<ValueItem<T>> items,
@@ -72,7 +77,13 @@ class SearchDropDownController<T> extends DropDownControllerBase {
        ) {
     if (initialSelectedItem != null && _items.isNotEmpty) {
       _selectedItem = initialSelectedItem;
-      localSearchController.text = initialSelectedItem.label;
+      final String label = initialSelectedItem.label;
+      if (_ownsSearchController) {
+        // Brand new: no field listens to it yet, so no build can trip.
+        localSearchController.text = label;
+      } else {
+        _editText(() => localSearchController.text = label);
+      }
       _clearVisible = this.showClearIcon;
     }
     _engine.sortInPlace(_items, _sort, selected: _selectedItem);
@@ -515,16 +526,18 @@ class SearchDropDownController<T> extends DropDownControllerBase {
     // The view is closing: writing the label must not re-filter the list.
     _viewOpen = false;
     _untouchedLabel = null;
-    _selecting = true;
-    try {
-      if (localSearchController.isAttached && localSearchController.isOpen) {
-        localSearchController.closeView(item.label);
-      } else {
-        _showSelectedLabel(item, previous, replaceTyped: true);
+    _editText(() {
+      _selecting = true;
+      try {
+        if (localSearchController.isAttached && localSearchController.isOpen) {
+          localSearchController.closeView(item.label);
+        } else {
+          _showSelectedLabel(item, previous, replaceTyped: true);
+        }
+      } finally {
+        _selecting = false;
       }
-    } finally {
-      _selecting = false;
-    }
+    });
     _filterArmed = true;
     _selectionChanged(item);
     _clearVisible = showClearIcon;
@@ -556,8 +569,7 @@ class SearchDropDownController<T> extends DropDownControllerBase {
   void _clearSelection() {
     _selectedItem = null;
     _clearVisible = false;
-    localSearchController.text = '';
-    _applyFilter();
+    _editText(() => localSearchController.text = '', then: _applyFilter);
     notifyListeners();
   }
 
@@ -570,17 +582,41 @@ class SearchDropDownController<T> extends DropDownControllerBase {
     ValueItem<T>? previous, {
     required bool replaceTyped,
   }) {
-    final bool showsPrevious =
-        previous != null && localSearchController.text == previous.label;
-    if (showsPrevious || (item != null && replaceTyped)) {
-      final String label = item?.label ?? '';
-      if (_viewOpen) {
-        _untouchedLabel = item == null ? null : label;
+    _editText(
+      () {
+        final bool showsPrevious =
+            previous != null && localSearchController.text == previous.label;
+        if (showsPrevious || (item != null && replaceTyped)) {
+          final String label = item?.label ?? '';
+          if (_viewOpen) {
+            _untouchedLabel = item == null ? null : label;
+          }
+          localSearchController.text = label;
+        }
+      },
+      // Also when the text stayed: the new selection changes what is a
+      // query.
+      then: _followText,
+    );
+  }
+
+  /// Runs [edit], a write to [localSearchController], then [then]: now, or
+  /// after the frame when called during a build, together with the
+  /// notification (#52: every field on the SearchController hears the
+  /// write, also one of a bar this build is replacing). Once this controller
+  /// is disposed nothing runs; once the SearchController is (one passed in,
+  /// disposed by its owner while a callback was pending, #49) [edit] is
+  /// skipped.
+  void _editText(VoidCallback edit, {VoidCallback? then}) {
+    runOutsideBuild(() {
+      if (isDisposed) {
+        return;
       }
-      localSearchController.text = label;
-    }
-    // Also when the text stayed: the new selection changes what is a query.
-    _followText();
+      if (isUsable(localSearchController)) {
+        edit();
+      }
+      then?.call();
+    }, () => isDisposed);
   }
 
   /// Selects the item whose label matches [label] (exact first, then
@@ -632,9 +668,7 @@ class SearchDropDownController<T> extends DropDownControllerBase {
     final bool Function(ValueItem<T>)? verify = verifyInputItem;
     if (verify != null && !verify(item)) {
       await showRejectedItemWarning(context, verifyDialogSettings, strings);
-      if (!isDisposed) {
-        localSearchController.clear();
-      }
+      _editText(localSearchController.clear);
       return;
     }
     await onAddItem?.call(item);
@@ -750,9 +784,11 @@ class SearchDropDownController<T> extends DropDownControllerBase {
     _refresh();
     if (showsSelection) {
       // Typing replaces the selected label instead of appending to it.
-      localSearchController.selection = TextSelection(
-        baseOffset: 0,
-        extentOffset: text.length,
+      _editText(
+        () => localSearchController.selection = TextSelection(
+          baseOffset: 0,
+          extentOffset: text.length,
+        ),
       );
     }
   }
@@ -764,17 +800,21 @@ class SearchDropDownController<T> extends DropDownControllerBase {
     if (!isDisposed) {
       _highlight.value = -1;
     }
-    final String text = localSearchController.text;
-    if (clearOnClose && text.isNotEmpty) {
-      final ValueItem<T>? selected = _selectedItem;
-      if (selected != null) {
-        if (text != selected.label) {
-          localSearchController.text = selected.label;
-        }
-      } else {
-        localSearchController.text = '';
-      }
+    if (!clearOnClose) {
+      return;
     }
+    _editText(() {
+      final String text = localSearchController.text;
+      if (text.isEmpty) {
+        return;
+      }
+      final ValueItem<T>? selected = _selectedItem;
+      if (selected == null) {
+        localSearchController.text = '';
+      } else if (text != selected.label) {
+        localSearchController.text = selected.label;
+      }
+    });
   }
 
   // ------------------------------------------------------------- lifecycle
