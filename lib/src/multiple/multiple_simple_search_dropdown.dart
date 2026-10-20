@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/core/item_list.dart';
 import 'package:simple_search_dropdown/src/multiple/multiple_listview.dart';
 
 /// A multiple-selection dropdown: selected items show as chips in the box and
@@ -102,7 +103,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     // them through its own ListenableBuilder. Anything else the box reads
     // from the controller must be compared here too.
     if (controller.enabled == _shownEnabled &&
-        _isShownSelection(controller.selectedItems)) {
+        sameInstances(controller.selectedItems, _shownSelection)) {
       return;
     }
     setState(() {});
@@ -111,18 +112,6 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   /// What the box last drew: the selection (by identity) and enabled state.
   final List<ValueItem<T>> _shownSelection = <ValueItem<T>>[];
   bool? _shownEnabled;
-
-  bool _isShownSelection(List<ValueItem<T>> selected) {
-    if (selected.length != _shownSelection.length) {
-      return false;
-    }
-    for (int i = 0; i < selected.length; i++) {
-      if (!identical(selected[i], _shownSelection[i])) {
-        return false;
-      }
-    }
-    return true;
-  }
 
   // ---------------------------------------------------------------- overlay
 

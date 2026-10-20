@@ -28,3 +28,16 @@ ValueItem<T> replaceItem<T>(
   }
   return to;
 }
+
+/// Whether [a] and [b] hold the same instances in the same order.
+bool sameInstances<E>(List<E> a, List<E> b) {
+  if (a.length != b.length) {
+    return false;
+  }
+  for (int i = 0; i < a.length; i++) {
+    if (!identical(a[i], b[i])) {
+      return false;
+    }
+  }
+  return true;
+}

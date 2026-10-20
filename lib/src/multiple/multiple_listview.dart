@@ -49,6 +49,12 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
   @override
   void initState() {
     super.initState();
+    _open();
+  }
+
+  /// Opens the list fresh on [_controller] (re-reads its items) and scrolls
+  /// to the selection after the frame.
+  void _open() {
     _controller
       ..refresh()
       ..addListener(_syncField);
@@ -66,15 +72,12 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
     if (!old.isDisposed) {
       old.removeListener(_syncField);
     }
-    // A swapped-in controller opens fresh (re-reads its items, like
-    // initState) but keeps what the user typed, so field and list agree.
-    _controller
-      ..refresh()
-      ..addListener(_syncField);
+    // A swapped-in controller opens fresh but keeps what the user typed, so
+    // field and list agree.
+    _open();
     if (_search.text.isNotEmpty) {
       _controller.search(_search.text);
     }
-    WidgetsBinding.instance.addPostFrameCallback((_) => _goToSelected());
   }
 
   @override

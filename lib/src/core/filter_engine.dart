@@ -115,8 +115,14 @@ class FilterEngine<T> {
     ];
   }
 
-  /// First item of [source] whose normalized label equals the normalized [label].
+  /// The first item of [source] labelled exactly [label], else the first
+  /// whose normalized label equals the normalized [label].
   ValueItem<T>? findByLabel(Iterable<ValueItem<T>> source, String label) {
+    for (final ValueItem<T> item in source) {
+      if (item.label == label) {
+        return item;
+      }
+    }
     final String q = normalize(label);
     for (final ValueItem<T> item in source) {
       if (labelOf(item) == q) {

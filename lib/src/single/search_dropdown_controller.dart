@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/core/controller_base.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
 import 'package:simple_search_dropdown/src/core/item_list.dart';
 import 'package:simple_search_dropdown/src/core/package_dialog.dart';
@@ -19,7 +20,7 @@ import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
 /// ([items]) and never reads or writes your list again: sorting orders the
 /// copy, and add/edit/delete change it only after your callback completes
 /// without throwing. Replace the items from outside with [updateListItems].
-class SearchDropDownController<T> extends ChangeNotifier {
+class SearchDropDownController<T> extends DropDownControllerBase {
   /// Creates a controller over a copy of [items].
   SearchDropDownController({
     SearchController? searchController,
@@ -40,7 +41,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     bool? showClearIcon,
     ValueItem<T>? initialSelectedItem,
     SortType sort = SortType.none,
-    bool enabled = true,
+    super.enabled = true,
     this.onFilterUpdated,
     bool latinize = true,
     bool caseSensitive = false,
@@ -61,7 +62,6 @@ class SearchDropDownController<T> extends ChangeNotifier {
        _ownsSearchController = searchController == null,
        showClearIcon = showClearIcon ?? true,
        _items = List<ValueItem<T>>.of(items),
-       _enabled = enabled,
        _sort = sort,
        _engine = FilterEngine<T>(
          normalization: SearchNormalization(
@@ -153,7 +153,6 @@ class SearchDropDownController<T> extends ChangeNotifier {
 
   final FilterEngine<T> _engine;
   SortType _sort;
-  bool _disposed = false;
   bool _viewOpen = false;
 
   /// The selected label the open view started with, until the user edits
@@ -200,19 +199,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     _selectedItem = value;
     _clearVisible = value != null && showClearIcon;
     _showSelectedLabel(value, previous, replaceTyped: true);
-    _notify();
-  }
-
-  bool _enabled;
-
-  /// Whether the dropdown accepts interaction.
-  bool get enabled => _enabled;
-  set enabled(bool value) {
-    if (_enabled == value) {
-      return;
-    }
-    _enabled = value;
-    _notify();
+    notifyListeners();
   }
 
   bool _clearVisible = false;
@@ -226,7 +213,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
       return;
     }
     _clearVisible = value;
-    _notify();
+    notifyListeners();
   }
 
   final List<ValueItem<T>> _base = <ValueItem<T>>[];
@@ -391,7 +378,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
 
   void _show(List<ValueItem<T>> next) {
     final bool equal = listEquals(next, _filtered);
-    if (equal && _sameInstances(next, _filtered)) {
+    if (equal && sameInstances(next, _filtered)) {
       return;
     }
     // Applied at once, as in 7.x: reads made in the same build (Enter,
@@ -412,11 +399,11 @@ class SearchDropDownController<T> extends ChangeNotifier {
       return;
     }
     _resultsQueued = true;
-    _runOutsideBuild(() {
+    runOutsideBuild(() {
       _resultsQueued = false;
       final bool changed = _resultsChanged;
       _resultsChanged = false;
-      if (_disposed) {
+      if (isDisposed) {
         return;
       }
       _highlight.flush();
@@ -424,22 +411,8 @@ class SearchDropDownController<T> extends ChangeNotifier {
       if (changed) {
         onFilterUpdated?.call();
       }
-    });
+    }, () => isDisposed);
   }
-
-  static bool _sameInstances<E>(List<E> a, List<E> b) {
-    for (int i = 0; i < a.length; i++) {
-      if (!identical(a[i], b[i])) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  /// Runs [callback] now, or after the frame when called during a build
-  /// (user callbacks often call setState).
-  void _runOutsideBuild(void Function() callback) =>
-      runOutsideBuild(callback, () => _disposed);
 
   /// Calls [updateSelectedItem] with [item], outside a build; also when the
   /// controller is disposed in that frame (7.x called it synchronously).
@@ -555,7 +528,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     _filterArmed = true;
     _selectionChanged(item);
     _clearVisible = showClearIcon;
-    _notify();
+    notifyListeners();
   }
 
   /// Clears the selection and the text, then calls [updateSelectedItem].
@@ -585,7 +558,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     _clearVisible = false;
     localSearchController.text = '';
     _applyFilter();
-    _notify();
+    notifyListeners();
   }
 
   /// Shows [item] (the new selection, [previous] the old one) in the field.
@@ -613,14 +586,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// Selects the item whose label matches [label] (exact first, then
   /// normalized). Does nothing when no item matches.
   void forceSelection(String label) {
-    ValueItem<T>? match;
-    for (final ValueItem<T> item in _items) {
-      if (item.label == label) {
-        match = item;
-        break;
-      }
-    }
-    match ??= _engine.findByLabel(_items, label);
+    final ValueItem<T>? match = _engine.findByLabel(_items, label);
     if (match != null) {
       selectItem(match);
     }
@@ -643,7 +609,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
       ..clearCache()
       ..sortInPlace(_items, _sort, selected: _selectedItem);
     _refresh();
-    _notify();
+    notifyListeners();
   }
 
   // ---------------------------------------------------------- add / delete
@@ -665,25 +631,14 @@ class SearchDropDownController<T> extends ChangeNotifier {
     final ValueItem<T> item = create(text);
     final bool Function(ValueItem<T>)? verify = verifyInputItem;
     if (verify != null && !verify(item)) {
-      final SearchDropDownStrings texts =
-          strings ?? SearchDropDownStrings.of(context);
-      await showPackageDialog(
-        context,
-        (VoidCallback close) => WarningDialog(
-          confirmDialog: false,
-          returnFunction: (_) => close(),
-          settings: verifyDialogSettings,
-          strings: texts,
-        ),
-      );
-      if (_disposed) {
-        return;
+      await showRejectedItemWarning(context, verifyDialogSettings, strings);
+      if (!isDisposed) {
+        localSearchController.clear();
       }
-      localSearchController.clear();
       return;
     }
     await onAddItem?.call(item);
-    if (_disposed) {
+    if (isDisposed) {
       return;
     }
     if (!_items.contains(item)) {
@@ -691,17 +646,6 @@ class SearchDropDownController<T> extends ChangeNotifier {
     }
     _refresh();
     selectItem(item);
-  }
-
-  Future<void> _proceedWithDeletion(ValueItem<T> item) async {
-    await onDeleteItem?.call(item);
-    if (_disposed) {
-      return;
-    }
-    _items.remove(item);
-    _engine.forget(item);
-    _refresh();
-    resetSelection(highlight: true);
   }
 
   /// Deletes [item] (after confirmation when [confirmDelete]): awaits
@@ -717,26 +661,18 @@ class SearchDropDownController<T> extends ChangeNotifier {
     if (!deleteMode) {
       return;
     }
-    if (!confirmDelete) {
-      return _proceedWithDeletion(item);
+    if (confirmDelete &&
+        !await confirmDeletion(context, deleteDialogSettings, strings)) {
+      return;
     }
-    bool confirmed = false;
-    final SearchDropDownStrings texts =
-        strings ?? SearchDropDownStrings.of(context);
-    await showPackageDialog(
-      context,
-      (VoidCallback close) => WarningDialog(
-        returnFunction: (bool result) {
-          confirmed = result;
-          close();
-        },
-        settings: deleteDialogSettings,
-        strings: texts,
-      ),
-    );
-    if (confirmed) {
-      await _proceedWithDeletion(item);
+    await onDeleteItem?.call(item);
+    if (isDisposed) {
+      return;
     }
+    _items.remove(item);
+    _engine.forget(item);
+    _refresh();
+    resetSelection(highlight: true);
   }
 
   // ------------------------------------------------------------------ edit
@@ -756,31 +692,18 @@ class SearchDropDownController<T> extends ChangeNotifier {
     if (!editMode || create == null) {
       return;
     }
-    String? newText;
-    final SearchDropDownStrings texts =
-        strings ?? SearchDropDownStrings.of(context);
-    await showPackageDialog(
+    final String? text = await askNewLabel(
       context,
-      (VoidCallback close) => EditDialog(
-        label: item.label,
-        returnFunction: (bool ok, String text) {
-          if (ok) {
-            newText = text;
-          }
-          close();
-        },
-        settings: editDialogSettings,
-        strings: texts,
-      ),
+      item.label,
+      editDialogSettings,
+      strings,
     );
-    final String? text = newText;
-    // An unchanged label is not an edit: the item and selection stay.
-    if (text == null || text == item.label) {
+    if (text == null) {
       return;
     }
     final ValueItem<T> newValue = create(text);
     await onEditItem?.call(item, newValue);
-    if (_disposed) {
+    if (isDisposed) {
       return;
     }
     // The row the user saw as selected, with the rule of [isSelected] over
@@ -809,7 +732,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
     _clearVisible = showClearIcon;
     _showSelectedLabel(next, previous, replaceTyped: false);
     _selectionChanged(next);
-    _notify();
+    notifyListeners();
   }
 
   // ------------------------------------------------------------ open/close
@@ -838,7 +761,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
   void onSearchClose(bool clearOnClose) {
     _viewOpen = false;
     _untouchedLabel = null;
-    if (!_disposed) {
+    if (!isDisposed) {
       _highlight.value = -1;
     }
     final String text = localSearchController.text;
@@ -854,28 +777,13 @@ class SearchDropDownController<T> extends ChangeNotifier {
     }
   }
 
-  /// Toggles [enabled].
-  void toggleEnabled() => enabled = !_enabled;
-
   // ------------------------------------------------------------- lifecycle
 
-  /// Whether [dispose] was called.
-  bool get isDisposed => _disposed;
-
-  void _notify() {
-    if (_disposed) {
-      return;
-    }
-    _runOutsideBuild(notifyListeners);
-  }
-
-  /// Releases resources. Safe to call more than once.
   @override
   void dispose() {
-    if (_disposed) {
+    if (isDisposed) {
       return;
     }
-    _disposed = true;
     localSearchController.removeListener(_onTextChanged);
     if (_ownsSearchController) {
       localSearchController.dispose();

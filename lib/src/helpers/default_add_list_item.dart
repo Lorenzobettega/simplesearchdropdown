@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
-import 'package:simple_search_dropdown/src/core/package_dialog.dart';
+import 'package:simple_search_dropdown/src/core/busy_row.dart';
 
 /// The "create" row shown when the typed text matches no item.
 class DefaultAddListItem extends StatefulWidget {
@@ -34,22 +34,10 @@ class DefaultAddListItem extends StatefulWidget {
   State<DefaultAddListItem> createState() => _DefaultAddListItemState();
 }
 
-class _DefaultAddListItemState extends State<DefaultAddListItem> {
-  bool _isLoading = false;
-
-  Future<void> _handleItemAdded() async {
-    setState(() => _isLoading = true);
-
-    try {
-      await widget.itemAdded(widget.text);
-    } catch (exception, stack) {
-      reportCallbackError(exception, stack);
-    } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
-    }
-  }
+class _DefaultAddListItemState extends State<DefaultAddListItem>
+    with BusyRow<DefaultAddListItem> {
+  Future<void> _handleItemAdded() =>
+      runBusy(() => widget.itemAdded(widget.text));
 
   @override
   Widget build(BuildContext context) {
@@ -71,16 +59,10 @@ class _DefaultAddListItemState extends State<DefaultAddListItem> {
           if (widget.addAdditionalWidget != null)
             Flexible(child: widget.addAdditionalWidget!),
           Flexible(
-            child: _isLoading
+            child: busy
                 ? Padding(
                     padding: const EdgeInsets.only(top: 4),
-                    child: SizedBox(
-                      height: widget.overlayListSettings.loadingSize,
-                      child: Loading(
-                        cor: widget.overlayListSettings.loadingColor,
-                        semanticsLabel: texts.loadingLabel,
-                      ),
-                    ),
+                    child: spinner(widget.overlayListSettings, texts),
                   )
                 : TextButton(
                     onPressed: _handleItemAdded,
