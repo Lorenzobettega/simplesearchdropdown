@@ -1,19 +1,23 @@
 ## [8.0.0] - 2026-10-15.
-Requires Flutter 3.32+. A major release: the 7.x members listed under Breaking are gone, each with its replacement. See "Migrating from 7.x" in the README.
+Requires Flutter 3.32+. A major release with no deprecation period: the 7.x members below are gone. Replace each one as the table shows (the same table is in the README, "Migrating from 7.x").
 
 ### Breaking
 | 7.x | 8.0 |
 |---|---|
-| `addAditionalWidget:` / `.addAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `MultipleListView`, `DefaultAddListItem`) | `addAdditionalWidget` |
-| `defaultAditionalWidget:` / `.defaultAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `MultipleListView`, `DefaultListTile`) | `defaultAdditionalWidget` |
+| `addAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `DefaultAddListItem`) | `addAdditionalWidget` |
+| `defaultAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `DefaultListTile`) | `defaultAdditionalWidget` |
 | `SimpleOverlaySettings.aditionalWidgetSpacing` | `additionalWidgetSpacing` |
-| `sortType: int` (`SearchDropDownController`, `MultipleSearchDropDown`) and `MultipleSearchDropDown.sortType` | `sort: SortType` (`SortType.values[n]` maps an old `int`) |
+| `sortType: int` (`SearchDropDownController`, `MultipleSearchDropDown`) | `sort: SortType` (`SortType.values[n]` maps an old `int`) |
 | `SearchDropDownController.sortList(int)` | `sortBy(SortType)` |
-| `SearchDropDownState.enableDisable()` | `controller.toggleEnabled()` |
+| `SearchDropDownController(listItems: list)` and its `listItems` field (your list, read live and changed by the controller) | `items: list` (the controller keeps its own copy), the read-only `items` getter, and `updateListItems(list, shouldReset)` to replace them |
+| add/edit/delete callbacks that changed your list, one list shared by two dropdowns, the single `sort` reordering your list in place | your lists are never read again nor written: the controller sorts its copy and applies add/edit/delete to it once the callback completes without throwing; keep another dropdown in step from your callbacks with its `updateListItems` |
+| `MultipleSearchDropDown(listItems:, selectedItems:, updateSelectedItems:, addMode:, onAddItem:, newValueItem:, deleteMode:, onDeleteItem:, editMode:, onEditItem:, onClearItem:, onClearList:, sortType:, confirmDelete:, deleteDialogSettings:, verifyInputItem:, verifyDialogSettings:, enabled:)` | `MultipleSearchDropDown(controller: MultipleSearchDropDownController(items:, selectedItems:, ...))`: `controller:` is required and takes the same options (`onEditItem` gets `(old, edited)`) |
+| `MultipleSearchDropDown(selectedItems: list)` (your list, changed in place and passed to `updateSelectedItems`) | `selectedItems:` is copied; `controller.selectedItems` is a read-only view and `updateSelectedItems` gets a copy |
+| `SearchDropDownState.enableDisable()` (via `GlobalKey`) | `controller.toggleEnabled()` |
 | `SearchDropDownState.resetSelection()` | `controller.resetSelection()` |
 | `SearchDropDownState.updateList(list, shouldreset:)` | `controller.updateListItems(list, shouldReset)` |
-| `MultipleSearchDropDownState.aberto = open` | tap the box to open, `hideOverlay()` to close (`aberto` stays as a read-only getter) |
-| `MultipleSearchDropDownState.enabled` (getter and setter) | `controller.enabled` |
+| `MultipleSearchDropDownState.aberto = open` | tap the box to open, `hideOverlay()` to close (`aberto` is a read-only getter) |
+| `MultipleSearchDropDownState.enabled` | `controller.enabled` |
 | `MultipleSearchDropDownState.onItemSelected(item)` | `controller.toggle(item)` |
 | `MultipleSearchDropDownState.resetSelection()` | `controller.resetSelection()` |
 | `MultipleSearchDropDownState.forceSelection(label)` | `controller.forceSelection(label)` |
@@ -23,24 +27,19 @@ Requires Flutter 3.32+. A major release: the 7.x members listed under Breaking a
 | `MultipleSearchDropDownState.handleDeleteItem(item, context)` | `controller.deleteItem(item, context)` |
 | `MultipleSearchDropDownState.onClear()` | `controller.clear()` |
 | `MultipleSearchDropDownState.overlayScreen` and the exported `OverlayScreen` class | removed: close the list with `hideOverlay()`; show your own overlays with `Overlay.of(context)` |
-| `SearchDropDownController(listItems:)` / `MultipleSearchDropDownController(listItems:)` and their `listItems` getter (your list, read live) | `items:` (required; the controller keeps its own copy) and the read-only `items` getter; replace the data with `updateListItems(list, shouldReset)` (now on both controllers) |
-| `MultipleSearchDropDown(listItems:, selectedItems:, updateSelectedItems:, addMode:, onAddItem:, newValueItem:, deleteMode:, onDeleteItem:, editMode:, onEditItem:, onClearItem:, onClearList:, sort:, confirmDelete:, deleteDialogSettings:, verifyInputItem:, verifyDialogSettings:, enabled:)` and its `listItems`/`selectedItems`/`updateSelectedItems` getters | `MultipleSearchDropDown(controller:)` (now required), with the same options on `MultipleSearchDropDownController` (`onEditItem` gets `(old, edited)`; surrounding spaces are trimmed unless `trim: false`) |
-| `MultipleSearchDropDownController.selectedItems` (your list, changed in place) and `updateSelectedItems` receiving it | `selectedItems:` is copied; the getter is a read-only view and `updateSelectedItems` gets a copy |
-| The dropdowns read your list live (add/edit/delete callbacks updated it, e.g. one list shared by two dropdowns) and the single `sort` reordered it in place | your lists are never read again nor written: the controller sorts its own copy and applies add/edit/delete to it once the callback completes without throwing; keep other lists (e.g. a second dropdown) in step from your callbacks with `updateListItems` |
-| `MultipleListView` (exported; `MultipleListView(listItens:, selectedItens:, onItemSelected:, ...)` and the matching getters) | no longer exported: use `MultipleSearchDropDown` |
+| `MultipleListView` (exported; `listItens:`, `selectedItens:`, `onItemSelected:`, ...) | no longer exported: use `MultipleSearchDropDown` |
 
 - New exported names `SortType`, `SearchDropDownStrings`, `SearchDropDownStringsScope` and `MultipleSearchDropDownController` clash (`ambiguous_import`) with a type of the same name that your file imports from elsewhere: `import 'package:simple_search_dropdown/simple_search_dropdown.dart' hide SortType;` (or the clashing name), or use a prefixed import.
 
 ### Added
 - `SearchDropDownController` is a `ChangeNotifier`: change selection, items or `enabled` from code and the widget updates, no `GlobalKey` needed (#45).
-- `MultipleSearchDropDownController` (exported) and a `controller:` parameter on `MultipleSearchDropDown`.
-- `items:` on both controllers: the controller keeps its own copy, and a multiple controller also copies `selectedItems`; `MultipleSearchDropDownController.updateListItems(list, shouldReset)` replaces its items (selected items no longer in the list leave the selection).
-- The single list opens scrolled to the selected item (#46) until you type a search, whose results then list from the top; PageUp/PageDown jump to the first/last item.
+- `MultipleSearchDropDownController` (exported), a `ChangeNotifier` holding the multiple dropdown's items, selection, modes and callbacks, with `toggle`, `forceSelection`, `forceMultipleSelection`, `resetSelection`, `clear`, `addValue`, `deleteItem`, `editItem` and `updateListItems(list, shouldReset)` (selected items no longer in the list leave the selection).
+- The single list opens scrolled to the selected item (#46), on every reopening, until you type a search, whose results then list from the top; PageUp/PageDown jump to the first/last item.
 - `SearchDropDownController.ownsSearchController`: whether the controller created its own `SearchController`.
 - `SearchDropDownStrings` (Portuguese defaults, `.en()`), per widget (`strings:`) or app-wide with `SearchDropDownStringsScope`, which also reaches the controllers' `addItem`/`addValue`/`editItem`/`deleteItem` dialogs and the exported dialogs and rows when they get no `strings:`.
-- `SortType` enum (`sort:`), A-Z/Z-A ordering that ignores case, accents and surrounding spaces, whatever `caseSensitive`/`latinize`/`trim` (both dropdowns); digits still compare as text, as in 7.x (`Item 10` before `Item 2`).
+- `SortType` enum (`sort:`): A-Z/Z-A ordering ignores case, accents and surrounding spaces, whatever `caseSensitive`/`latinize`/`trim` (both dropdowns); digits still compare as text, as in 7.x (`Item 10` before `Item 2`).
 - Multiple dropdown: edit mode works (it was a stub); `latinize`/`caseSensitive`/`trim` apply there too (`trim: false` keeps the 7.x multiple matching: `' ana'` finds `Maria Ana`, not `Mariana`).
-- `MultipleSearchDropDownController.addMode`, `deleteMode`, `editMode`, `confirmDelete` and `sort` can be changed after creation (`sort` reorders the results, never your list).
+- `MultipleSearchDropDownController.addMode`, `deleteMode`, `editMode`, `confirmDelete` and `sort` can be changed after creation (`sort` reorders the results, never `items`).
 - Keyboard highlight is distinct from the selection (`highlightedItemBackgroundColor`, `highlightedItemBorderColor`); tooltips and semantics on buttons, rows, chips and spinners.
 
 ### Changed
@@ -51,32 +50,33 @@ Requires Flutter 3.32+. A major release: the 7.x members listed under Breaking a
 - The multiple list is drawn with `OverlayPortal`: it follows parent rebuilds, is removed with the widget and stays below dialogs (confirm/verify dialogs are now regular modal dialogs).
 - Settings texts (`hint`, `addItemHint`, `editHint`, dialog button settings) still read as before, but a value you do not set now comes from `SearchDropDownStrings`; `customHint`, `customAddItemHint`, `customEditHint` tell whether one was set explicitly.
 - `SearchDropDownController.dispose()` can be called more than once.
-- `SearchDropDown(disposeController: true)` (default) disposes the whole controller when the widget is removed, but only when the controller created its own `SearchController` (7.x disposed just that one); a controller built with `searchController:` is left to you and can be mounted again, as in 7.x.
+- `SearchDropDown(disposeController: true)` (default) disposes the whole controller when the widget is removed, but only when the controller created its own `SearchController` (7.x disposed just that `SearchController`); a controller built with `searchController:` is left to you and can be mounted again. `MultipleSearchDropDown` never disposes its controller: dispose it in your `State.dispose`.
 - An error thrown by `onAddItem`, `onEditItem` or `onDeleteItem` started from a list row is reported with `FlutterError.reportError` (library `simple_search_dropdown`, so crash reporters see it) instead of escaping as an uncaught error (7.x silently dropped delete errors); the item stays as it was and the row's button comes back. Awaiting the controller's `addItem`/`editItem`/`deleteItem` yourself still gets the error.
 - Confirming the edit dialog with the label unchanged does nothing: `onEditItem` is not called and the original item stays in the list and the selection (7.x single called `onEditItem`).
 - Multiple: `enabled = false` closes an open list, and the dimmed box, its chips and the clear button no longer take keyboard focus (7.x only blocked the pointer; Tab + Enter still opened it). Changes made from code still apply while disabled.
 - Multiple: while an async `onAddItem` runs the search field keeps the typed text, matching the filter and the add row, and it clears when the add is done (7.x cleared it at once, as the callback was not awaited); a failing callback leaves both as they were.
+- Multiple: deleting an item deselects only that item (7.x cleared the whole selection).
 - `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
 - Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously. They are delivered even if the controller is disposed in that frame; listeners and `onFilterUpdated` are then skipped.
 - Items, sort or filter changes made to the single dropdown during a build: `filteredItems`, `selectedIndex`, `highlightedIndex` and Enter (`submit`, `handleEnterKey`) see the new list at once, as in 7.x, while the open list (left stale by 7.x), the `results`/`highlight` listeners and `onFilterUpdated` follow right after that frame, coalesced into one notification per frame (7.x called `onFilterUpdated` once per change).
 - Single keyboard and focus: Tab/Shift+Tab move past the bar to the next field (with `removeFocus: false` 7.x cycled inside the bar); Enter or the keyboard's done key on the focused closed bar does nothing (7.x with `removeFocus: false` selected the first item); a disabled dropdown cannot take the focus and drops it when disabled.
-- The example app is written on the 8.0 API: controllers owned by the page, `sort: SortType.*`, controller methods instead of `GlobalKey`s, and one app-owned list kept in step between the dropdowns with their callbacks and `updateListItems`.
+- The example app uses the 8.0 API: controllers owned by the page, `sort: SortType.*`, controller methods instead of `GlobalKey`s, and one app-owned list kept in step between the dropdowns with their callbacks and `updateListItems`.
 
 ### Fixed
-- Crash when filtering after deleting/editing with a callback that does not change the list.
+- Filtering after a delete or edit could crash (7.x, when the callback left the list unchanged).
 - `updateListItems` with the same list instance emptied it.
 - Opening the single list through the arrow did not filter while typing.
-- `SimpleSearchbarSettings.showClearIcon: false` hid the single clear button only in the bar; the open list showed it anyway (B14).
+- `SimpleSearchbarSettings.showClearIcon: false` hid the single clear button only in the bar; the open list showed it anyway.
 - Keyboard highlight could stay on a stale row; rows were marked selected just because the typed text equalled their label; Tab focus was dropped immediately.
-- Delete spinner kept spinning after cancelling the confirmation; edit dialog now starts with the current label and only re-selects when the edited item was selected (also a row matched by label, e.g. values without `==`), keeping the list open as in 7.x.
+- Delete spinner kept spinning after cancelling the confirmation; the edit dialog now starts with the current label and only re-selects when the edited item was selected (also a row matched by label, e.g. values without `==`), keeping the list open as in 7.x.
 - `onFilterUpdated` missed changes with the same length/first/last item, and is never called during a build (safe to `setState` in it).
 - Keyboard highlight is cleared when the list reopens; selecting no longer re-filters the list while it closes.
-- Multiple: deleting an item cleared the whole selection; `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; the list leaked when the widget was removed; a rejected item stayed in the search field (#13); async callbacks were not awaited.
+- Multiple: an item rejected by `verifyInputItem` stayed in the search field; now it is never listed and the search is cleared (#13).
+- Multiple: `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; the list leaked when the widget was removed; async callbacks were not awaited.
 - Multiple: typing key by key froze the add row on the first text that matched nothing (it created that truncated item), and an empty list never offered the add row; `selectedFirst` did not re-pin after `resetSelection`, `clear` or `forceMultipleSelection`.
 - Single: Enter or the keyboard's done action right after reopening with a selection selected the first item instead of keeping the selection, and typing the selected label again did not filter.
 - Single: with duplicate labels every row with the selected label was marked selected; now only the row `==` to the selection is (the label still matches values without `==`).
 - The confirm-delete, invalid-item and edit dialogs close their own route: under a nested navigator (go_router `ShellRoute`, `CupertinoTabView`) they popped the page behind them and stayed open, and a dialog opened from a row that left the list never closed.
-- Single: a rejected item whose warning closed after `dispose()` used the disposed search controller.
 - Single: several keys typed within one frame into a focused closed bar (e.g. a barcode scanner) opened stacked lists that stopped filtering and did not close on selection. Guarded on the controller's own `SearchController`; one you pass as `searchController` is used as is.
 - Single: Enter on a Tab-focused row or button of the open list also selected the highlighted or first item; arrows, PageUp/PageDown and Enter drive the list only from its search field (or with no control focused).
 - Single: arrows and PageUp/PageDown dropped the selection of the selected label, so typing appended to it instead of replacing it.
