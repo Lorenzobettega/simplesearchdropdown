@@ -758,9 +758,11 @@ void main() {
       expect(_barClearVisible(tester), isTrue);
     });
 
-    testWidgets('showClearIcon false (controller default) -> clear hidden', (
+    testWidgets('showClearIcon: false on the controller -> clear hidden', (
       tester,
     ) async {
+      // _controller passes showClearIcon: false (the controller default is
+      // true).
       final c = _controller(fruitItems(), initialSelectedItem: _banana);
       await _pump(tester, c);
 

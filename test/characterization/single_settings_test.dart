@@ -127,6 +127,14 @@ void main() {
       expect(tester.getSize(_viewHeader()).height, 64);
     });
 
+    testWidgets('dropdownWidth sizes the closed bar', (tester) async {
+      await _pump(
+        tester,
+        bar: const SimpleSearchbarSettings(dropdownWidth: 250),
+      );
+      expect(tester.getSize(_bar()).width, 250);
+    });
+
     testWidgets('elevation lifts the bar and the open view', (tester) async {
       await _pump(tester, bar: const SimpleSearchbarSettings(elevation: 7));
       expect(_barMaterial(tester).elevation, 7);

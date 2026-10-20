@@ -428,6 +428,63 @@ void main() {
       );
     });
 
+    testWidgets('search field: the bar backgroundColor and elevation, not '
+        'dialogBackgroundColor', (tester) async {
+      await _pump(
+        tester,
+        _mc(),
+        bar: const SimpleSearchbarSettings(
+          backgroundColor: Colors.teal,
+          elevation: 5,
+        ),
+        overlay: const SimpleOverlaySettings(
+          dialogHeight: 400,
+          dialogBackgroundColor: Colors.amber,
+        ),
+      );
+      await openMultiple(tester);
+      final Material material = tester
+          .widgetList<Material>(
+            find.descendant(of: _listBar, matching: find.byType(Material)),
+          )
+          .first;
+      expect(material.color, Colors.teal);
+      expect(material.elevation, 5);
+    });
+
+    testWidgets('search field: unselectedItemHoverColor is its ink overlay', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _mc(),
+        overlay: const SimpleOverlaySettings(
+          dialogHeight: 400,
+          unselectedItemHoverColor: Colors.lime,
+        ),
+      );
+      await openMultiple(tester);
+      final InkWell ink = tester.widget<InkWell>(
+        find.descendant(of: _listBar, matching: find.byType(InkWell)).first,
+      );
+      expect(
+        ink.overlayColor!.resolve(<WidgetState>{WidgetState.hovered}),
+        Colors.lime,
+      );
+    });
+
+    testWidgets('search field: dropdownHeight is its minimum height', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _mc(),
+        bar: const SimpleSearchbarSettings(dropdownHeight: 72),
+      );
+      await openMultiple(tester);
+      expect(tester.getSize(_listBar).height, 72);
+    });
+
     testWidgets('search field: without searchBarTextStyle, hintStyle', (
       tester,
     ) async {

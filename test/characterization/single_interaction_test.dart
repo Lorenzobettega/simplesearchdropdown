@@ -1228,6 +1228,40 @@ void main() {
       expect(_focusInsideDropdown(), isTrue);
     });
 
+    // On Flutter 3.32 the framework leaves the focus in the bar after the
+    // view closes, so the two "after selecting" tests below tell `true` from
+    // `false` there. Newer Flutter (3.47) unfocuses the bar itself one frame
+    // after the view closes, so on 3.47 only the "as soon as it returns"
+    // pair (which looks before that frame) separates the two values.
+    testWidgets('true: focus is dropped as soon as it returns to the bar, '
+        'before the next frame', (tester) async {
+      await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
+      await openSingle(tester);
+      await tester.tap(
+        find.descendant(of: _row('Item 1'), matching: find.byType(TextButton)),
+      );
+
+      // No frame has run since the view closed.
+      expect(_focusInsideDropdown(), isFalse);
+      await tester.pumpAndSettle();
+    });
+
+    testWidgets('false: focus returns to the bar when the view closes', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _dropdown(_ctrl(numberedItems(2)), removeFocus: false),
+      );
+      await openSingle(tester);
+      await tester.tap(
+        find.descendant(of: _row('Item 1'), matching: find.byType(TextButton)),
+      );
+
+      expect(_focusInsideDropdown(), isTrue);
+      await tester.pumpAndSettle();
+    });
+
     testWidgets('true: after selecting, focus is not left in the bar', (
       tester,
     ) async {

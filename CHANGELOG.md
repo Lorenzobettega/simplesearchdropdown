@@ -57,6 +57,7 @@ Requires Flutter 3.32+. A major release with no deprecation period: the 7.x memb
 - Multiple: while an async `onAddItem` runs the search field keeps the typed text, matching the filter and the add row, and it clears when the add is done (7.x cleared it at once, as the callback was not awaited); a failing callback leaves both as they were.
 - Multiple: deleting an item deselects only that item (7.x cleared the whole selection).
 - Multiple: deleting a selected item calls `updateSelectedItems` once with the remaining selection (7.x did not call it); `onClearItem` is not called, as a delete is not a deselection.
+- Multiple: `resetSelection` notifies listeners and calls `updateSelectedItems` once with the empty selection (7.x did neither); it does not call `onClearList` (use `clear` for that).
 - `ValueItem.hashCode` is `Object.hash(label, value)`: hash values differ from 7.x (equal items still hash alike).
 - Selection callbacks (`updateSelectedItem`, `updateSelectedItems`, `onClearItem`, `onClearList`) triggered during a build run right after that frame, like listeners and `onFilterUpdated` (safe to `setState` in them); outside a build they still run synchronously. They are delivered even if the controller is disposed in that frame; listeners and `onFilterUpdated` are then skipped.
 - Items, sort or filter changes made to the single dropdown during a build: `filteredItems`, `selectedIndex`, `highlightedIndex` and Enter (`submit`, `handleEnterKey`) see the new list at once, as in 7.x, while the open list (left stale by 7.x), the `results`/`highlight` listeners and `onFilterUpdated` follow right after that frame, coalesced into one notification per frame (7.x called `onFilterUpdated` once per change).
@@ -75,7 +76,7 @@ Requires Flutter 3.32+. A major release with no deprecation period: the 7.x memb
 - `onFilterUpdated` missed changes with the same length/first/last item, and is never called during a build (safe to `setState` in it).
 - Keyboard highlight is cleared when the list reopens; selecting no longer re-filters the list while it closes.
 - Multiple: an item rejected by `verifyInputItem` stayed in the search field; now it is never listed and the search is cleared (#13).
-- Multiple: `resetSelection` did not notify; `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; the list leaked when the widget was removed; async callbacks were not awaited.
+- Multiple: `forceMultipleSelection` did not rebuild; the arrow cleared instead of opening; `hideOverlay` toggled; the list leaked when the widget was removed; async callbacks were not awaited.
 - Multiple: typing key by key froze the add row on the first text that matched nothing (it created that truncated item), and an empty list never offered the add row; `selectedFirst` did not re-pin after `resetSelection`, `clear` or `forceMultipleSelection`.
 - Single: Enter or the keyboard's done action right after reopening with a selection selected the first item instead of keeping the selection, and typing the selected label again did not filter.
 - Single: with duplicate labels every row with the selected label was marked selected; now only the row `==` to the selection is (the label still matches values without `==`).

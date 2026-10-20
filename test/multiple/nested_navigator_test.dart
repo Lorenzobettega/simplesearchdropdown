@@ -254,7 +254,7 @@ void main() {
       await run(tester, (ctx) => c.deleteItem(c.items.first, ctx), 'Cancelar');
     });
 
-    testWidgets('multiple addValue rejected', (tester) async {
+    testWidgets('multiple addItem rejected', (tester) async {
       final c = _multiple(addMode: true, verifyInputItem: (_) => false);
       addTearDown(c.dispose);
       await run(tester, (ctx) => c.addItem('Kiwi', ctx), 'OK');
