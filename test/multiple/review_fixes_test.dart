@@ -343,6 +343,21 @@ void main() {
       );
     });
 
+    test('customHint / customAddItemHint hold only an explicit text', () {
+      expect(const SimpleSearchbarSettings().customHint, isNull);
+      expect(const SimpleOverlaySettings().customAddItemHint, isNull);
+      const SimpleSearchbarSettings bar = SimpleSearchbarSettings(
+        hint: 'Buscar',
+      );
+      const SimpleOverlaySettings list = SimpleOverlaySettings(
+        addItemHint: 'Novo',
+      );
+      expect(bar.customHint, 'Buscar');
+      expect(bar.hint, 'Buscar');
+      expect(list.customAddItemHint, 'Novo');
+      expect(list.addItemHint, 'Novo');
+    });
+
     testWidgets('tiles render their additional widgets', (tester) async {
       await tester.pumpWidget(
         host(

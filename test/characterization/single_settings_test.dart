@@ -469,6 +469,29 @@ void main() {
       expect(c.highlightedIndex, -1);
     });
 
+    test('highlightPrevious starts at the last item and wraps upwards', () {
+      final c = _ctrl();
+      addTearDown(c.dispose);
+      final int last = c.filteredItems.length - 1;
+      c.highlightPrevious();
+      expect(c.highlightedIndex, last);
+      c.highlightPrevious();
+      expect(c.highlightedIndex, last - 1);
+
+      c
+        ..highlightEdge(last: false)
+        ..highlightPrevious();
+      expect(c.highlightedIndex, last, reason: 'wraps from the first');
+    });
+
+    test('highlightPrevious starts at the selected item', () {
+      final c = _ctrl(initial: _banana);
+      addTearDown(c.dispose);
+      c.highlightPrevious();
+      expect(c.highlightedIndex, c.selectedIndex);
+      expect(c.highlightedIndex, isNot(-1));
+    });
+
     test('handleEnterKey selects the first filtered item', () {
       final List<ValueItem<int>?> calls = <ValueItem<int>?>[];
       final c = _ctrl(calls: calls);

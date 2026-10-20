@@ -71,6 +71,11 @@ void main() {
       final EditableText e = _editable(tester);
       expect(e.maxLines, 1);
       expect(e.style.fontSize, 16);
+      expect(
+        tester.widget<InputField>(find.byType(InputField)).estilo,
+        const TextStyle(fontSize: 16),
+        reason: 'the public field holds the default style',
+      );
       expect(e.obscureText, isFalse);
       expect(e.textAlign, TextAlign.start);
       expect(e.keyboardType, TextInputType.text);

@@ -367,6 +367,29 @@ void main() {
       );
     });
 
+    testWidgets(
+      'animationDuration drives the list container (100 ms default)',
+      (tester) async {
+        Duration duration() => tester
+            .widget<AnimatedContainer>(_inList(find.byType(AnimatedContainer)))
+            .duration;
+        await _pump(tester, _mc());
+        await openMultiple(tester);
+        expect(duration(), const Duration(milliseconds: 100));
+
+        await _pump(
+          tester,
+          _mc(),
+          overlay: const SimpleOverlaySettings(
+            dialogHeight: 400,
+            animationDuration: Duration(milliseconds: 750),
+          ),
+        );
+        await tester.pumpAndSettle();
+        expect(duration(), const Duration(milliseconds: 750));
+      },
+    );
+
     testWidgets('search field: hint, searchBarTextStyle and border', (
       tester,
     ) async {
