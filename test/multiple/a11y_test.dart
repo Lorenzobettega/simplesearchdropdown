@@ -31,7 +31,7 @@ void main() {
       await openMultiple(tester);
       expect(_semanticButton('Fechar lista'), findsOneWidget);
 
-      c.toggle(c.listItems[1]);
+      c.toggle(c.items[1]);
       await tester.pump();
       expect(_semanticButton('Limpar seleção'), findsOneWidget);
     });

@@ -20,7 +20,7 @@ void main() {
     int filtered = 0;
     final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
     final c = SearchDropDownController<int>(
-      listItems: _items(),
+      items: _items(),
       addMode: false,
       deleteMode: false,
       onFilterUpdated: () => filtered++,

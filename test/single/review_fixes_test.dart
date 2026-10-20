@@ -15,7 +15,7 @@ void main() {
         const ValueItem(label: 'Banana', value: 'Banana'),
       ];
       final c = SearchDropDownController<String>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         editMode: true,
@@ -35,7 +35,7 @@ void main() {
       tester,
     ) async {
       final c = SearchDropDownController<int>(
-        listItems: numberedItems(5),
+        items: numberedItems(5),
         addMode: false,
         deleteMode: false,
       );
@@ -56,7 +56,7 @@ void main() {
     ) async {
       int updates = 0;
       final c = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         addMode: false,
         deleteMode: false,
         onFilterUpdated: () => updates++,
@@ -74,12 +74,12 @@ void main() {
       tester,
     ) async {
       final a = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         addMode: false,
         deleteMode: false,
       );
       final b = SearchDropDownController<int>(
-        listItems: numberedItems(3),
+        items: numberedItems(3),
         addMode: false,
         deleteMode: false,
       );
@@ -93,7 +93,7 @@ void main() {
 
     test('typing narrows the previous results (R19)', () {
       final c = SearchDropDownController<int>(
-        listItems: numberedItems(1000),
+        items: numberedItems(1000),
         addMode: false,
         deleteMode: false,
       );
@@ -117,7 +117,7 @@ void main() {
       final List<List<ValueItem<int>>> edits = <List<ValueItem<int>>>[];
       final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
       final c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         initialSelectedItem: apple,
         addMode: false,
         deleteMode: false,
@@ -142,7 +142,7 @@ void main() {
     });
   });
 
-  group('legacy listItems write-back (F1/F2)', () {
+  group('the controller owns its list (no write-back)', () {
     SearchDropDownController<int> legacy(
       List<ValueItem<int>> list, {
       bool addMode = true,
@@ -153,7 +153,7 @@ void main() {
       ValueItem<int> Function(String)? newValueItem,
       ValueItem<int>? initial,
     }) => SearchDropDownController<int>(
-      listItems: list,
+      items: list,
       addMode: addMode,
       newValueItem:
           newValueItem ?? (s) => ValueItem<int>(label: s, value: s.length),
@@ -188,7 +188,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('F1: add and delete finish with an unmodifiable list', (
+    testWidgets('F1: add and delete work on the copy of an unmodifiable list', (
       tester,
     ) async {
       final List<ValueItem<int>> frozen = List<ValueItem<int>>.unmodifiable(
@@ -213,138 +213,79 @@ void main() {
 
       expect(c.selectedItem, isNull);
       expect(calls, <String>['add Kiwi', 'del Banana']);
-      expect(c.listItems.map((e) => e.label), fruitItems().map((e) => e.label));
+      expect(c.items.map((e) => e.label), <String>[
+        'Maçã',
+        'Uva',
+        'abacaxi',
+        'Pêra',
+        'Kiwi',
+      ]);
+      expect(frozen.map((e) => e.label), fruitItems().map((e) => e.label));
       expect(tester.takeException(), isNull);
     });
 
-    testWidgets('F1: edit finishes with an unmodifiable list', (tester) async {
+    testWidgets('F1: edit works on the copy of an unmodifiable list', (
+      tester,
+    ) async {
+      final List<ValueItem<int>> frozen = List<ValueItem<int>>.unmodifiable(
+        fruitItems(),
+      );
       final c = legacy(
-        List<ValueItem<int>>.unmodifiable(fruitItems()),
+        frozen,
         addMode: false,
         editMode: true,
         onEditItem: (_, _) {},
       );
-      c.selectItem(c.listItems[1]);
+      c.selectItem(c.items[1]);
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
       await submitEdit(tester, 'Banana', 'Kiwi');
 
       expect(tester.takeException(), isNull);
       expect(c.selectedItem?.label, 'Kiwi');
-      expect(c.listItems[1].label, 'Banana');
+      expect(c.items[1].label, 'Kiwi');
+      expect(frozen[1].label, 'Banana');
     });
 
-    testWidgets('F2: an add whose callback stores its own copy (server id) '
-        'is not duplicated and the copy is selected', (tester) async {
-      final List<ValueItem<int>> shared = fruitItems();
-      final List<ValueItem<int>?> notified = <ValueItem<int>?>[];
-      final c = SearchDropDownController<int>(
-        listItems: shared,
-        newValueItem: (s) => ValueItem<int>(label: s, value: s.length),
-        onAddItem: (i) async {
-          await Future<void>.delayed(Duration.zero);
-          shared.add(ValueItem<int>(label: i.label, value: 42));
-        },
-        deleteMode: false,
-        updateSelectedItem: notified.add,
-      );
-      await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
-      await openSingle(tester);
-      await typeInSingle(tester, 'Kiwi');
-      await tester.tap(find.text('Criar'));
-      await tester.pumpAndSettle();
-
-      expect(shared.where((e) => e.label == 'Kiwi'), hasLength(1));
-      expect(shared.last, const ValueItem<int>(label: 'Kiwi', value: 42));
-      expect(c.selectedItem, const ValueItem<int>(label: 'Kiwi', value: 42));
-      expect(notified.last, const ValueItem<int>(label: 'Kiwi', value: 42));
-    });
-
-    testWidgets('F2: a copy that differs only in case and accents counts as '
-        'stored', (tester) async {
-      final List<ValueItem<int>> shared = fruitItems();
+    testWidgets('an item the callback adds to its own list stays there; the '
+        'controller adds and selects the new item', (tester) async {
+      final List<ValueItem<int>> mine = fruitItems();
       final c = legacy(
-        shared,
-        onAddItem: (i) =>
-            shared.add(const ValueItem<int>(label: 'kíwi', value: 42)),
-      );
-      await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
-      final BuildContext ctx = tester.element(find.byType(SearchDropDown<int>));
-      await c.addItem('Kiwi', ctx);
-
-      expect(shared, hasLength(6));
-      expect(c.selectedItem, same(shared.last));
-    });
-
-    testWidgets('F2: an unrelated item added by the callback is not taken for '
-        'the stored copy', (tester) async {
-      final List<ValueItem<int>> shared = fruitItems();
-      final c = legacy(
-        shared,
+        mine,
         onAddItem: (_) =>
-            shared.add(const ValueItem<int>(label: 'Other', value: 7)),
+            mine.add(const ValueItem<int>(label: 'Other', value: 7)),
       );
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       final BuildContext ctx = tester.element(find.byType(SearchDropDown<int>));
       await c.addItem('Kiwi', ctx);
 
-      expect(
-        shared.map((e) => e.label),
-        containsAll(<String>['Other', 'Kiwi']),
-      );
-      expect(shared, contains(const ValueItem<int>(label: 'Kiwi', value: 4)));
+      expect(mine.map((e) => e.label), isNot(contains('Kiwi')));
+      expect(c.items.map((e) => e.label), isNot(contains('Other')));
+      expect(c.items, contains(const ValueItem<int>(label: 'Kiwi', value: 4)));
       expect(c.selectedItem, const ValueItem<int>(label: 'Kiwi', value: 4));
     });
 
-    testWidgets('F2: an item already in the list with the same label is not '
-        'taken for the stored copy', (tester) async {
-      final List<ValueItem<int>> shared = <ValueItem<int>>[
+    testWidgets('an item already in the list with the same label is kept '
+        'beside the new one', (tester) async {
+      final c = legacy(<ValueItem<int>>[
         const ValueItem<int>(label: 'Kiwi', value: 1),
-      ];
-      final c = legacy(shared);
+      ]);
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       final BuildContext ctx = tester.element(find.byType(SearchDropDown<int>));
       await c.addItem('kiwi', ctx);
 
-      expect(shared, hasLength(2));
+      expect(c.items, hasLength(2));
       expect(c.selectedItem, const ValueItem<int>(label: 'kiwi', value: 4));
     });
 
-    testWidgets('F2: an edit whose callback swaps in its own copy is not '
-        'duplicated and the copy stays selected', (tester) async {
-      final List<ValueItem<int>> items = fruitItems();
+    testWidgets('an edit that recreates an equal item selects the instance '
+        'now in the list', (tester) async {
+      // A distinct instance on purpose; 'Banana' has 6 letters, so the
+      // edited item equals the old one.
+      // ignore: prefer_const_constructors
+      final ValueItem<int> old = ValueItem<int>(label: 'Banana', value: 6);
       final c = legacy(
-        items,
-        addMode: false,
-        editMode: true,
-        initial: items[1],
-        onEditItem: (old, nw) {
-          items[items.indexOf(old)] = ValueItem<int>(
-            label: nw.label,
-            value: 42,
-          );
-        },
-      );
-      await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
-      await openSingle(tester);
-      await submitEdit(tester, 'Banana', 'Banana2');
-
-      expect(items.where((e) => e.label == 'Banana2'), hasLength(1));
-      expect(items[1], const ValueItem<int>(label: 'Banana2', value: 42));
-      expect(c.selectedItem, same(items[1]));
-    });
-
-    testWidgets('F2: an edit that recreates an equal item selects the '
-        'instance now in the list', (tester) async {
-      final List<ValueItem<int>> items = <ValueItem<int>>[
-        // A distinct instance on purpose; 'Banana' has 6 letters, so the
-        // edited item equals the old one.
-        // ignore: prefer_const_constructors
-        ValueItem<int>(label: 'Banana', value: 6),
-      ];
-      final ValueItem<int> old = items.single;
-      final c = legacy(
-        items,
+        <ValueItem<int>>[old],
         addMode: false,
         editMode: true,
         initial: old,
@@ -357,34 +298,33 @@ void main() {
       await openSingle(tester);
       await submitEdit(tester, 'Banana', 'Banana ');
 
-      expect(items, hasLength(1));
-      expect(items.single, isNot(same(old)));
-      expect(c.selectedItem, same(items.single));
+      expect(c.items, hasLength(1));
+      expect(c.items.single, isNot(same(old)));
+      expect(c.selectedItem, same(c.items.single));
     });
 
-    testWidgets('F2: an edit whose callback adds its own copy but keeps the '
-        'old item removes the old one', (tester) async {
-      final List<ValueItem<int>> items = fruitItems();
+    testWidgets('an edit into an item already in the list keeps that one '
+        'instead of a duplicate', (tester) async {
       final c = legacy(
-        items,
+        fruitItems(),
         addMode: false,
         editMode: true,
-        initial: items[1],
-        onEditItem: (_, nw) =>
-            items.add(ValueItem<int>(label: nw.label, value: 42)),
+        onEditItem: (_, _) {},
+        newValueItem: (s) => fruitItems().firstWhere((e) => e.label == s),
       );
+      final ValueItem<int> uva = c.items[2];
+      c.selectItem(c.items[1]);
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
-      await submitEdit(tester, 'Banana', 'Banana2');
+      await submitEdit(tester, 'Banana', 'Uva');
 
-      expect(items.map((e) => e.label), <String>[
+      expect(c.items.map((e) => e.label), <String>[
         'Maçã',
         'Uva',
         'abacaxi',
         'Pêra',
-        'Banana2',
       ]);
-      expect(c.selectedItem, same(items.last));
+      expect(c.selectedItem, same(uva));
     });
   });
 }

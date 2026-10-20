@@ -57,7 +57,7 @@ SearchDropDownController<int> _controller(
   void Function()? onFilterUpdated,
   void Function(ValueItem<int>?)? updateSelectedItem,
 }) => SearchDropDownController<int>(
-  listItems: items,
+  items: items,
   addMode: false,
   deleteMode: false,
   initialSelectedItem: initialSelectedItem,
@@ -523,15 +523,16 @@ void main() {
   });
 
   group('sort: alphabetical A-Z', () {
-    test('A-Z ignores case and accents (D2) and mutates the caller list', () {
+    test('A-Z ignores case and accents (D2) and sorts only the copy', () {
       final items = fruitItems();
       final c = _controller(items, sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
       // 8.0 (D2): case and accents are ignored ('abacaxi' first).
       expect(_labels(c.filteredItems), _fruitAZ);
-      expect(identical(c.listItems, items), isTrue);
-      expect(_labels(items), _fruitAZ);
+      expect(identical(c.items, items), isFalse);
+      expect(_labels(c.items), _fruitAZ);
+      expect(_labels(items), _fruitOrder);
     });
 
     test('accented characters sort with their base letter (D2, 8.0)', () {
@@ -567,31 +568,17 @@ void main() {
       addTearDown(c.dispose);
 
       expect(_labels(c.filteredItems), _fruitAZ);
-      expect(_labels(items), _fruitAZ);
+      expect(_labels(c.items), _fruitAZ);
     });
 
-    test('throws UnsupportedError for an unmodifiable caller list', () {
-      expect(
-        () => _controller(
-          List<ValueItem<int>>.unmodifiable(fruitItems()),
-          sort: SortType.alphabetical,
-        ),
-        throwsUnsupportedError,
+    test('an unmodifiable caller list is sorted on the copy', () {
+      final c = _controller(
+        List<ValueItem<int>>.unmodifiable(fruitItems()),
+        sort: SortType.alphabetical,
       );
-    });
-
-    test('items appended to the live caller list are sorted into the view '
-        'without re-sorting the caller list (F13)', () {
-      final items = fruitItems();
-      final c = _controller(items, sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
-      items.add(const ValueItem(label: 'Abacate', value: 12));
-      c.onSearchOpen();
-
-      expect(_labels(c.filteredItems).first, 'Abacate');
-      expect(_labels(items).last, 'Abacate');
-      expect(identical(c.listItems, items), isTrue);
+      expect(_labels(c.filteredItems), _fruitAZ);
     });
 
     test('digits compare as text, like 7.x (D2: Item 10 before Item 2)', () {
@@ -604,18 +591,19 @@ void main() {
       addTearDown(c.dispose);
 
       expect(_labels(c.filteredItems), <String>['Item 1', 'Item 10', 'Item 2']);
-      expect(_labels(items), <String>['Item 1', 'Item 10', 'Item 2']);
+      expect(_labels(c.items), <String>['Item 1', 'Item 10', 'Item 2']);
     });
   });
 
   group('sort: reverseAlphabetical Z-A', () {
-    test('Z-A ignores case and accents (D2) and mutates the caller list', () {
+    test('Z-A ignores case and accents (D2) and sorts only the copy', () {
       final items = fruitItems();
       final c = _controller(items, sort: SortType.reverseAlphabetical);
       addTearDown(c.dispose);
 
       expect(_labels(c.filteredItems), _fruitZA);
-      expect(_labels(items), _fruitZA);
+      expect(_labels(c.items), _fruitZA);
+      expect(_labels(items), _fruitOrder);
     });
 
     test('filter results keep the sorted order', () {
@@ -629,7 +617,7 @@ void main() {
   });
 
   group('sort: selectedFirst moves initialSelectedItem first', () {
-    test('selected item moved to index 0, rest keep order, caller mutated', () {
+    test('selected item moved to index 0, rest keep order, caller kept', () {
       final items = fruitItems();
       final c = _controller(
         items,
@@ -640,7 +628,8 @@ void main() {
 
       const expected = <String>['Uva', 'Maçã', 'Banana', 'abacaxi', 'Pêra'];
       expect(_labels(c.filteredItems), expected);
-      expect(_labels(items), expected);
+      expect(_labels(c.items), expected);
+      expect(_labels(items), _fruitOrder);
     });
 
     test('matches by value equality and inserts the selected instance', () {
@@ -655,9 +644,9 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      expect(_labels(items).first, 'Uva');
-      expect(items, hasLength(5));
-      expect(identical(items.first, uva), isTrue);
+      expect(_labels(c.items).first, 'Uva');
+      expect(c.items, hasLength(5));
+      expect(identical(c.items.first, uva), isTrue);
     });
 
     test('no initialSelectedItem: order unchanged', () {
@@ -687,13 +676,14 @@ void main() {
   });
 
   group('sort: sortBy() public method', () {
-    test('mutates listItems and refreshes filteredItems immediately', () {
+    test('sorts the copy and refreshes filteredItems immediately', () {
       final items = fruitItems();
       final c = _controller(items);
       addTearDown(c.dispose);
 
       c.sortBy(SortType.reverseAlphabetical);
-      expect(_labels(items), _fruitZA);
+      expect(_labels(c.items), _fruitZA);
+      expect(_labels(items), _fruitOrder);
       // 8.0: filteredItems follows immediately.
       expect(_labels(c.filteredItems), _fruitZA);
       c.onSearchOpen();
@@ -711,7 +701,7 @@ void main() {
       ];
       c.updateListItems(newList, false);
       expect(_labels(c.filteredItems), <String>['Abacate', 'Figo', 'Kiwi']);
-      expect(_labels(c.listItems), <String>['Abacate', 'Figo', 'Kiwi']);
+      expect(_labels(c.items), <String>['Abacate', 'Figo', 'Kiwi']);
       // The argument list itself is copied, not sorted.
       expect(_labels(newList), <String>['Kiwi', 'Figo', 'Abacate']);
     });
@@ -911,7 +901,7 @@ void main() {
   });
 
   group('updateListItems: replace items and reset semantics', () {
-    test('replaces the contents of the original listItems instance', () {
+    test("replaces the controller's items; the first list is untouched", () {
       final items = fruitItems();
       final c = _controller(items);
       addTearDown(c.dispose);
@@ -919,13 +909,14 @@ void main() {
       final newList = _newList();
       c.updateListItems(newList, false);
 
-      expect(identical(c.listItems, items), isTrue);
-      expect(_labels(items), <String>['Kiwi', 'Figo']);
+      expect(identical(c.items, items), isFalse);
+      expect(_labels(items), _fruitOrder);
+      expect(_labels(c.items), <String>['Kiwi', 'Figo']);
       expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
 
       // The argument is copied: later changes to it are not reflected.
       newList.add(const ValueItem(label: 'Lima', value: 12));
-      expect(_labels(c.listItems), <String>['Kiwi', 'Figo']);
+      expect(_labels(c.items), <String>['Kiwi', 'Figo']);
     });
 
     test('shouldReset false, no selection: text kept, no notification', () {
@@ -1017,7 +1008,7 @@ void main() {
         c.updateListItems(items, false);
 
         const expected = <String>[..._fruitOrder, 'Kiwi'];
-        expect(_labels(c.listItems), expected);
+        expect(_labels(c.items), expected);
         expect(_labels(c.filteredItems), expected);
       }, // B3: fixed in 8.0
     );
@@ -1035,7 +1026,7 @@ void main() {
 
       expect(_barText(tester), '');
       expect(selected, <ValueItem<int>?>[null]);
-      expect(_labels(c.listItems), <String>['Kiwi', 'Figo']);
+      expect(_labels(c.items), <String>['Kiwi', 'Figo']);
       expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
 
@@ -1070,21 +1061,7 @@ void main() {
     });
   });
 
-  group('data: listItems is the caller list (external mutation)', () {
-    test('controller keeps a reference to the caller list', () {
-      final items = fruitItems();
-      final c = _controller(items);
-      addTearDown(c.dispose);
-
-      items.add(_kiwi);
-      expect(identical(c.listItems, items), isTrue);
-      expect(_labels(c.listItems).last, 'Kiwi');
-      // filteredItems is only refreshed by the next reset (open).
-      expect(_labels(c.filteredItems), _fruitOrder);
-      c.onSearchOpen();
-      expect(_labels(c.filteredItems), <String>[..._fruitOrder, 'Kiwi']);
-    });
-
+  group('data: items replaced from outside', () {
     test(
       'B9: typing after an external add does not crash filtering',
       () {
@@ -1097,8 +1074,9 @@ void main() {
         final c = _controller(items);
         addTearDown(c.dispose);
 
-        items.add(_kiwi);
-        c.onSearchOpen();
+        c
+          ..updateListItems(items..add(_kiwi), false)
+          ..onSearchOpen();
         _typeViaController(c, 'ban');
 
         expect(errors, isEmpty);

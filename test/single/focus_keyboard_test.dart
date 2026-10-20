@@ -14,7 +14,7 @@ SearchDropDownController<int> _ctrl(
   bool enabled = true,
   ValueItem<int>? initial,
 }) => SearchDropDownController<int>(
-  listItems: items,
+  items: items,
   addMode: false,
   deleteMode: false,
   updateSelectedItem: calls?.add,

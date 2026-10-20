@@ -18,7 +18,7 @@ SearchDropDownController<T> _ctrl<T>(
   bool editMode = false,
   ValueItem<T> Function(String)? newValueItem,
 }) => SearchDropDownController<T>(
-  listItems: items,
+  items: items,
   addMode: false,
   deleteMode: false,
   editMode: editMode,
@@ -273,10 +273,13 @@ void main() {
       addTearDown(c.dispose);
       expect(c.isSelected(items[0]), isFalse);
 
-      // The == row leaves the shared list: only the label can match now.
+      // The == row leaves the list: only the label can match now. The same
+      // selection instance comes back, so only the new results tell.
       final ValueItem<int> other = items[0];
-      items.removeAt(1);
-      c.filterList('');
+      final ValueItem<int> selected = items[1];
+      c
+        ..updateListItems(<ValueItem<int>>[...items]..removeAt(1), false)
+        ..selectedItem = selected;
 
       expect(c.isSelected(other), isTrue);
     });
@@ -340,7 +343,7 @@ void main() {
 
       expect(c.selectedItem?.label, 'Banana2');
       expect(sel.single?.label, 'Banana2');
-      expect(_labels(items), <String>['Apple', 'Banana2']);
+      expect(_labels(c.items), <String>['Apple', 'Banana2']);
       expect(c.selectedIndex, isNot(-1));
     });
 
@@ -439,7 +442,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(_labels(items), <String>['Y', 'X']);
+      expect(_labels(c.items), <String>['Y', 'X']);
       expect(c.selectedItem, items[1]);
       expect(selections, isEmpty);
     });
@@ -485,7 +488,7 @@ void main() {
       await typeInSingle(tester, 'Ba');
       expect(c.filteredItems.length, lessThan(5));
 
-      c.selectedItem = c.listItems.firstWhere((e) => e.label == 'Uva');
+      c.selectedItem = c.items.firstWhere((e) => e.label == 'Uva');
       await tester.pump();
 
       expect(c.localSearchController.text, 'Uva');
@@ -501,7 +504,7 @@ void main() {
       await typeInSingle(tester, 'Uva');
       expect(_labels(c.filteredItems), <String>['Uva']);
 
-      c.selectedItem = c.listItems.firstWhere((e) => e.label == 'Uva');
+      c.selectedItem = c.items.firstWhere((e) => e.label == 'Uva');
       await tester.pump();
 
       expect(c.filteredItems, hasLength(5));
@@ -537,7 +540,7 @@ void main() {
     c.localSearchController.text = 'Uva';
     expect(_labels(c.filteredItems), <String>['Uva']);
 
-    c.selectedItem = c.listItems.firstWhere((e) => e.label == 'Uva');
+    c.selectedItem = c.items.firstWhere((e) => e.label == 'Uva');
 
     expect(c.filteredItems, hasLength(5));
   });

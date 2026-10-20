@@ -94,7 +94,7 @@ void main() {
     testWidgets('single: delete, edit and add', (tester) async {
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         editMode: true,
         onAddItem: (_) async => throw StateError('offline'),
         onDeleteItem: (_) async => throw StateError('offline'),
@@ -129,7 +129,7 @@ void main() {
       final List<ValueItem<int>> items = fruitItems();
       final List<ValueItem<int>> selected = <ValueItem<int>>[items.first];
       final c = MultipleSearchDropDownController<int>(
-        listItems: items,
+        items: items,
         selectedItems: selected,
         editMode: true,
         onAddItem: (_) async => throw StateError('offline'),

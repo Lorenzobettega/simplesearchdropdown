@@ -36,7 +36,7 @@ SearchDropDownController<int> _ctrl(
   void Function(ValueItem<int>?)? updateSelectedItem,
   ValueItem<int>? initial,
 }) => SearchDropDownController<int>(
-  listItems: items,
+  items: items,
   addMode: addMode,
   newValueItem: newValueItem ?? _newItem,
   onAddItem: onAddItem ?? (_) {},
@@ -971,7 +971,7 @@ void main() {
     test('addMode (default true) without newValueItem throws', () {
       expect(
         () => SearchDropDownController<int>(
-          listItems: <ValueItem<int>>[],
+          items: <ValueItem<int>>[],
           onAddItem: (_) {},
           deleteMode: false,
         ),
@@ -982,7 +982,7 @@ void main() {
     test('addMode (default true) without onAddItem throws', () {
       expect(
         () => SearchDropDownController<int>(
-          listItems: <ValueItem<int>>[],
+          items: <ValueItem<int>>[],
           newValueItem: _newItem,
           deleteMode: false,
         ),
@@ -993,7 +993,7 @@ void main() {
     test('deleteMode (default true) without onDeleteItem throws', () {
       expect(
         () => SearchDropDownController<int>(
-          listItems: <ValueItem<int>>[],
+          items: <ValueItem<int>>[],
           addMode: false,
         ),
         assertion('deleteMode can only be used with onDeleteItem != null'),
@@ -1003,7 +1003,7 @@ void main() {
     test('editMode without onEditItem throws', () {
       expect(
         () => SearchDropDownController<int>(
-          listItems: <ValueItem<int>>[],
+          items: <ValueItem<int>>[],
           addMode: false,
           deleteMode: false,
           editMode: true,
@@ -1016,7 +1016,7 @@ void main() {
     test('editMode without newValueItem throws', () {
       expect(
         () => SearchDropDownController<int>(
-          listItems: <ValueItem<int>>[],
+          items: <ValueItem<int>>[],
           addMode: false,
           deleteMode: false,
           editMode: true,
@@ -1028,7 +1028,7 @@ void main() {
 
     test('all modes off needs no callbacks', () {
       final SearchDropDownController<int> c = SearchDropDownController<int>(
-        listItems: <ValueItem<int>>[],
+        items: <ValueItem<int>>[],
         addMode: false,
         deleteMode: false,
       );
@@ -1040,7 +1040,7 @@ void main() {
 
     test('all modes on with their callbacks constructs', () {
       final SearchDropDownController<int> c = SearchDropDownController<int>(
-        listItems: <ValueItem<int>>[],
+        items: <ValueItem<int>>[],
         newValueItem: _newItem,
         onAddItem: (_) {},
         onDeleteItem: (_) {},

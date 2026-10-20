@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/multiple/multiple_listview.dart';
 
 import '../support/harness.dart';
 
@@ -25,7 +26,7 @@ Future<void> _run(WidgetTester tester) async {
 }
 
 SearchDropDownController<int> _controller() => SearchDropDownController<int>(
-  listItems: fruitItems(),
+  items: fruitItems(),
   addMode: false,
   deleteMode: false,
 );
@@ -115,14 +116,14 @@ void main() {
       'widgets (N60)', () {
     testWidgets('single deleteItem confirm dialog', (tester) async {
       final c = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         addMode: false,
         onDeleteItem: (_) {},
         confirmDelete: true,
       );
       addTearDown(c.dispose);
       await tester.pumpWidget(
-        _scoped(_button((ctx) => c.deleteItem(c.listItems[1], ctx))),
+        _scoped(_button((ctx) => c.deleteItem(c.items[1], ctx))),
       );
       await _run(tester);
       expect(find.text('Are you sure?'), findsOneWidget);
@@ -135,7 +136,7 @@ void main() {
 
     testWidgets('single addItem rejected dialog', (tester) async {
       final c = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         deleteMode: false,
         newValueItem: (t) => ValueItem(label: t, value: 0),
         onAddItem: (_) {},
@@ -153,7 +154,7 @@ void main() {
 
     testWidgets('single editItem dialog', (tester) async {
       final c = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         addMode: false,
         deleteMode: false,
         editMode: true,
@@ -162,7 +163,7 @@ void main() {
       );
       addTearDown(c.dispose);
       await tester.pumpWidget(
-        _scoped(_button((ctx) => c.editItem(c.listItems[1], ctx))),
+        _scoped(_button((ctx) => c.editItem(c.items[1], ctx))),
       );
       await _run(tester);
       expect(find.text('Edit item:'), findsOneWidget);
@@ -176,7 +177,7 @@ void main() {
       tester,
     ) async {
       final c = MultipleSearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         confirmDelete: true,
         editMode: true,
         onAddItem: (_) {},
@@ -197,7 +198,7 @@ void main() {
           ),
         ),
       );
-      c.deleteItem(c.listItems[1], ctx).ignore();
+      c.deleteItem(c.items[1], ctx).ignore();
       await tester.pumpAndSettle();
       expect(find.text('Are you sure?'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
@@ -209,7 +210,7 @@ void main() {
       await tester.tap(find.text('OK'));
       await tester.pumpAndSettle();
 
-      c.editItem(c.listItems[1], ctx).ignore();
+      c.editItem(c.items[1], ctx).ignore();
       await tester.pumpAndSettle();
       expect(find.text('Edit item:'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
@@ -268,7 +269,7 @@ void main() {
       expect(find.text('Create'), findsOneWidget);
 
       final c = MultipleSearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         addMode: false,
         deleteMode: false,
       );
@@ -289,14 +290,14 @@ void main() {
       tester,
     ) async {
       final c = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         addMode: false,
         onDeleteItem: (_) {},
         confirmDelete: true,
       );
       addTearDown(c.dispose);
       await tester.pumpWidget(
-        host(_button((ctx) => c.deleteItem(c.listItems[1], ctx))),
+        host(_button((ctx) => c.deleteItem(c.items[1], ctx))),
       );
       await _run(tester);
       expect(find.text('Tem certeza?'), findsOneWidget);
@@ -309,7 +310,7 @@ void main() {
       tester,
     ) async {
       final c = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         addMode: false,
         onDeleteItem: (_) {},
         confirmDelete: true,
@@ -319,7 +320,7 @@ void main() {
         _scoped(
           _button(
             (ctx) => c.deleteItem(
-              c.listItems[1],
+              c.items[1],
               ctx,
               strings: const SearchDropDownStrings(
                 confirmDeleteTitle: 'Certeza?',

@@ -4,9 +4,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
+import 'package:simple_search_dropdown/src/core/item_list.dart';
 import 'package:simple_search_dropdown/src/core/package_dialog.dart';
 import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
-import 'package:simple_search_dropdown/src/core/shared_list.dart';
 
 /// State of a [SearchDropDown]: items, selection, search text and filtering.
 ///
@@ -15,24 +15,15 @@ import 'package:simple_search_dropdown/src/core/shared_list.dart';
 /// Typing only updates [results] and [highlight], so the bar does not rebuild
 /// on every keystroke.
 ///
-/// Items come from either:
-/// * [listItems] — your own list, shared by reference. Changes you make to it
-///   show up on the next search, the next time the list opens or on
-///   [filterList].
-/// * `items` — copied once; the controller owns the copy.
-///
-/// Either way add/edit/delete keep the list in sync after your callback
-/// returns, unless the callback already stored the item: the list holds it,
-/// an equal item, or a new entry with the same label (e.g. your copy with a
-/// server id), which is then kept and selected. An unmodifiable [listItems]
-/// (`const`, `List.unmodifiable`, freezed) is never written; to keep such a
-/// list in sync, use `items` and [updateListItems].
+/// The controller keeps its own copy of the `items` it is created with
+/// ([items]) and never reads or writes your list again: sorting orders the
+/// copy, and add/edit/delete change it only after your callback completes
+/// without throwing. Replace the items from outside with [updateListItems].
 class SearchDropDownController<T> extends ChangeNotifier {
-  /// Creates a controller. Pass exactly one of [listItems] or `items`.
+  /// Creates a controller over a copy of [items].
   SearchDropDownController({
     SearchController? searchController,
-    List<ValueItem<T>>? listItems,
-    List<ValueItem<T>>? items,
+    required List<ValueItem<T>> items,
     this.addMode = true,
     this.newValueItem,
     this.onAddItem,
@@ -55,10 +46,6 @@ class SearchDropDownController<T> extends ChangeNotifier {
     bool caseSensitive = false,
     bool trim = true,
   }) : assert(
-         (listItems == null) != (items == null),
-         'Pass exactly one of listItems or items',
-       ),
-       assert(
          (addMode && (newValueItem != null && onAddItem != null)) || !addMode,
          'addMode can only be used with newValueItem != null && onAddItem != null',
        ),
@@ -73,7 +60,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
        localSearchController = searchController ?? _SingleViewController(),
        _ownsSearchController = searchController == null,
        showClearIcon = showClearIcon ?? true,
-       listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
+       _items = List<ValueItem<T>>.of(items),
        _enabled = enabled,
        _sort = sort,
        _engine = FilterEngine<T>(
@@ -83,12 +70,12 @@ class SearchDropDownController<T> extends ChangeNotifier {
            trim: trim,
          ),
        ) {
-    if (initialSelectedItem != null && this.listItems.isNotEmpty) {
+    if (initialSelectedItem != null && _items.isNotEmpty) {
       _selectedItem = initialSelectedItem;
       localSearchController.text = initialSelectedItem.label;
       _clearVisible = this.showClearIcon;
     }
-    _engine.sortInPlace(this.listItems, _sort, selected: _selectedItem);
+    _engine.sortInPlace(_items, _sort, selected: _selectedItem);
     _rebuildBase();
     _filtered.addAll(_base);
     localSearchController.addListener(_onTextChanged);
@@ -107,9 +94,12 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// passed) and is disposed with this controller.
   bool get ownsSearchController => _ownsSearchController;
 
-  /// The items shown by the dropdown (your list when created with
-  /// `listItems`, the controller's copy when created with `items`).
-  final List<ValueItem<T>> listItems;
+  final List<ValueItem<T>> _items;
+
+  /// The controller's own items (a read-only view of its copy), in the
+  /// current sort order.
+  UnmodifiableListView<ValueItem<T>> get items =>
+      UnmodifiableListView<ValueItem<T>>(_items);
 
   /// Allow the user to add new items to the list.
   final bool addMode;
@@ -349,41 +339,21 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// The query of the open view (`''` while closed, for refreshes).
   String get _query => _viewOpen ? _textQuery : '';
 
-  /// Rebuilds the sorted base from [listItems] and re-applies the filter.
+  /// Rebuilds the sorted base from [items] and re-applies the filter.
   void _refresh() {
     _rebuildBase();
     _applyFilter();
   }
 
-  /// The [listItems] entries behind [_base], by identity.
-  final List<ValueItem<T>> _seen = <ValueItem<T>>[];
-
-  /// Whether [listItems] changed since [_base] was built, compared by
-  /// identity (O(n), without calling `==`).
-  bool _sourceChanged() {
-    if (listItems.length != _seen.length) {
-      return true;
-    }
-    for (int i = 0; i < listItems.length; i++) {
-      if (!identical(listItems[i], _seen[i])) {
-        return true;
-      }
-    }
-    return false;
-  }
-
   void _rebuildBase() {
     _lastQuery = null;
-    _engine.retainOnly(listItems);
-    _seen
-      ..clear()
-      ..addAll(listItems);
+    _engine.retainOnly(_items);
     _base
       ..clear()
       ..addAll(switch (_sort) {
         SortType.alphabetical ||
-        SortType.reverseAlphabetical => _engine.sorted(listItems, _sort),
-        _ => listItems,
+        SortType.reverseAlphabetical => _engine.sorted(_items, _sort),
+        _ => _items,
       });
   }
 
@@ -396,10 +366,6 @@ class SearchDropDownController<T> extends ChangeNotifier {
   String? _lastQuery;
 
   void _filterBy(String text) {
-    // A shared list changed from outside: start again from it (7.x).
-    if (_sourceChanged()) {
-      _rebuildBase();
-    }
     final String query = _engine.normalize(text);
     final String? last = _lastQuery;
     // Same query on the same items (caret, selection or IME composing
@@ -484,15 +450,14 @@ class SearchDropDownController<T> extends ChangeNotifier {
     }
   }
 
-  /// Filters the current [listItems] by [text] immediately (ignores whether
-  /// the view is open). Changes made to a shared `listItems:` list are picked
-  /// up; an empty [text] shows every item.
+  /// Filters [items] by [text] immediately (ignores whether the view is
+  /// open); an empty [text] shows every item.
   void filterList(String text) => _filterBy(text);
 
-  /// Sorts [listItems] in place by [type] and refreshes the results.
+  /// Sorts the controller's [items] by [type] and refreshes the results.
   void sortBy(SortType type) {
     _sort = type;
-    _engine.sortInPlace(listItems, type, selected: _selectedItem);
+    _engine.sortInPlace(_items, type, selected: _selectedItem);
     _refresh();
   }
 
@@ -649,19 +614,20 @@ class SearchDropDownController<T> extends ChangeNotifier {
   /// normalized). Does nothing when no item matches.
   void forceSelection(String label) {
     ValueItem<T>? match;
-    for (final ValueItem<T> item in listItems) {
+    for (final ValueItem<T> item in _items) {
       if (item.label == label) {
         match = item;
         break;
       }
     }
-    match ??= _engine.findByLabel(listItems, label);
+    match ??= _engine.findByLabel(_items, label);
     if (match != null) {
       selectItem(match);
     }
   }
 
-  /// Replaces the items with [newList] (written into [listItems]).
+  /// Replaces the items with a copy of [newList]; the only way to change
+  /// them from outside. [newList] itself is never changed.
   ///
   /// The selection is reset when [shouldReset] is `true` or an item is
   /// selected.
@@ -670,12 +636,12 @@ class SearchDropDownController<T> extends ChangeNotifier {
       resetSelection();
     }
     final List<ValueItem<T>> copy = List<ValueItem<T>>.of(newList);
-    listItems
+    _items
       ..clear()
       ..addAll(copy);
     _engine
       ..clearCache()
-      ..sortInPlace(listItems, _sort, selected: _selectedItem);
+      ..sortInPlace(_items, _sort, selected: _selectedItem);
     _refresh();
     _notify();
   }
@@ -683,8 +649,8 @@ class SearchDropDownController<T> extends ChangeNotifier {
   // ---------------------------------------------------------- add / delete
 
   /// Creates an item from [text] (after [verifyInputItem]), awaits
-  /// [onAddItem], adds it to [listItems] unless the callback stored it, and
-  /// selects it (or the copy the callback stored).
+  /// [onAddItem] and, once it completes without throwing, adds the item to
+  /// [items] (unless an equal one is there) and selects it.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> addItem(
@@ -716,38 +682,31 @@ class SearchDropDownController<T> extends ChangeNotifier {
       localSearchController.clear();
       return;
     }
-    final Set<ValueItem<T>> before = _snapshot();
     await onAddItem?.call(item);
     if (_disposed) {
       return;
     }
-    final ValueItem<T>? stored = _engine.storedFor(listItems, before, item);
-    if (stored == null) {
-      writeShared(() => listItems.add(item));
+    if (!_items.contains(item)) {
+      _items.add(item);
     }
     _refresh();
-    selectItem(stored ?? item);
+    selectItem(item);
   }
-
-  /// The current entries of [listItems], by identity, taken before a
-  /// callback runs so its own copy of an item can be told apart.
-  Set<ValueItem<T>> _snapshot() =>
-      HashSet<ValueItem<T>>.identity()..addAll(listItems);
 
   Future<void> _proceedWithDeletion(ValueItem<T> item) async {
     await onDeleteItem?.call(item);
     if (_disposed) {
       return;
     }
-    writeShared(() => listItems.remove(item));
+    _items.remove(item);
     _engine.forget(item);
     _refresh();
     resetSelection(highlight: true);
   }
 
-  /// Deletes [item] (after confirmation when [confirmDelete]), awaiting
-  /// [onDeleteItem] and removing the item from [listItems] if the callback
-  /// did not.
+  /// Deletes [item] (after confirmation when [confirmDelete]): awaits
+  /// [onDeleteItem] and, once it completes without throwing, removes the
+  /// item from [items] and clears the selection.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> deleteItem(
@@ -782,10 +741,10 @@ class SearchDropDownController<T> extends ChangeNotifier {
 
   // ------------------------------------------------------------------ edit
 
-  /// Opens the edit dialog for [item]; on confirm awaits [onEditItem] and
-  /// replaces the item in [listItems] unless the callback stored the new one
-  /// (then the item the callback stored is the one selected). A confirm with
-  /// an unchanged label does nothing.
+  /// Opens the edit dialog for [item]; on confirm awaits [onEditItem] and,
+  /// once it completes without throwing, replaces the item in [items] (an
+  /// equal item already there is kept instead of a duplicate) and reselects
+  /// it when it was selected. A confirm with an unchanged label does nothing.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> editItem(
@@ -820,33 +779,21 @@ class SearchDropDownController<T> extends ChangeNotifier {
       return;
     }
     final ValueItem<T> newValue = create(text);
-    final Set<ValueItem<T>> before = _snapshot();
     await onEditItem?.call(item, newValue);
     if (_disposed) {
       return;
     }
-    final ValueItem<T>? stored = _engine.storedFor(listItems, before, newValue);
-    final int index = listItems.indexOf(item);
-    final bool replace = index != -1 && (stored == null || newValue == item);
     // The row the user saw as selected, with the rule of [isSelected] over
     // the list before it is written.
     final ValueItem<T>? selected = _selectedItem;
     final bool wasSelected =
         selected != null &&
-        _selects(item, selected, exactInPool: listItems.contains(selected));
-    writeShared(() {
-      if (replace) {
-        listItems[index] = newValue;
-      } else if (index != -1) {
-        listItems.removeAt(index);
-      } else if (stored == null) {
-        listItems.add(newValue);
-      }
-    });
+        _selects(item, selected, exactInPool: _items.contains(selected));
+    final ValueItem<T> edited = replaceItem(_items, item, newValue);
     _engine.forget(item);
     _refresh();
     if (wasSelected) {
-      _reselectEdited(replace || stored == null ? newValue : stored);
+      _reselectEdited(edited);
     }
   }
 
@@ -868,7 +815,7 @@ class SearchDropDownController<T> extends ChangeNotifier {
   // ------------------------------------------------------------ open/close
 
   /// Prepares the list when the search view opens: refreshes it from
-  /// [listItems] and shows every item (the selected label is not a query).
+  /// [items] and shows every item (the selected label is not a query).
   void onSearchOpen() {
     _viewOpen = true;
     _filterArmed = true;

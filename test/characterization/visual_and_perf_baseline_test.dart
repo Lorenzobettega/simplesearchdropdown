@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/multiple/multiple_listview.dart';
 
 import '../support/harness.dart';
 
@@ -40,7 +41,7 @@ SearchDropDownController<int> _ctrl(
   ValueItem<int>? initial,
   void Function()? onFilterUpdated,
 }) => SearchDropDownController<int>(
-  listItems: items,
+  items: items,
   addMode: addMode,
   newValueItem: _newItem,
   onAddItem: (_) {},
@@ -87,14 +88,18 @@ Future<void> _pumpMultiple(
   List<ValueItem<int>> selected,
 ) async {
   _fixSurface(tester);
+  final MultipleSearchDropDownController<int> controller =
+      MultipleSearchDropDownController<int>(
+        items: items,
+        selectedItems: selected,
+        addMode: false,
+        deleteMode: false,
+      );
+  addTearDown(controller.dispose);
   await tester.pumpWidget(
     host(
       MultipleSearchDropDown<int>(
-        listItems: items,
-        selectedItems: selected,
-        updateSelectedItems: (_) {},
-        addMode: false,
-        deleteMode: false,
+        controller: controller,
         overlayListSettings: _tall,
       ),
     ),
@@ -448,7 +453,7 @@ void main() {
         final counters = _Counters();
         final c = await _pumpPerf(tester, counters);
         final int before = counters.bar;
-        c.selectedItem = c.listItems[3];
+        c.selectedItem = c.items[3];
         await tester.pumpAndSettle();
         expect(counters.bar - before, greaterThanOrEqualTo(1));
       },

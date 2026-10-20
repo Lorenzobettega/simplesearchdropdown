@@ -10,7 +10,7 @@ void main() {
     testWidgets('arrow, clear, edit and delete have tooltips', (tester) async {
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         onDeleteItem: items.remove,
         editMode: true,
@@ -32,7 +32,7 @@ void main() {
       final SemanticsHandle handle = tester.ensureSemantics();
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         initialSelectedItem: items[1],
@@ -57,7 +57,7 @@ void main() {
       final SemanticsHandle handle = tester.ensureSemantics();
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         initialSelectedItem: items[1],
@@ -90,7 +90,7 @@ void main() {
       final SemanticsHandle handle = tester.ensureSemantics();
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         initialSelectedItem: items[0],
@@ -126,7 +126,7 @@ void main() {
     ) async {
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         initialSelectedItem: items[1],
@@ -167,7 +167,7 @@ void main() {
         SimpleOverlaySettings overlay,
       ) async {
         final c = SearchDropDownController<int>(
-          listItems: fruitItems(),
+          items: fruitItems(),
           addMode: false,
           deleteMode: false,
         );

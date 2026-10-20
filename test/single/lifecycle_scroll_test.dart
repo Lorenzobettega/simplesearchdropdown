@@ -17,7 +17,7 @@ SearchDropDownController<int> _ctrl(
   List<ValueItem<int>?>? calls,
   ValueItem<int>? initial,
 }) => SearchDropDownController<int>(
-  listItems: items,
+  items: items,
   searchController: searchController,
   addMode: false,
   deleteMode: false,
@@ -180,7 +180,7 @@ void main() {
         'anchor (not a typed query)', (tester) async {
       final List<ValueItem<int>> items = numberedItems(200);
       final SearchDropDownController<int> c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         editMode: true,
@@ -238,7 +238,7 @@ void main() {
         'row, keeps the anchor', (tester) async {
       final List<ValueItem<int>> items = numberedItems(200);
       final SearchDropDownController<int> c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         onDeleteItem: (_) {},
         initialSelectedItem: items[150],
@@ -292,7 +292,7 @@ void main() {
         'move the spinner to another item', (tester) async {
       final Completer<void> pending = Completer<void>();
       final SearchDropDownController<int> c = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         addMode: false,
         onDeleteItem: (_) => pending.future,
       );
@@ -333,7 +333,7 @@ void main() {
       final Completer<void> pending = Completer<void>();
       final MultipleSearchDropDownController<int> c =
           MultipleSearchDropDownController<int>(
-            listItems: fruitItems(),
+            items: fruitItems(),
             addMode: false,
             onDeleteItem: (_) => pending.future,
           );

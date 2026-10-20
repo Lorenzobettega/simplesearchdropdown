@@ -33,7 +33,7 @@ MultipleSearchDropDownController<int> _multiple({
   Function(ValueItem<int>)? onDeleteItem,
   bool Function(ValueItem<int>)? verifyInputItem,
 }) => MultipleSearchDropDownController<int>(
-  listItems: fruitItems(),
+  items: fruitItems(),
   addMode: addMode,
   deleteMode: deleteMode,
   editMode: editMode,
@@ -52,7 +52,7 @@ SearchDropDownController<int> _single({
   bool confirmDelete = false,
   bool Function(ValueItem<int>)? verifyInputItem,
 }) => SearchDropDownController<int>(
-  listItems: fruitItems(),
+  items: fruitItems(),
   addMode: addMode,
   deleteMode: deleteMode,
   editMode: editMode,
@@ -190,7 +190,7 @@ void main() {
         host(
           Builder(
             builder: (context) => TextButton(
-              onPressed: () => c.deleteItem(c.listItems.first, context),
+              onPressed: () => c.deleteItem(c.items.first, context),
               child: const Text('run'),
             ),
           ),
@@ -251,11 +251,7 @@ void main() {
     testWidgets('multiple deleteItem', (tester) async {
       final c = _multiple(deleteMode: true, confirmDelete: true);
       addTearDown(c.dispose);
-      await run(
-        tester,
-        (ctx) => c.deleteItem(c.listItems.first, ctx),
-        'Cancelar',
-      );
+      await run(tester, (ctx) => c.deleteItem(c.items.first, ctx), 'Cancelar');
     });
 
     testWidgets('multiple addValue rejected', (tester) async {
@@ -267,17 +263,13 @@ void main() {
     testWidgets('multiple editItem', (tester) async {
       final c = _multiple(editMode: true);
       addTearDown(c.dispose);
-      await run(tester, (ctx) => c.editItem(c.listItems.first, ctx), 'Editar');
+      await run(tester, (ctx) => c.editItem(c.items.first, ctx), 'Editar');
     });
 
     testWidgets('single deleteItem', (tester) async {
       final c = _single(deleteMode: true, confirmDelete: true);
       addTearDown(c.dispose);
-      await run(
-        tester,
-        (ctx) => c.deleteItem(c.listItems.first, ctx),
-        'Apagar',
-      );
+      await run(tester, (ctx) => c.deleteItem(c.items.first, ctx), 'Apagar');
     });
 
     testWidgets('single addItem rejected', (tester) async {
@@ -289,11 +281,7 @@ void main() {
     testWidgets('single editItem', (tester) async {
       final c = _single(editMode: true);
       addTearDown(c.dispose);
-      await run(
-        tester,
-        (ctx) => c.editItem(c.listItems.first, ctx),
-        'Cancelar',
-      );
+      await run(tester, (ctx) => c.editItem(c.items.first, ctx), 'Cancelar');
     });
   });
 }

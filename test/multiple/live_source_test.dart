@@ -41,7 +41,7 @@ MultipleSearchDropDownController<int> _shared(
   void Function(List<ValueItem<int>>)? onChanged,
   void Function()? onFilterUpdated,
 }) => MultipleSearchDropDownController<int>(
-  listItems: items,
+  items: items,
   selectedItems: selected,
   updateSelectedItems: onChanged,
   addMode: false,
@@ -51,7 +51,7 @@ MultipleSearchDropDownController<int> _shared(
 );
 
 void main() {
-  group('a new selection list alone does not re-normalize labels (N56)', () {
+  group('a selection change alone does not re-normalize labels (N56)', () {
     for (final SortType sort in <SortType>[
       SortType.alphabetical,
       SortType.none,
@@ -61,13 +61,7 @@ void main() {
           500,
           (i) => _CountingItem('Item $i', i),
         );
-        List<ValueItem<int>> selected = <ValueItem<int>>[];
-        final c = _shared(
-          items,
-          selected: selected,
-          sort: sort,
-          onChanged: (l) => selected = List<ValueItem<int>>.of(l),
-        );
+        final c = _shared(items, sort: sort);
         addTearDown(c.dispose);
         c.search('item 1');
         final List<ValueItem<int>> before = List<ValueItem<int>>.of(
@@ -76,16 +70,14 @@ void main() {
 
         _labelReads = 0;
         c.toggle(c.filteredItems.first);
-        c.replaceSources(listItems: items, selectedItems: selected);
+        c.toggle(c.filteredItems[1]);
 
         expect(_labelReads, lessThan(items.length));
         expect(c.filteredItems, before);
-        expect(c.selectedItems, same(selected));
-        expect(c.listItems, same(items));
       });
     }
 
-    test('a new selection list keeps the label cache', () {
+    test('a new selection keeps the label cache', () {
       final List<ValueItem<int>> items = List<ValueItem<int>>.generate(
         500,
         (i) => _CountingItem('Item $i', i),
@@ -99,14 +91,14 @@ void main() {
       c.search('item 2');
       final int warm = _labelReads;
 
-      c.replaceSources(listItems: items, selectedItems: <ValueItem<int>>[]);
+      c.forceMultipleSelection(<ValueItem<int>>[items[3]]);
       _labelReads = 0;
       c.search('item 1');
       c.search('item 2');
       expect(_labelReads, lessThanOrEqualTo(2 * warm));
     });
 
-    testWidgets('a new selection list alone still notifies listeners', (
+    testWidgets('a selection change alone still notifies listeners once', (
       tester,
     ) async {
       final List<ValueItem<int>> items = fruitItems();
@@ -115,11 +107,9 @@ void main() {
       int n = 0;
       c.addListener(() => n++);
 
-      c.replaceSources(listItems: items, selectedItems: [items[1]]);
+      c.forceMultipleSelection(<ValueItem<int>>[items[1]]);
       expect(n, 1);
       expect(c.isSelected(items[1]), isTrue);
-      c.replaceSources(listItems: items, selectedItems: c.selectedItems);
-      expect(n, 1);
     });
 
     test('selectedFirst still re-pins on a selection-only change', () {
@@ -127,19 +117,19 @@ void main() {
       final c = _shared(items, sort: SortType.selectedFirst);
       addTearDown(c.dispose);
 
-      c.replaceSources(listItems: items, selectedItems: [items[3]]);
+      c.forceMultipleSelection(<ValueItem<int>>[items[3]]);
       expect(c.filteredItems.first, same(items[3]));
       expect(_labels(items), _labels(numberedItems(5)));
     });
 
-    test('a new listItems instance with new items still refreshes', () {
+    test('updateListItems with new items refreshes the results', () {
       final c = _shared(fruitItems(), sort: SortType.alphabetical);
       addTearDown(c.dispose);
       c.search('a');
 
-      c.replaceSources(
-        listItems: fruitItems()..add(const ValueItem(label: 'Amora', value: 9)),
-        selectedItems: c.selectedItems,
+      c.updateListItems(
+        fruitItems()..add(const ValueItem(label: 'Amora', value: 9)),
+        false,
       );
       expect(_labels(c.filteredItems), <String>[
         'abacaxi',
@@ -149,16 +139,6 @@ void main() {
         'Pêra',
         'Uva',
       ]);
-    });
-
-    test('an in-place change with the same instances refreshes', () {
-      final List<ValueItem<int>> items = fruitItems();
-      final c = _shared(items);
-      addTearDown(c.dispose);
-
-      items.add(const ValueItem(label: 'Kiwi', value: 9));
-      c.replaceSources(listItems: items, selectedItems: c.selectedItems);
-      expect(_labels(c.filteredItems).last, 'Kiwi');
     });
   });
 
@@ -209,14 +189,16 @@ void main() {
   });
 
   group('fresh instances replace stale ones (N42, multiple)', () {
-    testWidgets('refresh hands back the fresh instances', (tester) async {
+    testWidgets('updateListItems hands back the fresh instances', (
+      tester,
+    ) async {
       int updates = 0;
       final List<ValueItem<_Product>> items = <ValueItem<_Product>>[
         ValueItem(label: 'Café', value: _Product(1, 10)),
         ValueItem(label: 'Chá', value: _Product(2, 10)),
       ];
       final c = MultipleSearchDropDownController<_Product>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         onFilterUpdated: () => updates++,
@@ -226,7 +208,7 @@ void main() {
       c.addListener(() => notified++);
 
       items[0] = ValueItem(label: 'Café', value: _Product(1, 12));
-      c.refresh();
+      c.updateListItems(items, false);
       expect(identical(c.filteredItems.first, items.first), isTrue);
       expect(updates, 0);
       expect(notified, 1);
@@ -258,7 +240,7 @@ void main() {
     });
   });
 
-  group('items: mode owns the selection (N61)', () {
+  group('the controller owns the selection (N61)', () {
     test('an unmodifiable const selectedItems is copied', () {
       final c = MultipleSearchDropDownController<int>(
         items: fruitItems(),
@@ -268,9 +250,9 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      c.toggle(c.listItems[1]);
+      c.toggle(c.items[1]);
       expect(c.selectedItems.map((e) => e.value), <int>[2]);
-      c.forceMultipleSelection(<ValueItem<int>>[c.listItems[0]]);
+      c.forceMultipleSelection(<ValueItem<int>>[c.items[0]]);
       expect(c.selectedItems.map((e) => e.value), <int>[1]);
       c.resetSelection();
       expect(c.selectedItems, isEmpty);
@@ -288,7 +270,7 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      c.toggle(c.listItems[1]);
+      c.toggle(c.items[1]);
       expect(c.selectedItems.map((e) => e.value), <int>[1, 2]);
       expect(initial, hasLength(1));
     });
@@ -311,14 +293,20 @@ void main() {
       expect(_labels(c.selectedItems), <String>['Banana']);
     });
 
-    test('listItems: mode still shares the caller selection (7.x)', () {
-      final List<ValueItem<int>> sel = <ValueItem<int>>[];
-      final c = _shared(fruitItems(), selected: sel);
+    test("the initial selection is copied: neither side sees the other's "
+        'changes', () {
+      final List<ValueItem<int>> items = fruitItems();
+      final List<ValueItem<int>> sel = <ValueItem<int>>[items[0]];
+      final c = _shared(items, selected: sel);
       addTearDown(c.dispose);
 
-      c.toggle(c.listItems[0]);
-      expect(identical(c.selectedItems, sel), isTrue);
-      expect(sel, hasLength(1));
+      c.toggle(items[1]);
+      expect(sel, <ValueItem<int>>[items[0]]);
+      sel.add(items[2]);
+      expect(c.selectedItems, <ValueItem<int>>[items[0], items[1]]);
+      expect(c.isSelected(items[2]), isFalse);
+      c.clear();
+      expect(sel, hasLength(2));
     });
   });
 }

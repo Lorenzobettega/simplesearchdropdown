@@ -34,7 +34,9 @@ Finder get _custom => find.byType(SearchDropDown<Custom>);
 Finder get _multiple => find.byType(MultipleSearchDropDown<dynamic>);
 
 /// The open multiple overlay list.
-Finder get _multipleOverlay => find.byType(MultipleListView<dynamic>);
+Finder get _multipleOverlay => find.byWidgetPredicate(
+      (w) => w.runtimeType.toString() == 'MultipleListView<dynamic>',
+    );
 
 Finder _barOf(Finder dropdown) =>
     find.descendant(of: dropdown, matching: find.byType(SearchBar));
@@ -198,11 +200,17 @@ void main() {
 
     testWidgets(
         'selectedFirst sort of the first single moves "Teste" to the top of '
-        'the shared list', (tester) async {
+        'its list (the shared list keeps its order)', (tester) async {
       await _pumpApp(tester);
+      await _tapButton(tester, 'Enable/Disable Single Selection');
+      await _openSingleView(tester, _single);
 
-      expect(listitems.first.label, 'Teste');
-      expect(listitems[1].label, 'Lorenzo');
+      expect(
+        tester.getTopLeft(_viewItem('Teste')).dy,
+        lessThan(tester.getTopLeft(_viewItem('Lorenzo')).dy),
+      );
+      expect(listitems.first.label, 'Lorenzo');
+      expect(listitems[1].label, 'Teste');
     });
   });
 
@@ -345,7 +353,7 @@ void main() {
       expect(
         customListitems.map((e) => e.label).toList(),
         <String>['Reset 1', 'Reset 2'],
-        reason: 'updateListItems writes through to the global list',
+        reason: 'the app resets its own list along with the controller',
       );
 
       await _openSingleView(tester, _custom);

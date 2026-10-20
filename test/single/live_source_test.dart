@@ -18,7 +18,7 @@ SearchDropDownController<T> _controller<T>(
   void Function(ValueItem<T>?)? updateSelectedItem,
   ValueItem<T>? initialSelectedItem,
 }) => SearchDropDownController<T>(
-  listItems: items,
+  items: items,
   addMode: false,
   deleteMode: false,
   sort: sort,
@@ -64,8 +64,8 @@ class _Probe extends ValueItem<int> {
 }
 
 void main() {
-  group('filterList re-reads a shared listItems (N53)', () {
-    test('changes made to the list from outside show up (7.x)', () {
+  group('updateListItems feeds filterList and typing (N53)', () {
+    test('the new items show up', () {
       final List<ValueItem<int>> items = fruitItems();
       int calls = 0;
       final c = _controller(items, onFilterUpdated: () => calls++);
@@ -74,6 +74,7 @@ void main() {
       items
         ..remove(_banana)
         ..add(_kiwi);
+      c.updateListItems(items, false);
       c.filterList('');
       expect(_labels(c.filteredItems), <String>[
         'Maçã',
@@ -97,29 +98,29 @@ void main() {
       c.filterList('a');
       expect(_labels(c.filteredItems), contains('abacaxi'));
       items.removeWhere((e) => e.label == 'abacaxi');
+      c.updateListItems(items, false);
       c.filterList('ab');
       expect(c.filteredItems, isEmpty);
     });
 
-    test('A-Z resync sorts the results but not the caller list', () {
-      final List<ValueItem<int>> items = fruitItems();
-      final c = _controller(items, sort: SortType.alphabetical);
+    test('A-Z sorts the new items but not the list passed in', () {
+      final c = _controller(fruitItems(), sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
       const ValueItem<int> aaa = ValueItem<int>(label: 'Aaa', value: 99);
-      items.add(aaa);
+      final List<ValueItem<int>> next = fruitItems()..add(aaa);
+      c.updateListItems(next, false);
       c.filterList('');
       expect(_labels(c.filteredItems).first, 'Aaa');
-      expect(items.last, aaa);
+      expect(next.last, aaa);
     });
 
-    test('typing in the open view re-reads the list too', () {
-      final List<ValueItem<int>> items = fruitItems();
-      final c = _controller(items);
+    test('typing in the open view filters the new items', () {
+      final c = _controller(fruitItems());
       addTearDown(c.dispose);
 
       c.onSearchOpen();
-      items.add(_kiwi);
+      c.updateListItems(fruitItems()..add(_kiwi), false);
       c.localSearchController.text = 'kiw';
       expect(_labels(c.filteredItems), <String>['Kiwi']);
     });
@@ -139,7 +140,7 @@ void main() {
       c.results.addListener(() => fires++);
 
       c.updateListItems(_products(12), false);
-      expect(identical(c.filteredItems.first, c.listItems.first), isTrue);
+      expect(identical(c.filteredItems.first, c.items.first), isTrue);
       expect(c.filteredItems.first.value!.price, 12);
       // Same results: no onFilterUpdated (7.x), but the view is refreshed.
       expect(updates, 0);
@@ -159,7 +160,7 @@ void main() {
       c.highlightNext();
       expect(c.highlightedIndex, 0);
       items[1] = ValueItem(label: 'Chá', value: _Product(2, 12));
-      c.filterList('');
+      c.updateListItems(items, false);
       expect(c.filteredItems[1].value!.price, 12);
       expect(c.highlightedIndex, 0);
     });
@@ -168,7 +169,7 @@ void main() {
         'item', (tester) async {
       final List<ValueItem<_Product>?> selected = <ValueItem<_Product>?>[];
       final c = SearchDropDownController<_Product>(
-        listItems: _products(10),
+        items: _products(10),
         addMode: false,
         deleteMode: false,
         updateSelectedItem: selected.add,
@@ -182,23 +183,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(selected.last!.value!.price, 12);
-      expect(identical(c.selectedItem, c.listItems.first), isTrue);
-    });
-
-    testWidgets('a legacy in-place replacement is picked up on open', (
-      tester,
-    ) async {
-      final List<ValueItem<_Product>?> selected = <ValueItem<_Product>?>[];
-      final List<ValueItem<_Product>> items = _products(10);
-      final c = _controller<_Product>(items, updateSelectedItem: selected.add);
-      await tester.pumpWidget(host(SearchDropDown<_Product>(controller: c)));
-
-      items[0] = ValueItem(label: 'Café', value: _Product(1, 12));
-      await openSingle(tester);
-      await tester.tap(find.text('Café').last);
-      await tester.pumpAndSettle();
-
-      expect(selected.last!.value!.price, 12);
+      expect(identical(c.selectedItem, c.items.first), isTrue);
     });
   });
 
@@ -244,7 +229,7 @@ void main() {
 
       c.filterList('k');
       expect(c.filteredItems, isEmpty);
-      items.add(_kiwi);
+      c.updateListItems(items..add(_kiwi), false);
       c.filterList('k');
       expect(_labels(c.filteredItems), <String>['Kiwi']);
     });

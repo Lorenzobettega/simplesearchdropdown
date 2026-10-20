@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/multiple/multiple_listview.dart';
 
 import '../support/harness.dart';
 
@@ -16,7 +17,8 @@ const SimpleOverlaySettings _tallOverlay = SimpleOverlaySettings(
   dialogHeight: 400,
 );
 
-// Records every callback the widget fires.
+// Records every callback the widget fires, and holds the controller that
+// [_dropdown] built for it.
 class _Probe {
   final List<List<ValueItem<int>>> updates = <List<ValueItem<int>>>[];
   final List<ValueItem<int>> clearedItems = <ValueItem<int>>[];
@@ -24,6 +26,13 @@ class _Probe {
   final List<ValueItem<int>> deleted = <ValueItem<int>>[];
   final List<ValueItem<int>> edited = <ValueItem<int>>[];
   int clearList = 0;
+  MultipleSearchDropDownController<int>? controller;
+
+  /// The controller's selection (its own copy of the `selected` passed in).
+  List<ValueItem<int>> get selection => controller!.selectedItems;
+
+  /// The controller's items (its own copy of the `items` passed in).
+  List<ValueItem<int>> get items => controller!.items;
 }
 
 // Deliberately unsorted and mixed case: 'Cherry', 'apple', 'Banana'.
@@ -47,6 +56,8 @@ Widget _app(Widget child) => MaterialApp(
   ),
 );
 
+// The 7.x widget parameters, now on a controller that [probe] keeps: a
+// rebuild with the same probe reuses it (its parameters are taken once).
 MultipleSearchDropDown<int> _dropdown({
   required List<ValueItem<int>> items,
   required List<ValueItem<int>> selected,
@@ -59,42 +70,61 @@ MultipleSearchDropDown<int> _dropdown({
   bool addToList = true,
   SortType sort = SortType.none,
   bool enabled = true,
+  bool trim = true,
   bool Function(ValueItem<int>)? verifyInputItem,
   SimpleSearchbarSettings settings = defaultSearchBarSettings,
   SimpleOverlaySettings overlay = _tallOverlay,
   Widget? addAdditionalWidget,
   Widget? defaultAdditionalWidget,
-}) => MultipleSearchDropDown<int>(
-  key: key,
-  listItems: items,
-  selectedItems: selected,
-  updateSelectedItems: probe.updates.add,
-  onClearItem: probe.clearedItems.add,
-  onClearList: () => probe.clearList++,
-  addMode: addMode,
-  newValueItem: (input) => ValueItem<int>(label: input, value: 99),
-  onAddItem: (item) {
-    probe.added.add(item);
-    if (addToList) {
-      items.add(item);
-    }
-  },
-  deleteMode: deleteMode,
-  onDeleteItem: (item) {
-    probe.deleted.add(item);
-    items.remove(item);
-  },
-  editMode: editMode,
-  onEditItem: probe.edited.add,
-  confirmDelete: confirmDelete,
-  sort: sort,
-  enabled: enabled,
-  verifyInputItem: verifyInputItem,
-  searchBarSettings: settings,
-  overlayListSettings: overlay,
-  addAdditionalWidget: addAdditionalWidget,
-  defaultAdditionalWidget: defaultAdditionalWidget,
-);
+}) {
+  final MultipleSearchDropDownController<int> controller =
+      probe.controller ??
+      _disposedAtEnd(
+        MultipleSearchDropDownController<int>(
+          items: items,
+          selectedItems: selected,
+          updateSelectedItems: probe.updates.add,
+          onClearItem: probe.clearedItems.add,
+          onClearList: () => probe.clearList++,
+          addMode: addMode,
+          newValueItem: (input) => ValueItem<int>(label: input, value: 99),
+          onAddItem: (item) {
+            probe.added.add(item);
+            if (addToList) {
+              items.add(item);
+            }
+          },
+          deleteMode: deleteMode,
+          onDeleteItem: (item) {
+            probe.deleted.add(item);
+            items.remove(item);
+          },
+          editMode: editMode,
+          onEditItem: (_, edited) => probe.edited.add(edited),
+          confirmDelete: confirmDelete,
+          sort: sort,
+          enabled: enabled,
+          trim: trim,
+          verifyInputItem: verifyInputItem,
+        ),
+      );
+  probe.controller = controller;
+  return MultipleSearchDropDown<int>(
+    key: key,
+    controller: controller,
+    searchBarSettings: settings,
+    overlayListSettings: overlay,
+    addAdditionalWidget: addAdditionalWidget,
+    defaultAdditionalWidget: defaultAdditionalWidget,
+  );
+}
+
+MultipleSearchDropDownController<int> _disposedAtEnd(
+  MultipleSearchDropDownController<int> controller,
+) {
+  addTearDown(controller.dispose);
+  return controller;
+}
 
 // The same wiring as [_dropdown], on a controller the test drives directly.
 MultipleSearchDropDownController<int> _controller({
@@ -102,8 +132,8 @@ MultipleSearchDropDownController<int> _controller({
   required List<ValueItem<int>> selected,
   required _Probe probe,
   bool enabled = true,
-}) => MultipleSearchDropDownController<int>(
-  listItems: items,
+}) => probe.controller = MultipleSearchDropDownController<int>(
+  items: items,
   selectedItems: selected,
   updateSelectedItems: probe.updates.add,
   onClearItem: probe.clearedItems.add,
@@ -513,7 +543,7 @@ void main() {
 
       await openMultiple(tester);
 
-      expect(selected, isEmpty);
+      expect(probe.selection, isEmpty);
       expect(probe.updates, isEmpty);
     });
   });
@@ -719,7 +749,8 @@ void main() {
     });
   });
 
-  group('overlay search: surrounding whitespace is significant (7.x)', () {
+  group('overlay search: with trim: false surrounding whitespace is '
+      'significant (7.x matching)', () {
     List<ValueItem<int>> names() => <ValueItem<int>>[
       const ValueItem(label: 'Maria Ana', value: 1),
       const ValueItem(label: 'Mariana', value: 2),
@@ -731,7 +762,9 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(
-        _app(_dropdown(items: names(), selected: [], probe: _Probe())),
+        _app(
+          _dropdown(items: names(), selected: [], probe: _Probe(), trim: false),
+        ),
       );
       await openMultiple(tester);
 
@@ -752,6 +785,7 @@ void main() {
             items: _items(),
             selected: [],
             probe: _Probe(),
+            trim: false,
             addMode: true,
           ),
         ),
@@ -854,9 +888,9 @@ void main() {
 
       await _tapRow(tester, 'apple');
 
-      expect(selected, [items[1]]);
+      expect(probe.selection, [items[1]]);
       expect(probe.updates, hasLength(1));
-      expect(probe.updates.single, same(selected));
+      expect(probe.updates.single, probe.selection);
       expect(probe.clearedItems, isEmpty);
       expect(_list, findsOneWidget);
       expect(_rowSelected(tester, 'apple'), isTrue);
@@ -876,9 +910,9 @@ void main() {
       await _tapRow(tester, 'Banana');
       await _tapRow(tester, 'Cherry');
 
-      expect(_labels(selected), ['Banana', 'Cherry']);
+      expect(_labels(probe.selection), ['Banana', 'Cherry']);
       expect(probe.updates, hasLength(2));
-      expect(probe.updates.every((l) => identical(l, selected)), isTrue);
+      expect(probe.updates.last, probe.selection);
     });
 
     testWidgets(
@@ -894,9 +928,9 @@ void main() {
 
         await _tapRow(tester, 'apple');
 
-        expect(selected, isEmpty);
+        expect(probe.selection, isEmpty);
         expect(probe.clearedItems, [items[1]]);
-        expect(probe.updates.single, same(selected));
+        expect(probe.updates.single, probe.selection);
         expect(_rowSelected(tester, 'apple'), isFalse);
         expect(_inBox(find.text('Pesquisar')), findsOneWidget);
       },
@@ -916,7 +950,7 @@ void main() {
 
       expect(_rowSelected(tester, 'apple'), isTrue);
       await _tapRow(tester, 'apple');
-      expect(selected, isEmpty);
+      expect(probe.selection, isEmpty);
     });
   });
 
@@ -934,9 +968,9 @@ void main() {
       await tester.tap(_inBox(find.byIcon(Icons.close)).first);
       await tester.pumpAndSettle();
 
-      expect(selected, [items[1]]);
+      expect(probe.selection, [items[1]]);
       expect(probe.clearedItems, [items[0]]);
-      expect(probe.updates.single, same(selected));
+      expect(probe.updates.single, probe.selection);
       expect(_inBox(find.text('Cherry')), findsNothing);
       expect(_inBox(find.byType(Card)), findsOneWidget);
       expect(_list, findsNothing);
@@ -957,9 +991,9 @@ void main() {
       await tester.tap(_inBox(find.byIcon(Icons.clear)));
       await tester.pumpAndSettle();
 
-      expect(selected, isEmpty);
+      expect(probe.selection, isEmpty);
       expect(probe.updates, hasLength(1));
-      expect(probe.updates.single, same(selected));
+      expect(probe.updates.single, probe.selection);
       expect(probe.clearList, 1);
       expect(probe.clearedItems, isEmpty);
       expect(_list, findsNothing);
@@ -986,8 +1020,8 @@ void main() {
       controller.forceSelection('apple');
       await tester.pump();
 
-      expect(selected, [items[1]]);
-      expect(probe.updates.single, same(selected));
+      expect(probe.selection, [items[1]]);
+      expect(probe.updates.single, probe.selection);
       expect(_inBox(find.text('apple')), findsOneWidget);
     });
 
@@ -1008,7 +1042,7 @@ void main() {
       controller.forceSelection('apple');
       await tester.pump();
 
-      expect(selected, [items[1]]);
+      expect(probe.selection, [items[1]]);
       expect(probe.updates, hasLength(1));
       expect(probe.clearedItems, isEmpty);
     });
@@ -1028,13 +1062,13 @@ void main() {
 
         controller.forceSelection('Kiwi');
         await tester.pump();
-        expect(selected, isEmpty);
+        expect(probe.selection, isEmpty);
         expect(probe.updates, isEmpty);
 
         // Like the single dropdown: exact first, then case/accent-insensitive.
         controller.forceSelection('Apple');
         await tester.pump();
-        expect(_labels(selected), ['apple']);
+        expect(_labels(probe.selection), ['apple']);
       },
     );
   });
@@ -1062,7 +1096,7 @@ void main() {
         ]);
         await tester.pump();
 
-        expect(_labels(selected), ['Banana', 'apple']);
+        expect(_labels(probe.selection), ['Banana', 'apple']);
         expect(probe.updates, isEmpty);
         expect(probe.clearList, 0);
         // M3 (8.0): the chips follow right away.
@@ -1110,7 +1144,7 @@ void main() {
         controller.resetSelection();
         await tester.pump();
 
-        expect(selected, isEmpty);
+        expect(probe.selection, isEmpty);
         expect(probe.updates, hasLength(1));
         expect(probe.clearList, 0);
         expect(probe.clearedItems, isEmpty);
@@ -1235,21 +1269,23 @@ void main() {
     }); // M8: fixed in 8.0
   });
 
-  group('data: listItems is the caller list (external mutation, N31)', () {
-    testWidgets('typing re-reads listItems changed while the list is open', (
-      tester,
-    ) async {
+  group('data: updateListItems while the list is open (N31)', () {
+    testWidgets('typing filters the new items', (tester) async {
       final items = _items();
+      final probe = _Probe();
       await tester.pumpWidget(
         _app(
-          _dropdown(items: items, selected: [], probe: _Probe(), addMode: true),
+          _dropdown(items: items, selected: [], probe: probe, addMode: true),
         ),
       );
       await openMultiple(tester);
 
-      items
-        ..add(const ValueItem(label: 'Kiwi', value: 4))
-        ..removeWhere((e) => e.label == 'Banana');
+      probe.controller!.updateListItems(
+        List<ValueItem<int>>.of(items)
+          ..add(const ValueItem(label: 'Kiwi', value: 4))
+          ..removeWhere((e) => e.label == 'Banana'),
+        false,
+      );
       await _type(tester, 'kiwi');
 
       expect(_rowLabels(tester), ['Kiwi']);
@@ -1257,49 +1293,7 @@ void main() {
       expect(_inList(find.text('Criar')), findsNothing);
       await _type(tester, '');
       expect(_rowLabels(tester), ['Cherry', 'apple', 'Kiwi']);
-    });
-
-    testWidgets('a parent rebuild with the same list shows in-place changes', (
-      tester,
-    ) async {
-      final items = _items();
-      final selected = <ValueItem<int>>[];
-      final probe = _Probe();
-      late StateSetter rebuild;
-      await tester.pumpWidget(
-        _app(
-          StatefulBuilder(
-            builder: (context, set) {
-              rebuild = set;
-              // Same list instances on every build (the 7.x pattern).
-              return _dropdown(items: items, selected: selected, probe: probe);
-            },
-          ),
-        ),
-      );
-      await openMultiple(tester);
-
-      items.add(const ValueItem(label: 'Kiwi', value: 4));
-      rebuild(() {});
-      await tester.pump();
-      await tester.pump();
-
-      expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
-    });
-
-    testWidgets('a tap redraws from the live list (7.x addItem setState)', (
-      tester,
-    ) async {
-      final items = _items();
-      await tester.pumpWidget(
-        _app(_dropdown(items: items, selected: [], probe: _Probe())),
-      );
-      await openMultiple(tester);
-
-      items.removeWhere((e) => e.label == 'Banana');
-      await _tapRow(tester, 'Cherry');
-
-      expect(_rowLabels(tester), ['Cherry', 'apple']);
+      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
     });
   });
 
@@ -1358,7 +1352,7 @@ void main() {
       await tester.pumpAndSettle();
       expect(probe.added, [const ValueItem<int>(label: 'Ki', value: 99)]);
       expect(items, hasLength(1));
-      expect(selected, hasLength(1));
+      expect(probe.selection, hasLength(1));
     });
   });
 
@@ -1461,8 +1455,8 @@ void main() {
 
         const kiwi = ValueItem<int>(label: 'Kiwi', value: 99);
         expect(probe.added, [kiwi]);
-        expect(selected, [kiwi]);
-        expect(probe.updates.single, same(selected));
+        expect(probe.selection, [kiwi]);
+        expect(probe.updates.single, probe.selection);
         expect(_searchText(tester), '');
         expect(_list, findsOneWidget);
         expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
@@ -1472,7 +1466,7 @@ void main() {
     );
 
     testWidgets(
-      'if onAddItem does not grow listItems, the item is added for it (8.0)',
+      'the controller adds the item itself; onAddItem need not (8.0)',
       (tester) async {
         final probe = _Probe();
         final List<ValueItem<int>> selected = [];
@@ -1493,7 +1487,7 @@ void main() {
         await tester.tap(_inList(find.text('Criar')));
         await tester.pumpAndSettle();
 
-        expect(_labels(selected), ['Kiwi']);
+        expect(_labels(probe.selection), ['Kiwi']);
         expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
       },
     );
@@ -1532,7 +1526,7 @@ void main() {
         expect(find.text('O valor adicionado não é válido.'), findsOneWidget);
         expect(find.text('OK'), findsOneWidget);
         expect(probe.added, isEmpty);
-        expect(selected, isEmpty);
+        expect(probe.selection, isEmpty);
         expect(probe.updates, isEmpty);
 
         await tester.tap(find.text('OK'));
@@ -1564,7 +1558,7 @@ void main() {
 
       expect(find.byType(WarningDialog), findsNothing);
       expect(_labels(probe.added), ['Good']);
-      expect(_labels(selected), ['Good']);
+      expect(_labels(probe.selection), ['Good']);
     });
 
     testWidgets(
@@ -1651,7 +1645,7 @@ void main() {
           const ValueItem<int>(label: 'Banana', value: 2),
         ]);
         // Banana was not selected: the selection is untouched.
-        expect(_labels(selected), ['Cherry', 'apple']);
+        expect(_labels(probe.selection), ['Cherry', 'apple']);
         expect(probe.updates, isEmpty);
         expect(probe.clearedItems, isEmpty);
         expect(_rowLabels(tester), ['Cherry', 'apple']);
@@ -1694,13 +1688,14 @@ void main() {
       tester,
     ) async {
       final items = _items();
+      final probe = _Probe();
       final List<ValueItem<int>> selected = [items[0], items[1]];
       await tester.pumpWidget(
         _app(
           _dropdown(
             items: items,
             selected: selected,
-            probe: _Probe(),
+            probe: probe,
             deleteMode: true,
           ),
         ),
@@ -1715,7 +1710,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(_labels(selected), ['apple']);
+      expect(_labels(probe.selection), ['apple']);
     }); // M1: fixed in 8.0
   });
 
@@ -1759,7 +1754,7 @@ void main() {
 
       expect(find.byType(WarningDialog), findsNothing);
       expect(probe.deleted, isEmpty);
-      expect(selected, [items[1]]);
+      expect(probe.selection, [items[1]]);
       expect(_list, findsOneWidget);
       expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
       // 8.0 (B5 class): the cancelled tile gets its delete icon back.
@@ -1799,7 +1794,7 @@ void main() {
         expect(probe.deleted, [
           const ValueItem<int>(label: 'Cherry', value: 3),
         ]);
-        expect(_labels(selected), ['apple']);
+        expect(_labels(probe.selection), ['apple']);
         expect(probe.updates, isEmpty);
         expect(_list, findsOneWidget);
         expect(_inBox(find.text('apple')), findsOneWidget);
@@ -1807,21 +1802,15 @@ void main() {
     );
 
     testWidgets('custom deleteDialogSettings title is used', (tester) async {
-      final List<ValueItem<int>> selected = [];
-      await tester.pumpWidget(
-        _app(
-          MultipleSearchDropDown<int>(
-            listItems: _items(),
-            selectedItems: selected,
-            updateSelectedItems: (_) {},
-            addMode: false,
-            onDeleteItem: (_) {},
-            confirmDelete: true,
-            overlayListSettings: _tallOverlay,
-            deleteDialogSettings: const DialogSettings(title: Text('Sure?')),
-          ),
-        ),
+      final controller = MultipleSearchDropDownController<int>(
+        items: _items(),
+        addMode: false,
+        onDeleteItem: (_) {},
+        confirmDelete: true,
+        deleteDialogSettings: const DialogSettings(title: Text('Sure?')),
       );
+      addTearDown(controller.dispose);
+      await tester.pumpWidget(_app(_controlled(controller)));
       await openMultiple(tester);
 
       await tester.tap(
@@ -1870,7 +1859,7 @@ void main() {
       expect(_rowLabels(tester), contains('Cherry2'));
     });
 
-    testWidgets('editing a selected item replaces it in the caller listItems '
+    testWidgets('editing a selected item replaces it in the controller items '
         'and selectedItems and fires updateSelectedItems (8.0)', (
       tester,
     ) async {
@@ -1903,13 +1892,17 @@ void main() {
       await tester.tap(find.text('Editar'));
       await tester.pump(const Duration(milliseconds: 400));
 
-      // Replaced in place: same position, caller list not reordered.
-      expect(_labels(items), ['Cherry', 'apple2', 'Banana']);
-      expect(_labels(selected), ['apple2']);
-      expect(selected.single, const ValueItem(label: 'apple2', value: 99));
-      expect(selected.every(items.contains), isTrue);
+      // Replaced in place: same position; the caller list is untouched.
+      expect(_labels(probe.items), ['Cherry', 'apple2', 'Banana']);
+      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
+      expect(_labels(probe.selection), ['apple2']);
+      expect(
+        probe.selection.single,
+        const ValueItem(label: 'apple2', value: 99),
+      );
+      expect(probe.selection.every(probe.items.contains), isTrue);
       expect(probe.updates, hasLength(1));
-      expect(probe.updates.single, same(selected));
+      expect(probe.updates.single, probe.selection);
       expect(_labels(probe.edited), ['apple2']);
       expect(_rowSelected(tester, 'apple2'), isTrue);
       // The chip is relabelled.
@@ -2012,20 +2005,16 @@ void main() {
   group('constructor asserts (addMode/deleteMode/editMode)', () {
     test('addMode (default true) requires newValueItem and onAddItem', () {
       expect(
-        () => MultipleSearchDropDown<int>(
-          listItems: const [],
-          selectedItems: const [],
-          updateSelectedItems: (_) {},
+        () => MultipleSearchDropDownController<int>(
+          items: const [],
           deleteMode: false,
           onAddItem: (_) {},
         ),
         throwsAssertionError,
       );
       expect(
-        () => MultipleSearchDropDown<int>(
-          listItems: const [],
-          selectedItems: const [],
-          updateSelectedItems: (_) {},
+        () => MultipleSearchDropDownController<int>(
+          items: const [],
           deleteMode: false,
           newValueItem: (s) => ValueItem(label: s),
         ),
@@ -2035,25 +2024,32 @@ void main() {
 
     test('deleteMode (default true) requires onDeleteItem', () {
       expect(
-        () => MultipleSearchDropDown<int>(
-          listItems: const [],
-          selectedItems: const [],
-          updateSelectedItems: (_) {},
+        () => MultipleSearchDropDownController<int>(
+          items: const [],
           addMode: false,
         ),
         throwsAssertionError,
       );
     });
 
-    test('editMode requires onEditItem', () {
+    test('editMode requires onEditItem and newValueItem', () {
       expect(
-        () => MultipleSearchDropDown<int>(
-          listItems: const [],
-          selectedItems: const [],
-          updateSelectedItems: (_) {},
+        () => MultipleSearchDropDownController<int>(
+          items: const [],
           addMode: false,
           deleteMode: false,
           editMode: true,
+          newValueItem: (s) => ValueItem(label: s),
+        ),
+        throwsAssertionError,
+      );
+      expect(
+        () => MultipleSearchDropDownController<int>(
+          items: const [],
+          addMode: false,
+          deleteMode: false,
+          editMode: true,
+          onEditItem: (_, _) {},
         ),
         throwsAssertionError,
       );
@@ -2061,13 +2057,11 @@ void main() {
 
     test('all modes off needs no callbacks', () {
       expect(
-        () => MultipleSearchDropDown<int>(
-          listItems: const [],
-          selectedItems: const [],
-          updateSelectedItems: (_) {},
+        () => MultipleSearchDropDownController<int>(
+          items: const [],
           addMode: false,
           deleteMode: false,
-        ),
+        ).dispose(),
         returnsNormally,
       );
     });

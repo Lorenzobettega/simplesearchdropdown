@@ -14,18 +14,18 @@ void main() {
     final key = UniqueKey();
     var selected = <ValueItem<int>>[];
 
+    final controller = MultipleSearchDropDownController<int>(
+      items: items,
+      selectedItems: selected,
+      sort: SortType.alphabetical,
+      updateSelectedItems: (v) => selected = List<ValueItem<int>>.from(v),
+      addMode: false,
+      deleteMode: false,
+    );
+    addTearDown(controller.dispose);
+
     await tester.pumpWidget(
-      _wrap(
-        MultipleSearchDropDown<int>(
-          key: key,
-          listItems: items,
-          selectedItems: selected,
-          sort: SortType.alphabetical,
-          updateSelectedItems: (v) => selected = List<ValueItem<int>>.from(v),
-          addMode: false,
-          deleteMode: false,
-        ),
-      ),
+      _wrap(MultipleSearchDropDown<int>(key: key, controller: controller)),
     );
     await tester.pumpAndSettle();
 

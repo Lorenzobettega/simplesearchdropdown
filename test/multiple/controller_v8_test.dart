@@ -4,6 +4,7 @@ import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/multiple/multiple_listview.dart';
 
 import '../support/harness.dart';
 
@@ -164,10 +165,10 @@ void main() {
     ) async {
       final List<ValueItem<int>> items = fruitItems();
       final c = MultipleSearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         confirmDelete: true,
-        onDeleteItem: items.remove,
+        onDeleteItem: (_) {},
       );
       addTearDown(c.dispose);
       await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
@@ -179,14 +180,15 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.byType(WarningDialog), findsNothing);
-      expect(items.map((e) => e.label), isNot(contains('Maçã')));
+      expect(c.items.map((e) => e.label), isNot(contains('Maçã')));
+      expect(items.map((e) => e.label), contains('Maçã'));
     });
   });
 
   group('multiple controller: flags and sort can change (N46)', () {
     MultipleSearchDropDownController<int> make(List<ValueItem<int>> items) {
       final c = MultipleSearchDropDownController<int>(
-        listItems: items,
+        items: items,
         newValueItem: (s) => ValueItem<int>(label: s, value: 99),
         onAddItem: (_) {},
         onDeleteItem: (_) {},
@@ -241,7 +243,7 @@ void main() {
       expect(c.filteredItems.map((e) => e.label), <String>['b', 'a']);
       final List<ValueItem<int>> pinned = <ValueItem<int>>[items[1]];
       final p = MultipleSearchDropDownController<int>(
-        listItems: items,
+        items: items,
         selectedItems: pinned,
         addMode: false,
         deleteMode: false,
@@ -505,92 +507,51 @@ void main() {
     });
   });
   group('public API surface (moved from the 7.x compile test)', () {
-    test('MultipleSearchDropDown listItems/selectedItems/updateSelectedItems '
-        'read as non-null (F14)', () {
+    test('controller items/selectedItems are read-only copies and '
+        'updateSelectedItems gets a copy (F14)', () {
       final List<ValueItem<int>> items = fruitItems();
-      final List<ValueItem<int>> sel = <ValueItem<int>>[];
+      final List<ValueItem<int>> sel = <ValueItem<int>>[items[1]];
       final List<List<ValueItem<int>>> calls = <List<ValueItem<int>>>[];
-      final MultipleSearchDropDown<int> w = MultipleSearchDropDown<int>(
-        listItems: items,
-        selectedItems: sel,
-        updateSelectedItems: calls.add,
-        addMode: false,
-        deleteMode: false,
-      );
-      final List<ValueItem<int>> l = w.listItems;
-      final List<ValueItem<int>> s = w.selectedItems;
-      final Function(List<ValueItem<int>>) update = w.updateSelectedItems;
-      expect(identical(l, items), isTrue);
-      expect(identical(s, sel), isTrue);
-      update(sel);
-      expect(calls, hasLength(1));
-      expect(w.selectedItems.isEmpty, isTrue);
-
-      // Controller mode: the getters read the controller.
-      final List<List<ValueItem<int>>> ctrlCalls = <List<ValueItem<int>>>[];
       final MultipleSearchDropDownController<int> mc =
           MultipleSearchDropDownController<int>(
-            items: fruitItems(),
-            updateSelectedItems: ctrlCalls.add,
+            items: items,
+            selectedItems: sel,
+            updateSelectedItems: calls.add,
             addMode: false,
             deleteMode: false,
           );
       addTearDown(mc.dispose);
-      final MultipleSearchDropDown<int> cw = MultipleSearchDropDown<int>(
-        controller: mc,
-      );
-      expect(identical(cw.listItems, mc.listItems), isTrue);
-      expect(identical(cw.selectedItems, mc.selectedItems), isTrue);
-      cw.updateSelectedItems(mc.selectedItems);
-      expect(ctrlCalls, hasLength(1));
-      // The controller wins over the list parameters passed alongside it.
-      final MultipleSearchDropDown<int> both = MultipleSearchDropDown<int>(
-        controller: mc,
-        listItems: items,
-        selectedItems: sel,
-        updateSelectedItems: calls.add,
-      );
-      expect(identical(both.listItems, mc.listItems), isTrue);
-      expect(identical(both.selectedItems, mc.selectedItems), isTrue);
-      both.updateSelectedItems(mc.selectedItems);
-      expect(ctrlCalls, hasLength(2));
-      expect(calls, hasLength(1));
-      // Without a callback the getter is a no-op, never null.
-      final MultipleSearchDropDownController<int> silent =
-          MultipleSearchDropDownController<int>(
-            items: fruitItems(),
-            addMode: false,
-            deleteMode: false,
-          );
-      addTearDown(silent.dispose);
-      MultipleSearchDropDown<int>(
-        controller: silent,
-      ).updateSelectedItems(silent.selectedItems);
+      final List<ValueItem<int>> l = mc.items;
+      final List<ValueItem<int>> s = mc.selectedItems;
+      final void Function(List<ValueItem<int>>)? update =
+          mc.updateSelectedItems;
+      expect(identical(l, items), isFalse);
+      expect(identical(s, sel), isFalse);
+      expect(update, isNotNull);
+      expect(() => l.add(items[0]), throwsUnsupportedError);
+      expect(() => s.add(items[0]), throwsUnsupportedError);
+
+      mc.toggle(items[2]);
+      expect(sel, <ValueItem<int>>[items[1]]);
+      expect(calls.single, <ValueItem<int>>[items[1], items[2]]);
+      expect(identical(calls.single, mc.selectedItems), isFalse);
+      mc.toggle(items[0]);
+      expect(calls.first, hasLength(2), reason: 'a copy, not a live view');
     });
 
     testWidgets('state members: aberto reads false, hideOverlay on a closed '
         'list is a no-op (F10)', (tester) async {
       final GlobalKey<MultipleSearchDropDownState<int>> key = GlobalKey();
-      final List<ValueItem<int>> sel = <ValueItem<int>>[];
+      final c = _ctrl(sort: SortType.alphabetical);
+      addTearDown(c.dispose);
       await tester.pumpWidget(
-        host(
-          MultipleSearchDropDown<int>(
-            key: key,
-            listItems: fruitItems(),
-            selectedItems: sel,
-            updateSelectedItems: (_) {},
-            addMode: false,
-            deleteMode: false,
-            sort: SortType.alphabetical,
-          ),
-        ),
+        host(MultipleSearchDropDown<int>(key: key, controller: c)),
       );
       final MultipleSearchDropDownState<int> state = key.currentState!;
       final bool open = state.aberto;
       expect(open, isFalse);
       state.hideOverlay();
       await tester.pump();
-      expect(sel, isEmpty);
       expect(tester.takeException(), isNull);
     });
   });

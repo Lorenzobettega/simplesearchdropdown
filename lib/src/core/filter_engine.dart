@@ -4,9 +4,7 @@ import 'package:stringr/stringr.dart';
 
 /// How labels and queries are normalized before matching.
 class SearchNormalization {
-  /// Creates a normalization policy. Defaults match the 7.x single dropdown;
-  /// a legacy `MultipleSearchDropDown(listItems:)` uses `trim: false`, as the
-  /// 7.x multiple did.
+  /// Creates a normalization policy. Defaults match the 7.x single dropdown.
   const SearchNormalization({
     this.latinize = true,
     this.caseSensitive = false,
@@ -40,9 +38,8 @@ class SearchNormalization {
 
 /// Filtering, lookup and sorting shared by the single and multiple dropdowns.
 ///
-/// The engine never mutates the lists it receives. Normalized labels are
-/// cached lazily per item, so items added to (or removed from) the source list
-/// behind the engine's back are handled without a rebuild.
+/// The engine never mutates the lists it receives, except [sortInPlace].
+/// Normalized labels are cached lazily per item.
 class FilterEngine<T> {
   /// Creates an engine with the given [normalization].
   FilterEngine({this.normalization = const SearchNormalization()});
@@ -127,37 +124,6 @@ class FilterEngine<T> {
       }
     }
     return null;
-  }
-
-  /// The entry of [list] that a callback stored for [item], or `null`.
-  ///
-  /// That is [item] itself, else an entry equal to it, else an entry added
-  /// since [before] (an identity snapshot) whose normalized label is
-  /// [item]'s: the callback's own copy, e.g. with a server id.
-  ValueItem<T>? storedFor(
-    List<ValueItem<T>> list,
-    Set<ValueItem<T>> before,
-    ValueItem<T> item,
-  ) {
-    ValueItem<T>? equal;
-    ValueItem<T>? copy;
-    String? label;
-    for (final ValueItem<T> e in list) {
-      if (identical(e, item)) {
-        return e;
-      }
-      if (equal != null) {
-        continue;
-      }
-      if (e == item) {
-        equal = e;
-      } else if (copy == null &&
-          !before.contains(e) &&
-          labelOf(e) == (label ??= labelOf(item))) {
-        copy = e;
-      }
-    }
-    return equal ?? copy;
   }
 
   bool get _sortMatchesFilter =>

@@ -6,8 +6,7 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import '../support/harness.dart';
 
 SearchDropDownController<int> _ctrl({
-  List<ValueItem<int>>? listItems,
-  List<ValueItem<int>>? items,
+  List<ValueItem<int>> items = const <ValueItem<int>>[],
   ValueItem<int>? initial,
   bool addMode = false,
   bool deleteMode = false,
@@ -16,7 +15,6 @@ SearchDropDownController<int> _ctrl({
   void Function(ValueItem<int>?)? updateSelectedItem,
   void Function()? onFilterUpdated,
 }) => SearchDropDownController<int>(
-  listItems: listItems,
   items: items,
   initialSelectedItem: initial,
   addMode: addMode,
@@ -35,30 +33,23 @@ void main() {
       final c = _ctrl(items: mine);
       addTearDown(c.dispose);
       c.sortBy(SortType.alphabetical);
-      expect(identical(c.listItems, mine), isFalse);
+      expect(identical(c.items, mine), isFalse);
       expect(mine.first.label, 'Maçã');
-      expect(c.listItems.first.label, 'abacaxi');
+      expect(c.items.first.label, 'abacaxi');
     });
 
-    test('exactly one of listItems or items is required', () {
-      expect(() => _ctrl(), throwsAssertionError);
-      expect(
-        () => _ctrl(listItems: fruitItems(), items: fruitItems()),
-        throwsAssertionError,
-      );
-    });
-
-    testWidgets('add keeps a legacy callback that also adds: no duplicates', (
+    testWidgets('a callback that adds to its own list: one item in each', (
       tester,
     ) async {
-      final List<ValueItem<int>> shared = fruitItems();
-      final c = _ctrl(listItems: shared, addMode: true, onAddItem: shared.add);
+      final List<ValueItem<int>> mine = fruitItems();
+      final c = _ctrl(items: mine, addMode: true, onAddItem: mine.add);
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
       await typeInSingle(tester, 'Kiwi');
       await tester.tap(find.text('Criar'));
       await tester.pumpAndSettle();
-      expect(shared.where((e) => e.label == 'Kiwi'), hasLength(1));
+      expect(mine.where((e) => e.label == 'Kiwi'), hasLength(1));
+      expect(c.items.where((e) => e.label == 'Kiwi'), hasLength(1));
       expect(c.selectedItem?.label, 'Kiwi');
     });
 
@@ -85,7 +76,7 @@ void main() {
       await typeInSingle(tester, 'Kiwi');
       await tester.tap(find.text('Criar'));
       await tester.pumpAndSettle();
-      expect(c.listItems.last.label, 'Kiwi');
+      expect(c.items.last.label, 'Kiwi');
     });
   });
 
@@ -93,7 +84,7 @@ void main() {
     testWidgets('selection made through the controller updates the bar', (
       tester,
     ) async {
-      final c = _ctrl(listItems: fruitItems());
+      final c = _ctrl(items: fruitItems());
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       expect(find.byIcon(Icons.clear), findsNothing);
 
@@ -108,7 +99,7 @@ void main() {
     });
 
     testWidgets('enabled toggles the bar without a GlobalKey', (tester) async {
-      final c = _ctrl(listItems: fruitItems());
+      final c = _ctrl(items: fruitItems());
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
 
@@ -118,7 +109,7 @@ void main() {
     });
 
     test('notifies listeners on selection, enabled and list changes', () {
-      final c = _ctrl(listItems: fruitItems());
+      final c = _ctrl(items: fruitItems());
       addTearDown(c.dispose);
       int count = 0;
       c
@@ -143,12 +134,12 @@ void main() {
     testWidgets('changes made during build are delivered after the frame', (
       tester,
     ) async {
-      final c = _ctrl(listItems: fruitItems());
+      final c = _ctrl(items: fruitItems());
       await tester.pumpWidget(
         host(
           Builder(
             builder: (context) {
-              if (c.listItems.length == 5) {
+              if (c.items.length == 5) {
                 c.updateListItems(numberedItems(2), true);
               }
               return SearchDropDown<int>(controller: c);
@@ -169,7 +160,7 @@ void main() {
         bool mutate = false;
         int filterUpdates = 0;
         final c = SearchDropDownController<int>(
-          listItems: fruitItems(),
+          items: fruitItems(),
           addMode: false,
           deleteMode: false,
           onFilterUpdated: () {
@@ -217,7 +208,7 @@ void main() {
         await tester.pump(); // flushes the parent rebuild it asked for
         expect(tester.takeException(), isNull);
         expect(filterUpdates, 1);
-        expect(c.listItems, hasLength(2));
+        expect(c.items, hasLength(2));
       },
     );
 
@@ -225,7 +216,7 @@ void main() {
       'changes made during build while the view is open are delivered after '
       'the frame (F7)',
       (tester) async {
-        final c = _ctrl(listItems: fruitItems());
+        final c = _ctrl(items: fruitItems());
         final ValueNotifier<int> tick = ValueNotifier<int>(0);
         addTearDown(tick.dispose);
         int applied = 0;
@@ -293,7 +284,7 @@ void main() {
       (tester) async {
         final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
         final c = _ctrl(
-          listItems: fruitItems(),
+          items: fruitItems(),
           updateSelectedItem: selections.add,
         );
         addTearDown(c.dispose);
@@ -333,7 +324,7 @@ void main() {
       (tester) async {
         int filterUpdates = 0;
         final c = _ctrl(
-          listItems: fruitItems(),
+          items: fruitItems(),
           onFilterUpdated: () => filterUpdates++,
         );
         addTearDown(c.dispose);
@@ -367,7 +358,7 @@ void main() {
       'a highlight reset made during a build notifies highlight listeners '
       'after the frame (F7)',
       (tester) async {
-        final c = _ctrl(listItems: fruitItems());
+        final c = _ctrl(items: fruitItems());
         addTearDown(c.dispose);
         c.highlightEdge(last: true); // outside a build
         final List<int> heard = <int>[];
@@ -396,11 +387,7 @@ void main() {
       'the open list never adds the add row to the list it still shows while '
       'a change from a build is pending (F7)',
       (tester) async {
-        final c = _ctrl(
-          listItems: fruitItems(),
-          addMode: true,
-          onAddItem: (_) {},
-        );
+        final c = _ctrl(items: fruitItems(), addMode: true, onAddItem: (_) {});
         addTearDown(c.dispose);
         final ValueNotifier<int> tick = ValueNotifier<int>(0);
         addTearDown(tick.dispose);
@@ -447,7 +434,7 @@ void main() {
       'filters run during a build narrow and compare against the latest '
       'results (F7)',
       (tester) async {
-        final c = _ctrl(listItems: fruitItems());
+        final c = _ctrl(items: fruitItems());
         addTearDown(c.dispose);
         c.filterList('u'); // outside a build: applied now
         expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
@@ -497,7 +484,7 @@ void main() {
     testWidgets(
       'a result deferred from a build never overwrites a newer one (F7)',
       (tester) async {
-        final c = _ctrl(listItems: fruitItems());
+        final c = _ctrl(items: fruitItems());
         addTearDown(c.dispose);
         bool first = true;
         bool second = true;
@@ -547,7 +534,7 @@ void main() {
         String shown = 'Banana';
         bool mutate = true;
         final c = SearchDropDownController<int>(
-          listItems: fruitItems(),
+          items: fruitItems(),
           addMode: false,
           deleteMode: false,
           // An ancestor setState throws when called during a build.
@@ -593,7 +580,7 @@ void main() {
         String shown = 'none';
         bool mutate = true;
         final c = SearchDropDownController<int>(
-          listItems: fruitItems(),
+          items: fruitItems(),
           addMode: false,
           deleteMode: false,
           updateSelectedItem: (v) => setScreen(() => shown = '${v?.label}'),
@@ -638,7 +625,7 @@ void main() {
         String shown = 'none';
         bool mutate = false;
         final c = SearchDropDownController<int>(
-          listItems: fruitItems(),
+          items: fruitItems(),
           addMode: false,
           deleteMode: false,
           updateSelectedItem: (v) => setScreen(() => shown = '${v?.label}'),
@@ -689,7 +676,7 @@ void main() {
         final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
         int filterUpdates = 0;
         final c = _ctrl(
-          listItems: fruitItems(),
+          items: fruitItems(),
           updateSelectedItem: selections.add,
           onFilterUpdated: () => filterUpdates++,
         );
@@ -726,7 +713,7 @@ void main() {
       final List<ValueItem<int>> mine = fruitItems();
       final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
       final c = _ctrl(
-        listItems: mine,
+        items: mine,
         deleteMode: true,
         onDeleteItem: (_) => Future<void>.delayed(Duration.zero),
         updateSelectedItem: selections.add,
@@ -747,7 +734,7 @@ void main() {
         final List<ValueItem<int>> mine = fruitItems();
         final List<ValueItem<int>?> selections = <ValueItem<int>?>[];
         final c = _ctrl(
-          listItems: mine,
+          items: mine,
           addMode: true,
           onAddItem: (_) => Future<void>.delayed(Duration.zero),
           updateSelectedItem: selections.add,
@@ -772,7 +759,7 @@ void main() {
       ];
       // Same label, different value instance (no == on the value type).
       final c = SearchDropDownController<Object>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         initialSelectedItem: const ValueItem<Object>(
@@ -793,7 +780,7 @@ void main() {
       (tester) async {
         final List<ValueItem<int>> items = fruitItems();
         final c = SearchDropDownController<int>(
-          listItems: items,
+          items: items,
           addMode: false,
           deleteMode: false,
           initialSelectedItem: items[1],
@@ -812,7 +799,7 @@ void main() {
       tester,
     ) async {
       final List<ValueItem<int>> items = numberedItems(200);
-      final c = _ctrl(listItems: items, initial: items[150]);
+      final c = _ctrl(items: items, initial: items[150]);
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
 
@@ -825,7 +812,7 @@ void main() {
     testWidgets('PageDown/PageUp highlight the last/first item', (
       tester,
     ) async {
-      final c = _ctrl(listItems: numberedItems(50));
+      final c = _ctrl(items: numberedItems(50));
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
 
@@ -847,7 +834,7 @@ void main() {
     ) async {
       final List<ValueItem<int>> items = fruitItems();
       final c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         confirmDelete: true,
         onDeleteItem: items.remove,
@@ -869,7 +856,7 @@ void main() {
     testWidgets('a rejected add whose dialog closes after dispose leaves the '
         'disposed SearchController alone', (tester) async {
       final c = SearchDropDownController<int>(
-        listItems: fruitItems(),
+        items: fruitItems(),
         deleteMode: false,
         newValueItem: (s) => ValueItem<int>(label: s, value: 99),
         onAddItem: (_) {},
@@ -902,7 +889,7 @@ void main() {
   group('public API surface (moved from the 7.x compile test)', () {
     test('controller.showClearIcon is a bool (default true) (F14)', () {
       final SearchDropDownController<int> c = SearchDropDownController<int>(
-        listItems: <ValueItem<int>>[const ValueItem(label: 'A', value: 1)],
+        items: <ValueItem<int>>[const ValueItem(label: 'A', value: 1)],
         addMode: false,
         deleteMode: false,
       );
@@ -911,7 +898,7 @@ void main() {
       expect(v, isTrue);
 
       final SearchDropDownController<int> off = SearchDropDownController<int>(
-        listItems: <ValueItem<int>>[],
+        items: <ValueItem<int>>[],
         addMode: false,
         deleteMode: false,
         showClearIcon: false,
@@ -924,19 +911,19 @@ void main() {
       final List<ValueItem<int>> items = fruitItems();
       final List<ValueItem<int>?> calls = <ValueItem<int>?>[];
       final SearchDropDownController<int> c = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
         sort: SortType.alphabetical,
         updateSelectedItem: calls.add,
       );
       addTearDown(c.dispose);
-      final List<ValueItem<int>> l = c.listItems;
+      final List<ValueItem<int>> l = c.items;
       final bool latinize = c.latinize;
       final bool caseSensitive = c.caseSensitive;
       final bool trim = c.trim;
       final int highlighted = c.highlightedIndex;
-      expect(identical(l, items), isTrue);
+      expect(identical(l, items), isFalse);
       expect(<bool>[latinize, caseSensitive, trim], <bool>[true, false, true]);
       expect(highlighted, -1);
       c

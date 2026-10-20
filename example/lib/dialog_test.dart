@@ -17,7 +17,7 @@ class _DialogTestState extends State<DialogTest> {
   void initState() {
     super.initState();
     dialogSearchController = SearchDropDownController(
-      listItems: listitems,
+      items: listitems,
       deleteMode: false,
       addMode: false,
       initialSelectedItem: selectedSingleItem,

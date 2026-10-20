@@ -1,128 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/multiple/multiple_listview.dart';
 
 /// A multiple-selection dropdown: selected items show as chips in the box and
 /// the list opens below it with a search field.
 ///
-/// Drive it with a [MultipleSearchDropDownController], or with the 7.x
-/// parameters ([listItems], [selectedItems], [updateSelectedItems], ...),
-/// which build a controller internally.
+/// Items, selection, modes and callbacks live in its [controller].
 class MultipleSearchDropDown<T> extends StatefulWidget {
-  /// Creates a multiple-selection dropdown.
+  /// Creates a multiple-selection dropdown driven by [controller].
   const MultipleSearchDropDown({
     super.key,
-    this.controller,
-    List<ValueItem<T>>? listItems,
-    this.addMode = true,
-    this.onAddItem,
-    this.newValueItem,
-    this.deleteMode = true,
-    this.onDeleteItem,
-    this.editMode = false,
-    this.onEditItem,
-    this.onClearItem,
-    this.onClearList,
-    Function(List<ValueItem<T>>)? updateSelectedItems,
-    this.sort = SortType.none,
-    this.confirmDelete = false,
-    List<ValueItem<T>>? selectedItems,
-    this.deleteDialogSettings,
-    this.verifyInputItem,
-    this.verifyDialogSettings,
+    required this.controller,
     this.searchBarSettings = defaultSearchBarSettings,
     this.overlayListSettings = defaultOverlaySettings,
     this.addAdditionalWidget,
     this.defaultAdditionalWidget,
-    this.enabled = true,
     this.strings,
-  }) : _listItems = listItems,
-       _selectedItems = selectedItems,
-       _updateSelectedItems = updateSelectedItems,
-       assert(
-         controller != null ||
-             (listItems != null &&
-                 selectedItems != null &&
-                 updateSelectedItems != null),
-         'Pass a controller, or listItems + selectedItems + updateSelectedItems',
-       ),
-       assert(
-         controller != null ||
-             (addMode && (newValueItem != null && onAddItem != null)) ||
-             !addMode,
-         'addMode can only be used with newValueItem != null && onAddItem != null',
-       ),
-       assert(
-         controller != null ||
-             (deleteMode && onDeleteItem != null) ||
-             !deleteMode,
-         'deleteMode can only be used with onDeleteItem != null',
-       ),
-       assert(
-         controller != null || (editMode && onEditItem != null) || !editMode,
-         'editMode can only be used with onEditItem != null',
-       );
+  });
 
-  /// Holds items, selection and search. When set, the 7.x data parameters
-  /// below are ignored.
-  final MultipleSearchDropDownController<T>? controller;
-
-  final List<ValueItem<T>>? _listItems;
-  final List<ValueItem<T>>? _selectedItems;
-  final Function(List<ValueItem<T>>)? _updateSelectedItems;
-
-  ///List of the items to be presented on the dropdown (the [controller]'s
-  ///list when one is set).
-  List<ValueItem<T>> get listItems => controller?.listItems ?? _listItems!;
-
-  ///List of the items already selected on the dropdown (updated in place;
-  ///the [controller]'s selection when one is set).
-  List<ValueItem<T>> get selectedItems =>
-      controller?.selectedItems ?? _selectedItems!;
-
-  ///Function to update the list of selected items on change (the
-  ///[controller]'s callback when one is set; a no-op when there is none).
-  Function(List<ValueItem<T>>) get updateSelectedItems =>
-      (controller != null
-          ? controller!.updateSelectedItems
-          : _updateSelectedItems) ??
-      _ignoreSelection;
-
-  static void _ignoreSelection(List<ValueItem<Object?>> _) {}
-
-  ///Allow the user to add items to the list.
-  final bool addMode;
-
-  ///Function to be executed after the item was added.
-  final Function(ValueItem<T>)? onAddItem;
-
-  ///Function that defines how the user input transforms into a new ValueItem on the list.
-  ///
-  ///Ex:`newValueItem: (input) => ValueItem(label: input, value: input)`
-  final ValueItem<T> Function(String input)? newValueItem;
-
-  ///Allow the user to delete items of the list.
-  final bool deleteMode;
-
-  ///Function to be executed after the item was deleted.
-  final Function(ValueItem<T>)? onDeleteItem;
-
-  ///Allow the user to edit items of the list.
-  final bool editMode;
-
-  ///Function to be executed after an item was edited (receives the new item).
-  final Function(ValueItem<T>)? onEditItem;
-
-  ///Function to be executed after clear list.
-  final Function()? onClearList;
-
-  ///Function to be executed after clear an item.
-  final Function(ValueItem<T>)? onClearItem;
-
-  ///Force the user to confirm delete
-  final bool confirmDelete;
-
-  ///Visual delete dialog settings
-  final DialogSettings? deleteDialogSettings;
+  /// Holds items, selection, search, modes and callbacks.
+  final MultipleSearchDropDownController<T> controller;
 
   ///The SearchBarSettings.
   final SimpleSearchbarSettings searchBarSettings;
@@ -130,23 +27,11 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
   ///The settings for the overlay list of items.
   final SimpleOverlaySettings overlayListSettings;
 
-  ///How the items are ordered.
-  final SortType sort;
-
-  ///Function to check if the item added is valid or not.
-  final bool Function(ValueItem<T>)? verifyInputItem;
-
-  ///Visual verify dialog settings
-  final DialogSettings? verifyDialogSettings;
-
   ///A custom additional widget to be inserted on the add item cell.
   final Widget? addAdditionalWidget;
 
   ///A custom additional widget to be inserted on the default item cell.
   final Widget? defaultAdditionalWidget;
-
-  ///A parameter to define if the widget is enabled or disabled (default: `true`).
-  final bool enabled;
 
   /// Texts used by this dropdown. Defaults to [SearchDropDownStrings.of].
   final SearchDropDownStrings? strings;
@@ -162,10 +47,8 @@ class MultipleSearchDropDown<T> extends StatefulWidget {
 class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   final LayerLink _layerLink = LayerLink();
   final OverlayPortalController _portal = OverlayPortalController();
-  MultipleSearchDropDownController<T>? _ownController;
 
-  MultipleSearchDropDownController<T> get _controller =>
-      widget.controller ?? _ownController!;
+  MultipleSearchDropDownController<T> get _controller => widget.controller;
 
   /// Whether the list is open.
   bool get aberto => _portal.isShowing;
@@ -176,83 +59,18 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   @override
   void initState() {
     super.initState();
-    _ownController = widget.controller == null ? _legacyController() : null;
     _controller.addListener(_onControllerChanged);
   }
-
-  /// Builds the controller behind the 7.x parameters. It lives as long as
-  /// this state: callbacks read the current widget when they run, and the
-  /// other parameters are applied in place (see [didUpdateWidget]), so a
-  /// parent rebuild never interrupts a search or a pending add/edit/delete.
-  MultipleSearchDropDownController<T> _legacyController() {
-    final MultipleSearchDropDown<T> w = widget;
-    return MultipleSearchDropDownController<T>(
-      listItems: w._listItems,
-      selectedItems: w._selectedItems,
-      updateSelectedItems: (List<ValueItem<T>> selected) =>
-          widget._updateSelectedItems?.call(selected),
-      addMode: _legacyAddMode,
-      newValueItem: (String s) => widget.newValueItem!(s),
-      onAddItem: (ValueItem<T> item) => widget.onAddItem?.call(item),
-      deleteMode: w.deleteMode,
-      onDeleteItem: (ValueItem<T> item) => widget.onDeleteItem?.call(item),
-      editMode: _legacyEditMode,
-      // 7.x never called onEditItem; 8.0 calls it with the edited item.
-      onEditItem: (_, ValueItem<T> edited) => widget.onEditItem?.call(edited),
-      onClearItem: (ValueItem<T> item) => widget.onClearItem?.call(item),
-      onClearList: () => widget.onClearList?.call(),
-      confirmDelete: w.confirmDelete,
-      deleteDialogSettings: w.deleteDialogSettings,
-      verifyInputItem: (ValueItem<T> item) =>
-          widget.verifyInputItem?.call(item) ?? true,
-      verifyDialogSettings: w.verifyDialogSettings,
-      sort: w.sort,
-      enabled: w.enabled,
-      // 7.x matched the raw text (main:multiple_listview.dart filtrarLista):
-      // ' ana' found 'Maria Ana' but not 'Mariana'.
-      trim: false,
-    );
-  }
-
-  // Without newValueItem nothing can be created: no add row, no edit button.
-  bool get _legacyAddMode => widget.addMode && widget.newValueItem != null;
-  bool get _legacyEditMode => widget.editMode && widget.newValueItem != null;
 
   @override
   void didUpdateWidget(covariant MultipleSearchDropDown<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
-    final MultipleSearchDropDownController<T> previous =
-        oldWidget.controller ?? _ownController!;
-    MultipleSearchDropDownController<T>? stale;
-    if (widget.controller == null) {
-      if (oldWidget.controller != null) {
-        _ownController = _legacyController();
-      } else {
-        final MultipleSearchDropDownController<T> own = _ownController!
-          ..replaceSources(
-            listItems: widget._listItems,
-            selectedItems: widget._selectedItems,
-          )
-          ..addMode = _legacyAddMode
-          ..deleteMode = widget.deleteMode
-          ..editMode = _legacyEditMode
-          ..confirmDelete = widget.confirmDelete
-          ..sort = widget.sort
-          ..deleteDialogSettings = widget.deleteDialogSettings
-          ..verifyDialogSettings = widget.verifyDialogSettings;
-        if (oldWidget.enabled != widget.enabled) {
-          own.enabled = widget.enabled;
-        }
-      }
-    } else {
-      stale = _ownController;
-      _ownController = null;
+    final MultipleSearchDropDownController<T> previous = oldWidget.controller;
+    if (identical(previous, _controller)) {
+      return;
     }
-    if (!identical(previous, _controller)) {
-      previous.removeListener(_onControllerChanged);
-      _controller.addListener(_onControllerChanged);
-    }
-    stale?.dispose();
+    previous.removeListener(_onControllerChanged);
+    _controller.addListener(_onControllerChanged);
     // A swapped-in disabled controller sends no notification. The portal
     // cannot be hidden during a build.
     if (!_controller.enabled && _portal.isShowing) {
@@ -267,7 +85,6 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
   @override
   void dispose() {
     _controller.removeListener(_onControllerChanged);
-    _ownController?.dispose();
     super.dispose();
   }
 

@@ -47,16 +47,18 @@ class _MyHomePageState extends State<MyHomePage> {
     super.initState();
 
     singleSearchController = SearchDropDownController(
-      listItems: listitems,
+      items: listitems,
       initialSelectedItem: listitems[1],
       confirmDelete: true,
       onDeleteItem: (item) async {
         await Future.delayed(const Duration(seconds: 2));
         listitems.remove(item);
+        multipleSearchController.updateListItems(listitems, false);
       },
       onAddItem: (item) async {
         await Future.delayed(const Duration(seconds: 2));
         listitems.add(item);
+        multipleSearchController.updateListItems(listitems, false);
       },
       updateSelectedItem: (item) => selectedSingleItem = item,
       verifyInputItem: (item) => item.label != 'name',
@@ -67,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     customSearchController = SearchDropDownController<Custom>(
-      listItems: customListitems,
+      items: customListitems,
       initialSelectedItem: selectedSingleCustom,
       confirmDelete: true,
       onDeleteItem: (item) => customListitems.remove(item),
@@ -81,10 +83,16 @@ class _MyHomePageState extends State<MyHomePage> {
     );
 
     multipleSearchController = MultipleSearchDropDownController(
-      listItems: listitems,
+      items: listitems,
       confirmDelete: true,
-      onDeleteItem: (item) => listitems.remove(item),
-      onAddItem: (item) => listitems.add(item),
+      onDeleteItem: (item) {
+        listitems.remove(item);
+        syncSingleItems();
+      },
+      onAddItem: (item) {
+        listitems.add(item);
+        syncSingleItems();
+      },
       onClearList: onClearMultipleSelection,
       onClearItem: onClearItemMultipleSelection,
       selectedItems: selectedMultipleItems,
@@ -97,6 +105,16 @@ class _MyHomePageState extends State<MyHomePage> {
   void dispose() {
     multipleSearchController.dispose();
     super.dispose();
+  }
+
+  /// The first single dropdown shows the shared `listitems` too: hand it the
+  /// new list, keeping its selection.
+  void syncSingleItems() {
+    final ValueItem? selected = singleSearchController.selectedItem;
+    singleSearchController.updateListItems(listitems, false);
+    if (selected != null && listitems.contains(selected)) {
+      singleSearchController.selectItem(selected);
+    }
   }
 
   void updateSelectedItems(List<ValueItem> newSelectedItems) {
@@ -132,10 +150,15 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void resetCustom() {
-    customSearchController.updateListItems(<ValueItem<Custom>>[
+    final List<ValueItem<Custom>> reset = <ValueItem<Custom>>[
       ValueItem(label: 'Reset 1', value: Custom('Reset 1', 80)),
       ValueItem(label: 'Reset 2', value: Custom('Reset 2', 90)),
-    ], true);
+    ];
+    // The controller keeps its own copy; the app keeps its list in step.
+    customListitems
+      ..clear()
+      ..addAll(reset);
+    customSearchController.updateListItems(reset, true);
   }
 
   void printNewSingleSelection() {

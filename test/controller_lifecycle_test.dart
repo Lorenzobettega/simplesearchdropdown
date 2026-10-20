@@ -7,20 +7,17 @@ void main() {
   group('SearchDropDownController – construção e flags', () {
     test('constrói com addMode=false sem exigir callbacks', () {
       final c = SearchDropDownController<int>(
-        listItems: const [],
+        items: const [],
         addMode: false,
         deleteMode: false,
       );
-      expect(c.listItems, isEmpty);
+      expect(c.items, isEmpty);
       expect(c.filteredItems, isEmpty);
     });
 
     test('asserta quando addMode=true sem newValueItem/onAddItem', () {
       expect(
-        () => SearchDropDownController<int>(
-          listItems: const [],
-          deleteMode: false,
-        ),
+        () => SearchDropDownController<int>(items: const [], deleteMode: false),
         throwsA(isA<AssertionError>()),
       );
     });
@@ -33,7 +30,7 @@ void main() {
       ];
 
       final cAsc = SearchDropDownController<int>(
-        listItems: List<ValueItem<int>>.of(base),
+        items: List<ValueItem<int>>.of(base),
         addMode: false,
         deleteMode: false,
         sort: SortType.alphabetical,
@@ -41,7 +38,7 @@ void main() {
       expect(cAsc.filteredItems.map((e) => e.label).toList(), ['a', 'b', 'c']);
 
       final cDesc = SearchDropDownController<int>(
-        listItems: List<ValueItem<int>>.of(base),
+        items: List<ValueItem<int>>.of(base),
         addMode: false,
         deleteMode: false,
         sort: SortType.reverseAlphabetical,
@@ -49,7 +46,7 @@ void main() {
       expect(cDesc.filteredItems.map((e) => e.label).toList(), ['c', 'b', 'a']);
 
       final cNone = SearchDropDownController<int>(
-        listItems: List<ValueItem<int>>.of(base),
+        items: List<ValueItem<int>>.of(base),
         addMode: false,
         deleteMode: false,
       );
@@ -61,7 +58,7 @@ void main() {
     late SearchDropDownController<int> c;
     setUp(() {
       c = SearchDropDownController<int>(
-        listItems: const [
+        items: const [
           ValueItem(label: 'Maçã', value: 1),
           ValueItem(label: 'Banana', value: 2),
           ValueItem(label: 'Uva', value: 3),
@@ -92,7 +89,7 @@ void main() {
   group('SearchDropDownController – abertura/fechamento da busca', () {
     test('onSearchOpen/onSearchClose ajustam estado sem exceção', () {
       final c = SearchDropDownController<int>(
-        listItems: const [ValueItem(label: 'A', value: 1)],
+        items: const [ValueItem(label: 'A', value: 1)],
         addMode: false,
         deleteMode: false,
       );
@@ -105,7 +102,7 @@ void main() {
   group('SearchDropDownController – dispose', () {
     test('dispose pode ser chamado mais de uma vez (8.0)', () {
       final c = SearchDropDownController<int>(
-        listItems: const [],
+        items: const [],
         addMode: false,
         deleteMode: false,
       );
@@ -119,12 +116,12 @@ void main() {
       tester,
     ) async {
       final cTrue = SearchDropDownController<String>(
-        listItems: const [],
+        items: const [],
         addMode: false,
         deleteMode: false,
       );
       final cFalse = SearchDropDownController<String>(
-        listItems: const [],
+        items: const [],
         addMode: false,
         deleteMode: false,
       );
@@ -170,7 +167,7 @@ void main() {
       ];
       final c =
           SearchDropDownController<int>(
-              listItems: items,
+              items: items,
               addMode: false,
               deleteMode: false,
             )

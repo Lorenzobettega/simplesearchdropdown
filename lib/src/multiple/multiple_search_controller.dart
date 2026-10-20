@@ -4,32 +4,25 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/filter_engine.dart';
+import 'package:simple_search_dropdown/src/core/item_list.dart';
 import 'package:simple_search_dropdown/src/core/package_dialog.dart';
 import 'package:simple_search_dropdown/src/core/run_outside_build.dart';
-import 'package:simple_search_dropdown/src/core/shared_list.dart';
 
 /// State of a [MultipleSearchDropDown]: items, selected items, search text and
 /// filtering. Changes notify listeners, so the widget updates without a
 /// `GlobalKey`.
 ///
-/// Items come from [listItems] (your list, shared by reference; changes you
-/// make to it show up on the next keystroke, tap or rebuild of your widget, as
-/// in 7.x) or `items` (copied once). [selectedItems] follows the same mode:
-/// with [listItems] it is your list, updated in place as in 7.x (so it must be
-/// growable); with `items` the initial selection is copied once and the
-/// controller owns the list.
-///
-/// Add/edit/delete keep [listItems] in sync after your callback returns,
-/// unless the callback already stored the item: the list holds it, an equal
-/// item, or a new entry with the same label (e.g. your copy with a server
-/// id), which is then the one selected. An unmodifiable [listItems] (`const`,
-/// `List.unmodifiable`, freezed) is never written: pass the new list from
-/// your state instead.
+/// The controller keeps its own copies of the `items` and `selectedItems` it
+/// is created with ([items], [selectedItems]) and never reads or writes your
+/// lists again: sorting orders only the results, and add/edit/delete change
+/// the copy only after your callback completes without throwing. Replace the
+/// items from outside with [updateListItems], the selection with
+/// [forceSelection], [forceMultipleSelection], [toggle] or [clear]; follow the
+/// selection with [updateSelectedItems] or a listener.
 class MultipleSearchDropDownController<T> extends ChangeNotifier {
-  /// Creates a controller. Pass exactly one of [listItems] or `items`.
+  /// Creates a controller over copies of [items] and [selectedItems].
   MultipleSearchDropDownController({
-    List<ValueItem<T>>? listItems,
-    List<ValueItem<T>>? items,
+    required List<ValueItem<T>> items,
     List<ValueItem<T>>? selectedItems,
     this.updateSelectedItems,
     bool addMode = true,
@@ -53,10 +46,6 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     bool caseSensitive = false,
     bool trim = true,
   }) : assert(
-         (listItems == null) != (items == null),
-         'Pass exactly one of listItems or items',
-       ),
-       assert(
          (addMode && (newValueItem != null && onAddItem != null)) || !addMode,
          'addMode can only be used with newValueItem != null && onAddItem != null',
        ),
@@ -68,10 +57,8 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
          (editMode && onEditItem != null && newValueItem != null) || !editMode,
          'editMode can only be used with onEditItem != null && newValueItem != null',
        ),
-       _listItems = listItems ?? List<ValueItem<T>>.of(items ?? const []),
-       _selectedItems = items != null
-           ? List<ValueItem<T>>.of(selectedItems ?? const [])
-           : selectedItems ?? <ValueItem<T>>[],
+       _items = List<ValueItem<T>>.of(items),
+       _selectedItems = List<ValueItem<T>>.of(selectedItems ?? const []),
        _addMode = addMode,
        _deleteMode = deleteMode,
        _editMode = editMode,
@@ -88,38 +75,20 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     _filtered.addAll(_base);
   }
 
-  List<ValueItem<T>> _listItems;
-  List<ValueItem<T>> _selectedItems;
+  final List<ValueItem<T>> _items;
+  final List<ValueItem<T>> _selectedItems;
 
-  /// The items shown by the dropdown.
-  List<ValueItem<T>> get listItems => _listItems;
+  /// The controller's own items (a read-only view of its copy).
+  UnmodifiableListView<ValueItem<T>> get items =>
+      UnmodifiableListView<ValueItem<T>>(_items);
 
-  /// The selected items, in selection order: the controller's list (yours in
-  /// `listItems` mode), updated in place.
-  List<ValueItem<T>> get selectedItems => _selectedItems;
+  /// The selected items, in selection order (a read-only view of the
+  /// controller's own list).
+  UnmodifiableListView<ValueItem<T>> get selectedItems =>
+      UnmodifiableListView<ValueItem<T>>(_selectedItems);
 
-  /// Points the controller at other lists (shared by reference), keeping the
-  /// search and enabled state. Used by [MultipleSearchDropDown] on every
-  /// rebuild with its 7.x `listItems`/`selectedItems` parameters: the results
-  /// are refiltered only when the items changed (also in place), or the
-  /// selection did with [SortType.selectedFirst].
-  void replaceSources({
-    List<ValueItem<T>>? listItems,
-    List<ValueItem<T>>? selectedItems,
-  }) {
-    final bool changed =
-        (listItems != null && !identical(listItems, _listItems)) ||
-        (selectedItems != null && !identical(selectedItems, _selectedItems));
-    _listItems = listItems ?? _listItems;
-    _selectedItems = selectedItems ?? _selectedItems;
-    // Cached labels stay valid: equal items have equal labels.
-    final bool notified = _syncBase() && _applyFilter();
-    if (changed && !notified) {
-      _notify();
-    }
-  }
-
-  /// Called with [selectedItems] whenever the user changes the selection.
+  /// Called with a copy of [selectedItems] whenever the user changes the
+  /// selection.
   final void Function(List<ValueItem<T>>)? updateSelectedItems;
 
   bool _addMode;
@@ -215,14 +184,13 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
 
   /// How items are ordered. [SortType.selectedFirst] moves the first
   /// selected item to the top. Setting it reorders [filteredItems], never
-  /// your [listItems].
+  /// [items].
   SortType get sort => _sort;
   set sort(SortType value) {
     if (_sort == value) {
       return;
     }
     _sort = value;
-    // Always rebuild: the source check only compares identities and the pin.
     _rebuildBase();
     if (!_applyFilter()) {
       _notify();
@@ -259,70 +227,36 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// The current search text.
   String get query => _query;
 
-  /// Filters the current [listItems] by [text].
+  /// Filters [items] by [text].
   void search(String text) {
     final bool queryChanged = text != _query;
     _query = text;
-    _syncBase();
     // The add row reads the query, even when the results stay the same.
     if (!_applyFilter() && queryChanged) {
       _notify();
     }
   }
 
-  /// Clears the search and re-reads [listItems] (call when the list opens).
+  /// Clears the search and rebuilds the results (call when the list opens).
   void refresh() {
     _query = '';
     _rebuildBase();
     _applyFilter();
   }
 
-  /// The [listItems] entries behind [_base], by identity.
-  final List<ValueItem<T>> _seen = <ValueItem<T>>[];
-
   /// The selected item pinned to the top of [_base] (selectedFirst).
-  ValueItem<T>? _seenPinned;
+  ValueItem<T>? _basePinned;
 
   ValueItem<T>? get _pinned => _sort == SortType.selectedFirst
-      ? (selectedItems.isEmpty ? null : selectedItems.first)
+      ? (_selectedItems.isEmpty ? null : _selectedItems.first)
       : null;
 
-  /// Whether [listItems] (compared by identity, so in O(n) without `==`) or
-  /// the pinned selection changed since [_base] was built.
-  bool _sourceChanged() {
-    if (!identical(_pinned, _seenPinned)) {
-      return true;
-    }
-    final List<ValueItem<T>> live = listItems;
-    if (live.length != _seen.length) {
-      return true;
-    }
-    for (int i = 0; i < live.length; i++) {
-      if (!identical(live[i], _seen[i])) {
-        return true;
-      }
-    }
-    return false;
-  }
-
-  /// Rebuilds [_base] when the source changed; returns whether it did.
-  bool _syncBase() {
-    if (!_sourceChanged()) {
-      return false;
-    }
-    _rebuildBase();
-    return true;
-  }
-
   void _rebuildBase() {
-    _engine.retainOnly(listItems);
-    _seen
-      ..clear()
-      ..addAll(listItems);
-    _seenPinned = _pinned;
+    _engine.retainOnly(_items);
+    _basePinned = _pinned;
     _base
       ..clear()
-      ..addAll(_engine.sorted(listItems, _sort, selected: _seenPinned));
+      ..addAll(_engine.sorted(_items, _sort, selected: _basePinned));
   }
 
   /// Refilters [_base] by [query]. Returns whether [filteredItems] changed
@@ -356,19 +290,19 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   // ------------------------------------------------------------- selection
 
   /// Whether [item] is selected.
-  bool isSelected(ValueItem<T> item) => selectedItems.contains(item);
+  bool isSelected(ValueItem<T> item) => _selectedItems.contains(item);
 
   /// Selects [item], or deselects it (calling [onClearItem]) when it is
   /// already selected. With [forced] an already selected item stays selected.
   void toggle(ValueItem<T> item, {bool forced = false}) {
     bool removed = false;
-    if (selectedItems.contains(item)) {
+    if (_selectedItems.contains(item)) {
       if (!forced) {
-        selectedItems.remove(item);
+        _selectedItems.remove(item);
         removed = true;
       }
     } else {
-      selectedItems.add(item);
+      _selectedItems.add(item);
     }
     _deliver((List<ValueItem<T>> selection) {
       if (removed) {
@@ -376,14 +310,14 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       }
       updateSelectedItems?.call(selection);
     });
-    _resync();
+    _repin();
     _notify();
   }
 
-  /// Redraws from the live [listItems] (7.x re-read it on every tap) and
-  /// re-pins the selection for [SortType.selectedFirst].
-  void _resync() {
-    if (_syncBase()) {
+  /// Re-pins the selection for [SortType.selectedFirst].
+  void _repin() {
+    if (!identical(_pinned, _basePinned)) {
+      _rebuildBase();
       _applyFilter();
     }
   }
@@ -391,51 +325,89 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   /// Selects the item whose label is [label] (exact first, then normalized).
   void forceSelection(String label) {
     ValueItem<T>? match;
-    for (final ValueItem<T> item in listItems) {
+    for (final ValueItem<T> item in _items) {
       if (item.label == label) {
         match = item;
         break;
       }
     }
-    match ??= _engine.findByLabel(listItems, label);
+    match ??= _engine.findByLabel(_items, label);
     if (match != null) {
       toggle(match, forced: true);
     }
   }
 
-  /// Replaces the selection with the [values] that exist in [listItems].
+  /// Replaces the selection with the [values] that exist in [items].
   void forceMultipleSelection(List<ValueItem<T>> values) {
-    final Set<ValueItem<T>> known = listItems.toSet();
+    final Set<ValueItem<T>> known = _items.toSet();
     final List<ValueItem<T>> next = values
         .where(known.contains)
         .toList(growable: false);
-    selectedItems
+    _selectedItems
       ..clear()
       ..addAll(next);
-    _resync();
+    _repin();
     _notify();
   }
 
   /// Clears the selection and calls [updateSelectedItems].
   void resetSelection() {
-    selectedItems.clear();
+    _selectedItems.clear();
     _deliver(
       (List<ValueItem<T>> selection) => updateSelectedItems?.call(selection),
     );
-    _resync();
+    _repin();
     _notify();
   }
 
   /// Clears the selection like the clear button: calls [updateSelectedItems]
   /// and [onClearList].
   void clear() {
-    selectedItems.clear();
+    _selectedItems.clear();
     _deliver((List<ValueItem<T>> selection) {
       updateSelectedItems?.call(selection);
       onClearList?.call();
     });
-    _resync();
+    _repin();
     _notify();
+  }
+
+  /// Replaces the items with a copy of [newList]; the only way to change
+  /// them from outside. [newList] itself is never changed.
+  ///
+  /// With [shouldReset] the selection is cleared; otherwise selected items
+  /// that are no longer in [newList] leave it and the others become their
+  /// [newList] instances. [updateSelectedItems] is called when the selection
+  /// changes.
+  void updateListItems(List<ValueItem<T>> newList, bool shouldReset) {
+    _items
+      ..clear()
+      ..addAll(newList);
+    _engine.clearCache();
+    final Map<ValueItem<T>, ValueItem<T>> fresh =
+        <ValueItem<T>, ValueItem<T>>{};
+    if (!shouldReset) {
+      for (final ValueItem<T> item in _items) {
+        fresh.putIfAbsent(item, () => item);
+      }
+    }
+    final List<ValueItem<T>> next = <ValueItem<T>>[
+      for (final ValueItem<T> item in _selectedItems)
+        if (fresh[item] case final ValueItem<T> kept) kept,
+    ];
+    final bool changed = !listEquals(next, _selectedItems);
+    _selectedItems
+      ..clear()
+      ..addAll(next);
+    if (changed) {
+      _deliver(
+        (List<ValueItem<T>> selection) => updateSelectedItems?.call(selection),
+      );
+    }
+    _rebuildBase();
+    if (!_applyFilter()) {
+      _notify();
+    }
   }
 
   // ---------------------------------------------------- add / delete / edit
@@ -453,9 +425,10 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
     await addValue(create(text), context, strings: strings);
   }
 
-  /// Verifies [item] with [verifyInputItem], awaits [onAddItem], adds it to
-  /// [listItems] if the callback did not, selects it and clears the search.
-  /// A rejected item shows the warning dialog and is not added.
+  /// Verifies [item] with [verifyInputItem] and awaits [onAddItem]; once it
+  /// completes without throwing, adds the item to [items] (unless an equal
+  /// one is there), selects it and clears the search. A rejected item shows
+  /// the warning dialog and is not added.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> addValue(
@@ -482,23 +455,22 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       );
       return;
     }
-    final Set<ValueItem<T>> before = _snapshot();
     await onAddItem?.call(item);
-    // Shared lists are updated even if this controller was disposed while
-    // the callback ran (e.g. the widget switched to another controller);
-    // notifications are skipped then.
-    final ValueItem<T>? stored = _engine.storedFor(listItems, before, item);
-    if (stored == null) {
-      writeShared(() => listItems.add(item));
+    if (_disposed) {
+      return;
+    }
+    if (!_items.contains(item)) {
+      _items.add(item);
     }
     _query = '';
     _rebuildBase();
-    toggle(stored ?? item, forced: true);
+    toggle(item, forced: true);
     _applyFilter();
   }
 
-  /// Deletes [item] (after confirmation when [confirmDelete]), awaiting
-  /// [onDeleteItem]. Only that item leaves the selection.
+  /// Deletes [item] (after confirmation when [confirmDelete]): awaits
+  /// [onDeleteItem] and, once it completes without throwing, removes the
+  /// item from [items]. Only that item leaves the selection.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> deleteItem(
@@ -529,22 +501,23 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       }
     }
     await onDeleteItem?.call(item);
-    // Shared lists are updated even if this controller was disposed while
-    // the callback ran (e.g. the widget switched to another controller);
-    // notifications are skipped then.
-    writeShared(() => listItems.remove(item));
+    if (_disposed) {
+      return;
+    }
+    _items.remove(item);
     _engine.forget(item);
-    if (selectedItems.remove(item)) {
-      updateSelectedItems?.call(selectedItems);
+    if (_selectedItems.remove(item)) {
+      updateSelectedItems?.call(_selectionCopy());
     }
     _rebuildBase();
     _applyFilter();
     _notify();
   }
 
-  /// Opens the edit dialog for [item]; on confirm awaits [onEditItem] and
-  /// replaces the item in [listItems] and [selectedItems]. A confirm with an
-  /// unchanged label does nothing.
+  /// Opens the edit dialog for [item]; on confirm awaits [onEditItem] and,
+  /// once it completes without throwing, replaces the item in [items] and
+  /// [selectedItems] (an equal item already there is kept instead of a
+  /// duplicate). A confirm with an unchanged label does nothing.
   /// Dialog texts come from `strings`, else the [SearchDropDownStringsScope]
   /// above [context].
   Future<void> editItem(
@@ -579,24 +552,14 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       return;
     }
     final ValueItem<T> newValue = create(text);
-    final Set<ValueItem<T>> before = _snapshot();
     await onEditItem?.call(item, newValue);
-    // Shared lists are updated even if this controller was disposed while
-    // the callback ran (e.g. the widget switched to another controller);
-    // notifications are skipped then.
-    final ValueItem<T>? stored = _engine.storedFor(listItems, before, newValue);
-    final bool replaced = _replace(
-      listItems,
-      item,
-      newValue,
-      stored: stored,
-      shared: true,
-    );
-    final int selectedIndex = selectedItems.indexOf(item);
-    if (selectedIndex != -1) {
-      final ValueItem<T> to = replaced || stored == null ? newValue : stored;
-      _replace(selectedItems, item, to);
-      updateSelectedItems?.call(selectedItems);
+    if (_disposed) {
+      return;
+    }
+    final ValueItem<T> edited = replaceItem(_items, item, newValue);
+    if (_selectedItems.contains(item)) {
+      replaceItem(_selectedItems, item, edited);
+      updateSelectedItems?.call(_selectionCopy());
     }
     _engine.forget(item);
     _rebuildBase();
@@ -611,39 +574,6 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
       }
     }
     return true;
-  }
-
-  /// The current entries of [listItems], by identity, taken before a
-  /// callback runs so its own copy of an item can be told apart.
-  Set<ValueItem<T>> _snapshot() =>
-      HashSet<ValueItem<T>>.identity()..addAll(listItems);
-
-  /// Puts [to] where [from] is in [list], unless [list] already holds
-  /// [stored] (the entry for [to], found with `contains` when omitted).
-  /// Returns whether [from]'s slot is the one meant to hold [to]. A [shared]
-  /// list (the caller's [listItems]) that cannot change is left as is.
-  static bool _replace<T>(
-    List<ValueItem<T>> list,
-    ValueItem<T> from,
-    ValueItem<T> to, {
-    ValueItem<T>? stored,
-    bool shared = false,
-  }) {
-    final int index = list.indexOf(from);
-    final bool hasNew = stored != null || list.contains(to);
-    final bool replace = index != -1 && (!hasNew || to == from);
-    void write() {
-      if (replace) {
-        list[index] = to;
-      } else if (index != -1) {
-        list.removeAt(index);
-      } else if (!hasNew) {
-        list.add(to);
-      }
-    }
-
-    shared ? writeShared(write) : write();
-    return replace;
   }
 
   // ------------------------------------------------------------- lifecycle
@@ -663,15 +593,17 @@ class MultipleSearchDropDownController<T> extends ChangeNotifier {
   void _runOutsideBuild(void Function() callback) =>
       runOutsideBuild(callback, () => _disposed);
 
+  /// A read-only copy of the selection, handed to [updateSelectedItems] so
+  /// the caller never holds (or changes) the controller's own list.
+  List<ValueItem<T>> _selectionCopy() =>
+      List<ValueItem<T>>.unmodifiable(_selectedItems);
+
   /// Runs a selection callback like [_runOutsideBuild], but also once the
   /// controller is disposed in that frame: the caller's state must still
-  /// learn about the change (7.x ran these synchronously). [callback] gets
-  /// [selectedItems] itself when run at once, or, when deferred, a copy taken
-  /// now: the value 7.x passed, whatever happens later in that frame.
+  /// learn about the change (7.x ran these synchronously). [callback] gets a
+  /// copy of the selection taken now, whatever happens later in that frame.
   void _deliver(void Function(List<ValueItem<T>> selection) callback) {
-    final List<ValueItem<T>> selection = isBuilding()
-        ? List<ValueItem<T>>.of(selectedItems)
-        : selectedItems;
+    final List<ValueItem<T>> selection = _selectionCopy();
     runOutsideBuild(() => callback(selection));
   }
 

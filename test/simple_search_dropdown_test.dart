@@ -18,7 +18,7 @@ void main() {
         const ValueItem(label: 'Uva', value: 3),
       ];
       controller = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
       );
@@ -96,7 +96,7 @@ void main() {
       tester,
     ) async {
       final local = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
       );
@@ -117,7 +117,7 @@ void main() {
       tester,
     ) async {
       final external = SearchDropDownController<int>(
-        listItems: items,
+        items: items,
         addMode: false,
         deleteMode: false,
       );
@@ -140,7 +140,7 @@ void main() {
       tester,
     ) async {
       final c = SearchDropDownController<int>(
-        listItems: [const ValueItem(label: 'A', value: 1)],
+        items: [const ValueItem(label: 'A', value: 1)],
         addMode: false,
         deleteMode: false,
       );
@@ -163,14 +163,14 @@ void main() {
       // Setup: Lista inicial (não ordenada)
       final initialList = [itemC, itemA, itemB];
       final controller = SearchDropDownController<String>(
-        listItems: initialList,
+        items: initialList,
         addMode: false,
         deleteMode: false,
         sort: SortType.alphabetical, // Ordenação alfabética (A, B, C)
       );
 
       expect(
-        controller.listItems.length,
+        controller.items.length,
         3,
         reason: 'Após a atualização, a lista deve ter 3 itens.',
       );
@@ -194,7 +194,7 @@ void main() {
       );
 
       expect(
-        controller.listItems.length,
+        controller.items.length,
         2,
         reason: 'Após a atualização, a lista deve ter 2 itens.',
       );

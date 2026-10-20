@@ -61,26 +61,16 @@ class _FruitPickerState extends State<FruitPicker> {
 The list opens scrolled to the selected item. Arrow keys move the highlight,
 PageUp/PageDown jump to the first/last item and Enter selects.
 
-### Items: `items` or `listItems`
+### Items
 
-- `items:` — the controller keeps its own copy. Add/edit/delete change the copy;
-  your callbacks are notifications (e.g. to persist).
-- `listItems:` — your list, shared by reference (7.x behaviour). Changes you make
-  to it show up in the single dropdown on the next search, open or
-  `filterList`, and in the multiple dropdown on the next keystroke, tap or
-  rebuild of your widget. With `items:`, a multiple controller copies
-  `selectedItems` too; with `listItems:` it updates yours in place, so pass a
-  growable list. Unlike 7.x, after an
-  add/edit/delete callback the controller adds, replaces or removes the item in
-  your list, unless your callback already stored it: the list holds that item,
-  an equal one, or a new entry with the same label (your own copy, e.g. with a
-  server id), which is then kept and selected. A callback that leaves the list
-  untouched gets the change applied, so refuse a delete with `confirmDelete`,
-  not by keeping the item. An unmodifiable list (`const`, `List.unmodifiable`,
-  freezed) is never written: pass the new list from your state (multiple), or
-  use `items:` and `updateListItems` (single). With a `sort`, the single
-  controller sorts your list in place, as 7.x did; the multiple one only
-  orders its results.
+Both controllers take `items:` and keep their own copy (a multiple controller
+copies `selectedItems` too); `controller.items` is a read-only view of it. Your
+lists are never read again nor written: sorting orders the copy, and
+add/edit/delete change it only after your callback completes without throwing,
+so the callbacks are notifications (e.g. to persist). Unmodifiable lists
+(`const`, `List.unmodifiable`, freezed) are fine. To change the items from
+outside, call `controller.updateListItems(newList, shouldReset)`; to keep two
+dropdowns on one list, call it on the other controller from your callbacks.
 
 ### Add, edit and delete
 
@@ -109,7 +99,8 @@ The "Criar" row appears when the typed text matches nothing. Callbacks may be
 |---|---|
 | `selectedItem`, `selectItem(item)`, `forceSelection(label)` | read / set the selection |
 | `resetSelection()` | clear selection and text (calls `updateSelectedItem(null)`) |
-| `updateListItems(list, shouldReset)` | replace the items |
+| `items` | the controller's own items (read-only) |
+| `updateListItems(list, shouldReset)` | replace the items (the only way from outside) |
 | `enabled`, `toggleEnabled()` | enable / disable |
 | `sortBy(SortType)` | `none`, `alphabetical`, `reverseAlphabetical`, `selectedFirst` |
 | `filteredItems`, `onFilterUpdated` | current results |
@@ -153,8 +144,8 @@ class _TagPickerState extends State<TagPicker> {
 ```
 
 Selected items show as chips inside the box; the list opens below it with its
-own search field. The 7.x parameters (`listItems`, `selectedItems`,
-`updateSelectedItems`, ...) still work without a controller.
+own search field. Items, selection, modes and callbacks live on its required
+`controller:`.
 
 ## Look and texts
 
@@ -197,7 +188,9 @@ or import the package with a prefix.
 | `sortType: 0..3` | `sort: SortType.none / alphabetical / reverseAlphabetical / selectedFirst` |
 | `addAditionalWidget`, `defaultAditionalWidget`, `aditionalWidgetSpacing` | `addAdditionalWidget`, `defaultAdditionalWidget`, `additionalWidgetSpacing` |
 | `hint: 'Pesquisar'`, `addItemHint: 'Criar'`, dialog button texts | `SearchDropDownStrings` (settings texts still win when set) |
-| `MultipleListView(listItens: ..., onItemSelected: ...)` | `MultipleSearchDropDown`, or `MultipleListView(controller: ...)` |
+| `SearchDropDownController(listItems: list)` / `MultipleSearchDropDownController(listItems: list)` | `items: list` (a copy); read it back with `controller.items`, change it with `updateListItems` |
+| `MultipleSearchDropDown(listItems:, selectedItems:, updateSelectedItems:, addMode:, ...)` | `MultipleSearchDropDown(controller: MultipleSearchDropDownController(items:, selectedItems:, updateSelectedItems:, addMode:, ...))` |
+| `MultipleListView(listItens: ..., onItemSelected: ...)` | `MultipleSearchDropDown` (`MultipleListView` is no longer exported) |
 | `multipleState.overlayScreen.closeAll()` / `overlayEntrys.isEmpty` | `multipleState.hideOverlay()` / `!multipleState.aberto` |
 
 Behaviour changes worth knowing (see the CHANGELOG for all of them):
@@ -215,11 +208,8 @@ Behaviour changes worth knowing (see the CHANGELOG for all of them):
   creation.
 - A–Z / Z–A ignore case and accents (`abacaxi, Banana, Maçã`); digits still
   compare as text (`Item 10` before `Item 2`).
-- Sorting: the single dropdown sorts a `listItems:` list in place, as in 7.x;
-  the multiple dropdown and `MultipleListView` no longer do (7.x sorted your
-  list), they only order the results.
-- `listItems:` mode writes add/edit/delete back to your list (see "Items"
-  above).
+- Your lists are never sorted or written (7.x sorted the single list in place
+  and read both live): see "Items" above.
 - An error thrown by `onAddItem`, `onEditItem` or `onDeleteItem` from a list
   row is reported with `FlutterError.reportError` (crash reporters see it);
   the item stays as it was.
