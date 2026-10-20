@@ -1,7 +1,7 @@
 // Characterization tests for the add / edit / delete (CRUD) surface of the
-// single-selection SearchDropDown. They lock the behaviour of v7.8.0 before
-// the 8.0 refactor. Tests named 'B<n>: ...' assert the CORRECT behaviour of a
-// known bug and are skipped until the bug is fixed.
+// single-selection SearchDropDown. Written against v7.8.0,
+// they now lock the 8.0 behaviour; "(8.0)" marks a deliberate change from
+// 7.x. Tests tagged 'B<n>' are regression tests for a 7.x bug fixed in 8.0.
 //
 // Note: rows show an indeterminate spinner while a delete / edit dialog is
 // open, so those flows use [_frames] instead of pumpAndSettle (which would

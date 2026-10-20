@@ -1,8 +1,7 @@
 // Characterization tests for the single-selection SearchDropDown widget
-// (interaction surface). They lock the behaviour of v7.8.0 before the 8.0
-// refactor. Tests named 'B<n>: ...' assert the CORRECT behaviour of a known
-// bug and are skipped until the bug is fixed. testWidgets() only accepts a
-// bool skip, so the reason "B<n>: fixed in 8.0" is the trailing comment.
+// (interaction surface). Written against v7.8.0,
+// they now lock the 8.0 behaviour; "(8.0)" marks a deliberate change from
+// 7.x. Tests tagged 'B<n>' are regression tests for a 7.x bug fixed in 8.0.
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -1076,6 +1075,7 @@ void main() {
         await _pump(tester, _dropdown(c));
         await tester.pumpWidget(host(const SizedBox()));
 
+        expect(c.isDisposed, isTrue);
         expect(
           () => c.localSearchController.addListener(() {}),
           throwsFlutterError,
@@ -1104,11 +1104,91 @@ void main() {
       await _pump(tester, _dropdown(c, disposeController: false));
       await tester.pumpWidget(host(const SizedBox()));
 
-      expect(() => c.localSearchController.addListener(() {}), returnsNormally);
+      expect(c.isDisposed, isFalse);
+      c.localSearchController.text = 'ok';
+      expect(c.localSearchController.text, 'ok');
+      c.localSearchController.clear();
 
       await _pump(tester, _dropdown(c, disposeController: false));
       await openSingle(tester);
       expect(_rowLabels(tester), <String>['Item 0', 'Item 1']);
+    });
+  });
+
+  group('single: controller dispose', () {
+    test('dispose can be called twice', () {
+      final c = _ctrl(numberedItems(1))..dispose();
+      expect(c.isDisposed, isTrue);
+      expect(c.dispose, returnsNormally);
+      expect(c.isDisposed, isTrue);
+    });
+
+    test('a change after dispose is kept but notifies nobody', () {
+      final c = _ctrl(numberedItems(1));
+      int calls = 0;
+      c
+        ..addListener(() => calls++)
+        ..dispose()
+        ..enabled = false;
+      expect(c.enabled, isFalse);
+      c.toggleEnabled();
+      expect(c.enabled, isTrue);
+      expect(calls, 0);
+    });
+  });
+
+  group('single: controller onSearchOpen / onSearchClose', () {
+    test('onSearchOpen arms the filter: the current text then filters', () {
+      final c = _ctrl(numberedItems(3));
+      addTearDown(c.dispose);
+      c.localSearchController.text = 'Item 1';
+      expect(c.filteredItems, hasLength(3), reason: 'not armed before open');
+
+      c.onSearchOpen();
+      expect(c.filteredItems.map((e) => e.label), <String>['Item 1']);
+      c.localSearchController.text = '';
+      expect(c.filteredItems, hasLength(3));
+    });
+
+    test('onSearchOpen over the selected label lists every item and selects '
+        'the label text (D1)', () {
+      final List<ValueItem<int>> items = numberedItems(3);
+      final c = _ctrl(items, initial: items[2]);
+      addTearDown(c.dispose);
+      expect(c.localSearchController.text, 'Item 2');
+
+      c.onSearchOpen();
+      expect(c.filteredItems, items);
+      expect(
+        c.localSearchController.selection,
+        const TextSelection(baseOffset: 0, extentOffset: 6),
+      );
+    });
+
+    test('onSearchClose(true) restores the selected label or clears the '
+        'text; onSearchClose(false) keeps it', () {
+      final List<ValueItem<int>> items = numberedItems(3);
+      final c = _ctrl(items);
+      addTearDown(c.dispose);
+
+      c
+        ..onSearchOpen()
+        ..localSearchController.text = 'Item'
+        ..onSearchClose(false);
+      expect(c.localSearchController.text, 'Item');
+
+      c
+        ..onSearchOpen()
+        ..onSearchClose(true);
+      expect(c.localSearchController.text, '', reason: 'no selection');
+
+      c
+        ..selectedItem = items[1]
+        ..onSearchOpen()
+        ..localSearchController.text = 'zz'
+        ..onSearchClose(true);
+      expect(c.localSearchController.text, 'Item 1');
+      expect(c.selectedItem, items[1]);
     });
   });
 

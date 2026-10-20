@@ -123,12 +123,13 @@ void main() {
 
       final int beforeList = count;
       c.updateListItems(numberedItems(3), true);
-      expect(
-        count - beforeList,
-        greaterThanOrEqualTo(1),
-        reason: 'updateListItems must notify',
-      );
+      // A reset (shouldReset or a selection) notifies, then the new list.
+      expect(count - beforeList, 2);
       expect(c.selectedItem, isNull);
+
+      final int noReset = count;
+      c.updateListItems(fruitItems(), false);
+      expect(count - noReset, 1, reason: 'no selection, no reset: the list');
     });
 
     testWidgets('changes made during build are delivered after the frame', (
@@ -413,7 +414,10 @@ void main() {
         );
         await openSingle(tester);
         await typeInSingle(tester, 'M');
-        expect(find.text('Maçã'), findsWidgets);
+        expect(
+          find.widgetWithText(DefaultListTile<int>, 'Maçã'),
+          findsOneWidget,
+        );
         expect(find.byType(DefaultAddListItem), findsNothing);
 
         // The typed text rebuilds the open list in the frame whose build

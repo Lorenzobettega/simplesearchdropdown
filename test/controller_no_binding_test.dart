@@ -44,11 +44,12 @@ void main() {
     expect(notified, 5);
     expect(selections.last, isNull);
 
+    expect(filtered, 0, reason: 'the results have not changed yet');
     c
       ..updateListItems(_items().reversed.toList(), true)
       ..sortBy(SortType.alphabetical)
       ..filterList('uva');
-    expect(filtered, greaterThan(0));
+    expect(filtered, 3, reason: 'one per change: list, order, filter');
     expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
     expect(c.selectedItem, isNull);
   });

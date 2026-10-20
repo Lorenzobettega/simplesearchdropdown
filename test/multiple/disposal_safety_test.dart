@@ -28,6 +28,7 @@ void main() {
   group('#49: a callback that finishes after the controller is disposed', () {
     late List<ValueItem<int>> items;
     late List<List<ValueItem<int>>> selections;
+    late List<String> calls;
     late Completer<void> pending;
     late MultipleSearchDropDownController<int> c;
 
@@ -36,16 +37,26 @@ void main() {
     void build() {
       items = numberedItems(3);
       selections = <List<ValueItem<int>>>[];
+      calls = <String>[];
       pending = Completer<void>();
       c = MultipleSearchDropDownController<int>(
         items: items,
         selectedItems: <ValueItem<int>>[items[1]],
         updateSelectedItems: selections.add,
         newValueItem: (String s) => ValueItem<int>(label: s, value: 99),
-        onAddItem: (_) => pending.future,
-        onDeleteItem: (_) => pending.future,
+        onAddItem: (ValueItem<int> item) {
+          calls.add('add:${item.label}');
+          return pending.future;
+        },
+        onDeleteItem: (ValueItem<int> item) {
+          calls.add('delete:${item.label}');
+          return pending.future;
+        },
         editMode: true,
-        onEditItem: (_, _) => pending.future,
+        onEditItem: (ValueItem<int> old, ValueItem<int> edited) {
+          calls.add('edit:${old.label}->${edited.label}');
+          return pending.future;
+        },
       );
     }
 
@@ -59,7 +70,14 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
+      expect(calls, <String>['delete:Item 1']);
       expect(selections, isEmpty);
+      expect(
+        c.items,
+        numberedItems(3),
+        reason: 'nothing applied after dispose',
+      );
+      expect(c.selectedItems, <ValueItem<int>>[items[1]]);
     });
 
     testWidgets('edit does not report a selection', (tester) async {
@@ -82,7 +100,14 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
+      expect(calls, <String>['edit:Item 1->Edited']);
       expect(selections, isEmpty);
+      expect(
+        c.items,
+        numberedItems(3),
+        reason: 'nothing applied after dispose',
+      );
+      expect(c.selectedItems, <ValueItem<int>>[items[1]]);
     });
 
     testWidgets('add does not report a selection', (tester) async {
@@ -95,7 +120,14 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
+      expect(calls, <String>['add:Kiwi']);
       expect(selections, isEmpty);
+      expect(
+        c.items,
+        numberedItems(3),
+        reason: 'nothing applied after dispose',
+      );
+      expect(c.selectedItems, <ValueItem<int>>[items[1]]);
     });
   });
 

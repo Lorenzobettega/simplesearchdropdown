@@ -370,8 +370,8 @@ void main() {
       // viewports (needed to open scrolled to the selection, #46), but rows
       // are no longer rebuilt per frame or per unchanged keystroke, so the
       // open + type journey below costs far less than in 7.8.
-      expect(built, lessThanOrEqualTo(10));
-      expect(rendered, lessThan(10000), reason: 'list is lazily built');
+      expect(built, inInclusiveRange(1, 10));
+      expect(rendered, inInclusiveRange(1, 9999), reason: 'lazily built');
     });
   });
 
@@ -391,6 +391,10 @@ void main() {
       // 7.8 baseline: 9 rows per keystroke, 63 in total. 8.0 only rebuilds
       // rows when the results change: 20 in total.
       expect(_sum(perKey), lessThanOrEqualTo(20));
+      // "Item " matches every item: those keys leave the rows alone; "9"
+      // and "99" change the results and rebuild the visible rows.
+      expect(perKey.take(5), everyElement(0));
+      expect(perKey.skip(5), everyElement(greaterThan(0)));
     });
   });
 
@@ -418,6 +422,8 @@ void main() {
       // 7.8 baseline: 0 on open, 2 while typing (misses changes, see B13).
       expect(onOpen, lessThanOrEqualTo(1));
       expect(_sum(perKey), lessThanOrEqualTo(perKey.length));
+      // Exactly once per key that changes the results ("9" and "99").
+      expect(perKey, <int>[0, 0, 0, 0, 0, 1, 1]);
     });
   });
 

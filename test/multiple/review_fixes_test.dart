@@ -29,8 +29,6 @@ class _HostState extends State<_Host> {
           await Future<void>.delayed(const Duration(milliseconds: 100));
         },
         deleteMode: false,
-        // ignore: prefer_const_constructors
-        verifyDialogSettings: DialogSettings(title: Text('t')),
       );
 
   void rebuild() => setState(() {});
@@ -191,11 +189,15 @@ void main() {
       tester,
     ) async {
       late StateSetter rebuild;
+      int updates = 0;
       final c = MultipleSearchDropDownController<int>(
         items: fruitItems(),
         addMode: false,
         deleteMode: false,
-        onFilterUpdated: () => rebuild(() {}),
+        onFilterUpdated: () {
+          updates++;
+          rebuild(() {});
+        },
       );
       addTearDown(c.dispose);
       await tester.pumpWidget(
@@ -209,8 +211,11 @@ void main() {
         ),
       );
       c.search('ma');
+      final int before = updates;
       await openMultiple(tester);
       expect(tester.takeException(), isNull);
+      expect(updates - before, 1, reason: 'opening reports the results once');
+      expect(find.byType(MultipleListView<int>), findsOneWidget);
     });
 
     testWidgets('the State reports the list open; disabling closes it '

@@ -88,7 +88,12 @@ void main() {
       await tester.pumpWidget(host(SearchDropDown<int>(controller: a)));
       await openSingle(tester);
       expect(tester.takeException(), isNull);
-      expect(find.text('Banana'), findsWidgets);
+      // The list shows a's items, not b's.
+      expect(
+        find.widgetWithText(DefaultListTile<int>, 'Banana'),
+        findsOneWidget,
+      );
+      expect(find.widgetWithText(DefaultListTile<int>, 'Item 0'), findsNothing);
     });
 
     test('typing narrows the previous results (R19)', () {

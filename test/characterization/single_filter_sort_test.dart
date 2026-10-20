@@ -1,9 +1,9 @@
 // Characterization tests for SearchDropDownController + SearchDropDown
 // (single selection): filtering, sorting and list data management.
 //
-// These tests lock the behaviour of v7.8.0 before the 8.0 refactor. They
-// assert what the code does TODAY, quirks included. Tests named `B<n>: ...`
-// assert the CORRECT behaviour for a known bug and are skipped until fixed.
+// Written against v7.8.0, these tests now lock the 8.0 behaviour; "(8.0)"
+// marks a deliberate change from 7.x. Tests tagged 'B<n>' are regression
+// tests for a 7.x bug fixed in 8.0.
 //
 // Note: tests that only need the controller's data logic drive it through
 // the public controller API (onSearchOpen + localSearchController.text is
@@ -323,6 +323,24 @@ void main() {
       expect(_labels(c.filteredItems), <String>['Banana']);
       c.filterList('');
       expect(_labels(c.filteredItems), _fruitOrder);
+    });
+
+    test('ignores accents and case on both sides', () {
+      final c = _controller(const <ValueItem<int>>[
+        ValueItem(label: 'São Paulo', value: 1),
+        ValueItem(label: 'Sao Tome', value: 2),
+        ValueItem(label: 'Porto Alegre', value: 3),
+      ]);
+      addTearDown(c.dispose);
+
+      c.filterList('sao');
+      expect(_labels(c.filteredItems), <String>['São Paulo', 'Sao Tome']);
+      c.filterList('SÃO');
+      expect(_labels(c.filteredItems), <String>['São Paulo', 'Sao Tome']);
+      c.filterList('PORTO');
+      expect(_labels(c.filteredItems), <String>['Porto Alegre']);
+      c.filterList('');
+      expect(c.filteredItems, hasLength(3));
     });
 
     test('honours normalization options', () {
@@ -931,6 +949,28 @@ void main() {
       expect(selected, isEmpty);
       // The kept text is not re-applied: every new item is listed.
       expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
+    });
+
+    test('shouldReset true with A-Z: the new list is sorted and the '
+        'selection reset', () {
+      final selected = <ValueItem<int>?>[];
+      final c = _controller(
+        fruitItems(),
+        sort: SortType.alphabetical,
+        initialSelectedItem: _banana,
+        updateSelectedItem: selected.add,
+      );
+      addTearDown(c.dispose);
+      expect(_labels(c.filteredItems), _fruitAZ);
+      expect(c.selectedItem, _banana);
+
+      c.updateListItems(<ValueItem<int>>[_kiwi, _figo], true);
+
+      expect(_labels(c.items), <String>['Figo', 'Kiwi']);
+      expect(_labels(c.filteredItems), <String>['Figo', 'Kiwi']);
+      expect(c.selectedItem, isNull);
+      expect(c.localSearchController.text, '');
+      expect(selected, <ValueItem<int>?>[null]);
     });
 
     test('shouldReset true: text cleared and updateSelectedItem(null)', () {

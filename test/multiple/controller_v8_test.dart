@@ -527,7 +527,6 @@ void main() {
           mc.updateSelectedItems;
       expect(identical(l, items), isFalse);
       expect(identical(s, sel), isFalse);
-      expect(update, isNotNull);
       expect(() => l.add(items[0]), throwsUnsupportedError);
       expect(() => s.add(items[0]), throwsUnsupportedError);
 
@@ -537,6 +536,11 @@ void main() {
       expect(identical(calls.single, mc.selectedItems), isFalse);
       mc.toggle(items[0]);
       expect(calls.first, hasLength(2), reason: 'a copy, not a live view');
+
+      // The getter hands back the callback the controller was given.
+      update!(<ValueItem<int>>[items[4]]);
+      expect(calls.last, <ValueItem<int>>[items[4]]);
+      expect(calls, hasLength(3));
     });
 
     testWidgets('state members: aberto reads false, hideOverlay on a closed '
@@ -553,6 +557,12 @@ void main() {
       state.hideOverlay();
       await tester.pump();
       expect(tester.takeException(), isNull);
+      expect(state.aberto, isFalse);
+      expect(find.byType(MultipleListView<int>), findsNothing);
+      // Still opens normally afterwards.
+      await openMultiple(tester);
+      expect(state.aberto, isTrue);
+      expect(find.byType(MultipleListView<int>), findsOneWidget);
     });
   });
 }

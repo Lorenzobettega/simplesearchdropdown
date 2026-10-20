@@ -167,7 +167,10 @@ void main() {
       );
       await _run(tester);
       expect(find.text('Edit item:'), findsOneWidget);
-      expect(find.text('New value'), findsWidgets);
+      expect(
+        tester.widget<InputField>(find.byType(InputField)).hint,
+        'New value',
+      );
       expect(find.text('Edit'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();

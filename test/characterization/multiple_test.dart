@@ -1,9 +1,7 @@
-// Characterization tests for the MultipleSearchDropDown widget (v7.8.0).
-// They lock the CURRENT behaviour before the 8.0 refactor, through the public
-// API and the user-visible widgets. Tests named 'M<n>: ...' assert the
-// CORRECT behaviour of a known bug and are skipped until the bug is fixed.
-// testWidgets() only accepts a bool skip, so the reason "M<n>: fixed in 8.0"
-// is the trailing comment.
+// Characterization tests for the MultipleSearchDropDown widget, through the
+// public API and the user-visible widgets. Written against v7.8.0, they now
+// lock the 8.0 behaviour; "(8.0)" marks a deliberate change from 7.x. Tests
+// tagged 'M<n>' are regression tests for a 7.x bug fixed in 8.0.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -480,21 +478,6 @@ void main() {
       expect(probe.clearList, 0);
       expect(_inBox(find.byIcon(Icons.arrow_drop_up)), findsOneWidget);
     });
-
-    testWidgets(
-      'M5: tapping the arrow when nothing is selected opens overlay',
-      (tester) async {
-        final probe = _Probe();
-        await tester.pumpWidget(
-          _app(_dropdown(items: _items(), selected: [], probe: probe)),
-        );
-
-        await tester.tap(_inBox(find.byIcon(Icons.arrow_drop_down)));
-        await tester.pumpAndSettle();
-
-        expect(_list, findsOneWidget);
-      },
-    ); // M5: fixed in 8.0
   });
 
   group('overlay: open/close by tapping the box', () {
@@ -548,8 +531,7 @@ void main() {
     });
   });
 
-  group('overlay: reopens scrolled to the first selected item '
-      '(reOpenedScrollDuration)', () {
+  group('overlay: reopens scrolled to the first selected item', () {
     Future<List<ValueItem<int>>> openScrolled(
       WidgetTester tester, {
       required List<int> selectedIdx,
@@ -875,28 +857,29 @@ void main() {
   });
 
   group('selection: tapping a row toggles selection', () {
-    testWidgets('select: adds, passes the SAME list instance, overlay stays', (
-      tester,
-    ) async {
-      final probe = _Probe();
-      final items = _items();
-      final List<ValueItem<int>> selected = [];
-      await tester.pumpWidget(
-        _app(_dropdown(items: items, selected: selected, probe: probe)),
-      );
-      await openMultiple(tester);
+    testWidgets(
+      'select: adds, reports a copy of the selection, overlay stays',
+      (tester) async {
+        final probe = _Probe();
+        final items = _items();
+        final List<ValueItem<int>> selected = [];
+        await tester.pumpWidget(
+          _app(_dropdown(items: items, selected: selected, probe: probe)),
+        );
+        await openMultiple(tester);
 
-      await _tapRow(tester, 'apple');
+        await _tapRow(tester, 'apple');
 
-      expect(probe.selection, [items[1]]);
-      expect(probe.updates, hasLength(1));
-      expect(probe.updates.single, probe.selection);
-      expect(probe.clearedItems, isEmpty);
-      expect(_list, findsOneWidget);
-      expect(_rowSelected(tester, 'apple'), isTrue);
-      expect(_rowSelected(tester, 'Cherry'), isFalse);
-      expect(_inBox(find.text('apple')), findsOneWidget);
-    });
+        expect(probe.selection, [items[1]]);
+        expect(probe.updates, hasLength(1));
+        expect(probe.updates.single, probe.selection);
+        expect(probe.clearedItems, isEmpty);
+        expect(_list, findsOneWidget);
+        expect(_rowSelected(tester, 'apple'), isTrue);
+        expect(_rowSelected(tester, 'Cherry'), isFalse);
+        expect(_inBox(find.text('apple')), findsOneWidget);
+      },
+    );
 
     testWidgets('multiple taps accumulate in tap order', (tester) async {
       final probe = _Probe();
@@ -978,28 +961,29 @@ void main() {
   });
 
   group('clear icon: onClear clears all selections', () {
-    testWidgets('clears in place, calls updateSelectedItems and onClearList', (
-      tester,
-    ) async {
-      final probe = _Probe();
-      final items = _items();
-      final List<ValueItem<int>> selected = [items[0], items[2]];
-      await tester.pumpWidget(
-        _app(_dropdown(items: items, selected: selected, probe: probe)),
-      );
+    testWidgets(
+      'clears the selection, calls updateSelectedItems and onClearList',
+      (tester) async {
+        final probe = _Probe();
+        final items = _items();
+        final List<ValueItem<int>> selected = [items[0], items[2]];
+        await tester.pumpWidget(
+          _app(_dropdown(items: items, selected: selected, probe: probe)),
+        );
 
-      await tester.tap(_inBox(find.byIcon(Icons.clear)));
-      await tester.pumpAndSettle();
+        await tester.tap(_inBox(find.byIcon(Icons.clear)));
+        await tester.pumpAndSettle();
 
-      expect(probe.selection, isEmpty);
-      expect(probe.updates, hasLength(1));
-      expect(probe.updates.single, probe.selection);
-      expect(probe.clearList, 1);
-      expect(probe.clearedItems, isEmpty);
-      expect(_list, findsNothing);
-      expect(_inBox(find.text('Pesquisar')), findsOneWidget);
-      expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
-    });
+        expect(probe.selection, isEmpty);
+        expect(probe.updates, hasLength(1));
+        expect(probe.updates.single, probe.selection);
+        expect(probe.clearList, 1);
+        expect(probe.clearedItems, isEmpty);
+        expect(_list, findsNothing);
+        expect(_inBox(find.text('Pesquisar')), findsOneWidget);
+        expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsOneWidget);
+      },
+    );
   });
 
   group('controller API: forceSelection(label)', () {
@@ -1075,8 +1059,8 @@ void main() {
 
   group('controller API: forceMultipleSelection(values)', () {
     testWidgets(
-      'replaces selection in place with values found in listItems and '
-      'rebuilds (M3, 8.0), without notify',
+      'replaces the selection with the values found in items and rebuilds '
+      'the chips (M3, 8.0), without notify',
       (tester) async {
         final probe = _Probe();
         final items = _items();
@@ -1105,30 +1089,11 @@ void main() {
         expect(_inBox(find.text('apple')), findsOneWidget);
       },
     );
-
-    testWidgets('M3: forceMultipleSelection rebuilds chips immediately', (
-      tester,
-    ) async {
-      final items = _items();
-      final controller = _controller(
-        items: items,
-        selected: [],
-        probe: _Probe(),
-      );
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(_controlled(controller)));
-
-      controller.forceMultipleSelection([items[0], items[2]]);
-      await tester.pump();
-
-      expect(_inBox(find.text('Cherry')), findsOneWidget);
-      expect(_inBox(find.text('Banana')), findsOneWidget);
-    }); // M3: fixed in 8.0
   });
 
   group('controller API: resetSelection()', () {
     testWidgets(
-      'clears in place, rebuilds and calls updateSelectedItems (M2)',
+      'clears the selection, rebuilds and calls updateSelectedItems (M2)',
       (tester) async {
         final probe = _Probe();
         final items = _items();
@@ -1146,30 +1111,13 @@ void main() {
 
         expect(probe.selection, isEmpty);
         expect(probe.updates, hasLength(1));
+        expect(probe.updates.single, isEmpty);
         expect(probe.clearList, 0);
         expect(probe.clearedItems, isEmpty);
         expect(_inBox(find.byType(Card)), findsNothing);
         expect(_inBox(find.text('Pesquisar')), findsOneWidget);
       },
     );
-
-    testWidgets('M2: resetSelection calls updateSelectedItems', (tester) async {
-      final probe = _Probe();
-      final items = _items();
-      final controller = _controller(
-        items: items,
-        selected: [items[0]],
-        probe: probe,
-      );
-      addTearDown(controller.dispose);
-      await tester.pumpWidget(_app(_controlled(controller)));
-
-      controller.resetSelection();
-      await tester.pump();
-
-      expect(probe.updates, hasLength(1));
-      expect(probe.updates.single, isEmpty);
-    }); // M2: fixed in 8.0
   });
 
   group('controller API: toggleEnabled() (opacity 0.38 + IgnorePointer)', () {
@@ -2067,6 +2015,35 @@ void main() {
     });
   });
 
+  group('lifecycle: controller dispose', () {
+    MultipleSearchDropDownController<int> create() =>
+        MultipleSearchDropDownController<int>(
+          items: _items(),
+          addMode: false,
+          deleteMode: false,
+        );
+
+    test('dispose can be called twice', () {
+      final c = create()..dispose();
+      expect(c.isDisposed, isTrue);
+      expect(c.dispose, returnsNormally);
+      expect(c.isDisposed, isTrue);
+    });
+
+    test('a change after dispose is kept but notifies nobody', () {
+      final c = create();
+      int calls = 0;
+      c
+        ..addListener(() => calls++)
+        ..dispose()
+        ..enabled = false;
+      expect(c.enabled, isFalse);
+      c.toggleEnabled();
+      expect(c.enabled, isTrue);
+      expect(calls, 0);
+    });
+  });
+
   group('lifecycle: widget removed while the overlay is open', () {
     testWidgets('the list goes away with the widget (M6, 8.0)', (tester) async {
       await tester.pumpWidget(
@@ -2081,19 +2058,6 @@ void main() {
       await tester.tapAt(const Offset(780, 580));
       expect(tester.takeException(), isNull);
     });
-
-    testWidgets('M6: removing the widget removes the overlay entry', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _app(_dropdown(items: _items(), selected: [], probe: _Probe())),
-      );
-      await openMultiple(tester);
-
-      await tester.pumpWidget(_app(const SizedBox()));
-
-      expect(_list, findsNothing);
-    }); // M6: fixed in 8.0
   });
 
   group('overlay host: follows the box and drops focus (#5, #35)', () {

@@ -24,8 +24,11 @@ void main() {
 
       await openSingle(tester);
       expect(find.byTooltip('Fechar lista'), findsOneWidget);
-      expect(find.byTooltip('Editar item'), findsWidgets);
-      expect(find.byTooltip('Apagar item'), findsWidgets);
+      // One edit and one delete button per built row.
+      final int rows = find.byType(DefaultListTile<int>).evaluate().length;
+      expect(rows, greaterThan(0));
+      expect(find.byTooltip('Editar item'), findsNWidgets(rows));
+      expect(find.byTooltip('Apagar item'), findsNWidgets(rows));
     });
 
     testWidgets('the selected row is announced as selected', (tester) async {

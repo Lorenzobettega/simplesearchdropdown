@@ -120,7 +120,7 @@ void main() {
         await tester.pumpAndSettle();
       });
       expect(errors, hasLength(3));
-      expect(items, unorderedEquals(fruitItems()));
+      expect(c.items, fruitItems());
       expect(c.selectedItem, isNull);
       expect(find.byType(Loading), findsNothing);
     });
@@ -157,8 +157,8 @@ void main() {
         await tester.pumpAndSettle();
       });
       expect(errors, hasLength(3));
-      expect(items, unorderedEquals(fruitItems()));
-      expect(selected, <ValueItem<int>>[items.first]);
+      expect(c.items, fruitItems());
+      expect(c.selectedItems, <ValueItem<int>>[items.first]);
       expect(find.byType(Loading), findsNothing);
     });
   });
