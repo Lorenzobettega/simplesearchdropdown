@@ -16,6 +16,8 @@ final Map<String, String Function(SearchDropDownStrings s)> _fields = {
   'editHint': (s) => s.editHint,
   'confirmDeleteTitle': (s) => s.confirmDeleteTitle,
   'confirmDeleteContent': (s) => s.confirmDeleteContent,
+  'confirmDeleteItemTitle': (s) => s.confirmDeleteItemTitle,
+  'confirmDeleteItemContent': (s) => s.confirmDeleteItemContent,
   'invalidItemTitle': (s) => s.invalidItemTitle,
   'invalidItemContent': (s) => s.invalidItemContent,
   'deleteButton': (s) => s.deleteButton,
@@ -44,6 +46,12 @@ final Map<String, SearchDropDownStrings> _ptOverrides = {
   'confirmDeleteContent': const SearchDropDownStrings(
     confirmDeleteContent: 'X',
   ),
+  'confirmDeleteItemTitle': const SearchDropDownStrings(
+    confirmDeleteItemTitle: 'X',
+  ),
+  'confirmDeleteItemContent': const SearchDropDownStrings(
+    confirmDeleteItemContent: 'X',
+  ),
   'invalidItemTitle': const SearchDropDownStrings(invalidItemTitle: 'X'),
   'invalidItemContent': const SearchDropDownStrings(invalidItemContent: 'X'),
   'deleteButton': const SearchDropDownStrings(deleteButton: 'X'),
@@ -67,6 +75,12 @@ final Map<String, SearchDropDownStrings> _enOverrides = {
   'confirmDeleteTitle': const SearchDropDownStrings.en(confirmDeleteTitle: 'X'),
   'confirmDeleteContent': const SearchDropDownStrings.en(
     confirmDeleteContent: 'X',
+  ),
+  'confirmDeleteItemTitle': const SearchDropDownStrings.en(
+    confirmDeleteItemTitle: 'X',
+  ),
+  'confirmDeleteItemContent': const SearchDropDownStrings.en(
+    confirmDeleteItemContent: 'X',
   ),
   'invalidItemTitle': const SearchDropDownStrings.en(invalidItemTitle: 'X'),
   'invalidItemContent': const SearchDropDownStrings.en(invalidItemContent: 'X'),
@@ -106,10 +120,12 @@ void main() {
       expect(_values(const SearchDropDownStrings()), {
         'searchHint': 'Pesquisar',
         'addItem': 'Criar',
-        'editTitle': 'Editar o item:',
+        'editTitle': 'Editar item',
         'editHint': 'Novo valor',
         'confirmDeleteTitle': 'Tem certeza?',
         'confirmDeleteContent': 'Essa ação não poderá ser desfeita.',
+        'confirmDeleteItemTitle': 'Apagar item?',
+        'confirmDeleteItemContent': '“{item}” será apagado.',
         'invalidItemTitle': 'Erro!',
         'invalidItemContent': 'O valor adicionado não é válido.',
         'deleteButton': 'Apagar',
@@ -130,10 +146,12 @@ void main() {
       expect(_values(const SearchDropDownStrings.en()), {
         'searchHint': 'Search',
         'addItem': 'Create',
-        'editTitle': 'Edit item:',
+        'editTitle': 'Edit item',
         'editHint': 'New value',
         'confirmDeleteTitle': 'Are you sure?',
         'confirmDeleteContent': 'This action cannot be undone.',
+        'confirmDeleteItemTitle': 'Delete item?',
+        'confirmDeleteItemContent': '“{item}” will be deleted.',
         'invalidItemTitle': 'Error!',
         'invalidItemContent': 'The value is not valid.',
         'deleteButton': 'Delete',

@@ -201,7 +201,7 @@ void main() {
       final TextField field = tester.widget<TextField>(
         find.descendant(of: dialog, matching: find.byType(TextField)),
       );
-      expect(field.decoration!.hintText, 'New label');
+      expect(field.decoration!.labelText, 'New label');
     });
   });
 
@@ -743,6 +743,7 @@ void main() {
       );
       await _openDialog(tester);
       expect(find.text('Later del'), findsOneWidget);
+      expect(find.text('Apagar item?'), findsNothing);
       expect(find.text('Tem certeza?'), findsNothing);
     });
 

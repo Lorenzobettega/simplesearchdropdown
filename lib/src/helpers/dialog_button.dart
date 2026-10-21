@@ -18,11 +18,14 @@ class DialogButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
+    final bool themed = buttonSettings.useThemeColors;
+    final Color ink = themed ? scheme.onSurface : buttonSettings.textColor;
     final text = Text(
       buttonSettings.text,
       style: TextStyle(
         fontSize: buttonSettings.fontSize,
-        color: buttonSettings.textColor,
+        color: ink,
         fontWeight: buttonSettings.mediumFont
             ? FontWeight.w500
             : FontWeight.normal,
@@ -34,13 +37,14 @@ class DialogButton extends StatelessWidget {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(buttonSettings.radius),
         border: buttonSettings.activeBorder
-            ? Border.all(color: buttonSettings.textColor)
+            ? Border.all(color: themed ? scheme.outline : ink)
             : null,
       ),
       child: TextButton(
         style: TextButton.styleFrom(
           padding: buttonSettings.padding,
           backgroundColor: buttonSettings.backgroundColor,
+          foregroundColor: ink,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.all(
               Radius.circular(buttonSettings.radius),
@@ -56,7 +60,7 @@ class DialogButton extends StatelessWidget {
                 children: [
                   Icon(
                     buttonSettings.icon,
-                    color: buttonSettings.textColor,
+                    color: ink,
                     size: buttonSettings.iconsize,
                   ),
                   const SizedBox(width: 10),

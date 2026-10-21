@@ -59,19 +59,17 @@ class _DefaultAddListItemState extends State<DefaultAddListItem>
           if (widget.addAdditionalWidget != null)
             Flexible(child: widget.addAdditionalWidget!),
           Flexible(
-            child: busy
-                ? Padding(
-                    padding: const EdgeInsets.only(top: 4),
-                    child: spinner(widget.overlayListSettings, texts),
-                  )
-                : TextButton(
-                    onPressed: _handleItemAdded,
-                    child: Text(
-                      widget.overlayListSettings.customAddItemHint ??
-                          texts.addItem,
-                      style: widget.overlayListSettings.addItemHintStyle,
-                    ),
-                  ),
+            child: busyActions(
+              TextButton(
+                onPressed: _handleItemAdded,
+                child: Text(
+                  widget.overlayListSettings.customAddItemHint ?? texts.addItem,
+                  style: widget.overlayListSettings.addItemHintStyle,
+                ),
+              ),
+              widget.overlayListSettings,
+              texts,
+            ),
           ),
         ],
       ),

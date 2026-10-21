@@ -1,6 +1,7 @@
 // DialogButton renders every DialogButtonSettings field, copyWith keeps the
 // fields it does not replace, and the default*ButtonSettings constants keep
-// their 7.x values. The rendered tests read the box, the TextButton's
+// their values (8.0.1: filled Editar/OK, outlined theme-coloured Cancelar,
+// 48 high, radius 12, no fixed width). The rendered tests read the box, the TextButton's
 // Material, its padding and the painted label and icon.
 
 import 'package:flutter/material.dart';
@@ -89,6 +90,27 @@ void main() {
       final BoxDecoration box = _box(tester);
       expect(box.border, Border.all(color: Colors.purple));
       expect(box.borderRadius, BorderRadius.circular(7));
+    });
+
+    testWidgets('useThemeColors: onSurface label, outline border', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        const DialogButtonSettings(
+          'Go',
+          textColor: Colors.purple,
+          activeBorder: true,
+          useThemeColors: true,
+          icon: Icons.star,
+        ),
+      );
+      final ColorScheme scheme = Theme.of(
+        tester.element(find.byType(DialogButton)),
+      ).colorScheme;
+      expect(_label(tester, 'Go').color, scheme.onSurface);
+      expect(_glyph(tester, Icons.star).color, scheme.onSurface);
+      expect(_box(tester).border, Border.all(color: scheme.outline));
     });
 
     testWidgets('without activeBorder there is no border', (tester) async {
@@ -185,6 +207,7 @@ void main() {
       expect(s.customWidth, isNull);
       expect(s.backgroundColor, isNull);
       expect(s.icon, isNull);
+      expect(s.useThemeColors, isFalse);
     });
 
     test('copyWith(text:) replaces only the text', () {
@@ -201,6 +224,13 @@ void main() {
       expect(c.customWidth, _custom.customWidth);
       expect(c.backgroundColor, _custom.backgroundColor);
       expect(c.icon, _custom.icon);
+      expect(
+        const DialogButtonSettings(
+          't',
+          useThemeColors: true,
+        ).copyWith(text: 'u').useThemeColors,
+        isTrue,
+      );
     });
 
     test('copyWith() keeps the text', () {
@@ -211,7 +241,9 @@ void main() {
       const DialogButtonSettings s = defaultDeleteButtonSettings;
       expect(s.text, 'Apagar');
       expect(s.backgroundColor, const Color.fromARGB(255, 198, 0, 0));
-      expect(s.customWidth, 160);
+      expect(s.customWidth, isNull);
+      expect(s.customHeight, 48);
+      expect(s.radius, 12);
       expect(s.textColor, Colors.white);
       expect(s.activeBorder, isFalse);
     });
@@ -219,25 +251,32 @@ void main() {
     test('defaultCancelButtonSettings', () {
       const DialogButtonSettings s = defaultCancelButtonSettings;
       expect(s.text, 'Cancelar');
-      expect(s.backgroundColor, Colors.white);
+      expect(s.backgroundColor, isNull);
       expect(s.textColor, const Color.fromARGB(255, 66, 70, 76));
-      expect(s.customWidth, 160);
+      expect(s.useThemeColors, isTrue);
+      expect(s.customWidth, isNull);
+      expect(s.customHeight, 48);
+      expect(s.radius, 12);
       expect(s.activeBorder, isTrue);
     });
 
     test('defaultOKButtonSettings', () {
       const DialogButtonSettings s = defaultOKButtonSettings;
       expect(s.text, 'OK');
-      expect(s.customWidth, 160);
-      expect(s.backgroundColor, isNull);
+      expect(s.customWidth, isNull);
+      expect(s.customHeight, 48);
+      expect(s.radius, 12);
+      expect(s.backgroundColor, darkGreen);
       expect(s.activeBorder, isFalse);
     });
 
     test('defaultEditButtonSettings', () {
       const DialogButtonSettings s = defaultEditButtonSettings;
       expect(s.text, 'Editar');
-      expect(s.customWidth, 160);
-      expect(s.backgroundColor, isNull);
+      expect(s.customWidth, isNull);
+      expect(s.customHeight, 48);
+      expect(s.radius, 12);
+      expect(s.backgroundColor, darkGreen);
       expect(s.activeBorder, isFalse);
     });
   });
@@ -279,10 +318,9 @@ void main() {
           .widgetList<DialogButton>(find.byType(DialogButton))
           .toList();
       expect(buttons.map((b) => b.buttonSettings.text), ['Cancelar', 'Apagar']);
-      expect(
-        tester.getSize(find.byType(DialogButton).first),
-        const Size(160, 50),
-      );
+      final Size cancelSize = tester.getSize(find.byType(DialogButton).first);
+      expect(cancelSize.height, 48);
+      expect(cancelSize, tester.getSize(find.byType(DialogButton).last));
       final BoxDecoration cancel =
           tester
                   .widget<DecoratedBox>(
@@ -297,7 +335,11 @@ void main() {
               as BoxDecoration;
       expect(
         cancel.border,
-        Border.all(color: const Color.fromARGB(255, 66, 70, 76)),
+        Border.all(
+          color: Theme.of(
+            tester.element(find.byType(DialogButton).first),
+          ).colorScheme.outline,
+        ),
       );
     });
   });

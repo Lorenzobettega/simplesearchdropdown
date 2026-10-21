@@ -141,28 +141,28 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>>
             widget.defaultAdditionalWidget!,
             SizedBox(width: settings.additionalWidgetSpacing),
           ],
-          if (busy)
-            Padding(
-              padding: const EdgeInsets.only(left: 6, right: 6),
-              child: spinner(settings, texts),
-            )
-          else ...[
-            if (widget.editMode)
-              IconButton(
-                tooltip: texts.editItemTooltip,
-                onPressed: _handleEditItem,
-                icon: settings.dialogEditIcon,
-              ),
-            if (widget.deleteMode)
-              settings.dialogActionWidget ??
+          busyActions(
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.editMode)
                   IconButton(
-                    tooltip: texts.deleteItemTooltip,
-                    onPressed: _handleDeleteItem,
-                    icon: settings.dialogDeleteIcon,
-                  )
-            else
-              const SizedBox.shrink(),
-          ],
+                    tooltip: texts.editItemTooltip,
+                    onPressed: _handleEditItem,
+                    icon: settings.dialogEditIcon,
+                  ),
+                if (widget.deleteMode)
+                  settings.dialogActionWidget ??
+                      IconButton(
+                        tooltip: texts.deleteItemTooltip,
+                        onPressed: _handleDeleteItem,
+                        icon: settings.dialogDeleteIcon,
+                      ),
+              ],
+            ),
+            settings,
+            texts,
+          ),
         ],
       ),
     );

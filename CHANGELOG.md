@@ -1,3 +1,16 @@
+## [8.0.1] - 2026-10-21.
+### Fixed
+- Dialog buttons (edit, delete confirmation, invalid-item warning) sit on one row of equal-width buttons 48 high with radius 12, 12 apart, at any phone width; at 390 px they no longer wrap to two rows. The default `DialogButtonSettings` no longer have a fixed `customWidth: 160` (an explicit `customWidth` is still honoured, and `actionsAlignment` places such buttons).
+- Editar and OK were white text on no background (invisible): they are now filled `darkGreen` (white text, 11.6:1). Apagar stays red (6.2:1). Cancelar is outlined in the theme's `outline` with `onSurface` text, so it follows light and dark themes.
+- The edit dialog no longer shows the label twice: the label line above the field is gone; the field (a themed outlined `TextField`, full content width) starts with the label selected and focused, and Enter confirms. Its title is `Editar item` (`Edit item`), without the colon, and the field label is no longer repeated as its hint.
+- Dialog titles are semibold 20 (`titleLarge`) and the supporting text `bodyMedium` in `onSurfaceVariant`, centred alike in the three dialogs, which share one layout.
+- A row's edit/delete buttons (and the add row's Criar) are hidden behind the spinner instead of removed while a callback runs, so the label and the row no longer move sideways.
+
+### Added
+- The delete confirmation names the item: `Apagar item?` and `“label” será apagado.` above `Essa ação não poderá ser desfeita.` New `SearchDropDownStrings.confirmDeleteItemTitle` and `confirmDeleteItemContent` (`{item}` is replaced by the label, in bold), `DialogSettings.showItemLabel` (default `true`; `false` keeps the generic `Tem certeza?` dialog), and `itemLabel` on `WarningDialog`, `DefaultDialogTitle` and `DefaultDialogContent`; both controllers pass the label. If you customise `confirmDeleteTitle`, set `confirmDeleteItemTitle` too (or `showItemLabel: false`).
+- `DialogButtonSettings.useThemeColors`: label in the theme's `onSurface` and border in its `outline` instead of `textColor` (used by the default cancel button).
+- The example app follows the system dark mode.
+
 ## [8.0.0] - 2026-10-15.
 Requires Flutter 3.32+. A major release with no deprecation period: the 7.x members below are gone. Replace each one as the table shows (the same table is in the README, "Migrating from 7.x").
 

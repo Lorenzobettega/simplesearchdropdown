@@ -22,6 +22,30 @@ mixin BusyRow<W extends StatefulWidget> on State<W> {
     }
   }
 
+  /// [actions], hidden behind [spinner] while [busy]. The hidden actions
+  /// keep their size, so nothing else in the row moves, and take no taps,
+  /// focus or semantics.
+  Widget busyActions(
+    Widget actions,
+    SimpleOverlaySettings settings,
+    SearchDropDownStrings texts,
+  ) => Stack(
+    alignment: Alignment.center,
+    children: [
+      ExcludeFocus(
+        excluding: busy,
+        child: Visibility(
+          visible: !busy,
+          maintainSize: true,
+          maintainAnimation: true,
+          maintainState: true,
+          child: actions,
+        ),
+      ),
+      if (busy) spinner(settings, texts),
+    ],
+  );
+
   /// The spinner sized and coloured by [settings].
   Widget spinner(SimpleOverlaySettings settings, SearchDropDownStrings texts) =>
       SizedBox(

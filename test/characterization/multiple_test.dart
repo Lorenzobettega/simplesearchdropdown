@@ -1691,7 +1691,11 @@ void main() {
       await tester.pump();
 
       expect(find.byType(WarningDialog), findsOneWidget);
-      expect(find.text('Tem certeza?'), findsOneWidget);
+      expect(find.text('Apagar item?'), findsOneWidget);
+      expect(
+        find.text('“Cherry” será apagado.', findRichText: true),
+        findsOneWidget,
+      );
       expect(find.text('Essa ação não poderá ser desfeita.'), findsOneWidget);
       expect(find.text('Cancelar'), findsOneWidget);
       expect(find.text('Apagar'), findsOneWidget);
@@ -1767,6 +1771,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Sure?'), findsOneWidget);
+      expect(find.text('Apagar item?'), findsNothing);
       expect(find.text('Tem certeza?'), findsNothing);
     });
   });

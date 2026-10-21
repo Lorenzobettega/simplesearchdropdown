@@ -15,7 +15,7 @@ keyboard navigation and Portuguese texts by default (any language via
 
 ```yaml
 dependencies:
-  simple_search_dropdown: ^8.0.0
+  simple_search_dropdown: ^8.0.1
 ```
 
 ```dart

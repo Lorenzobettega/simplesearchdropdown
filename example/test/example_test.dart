@@ -150,7 +150,9 @@ Future<void> _deleteRow(WidgetTester tester, String label) async {
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 300));
   expect(find.byType(AlertDialog), findsOneWidget);
-  expect(find.text('Tem certeza?'), findsOneWidget);
+  expect(find.text('Apagar item?'), findsOneWidget);
+  expect(
+      find.text('“$label” será apagado.', findRichText: true), findsOneWidget);
   expect(find.text('Cancelar'), findsOneWidget);
   await tester.tap(find.text('Apagar'));
   await tester.pump();
@@ -164,7 +166,7 @@ Future<void> _editRow(
   await tester.pump(const Duration(milliseconds: 300));
   final Finder dialog = find.byType(EditDialog);
   expect(dialog, findsOneWidget);
-  expect(find.text('Editar o item:'), findsOneWidget);
+  expect(find.text('Editar item'), findsOneWidget);
   await tester.enterText(
     find.descendant(of: dialog, matching: find.byType(TextField)),
     newLabel,

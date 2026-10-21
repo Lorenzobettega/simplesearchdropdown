@@ -719,7 +719,12 @@ class SearchDropDownController<T> extends DropDownControllerBase {
       return;
     }
     if (confirmDelete &&
-        !await confirmDeletion(context, deleteDialogSettings, strings)) {
+        !await confirmDeletion(
+          context,
+          deleteDialogSettings,
+          strings,
+          itemLabel: item.label,
+        )) {
       return;
     }
     await onDeleteItem?.call(item);

@@ -100,6 +100,15 @@ List<String> _rowLabels(WidgetTester tester) =>
 Finder _inAddRow(Finder matching) =>
     find.descendant(of: find.byType(DefaultAddListItem), matching: matching);
 
+/// Whether [target] sits under a `Visibility(visible: false)`.
+bool _hidden(Finder target) => find
+    .ancestor(
+      of: target,
+      matching: find.byWidgetPredicate((w) => w is Visibility && !w.visible),
+    )
+    .evaluate()
+    .isNotEmpty;
+
 Finder _inDialog(Finder matching) =>
     find.descendant(of: find.byType(AlertDialog), matching: matching);
 
@@ -273,7 +282,8 @@ void main() {
           _inAddRow(find.byType(CircularProgressIndicator)),
           findsOneWidget,
         );
-        expect(find.text('Criar'), findsNothing);
+        // Hidden behind the spinner, keeping its place (8.0.1).
+        expect(find.text('Criar').hitTestable(), findsNothing);
         expect(c.selectedItem, isNull);
         expect(c.localSearchController.isOpen, isTrue);
 
@@ -551,8 +561,12 @@ void main() {
       await tester.pump();
 
       expect(_spinnerIn('Banana'), findsOneWidget);
-      expect(_inRow('Banana', find.byIcon(Icons.delete)), findsNothing);
-      expect(find.byIcon(Icons.delete), findsNWidgets(4));
+      // Hidden behind the spinner, keeping its place (8.0.1).
+      expect(
+        _inRow('Banana', find.byIcon(Icons.delete)).hitTestable(),
+        findsNothing,
+      );
+      expect(find.byIcon(Icons.delete).hitTestable(), findsNWidgets(4));
 
       await tester.pump(const Duration(seconds: 1));
       await tester.pumpAndSettle();
@@ -602,8 +616,8 @@ void main() {
     );
 
     testWidgets(
-      'tapping delete opens "Tem certeza?" with the default content and '
-      'Cancelar / Apagar, without deleting yet',
+      'tapping delete opens "Apagar item?" naming the item, with the default '
+      'content and Cancelar / Apagar, without deleting yet',
       (tester) async {
         final List<ValueItem<int>> deleted = <ValueItem<int>>[];
         await _pump(tester, confirming(fruitItems(), deleted));
@@ -611,7 +625,11 @@ void main() {
 
         await _tapDelete(tester, 'Banana');
 
-        expect(_inDialog(find.text('Tem certeza?')), findsOneWidget);
+        expect(_inDialog(find.text('Apagar item?')), findsOneWidget);
+        expect(
+          _inDialog(find.text('“Banana” será apagado.', findRichText: true)),
+          findsOneWidget,
+        );
         expect(
           _inDialog(find.text('Essa ação não poderá ser desfeita.')),
           findsOneWidget,
@@ -763,8 +781,8 @@ void main() {
     );
 
     testWidgets(
-      'tapping edit opens the dialog with "Editar o item:", the item label, '
-      'the "Novo valor" hint and Cancelar / Editar',
+      'tapping edit opens the dialog with "Editar item", the field prefilled '
+      'with the item label, the "Novo valor" label and Cancelar / Editar',
       (tester) async {
         await _pump(tester, editing(fruitItems(), <List<ValueItem<int>>>[]));
         await openSingle(tester);
@@ -772,11 +790,12 @@ void main() {
         await _tapEdit(tester, 'Banana');
 
         expect(find.byType(EditDialog), findsOneWidget);
-        expect(_inEditDialog(find.text('Editar o item:')), findsOneWidget);
-        // The label above the field, plus the field prefilled with it (B2).
-        expect(_inEditDialog(find.text('Banana')), findsNWidgets(2));
+        expect(_inEditDialog(find.text('Editar item')), findsOneWidget);
+        // Only the field, prefilled (B2), shows the label: no line above it
+        // (8.0.1), and the field label is not repeated as a hint.
+        expect(_inEditDialog(find.text('Banana')), findsOneWidget);
         expect(_editField(tester).controller?.text, 'Banana');
-        expect(_editField(tester).decoration?.hintText, 'Novo valor');
+        expect(_editField(tester).decoration?.hintText, isNull);
         expect(_editField(tester).decoration?.labelText, 'Novo valor');
         expect(
           _inEditDialog(find.widgetWithText(TextButton, 'Cancelar')),
@@ -865,13 +884,19 @@ void main() {
         await _tapEdit(tester, 'Banana');
 
         expect(_spinnerIn('Banana'), findsOneWidget);
-        expect(_inRow('Banana', find.byIcon(Icons.edit)), findsNothing);
+        // Hidden behind the spinner, keeping its place (8.0.1); the dialog
+        // barrier would hide it from hit tests anyway, so read the flag.
+        expect(_hidden(_inRow('Banana', find.byIcon(Icons.edit))), isTrue);
 
         await tester.tap(_inDialog(find.text('Cancelar')));
         await tester.pumpAndSettle();
 
         expect(_spinnerIn('Banana'), findsNothing);
-        expect(_inRow('Banana', find.byIcon(Icons.edit)), findsOneWidget);
+        expect(_hidden(_inRow('Banana', find.byIcon(Icons.edit))), isFalse);
+        expect(
+          _inRow('Banana', find.byIcon(Icons.edit)).hitTestable(),
+          findsOneWidget,
+        );
       },
     );
 
@@ -1093,6 +1118,7 @@ void main() {
           _inDialog(find.widgetWithText(TextButton, 'Remove')),
           findsOneWidget,
         );
+        expect(find.text('Apagar item?'), findsNothing);
         expect(find.text('Tem certeza?'), findsNothing);
         expect(find.text('Essa ação não poderá ser desfeita.'), findsNothing);
         expect(find.text('Cancelar'), findsNothing);
@@ -1168,11 +1194,11 @@ void main() {
         await _tapEdit(tester, 'Banana');
 
         expect(_inEditDialog(find.text('Rename')), findsOneWidget);
-        expect(find.text('Editar o item:'), findsNothing);
-        // The label above the field, plus the field prefilled with it (B2).
-        expect(_inEditDialog(find.text('Banana')), findsNWidgets(2));
+        expect(find.text('Editar item'), findsNothing);
+        // The field prefilled with the label (B2), shown once (8.0.1).
+        expect(_inEditDialog(find.text('Banana')), findsOneWidget);
         expect(_editField(tester).controller?.text, 'Banana');
-        expect(_editField(tester).decoration?.hintText, 'New name');
+        expect(_editField(tester).decoration?.labelText, 'New name');
         expect(
           _inEditDialog(find.widgetWithText(TextButton, 'Back')),
           findsOneWidget,
@@ -1213,7 +1239,7 @@ void main() {
         expect(_inEditDialog(find.text('custom')), findsOneWidget);
         expect(_inEditDialog(find.text('Banana')), findsNothing);
         expect(_inEditDialog(find.byType(TextField)), findsNothing);
-        expect(_inEditDialog(find.text('Editar o item:')), findsOneWidget);
+        expect(_inEditDialog(find.text('Editar item')), findsOneWidget);
       },
     );
   });

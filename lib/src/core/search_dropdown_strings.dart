@@ -13,10 +13,12 @@ class SearchDropDownStrings {
   const SearchDropDownStrings({
     this.searchHint = 'Pesquisar',
     this.addItem = 'Criar',
-    this.editTitle = 'Editar o item:',
+    this.editTitle = 'Editar item',
     this.editHint = 'Novo valor',
     this.confirmDeleteTitle = 'Tem certeza?',
     this.confirmDeleteContent = 'Essa ação não poderá ser desfeita.',
+    this.confirmDeleteItemTitle = 'Apagar item?',
+    this.confirmDeleteItemContent = '“{item}” será apagado.',
     this.invalidItemTitle = 'Erro!',
     this.invalidItemContent = 'O valor adicionado não é válido.',
     this.deleteButton = 'Apagar',
@@ -36,10 +38,12 @@ class SearchDropDownStrings {
   const SearchDropDownStrings.en({
     this.searchHint = 'Search',
     this.addItem = 'Create',
-    this.editTitle = 'Edit item:',
+    this.editTitle = 'Edit item',
     this.editHint = 'New value',
     this.confirmDeleteTitle = 'Are you sure?',
     this.confirmDeleteContent = 'This action cannot be undone.',
+    this.confirmDeleteItemTitle = 'Delete item?',
+    this.confirmDeleteItemContent = '“{item}” will be deleted.',
     this.invalidItemTitle = 'Error!',
     this.invalidItemContent = 'The value is not valid.',
     this.deleteButton = 'Delete',
@@ -72,6 +76,14 @@ class SearchDropDownStrings {
 
   /// Body of the delete confirmation dialog.
   final String confirmDeleteContent;
+
+  /// Title of the delete confirmation when it names the item
+  /// (`DialogSettings.showItemLabel`), in place of [confirmDeleteTitle].
+  final String confirmDeleteItemTitle;
+
+  /// Line above [confirmDeleteContent] naming the item; `{item}` is replaced
+  /// by the item label, shown in bold.
+  final String confirmDeleteItemContent;
 
   /// Title of the dialog shown when `verifyInputItem` rejects an item.
   final String invalidItemTitle;
