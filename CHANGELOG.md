@@ -5,6 +5,15 @@
 - The edit dialog no longer shows the label twice: the label line above the field is gone; the field (a themed outlined `TextField`, full content width) starts with the label selected and focused, and Enter confirms. Its title is `Editar item` (`Edit item`), without the colon, and the field label is no longer repeated as its hint.
 - Dialog titles are semibold 20 (`titleLarge`) and the supporting text `bodyMedium` in `onSurfaceVariant`, centred alike in the three dialogs, which share one layout.
 - A row's edit/delete buttons (and the add row's Criar) are hidden behind the spinner instead of removed while a callback runs, so the label and the row no longer move sideways.
+- Dark theme: the bar, the multiple box, the list and its rows kept light surfaces (white, grey, black icons, a light-grey hint on white) under a dark theme. A color left unset in `SimpleSearchbarSettings` / `SimpleOverlaySettings` now follows the theme: under a light theme it keeps its 8.0.0 value (the light goldens are unchanged), under a dark one it comes from the `ColorScheme` (`surfaceContainerHigh` surfaces, `onSurfaceVariant` hint and rows, `secondaryContainer` selected row and chips, `outline` highlight border, `error` delete icon, `primary` spinner), with every text pair at WCAG AA (4.5:1) or better. A color you set still wins.
+- The row spinner was a 28 px ring with a 4 px stroke, bigger than the 20 px icons it replaces: it is now 24 px with a 2.5 stroke (`loadingSize`, new `loadingStrokeWidth`).
+
+### Added
+- The delete confirmation names the item: `Apagar item?` and `“label” será apagado.` above `Essa ação não poderá ser desfeita.` New `SearchDropDownStrings.confirmDeleteItemTitle` and `confirmDeleteItemContent` (`{item}` is replaced by the label, in bold), `DialogSettings.showItemLabel` (default `true`; `false` keeps the generic `Tem certeza?` dialog), and `itemLabel` on `WarningDialog`, `DefaultDialogTitle` and `DefaultDialogContent`; both controllers pass the label. If you customise `confirmDeleteTitle`, set `confirmDeleteItemTitle` too (or `showItemLabel: false`).
+- `DialogButtonSettings.useThemeColors`: label in the theme's `onSurface` and border in its `outline` instead of `textColor` (used by the default cancel button).
+- `custom...` fields that tell whether a color was set (`null` follows the theme): `SimpleSearchbarSettings.customBackgroundColor`, `customHoverColor`, `customBoxMultiSelectedBackgroundColor`; `SimpleOverlaySettings.customSelectedItemBackgroundColor`, `customSelectedItemHoverColor`, `customUnselectedItemHoverColor`, `customHighlightedItemBorderColor`, `customDialogDeleteIcon`, `customDialogEditIcon`, `customLoadingColor`. The constructor parameters of those colors are now nullable; the getters keep their types and light values, so existing code compiles unchanged.
+- `SimpleOverlaySettings.loadingStrokeWidth` (default `2.5`) and `Loading.strokeWidth` (default: the indicator's own).
+- The example app follows the system dark mode.
 
 ### Performance
 Single dropdown (no behaviour change; counts from `test/single/rebuild_counts_test.dart`):
@@ -16,11 +25,6 @@ Single dropdown (no behaviour change; counts from `test/single/rebuild_counts_te
 - `updateListItems` with a selection (or `shouldReset`) notifies once instead of twice and filters once; `updateSelectedItem(null)` is still called once.
 - Both controllers send one notification per frame for any number of changes made during a build (was one per change).
 - Opening the view no longer rebuilds (and re-sorts) the item list when it has not changed.
-
-### Added
-- The delete confirmation names the item: `Apagar item?` and `“label” será apagado.` above `Essa ação não poderá ser desfeita.` New `SearchDropDownStrings.confirmDeleteItemTitle` and `confirmDeleteItemContent` (`{item}` is replaced by the label, in bold), `DialogSettings.showItemLabel` (default `true`; `false` keeps the generic `Tem certeza?` dialog), and `itemLabel` on `WarningDialog`, `DefaultDialogTitle` and `DefaultDialogContent`; both controllers pass the label. If you customise `confirmDeleteTitle`, set `confirmDeleteItemTitle` too (or `showItemLabel: false`).
-- `DialogButtonSettings.useThemeColors`: label in the theme's `onSurface` and border in its `outline` instead of `textColor` (used by the default cancel button).
-- The example app follows the system dark mode.
 
 ## [8.0.0] - 2026-10-15.
 Requires Flutter 3.32+. A major release with no deprecation period: the 7.x members below are gone. Replace each one as the table shows (the same table is in the README, "Migrating from 7.x").

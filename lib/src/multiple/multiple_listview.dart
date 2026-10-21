@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/core/theme_colors.dart';
 
 /// The open list of a [MultipleSearchDropDown]: a search field and the items.
 class MultipleListView<T> extends StatefulWidget {
@@ -127,7 +128,9 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
   Widget build(BuildContext context) {
     final SimpleSearchbarSettings bar = widget.searchBarSettings;
     final SimpleOverlaySettings list = widget.overlayListSettings;
-    final Color background = list.dialogBackgroundColor ?? bar.backgroundColor;
+    final ThemeData theme = Theme.of(context);
+    final BarColors colors = BarColors.of(bar, theme);
+    final Color background = list.dialogBackgroundColor ?? colors.background;
     final SearchDropDownStrings texts =
         widget.strings ?? SearchDropDownStrings.of(context);
     return Card(
@@ -142,24 +145,22 @@ class _MultipleListViewState<T> extends State<MultipleListView<T>> {
           children: <Widget>[
             SearchBar(
               controller: _search,
-              backgroundColor: WidgetStatePropertyAll<Color>(
-                bar.backgroundColor,
-              ),
+              backgroundColor: WidgetStatePropertyAll<Color>(colors.background),
               overlayColor: WidgetStatePropertyAll<Color>(
-                list.unselectedItemHoverColor,
+                ListColors.of(list, theme).unselectedHover,
               ),
               constraints: BoxConstraints(
                 minHeight: bar.dropdownHeight,
                 maxWidth: bar.dropdownWidth,
               ),
               surfaceTintColor: WidgetStatePropertyAll<Color>(
-                bar.backgroundColor,
+                colors.background,
               ),
               shape: WidgetStatePropertyAll<OutlinedBorder>(bar.border),
               hintText: bar.customHint ?? texts.searchHint,
-              hintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
+              hintStyle: WidgetStatePropertyAll<TextStyle?>(colors.hintStyle),
               textStyle: WidgetStatePropertyAll<TextStyle?>(
-                bar.searchBarTextStyle ?? bar.hintStyle,
+                bar.searchBarTextStyle ?? colors.hintStyle,
               ),
               side: const WidgetStatePropertyAll<BorderSide>(
                 BorderSide(style: BorderStyle.none),

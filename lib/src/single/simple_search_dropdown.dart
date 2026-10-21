@@ -5,6 +5,7 @@ import 'package:flutter/services.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/controller_base.dart';
+import 'package:simple_search_dropdown/src/core/theme_colors.dart';
 
 /// A single-selection dropdown with a search bar, built on [SearchAnchor].
 ///
@@ -189,8 +190,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     final SimpleOverlaySettings list = widget.overlayListSettings;
     final SearchController search = _controller.localSearchController;
     final String hint = bar.customHint ?? strings.searchHint;
+    final BarColors colors = BarColors.of(bar, Theme.of(context));
     final Color viewBackground =
-        list.dialogBackgroundColor ?? bar.backgroundColor;
+        list.dialogBackgroundColor ?? colors.background;
     return SizedBox(
       width: bar.dropdownWidth,
       height: bar.dropdownHeight,
@@ -256,14 +258,12 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           viewShape: const RoundedRectangleBorder(
             borderRadius: BorderRadius.all(Radius.circular(10)),
           ),
-          barBackgroundColor: WidgetStatePropertyAll<Color>(
-            bar.backgroundColor,
-          ),
+          barBackgroundColor: WidgetStatePropertyAll<Color>(colors.background),
           viewBackgroundColor: viewBackground,
           isFullScreen: list.openFullScreen,
-          barHintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
+          barHintStyle: WidgetStatePropertyAll<TextStyle?>(colors.hintStyle),
           barHintText: hint,
-          barOverlayColor: WidgetStatePropertyAll<Color>(bar.hoverColor),
+          barOverlayColor: WidgetStatePropertyAll<Color>(colors.hover),
           barTextStyle: WidgetStatePropertyAll<TextStyle?>(
             bar.searchBarTextStyle,
           ),
@@ -275,7 +275,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           viewLeading: const SizedBox.shrink(),
           viewElevation: bar.elevation,
           viewHintText: hint,
-          viewHeaderHintStyle: bar.hintStyle,
+          viewHeaderHintStyle: colors.hintStyle,
           viewHeaderTextStyle: bar.searchBarTextStyle,
           keyboardType: bar.showKeyboardOnTap
               ? bar.keyboardType

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/busy_row.dart';
-
-/// The stock settings, to tell a customised selected style from the default.
-const SimpleOverlaySettings _stock = SimpleOverlaySettings();
+import 'package:simple_search_dropdown/src/core/theme_colors.dart';
 
 ///The default widget that will be presented on the list.
 class DefaultListTile<T> extends StatefulWidget {
@@ -73,6 +71,7 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>>
     final SearchDropDownStrings texts =
         widget.strings ?? SearchDropDownStrings.of(context);
     final SimpleOverlaySettings settings = widget.overlayListSettings;
+    final ListColors colors = ListColors.of(settings, Theme.of(context));
     return Padding(
       padding: settings.itemsPadding,
       child: Row(
@@ -84,20 +83,10 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>>
                   Set<WidgetState> states,
                 ) {
                   if (widget.selected) {
-                    return settings.selectedItemBackgroundColor;
+                    return colors.selectedBackground;
                   }
                   if (widget.highlighted) {
-                    // The stock text style pairs with the hover fill; a
-                    // customised one keeps the selected background (7.x).
-                    final bool stockPair =
-                        settings.selectedItemTextStyle ==
-                            _stock.selectedItemTextStyle &&
-                        settings.unselectedItemHoverColor ==
-                            _stock.unselectedItemHoverColor;
-                    return settings.highlightedItemBackgroundColor ??
-                        (stockPair
-                            ? settings.unselectedItemHoverColor
-                            : settings.selectedItemBackgroundColor);
+                    return colors.highlightedBackground;
                   }
                   return Colors.transparent;
                 }),
@@ -105,7 +94,7 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>>
                   RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                     side: widget.highlighted
-                        ? BorderSide(color: settings.highlightedItemBorderColor)
+                        ? BorderSide(color: colors.highlightedBorder)
                         : BorderSide.none,
                   ),
                 ),
@@ -113,9 +102,9 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>>
                   Set<WidgetState> states,
                 ) {
                   if (widget.selected) {
-                    return settings.selectedItemHoverColor;
+                    return colors.selectedHover;
                   }
-                  return settings.unselectedItemHoverColor;
+                  return colors.unselectedHover;
                 }),
               ),
               onPressed: () => widget.onPressed(widget.item),
@@ -130,8 +119,8 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>>
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: (widget.selected || widget.highlighted
-                              ? settings.selectedItemTextStyle
-                              : settings.unselectedItemTextStyle),
+                              ? colors.selectedTextStyle
+                              : colors.unselectedTextStyle),
                         ),
                       ),
               ),
@@ -149,14 +138,14 @@ class _DefaultListTileState<T> extends State<DefaultListTile<T>>
                   IconButton(
                     tooltip: texts.editItemTooltip,
                     onPressed: _handleEditItem,
-                    icon: settings.dialogEditIcon,
+                    icon: colors.editIcon,
                   ),
                 if (widget.deleteMode)
                   settings.dialogActionWidget ??
                       IconButton(
                         tooltip: texts.deleteItemTooltip,
                         onPressed: _handleDeleteItem,
-                        icon: settings.dialogDeleteIcon,
+                        icon: colors.deleteIcon,
                       ),
               ],
             ),

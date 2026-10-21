@@ -155,6 +155,19 @@ void main() {
       expect(find.bySemanticsLabel('Carregando'), findsOneWidget);
       semantics.dispose();
     });
+
+    testWidgets('strokeWidth: the ring stroke; unset, the indicator default', (
+      tester,
+    ) async {
+      CircularProgressIndicator ring() =>
+          tester.widget(find.byType(CircularProgressIndicator));
+      await tester.pumpWidget(
+        host(const Loading(cor: Colors.teal, strokeWidth: 3)),
+      );
+      expect(ring().strokeWidth, 3);
+      await tester.pumpWidget(host(const Loading(cor: Colors.teal)));
+      expect(ring().strokeWidth, isNull);
+    });
   });
 
   group('darkGreen', () {

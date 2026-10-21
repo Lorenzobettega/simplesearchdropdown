@@ -8,7 +8,7 @@ class SimpleSearchbarSettings {
     this.dropdownWidth = 300,
     this.dropdownHeight = 50,
     this.elevation = 2,
-    this.backgroundColor = Colors.white,
+    Color? backgroundColor,
     this.border = const RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(10)),
     ),
@@ -17,7 +17,7 @@ class SimpleSearchbarSettings {
     this.actions,
     String? hint,
     this.hintStyle = const TextStyle(fontSize: 14),
-    this.hoverColor = const Color.fromRGBO(245, 245, 245, 1),
+    Color? hoverColor,
     this.showArrow = true,
     this.showClearIcon = true,
     this.dropdownClosedArrowIcon = Icons.arrow_drop_down,
@@ -30,19 +30,17 @@ class SimpleSearchbarSettings {
     this.boxMultiSelectedClearIconSize = 20,
     this.boxMultiSelectedClearIconColor,
     this.boxMultiItemWidgetBuilder,
-    this.boxMultiSelectedBackgroundColor = const Color.fromRGBO(
-      224,
-      224,
-      224,
-      1,
-    ),
+    Color? boxMultiSelectedBackgroundColor,
     this.boxMultiSelectedTextStyle,
     this.searchBarPadding,
     this.showKeyboardOnTap = true,
     this.keyboardType,
     this.textInputAction,
     this.showDivider = false,
-  }) : customHint = hint;
+  }) : customHint = hint,
+       customBackgroundColor = backgroundColor,
+       customHoverColor = hoverColor,
+       customBoxMultiSelectedBackgroundColor = boxMultiSelectedBackgroundColor;
 
   ///Main/outside Container height(default:50)
   final double dropdownHeight;
@@ -50,8 +48,12 @@ class SimpleSearchbarSettings {
   ///Main/outside Container width(default:300)
   final double dropdownWidth;
 
-  ///The background color of the searchbar and overlay.
-  final Color backgroundColor;
+  ///The background color set explicitly, or `null` to follow the theme.
+  final Color? customBackgroundColor;
+
+  ///The background color of the searchbar and overlay (default: white; under
+  ///a dark theme the dropdowns use `colorScheme.surfaceContainerHigh`).
+  Color get backgroundColor => customBackgroundColor ?? Colors.white;
 
   ///The elevation of the searchbar and overlay (default:2).
   final double elevation;
@@ -77,11 +79,17 @@ class SimpleSearchbarSettings {
   ///The hint of the searchbar (default: `'Pesquisar'`).
   String get hint => customHint ?? const SearchDropDownStrings().searchHint;
 
-  ///The style of the hint of the searchbar.
+  ///The style of the hint of the searchbar. Without a color, a dark theme
+  ///draws the hint in `colorScheme.onSurfaceVariant`.
   final TextStyle? hintStyle;
 
-  ///The hover color of the searchbar.
-  final Color hoverColor;
+  ///The hover color set explicitly, or `null` to follow the theme.
+  final Color? customHoverColor;
+
+  ///The hover color of the searchbar (default: light grey; under a dark theme
+  ///the dropdowns use `colorScheme.onSurface` at 8%).
+  Color get hoverColor =>
+      customHoverColor ?? const Color.fromRGBO(245, 245, 245, 1);
 
   ///If true, the arrow icon will appear on the end of the searchbar (default:true).
   final bool showArrow;
@@ -113,10 +121,17 @@ class SimpleSearchbarSettings {
   ///Outside/horizontal list of selected items clear icon color
   final Color? boxMultiSelectedClearIconColor;
 
-  ///Outside/horizontal list of selected items Background color
-  final Color boxMultiSelectedBackgroundColor;
+  ///The chip background color set explicitly, or `null` to follow the theme.
+  final Color? customBoxMultiSelectedBackgroundColor;
 
-  ///Outside/horizontal list of selected items Background color
+  ///Outside/horizontal list of selected items Background color (default:
+  ///light grey; under a dark theme the dropdowns use
+  ///`colorScheme.secondaryContainer`).
+  Color get boxMultiSelectedBackgroundColor =>
+      customBoxMultiSelectedBackgroundColor ??
+      const Color.fromRGBO(224, 224, 224, 1);
+
+  ///Outside/horizontal list of selected items TextStyle
   final TextStyle? boxMultiSelectedTextStyle;
 
   ///Outside/horizontal list of selected items custom widget
