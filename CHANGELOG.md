@@ -19,6 +19,7 @@
 - `custom...` fields that tell whether a color was set (`null` follows the theme): `SimpleSearchbarSettings.customBackgroundColor`, `customHoverColor`, `customBoxMultiSelectedBackgroundColor`; `SimpleOverlaySettings.customSelectedItemBackgroundColor`, `customSelectedItemHoverColor`, `customUnselectedItemHoverColor`, `customHighlightedItemBorderColor`, `customDialogDeleteIcon`, `customDialogEditIcon`, `customLoadingColor`. The constructor parameters of those colors are now nullable; the getters keep their types and 8.0.0 values, so existing code compiles unchanged.
 - `SimpleOverlaySettings.loadingStrokeWidth` (default `2.5`) and `Loading.strokeWidth` (default: the indicator's own).
 - The example app follows the system dark mode with a Material 3 theme seeded from `darkGreen`, in titled sections with 16/24 px spacing; its custom row (`PersonRow`: initial, name, id, theme colors at AA contrast) replaces the blue box, and the clear/delete callbacks show a SnackBar instead of printing.
+- The README was rewritten for pub.dev (what the package is for, features, a screenshot gallery of the Material 3 example in light and dark, controller table, customization, keyboard and accessibility), and the pubspec lists the screenshots (`doc/screenshots/`).
 
 ### Performance
 Single dropdown (no behaviour change; counts from `test/single/rebuild_counts_test.dart`):

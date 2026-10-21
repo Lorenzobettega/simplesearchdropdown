@@ -1,5 +1,5 @@
 name: simple_search_dropdown
-description: Single and multiple selection dropdowns with search, add/edit/delete of items, keyboard navigation and localizable texts.
+description: Searchable single and multi-select dropdowns for Flutter with accent-insensitive search, add/edit/delete of items, keyboard navigation and Material 3 theming.
 homepage: https://github.com/Lorenzobettega/simplesearchdropdown
 repository: https://github.com/Lorenzobettega/simplesearchdropdown
 issue_tracker: https://github.com/Lorenzobettega/simplesearchdropdown/issues
@@ -9,6 +9,20 @@ topics:
   - autocomplete
   - select
   - widget
+
+screenshots:
+  - description: Single selection dropdown open, with the selected item highlighted.
+    path: doc/screenshots/single_light.webp
+  - description: Accent-insensitive search with custom rows.
+    path: doc/screenshots/search_accents.webp
+  - description: Multiple selection with chips and the list open.
+    path: doc/screenshots/multiple_light.webp
+  - description: Delete confirmation dialog naming the item.
+    path: doc/screenshots/delete_dialog.webp
+  - description: Single selection dropdown in a dark theme.
+    path: doc/screenshots/single_dark.webp
+  - description: Multiple selection dropdown in a dark theme.
+    path: doc/screenshots/multiple_dark.webp
 
 version: 8.0.1
 

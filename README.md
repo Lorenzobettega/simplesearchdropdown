@@ -1,15 +1,61 @@
 # Simple Search Dropdown
 
-Single and multiple selection dropdowns with search, built on Material 3.
-Accent- and case-insensitive filtering, optional add / edit / delete of items,
-keyboard navigation and Portuguese texts by default (any language via
-`SearchDropDownStrings`).
+Searchable single and multiple selection dropdowns for Flutter, built on
+Material 3.
 
-[![Buy Me A Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-FFDD00?style=flat)](https://buymeacoffee.com/gian.bettega)
+[![pub package](https://img.shields.io/pub/v/simple_search_dropdown.svg)](https://pub.dev/packages/simple_search_dropdown)
+[![CI](https://github.com/Lorenzobettega/simplesearchdropdown/actions/workflows/ci.yml/badge.svg)](https://github.com/Lorenzobettega/simplesearchdropdown/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
-| Add | Delete | Search |
-|---|---|---|
-| ![Add Mode](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/d3b61c7e-b4ac-4b53-867b-71daab10d687) | ![Delete Mode](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/ee4df7de-ec95-4804-a239-dc9ab8b5af9b) | ![Search](https://github.com/Lorenzobettega/simplesearchdropdown/assets/84482292/2e8360a7-9dd2-4b23-9431-d50b44cb7e07) |
+`SearchDropDown` picks one item and `MultipleSearchDropDown` picks several
+(shown as chips). Both filter as you type, can let users create, edit and
+delete items in place, and keep their whole state in a controller you own.
+Use it when a plain `DropdownButton` is not enough: long lists, lists users
+search more than scroll, or lists users maintain themselves.
+
+## Features
+
+- **Single and multiple selection**: `SearchDropDown` (built on
+  `SearchAnchor`) and `MultipleSearchDropDown` (chips in the box, the list in
+  an overlay with its own search field).
+- **Forgiving search**: accent- and case-insensitive by default (`ca` finds
+  `Lança`), with `latinize`, `caseSensitive` and `trim` to tune it.
+- **Add, edit and delete** from the list, with `async` callbacks (the row
+  shows a spinner while they run), input validation and an optional delete
+  confirmation that names the item.
+- **Controller-driven**: `SearchDropDownController` and
+  `MultipleSearchDropDownController` are `ChangeNotifier`s; change the
+  selection, items or enabled state from code and the widget follows. No
+  `GlobalKey`. Controllers keep their own copy of your list and never write
+  to yours.
+- **Sorting**: `SortType.none`, `alphabetical`, `reverseAlphabetical`,
+  `selectedFirst`.
+- **Theming**: unset colors come from your `ColorScheme`, in light and dark
+  themes, with AA text contrast; every color can be overridden.
+- **Localizable texts**: Portuguese by default, English built in
+  (`SearchDropDownStrings.en()`), any language via your own strings, per
+  widget or app-wide.
+- **Keyboard and accessibility**: arrow keys, PageUp/PageDown, Enter and Tab;
+  tooltips and semantics labels on rows, chips, buttons and spinners.
+- **Large lists**: rows are built lazily, and a selection or an arrow key
+  rebuilds only the rows whose state changed.
+- **Custom rows** with `itemWidgetBuilder`, any value type (`ValueItem<T>`).
+
+## Screenshots
+
+<p>
+  <img src="https://raw.githubusercontent.com/Lorenzobettega/simplesearchdropdown/main/doc/screenshots/single_light.webp" width="260" title="Single selection" alt="Single dropdown open, the selected item highlighted">
+  <img src="https://raw.githubusercontent.com/Lorenzobettega/simplesearchdropdown/main/doc/screenshots/search_accents.webp" width="260" title="Accent-insensitive search, custom rows" alt="Typing ca finds Lucas and Lança, custom rows">
+  <img src="https://raw.githubusercontent.com/Lorenzobettega/simplesearchdropdown/main/doc/screenshots/multiple_light.webp" width="260" title="Multiple selection" alt="Multiple dropdown with three chips and the list open">
+  <img src="https://raw.githubusercontent.com/Lorenzobettega/simplesearchdropdown/main/doc/screenshots/delete_dialog.webp" width="260" title="Delete confirmation" alt="Delete confirmation dialog naming the item">
+  <img src="https://raw.githubusercontent.com/Lorenzobettega/simplesearchdropdown/main/doc/screenshots/single_dark.webp" width="260" title="Dark theme" alt="Single dropdown open in a dark theme">
+  <img src="https://raw.githubusercontent.com/Lorenzobettega/simplesearchdropdown/main/doc/screenshots/multiple_dark.webp" width="260" title="Dark theme, multiple" alt="Multiple dropdown in a dark theme">
+</p>
+
+In order: single selection, accent-insensitive search with custom
+rows, multiple selection, the delete confirmation, and both dropdowns in a
+dark theme. All taken from the [example app](example/lib/main.dart)
+(Material 3 theme seeded from `darkGreen`).
 
 ## Install
 
@@ -24,10 +70,10 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 Requires Flutter 3.32 or newer.
 
-## Single selection
+## Quick start: single selection
 
-All state lives in a `SearchDropDownController` (a `ChangeNotifier`): change it
-from code and the widget updates, no `GlobalKey` needed.
+Create a `SearchDropDownController` with your items and hand it to
+`SearchDropDown`:
 
 ```dart
 class FruitPicker extends StatefulWidget {
@@ -63,31 +109,10 @@ with the widget when the controller created its own `SearchController`. If you
 pass `searchController:`, both are yours: dispose them together, in your own
 `dispose`.
 
-### Items
-
-Both controllers take `items:` and keep their own copy (a multiple controller
-copies `selectedItems` too); `controller.items` is a read-only view of it. Your
-lists are never read again nor written:
-
-- sorting orders the controller's copy (or, in the multiple dropdown, only the
-  results);
-- add/edit/delete change the copy only after your callback completes without
-  throwing, so the callbacks are notifications (e.g. to persist);
-- unmodifiable lists (`const`, `List.unmodifiable`, freezed) are fine.
-
-To change the items from outside, call `controller.updateListItems(newList,
-shouldReset)`; it copies `newList`. The single controller resets the selection
-when `shouldReset` is `true` or an item is selected; the multiple controller
-clears it when `shouldReset` is `true`, otherwise only the selected items that
-are no longer in `newList` leave the selection. To keep two dropdowns on one
-list, call `updateListItems` on the other controller from your callbacks.
-
-A callback may apply a server copy with `updateListItems` on its own
-controller (e.g. the saved item with its database id); the controller then
-keeps the app's list instead of applying the change again: add selects the
-matching item from it (equal, else the same label) and appends nothing, edit
-selects the edited item from it and never brings back an item the list
-dropped, and delete leaves it as it is.
+Opening the list shows every item, scrolled to the selection. The caret sits
+at the end of the selected label and the first key you type replaces it, so
+you can start a new search right away; until you type, Enter keeps the
+selection.
 
 ### Add, edit and delete
 
@@ -107,10 +132,13 @@ SearchDropDownController<String> editableController(
     );
 ```
 
-The "Criar" row appears when the typed text matches nothing. Callbacks may be
-`async`; the row shows a spinner while they run. An error thrown by a callback
-started from a row is reported with `FlutterError.reportError` and the item
-stays as it was.
+- The "Criar" row appears when the typed text matches nothing;
+  `verifyInputItem` rejects invalid input with a warning dialog.
+- Callbacks may be `async`; the row shows a spinner while they run. An error
+  thrown by a callback started from a row is reported with
+  `FlutterError.reportError` and the item stays as it was.
+- The controller applies the change to its own copy only after your callback
+  completes, so callbacks are notifications (for example, to persist).
 
 ## Multiple selection
 
@@ -151,10 +179,14 @@ class _TagPickerState extends State<TagPicker> {
 
 Selected items show as chips inside the box; the list opens below it with its
 own search field. Items, selection, modes and callbacks live on its required
-`controller:`. The widget never disposes the controller: dispose it in your
+`controller:`, which takes the same add/edit/delete options as the single
+one. The widget never disposes this controller: dispose it in your
 `State.dispose`, as above.
 
-## Controller API
+## Controller
+
+All state lives in the controller. Both controllers are `ChangeNotifier`s:
+listen to them, and call `dispose()` when done (calling it twice is safe).
 
 | Single (`SearchDropDownController`) | Multiple (`MultipleSearchDropDownController`) | What it does |
 |---|---|---|
@@ -169,18 +201,45 @@ own search field. Items, selection, modes and callbacks live on its required
 | `addItem(text, context)`, `editItem(item, context)`, `deleteItem(item, context)` | `addItem(text, context)`, `addValue(item, context)`, `editItem(item, context)`, `deleteItem(item, context)` | run an add/edit/delete as a row would, with its dialogs |
 | `latinize`, `caseSensitive`, `trim` (constructor) | `latinize`, `caseSensitive`, `trim` (constructor) | how text is matched |
 
-Both are `ChangeNotifier`s: listen to them, and call `dispose()` when done
-(calling it twice is safe).
+### Items are copied
 
-## Look and texts
+Both controllers take `items:` and keep their own copy (a multiple controller
+copies `selectedItems` too); `controller.items` is a read-only view of it.
+Your lists are never read again nor written:
+
+- sorting orders the controller's copy (or, in the multiple dropdown, only the
+  results);
+- add/edit/delete change the copy only after your callback completes without
+  throwing;
+- unmodifiable lists (`const`, `List.unmodifiable`, freezed) are fine.
+
+To change the items from outside, call `controller.updateListItems(newList,
+shouldReset)`; it copies `newList`. The single controller resets the selection
+when `shouldReset` is `true` or an item is selected; the multiple controller
+clears it when `shouldReset` is `true`, otherwise only the selected items that
+are no longer in `newList` leave the selection. To keep two dropdowns on one
+list, call `updateListItems` on the other controller from your callbacks.
+
+A callback may apply a server copy with `updateListItems` on its own
+controller (e.g. the saved item with its database id); the controller then
+keeps the app's list instead of applying the change again: add selects the
+matching item from it (equal, else the same label) and appends nothing, edit
+selects the edited item from it and never brings back an item the list
+dropped, and delete leaves it as it is.
+
+## Customization
+
+Both widgets take `searchBarSettings:` and `overlayListSettings:`; dialogs are
+configured on the controller (`editDialogSettings`, `deleteDialogSettings`,
+`verifyDialogSettings`).
 
 - `SimpleSearchbarSettings`: the bar/box: size, colors, border, hint, icons,
   `showClearIcon`, `clearOnClose`, keyboard type, chip style for the multiple
-  dropdown.
+  dropdown (`boxMultiItemWidgetBuilder` for your own chips).
 - `SimpleOverlaySettings`: the list: height, row colors and text styles,
   keyboard highlight colors (`highlightedItemBackgroundColor`,
   `highlightedItemBorderColor`), custom `itemWidgetBuilder`, delete/edit
-  icons, loading indicator, full screen.
+  icons, loading indicator, `openFullScreen`.
 - `DialogSettings`: delete confirmation, invalid item and edit dialogs.
 
 ### Dialogs
@@ -263,6 +322,8 @@ text color) are not a setting: draw your own with `boxMultiItemWidgetBuilder`.
 The row spinner is the size of the icons it replaces (`loadingSize: 24`,
 `loadingStrokeWidth: 2.5`), and the row does not move while it shows.
 
+### Texts and localization
+
 Texts default to Portuguese. Use `SearchDropDownStrings.en()`, or your own
 texts, per widget (`strings:`) or for the whole app:
 
@@ -276,16 +337,17 @@ Widget englishApp(Widget home) => MaterialApp(
     );
 ```
 
-A text set explicitly in a settings object (e.g. `SimpleSearchbarSettings.hint`)
-wins over `strings`.
+The scope also reaches the controllers' dialogs. A text set explicitly in a
+settings object (e.g. `SimpleSearchbarSettings.hint`) wins over `strings`.
 
 ## Keyboard and accessibility
 
 - Single: the list opens scrolled to the selected item and lists every item
-  until you type. Arrow keys move the keyboard highlight (drawn apart from the
-  selection), PageUp/PageDown jump to the first/last item and Enter selects
-  the highlighted (or first) item; with the selected label untouched Enter
-  keeps the selection. Tab and Shift+Tab move on to the next/previous field.
+  until you type; the first key typed replaces the selected label. Arrow keys
+  move the keyboard highlight (drawn apart from the selection), PageUp/PageDown
+  jump to the first/last item and Enter selects the highlighted (or first)
+  item; with the selected label untouched Enter keeps the selection. Tab and
+  Shift+Tab move on to the next/previous field.
 - Multiple: rows, chips and buttons are reached with Tab and activated with
   Enter or Space.
 - A disabled dropdown (`enabled: false`) cannot take the focus.
@@ -295,62 +357,44 @@ wins over `strings`.
 
 ## Migrating from 7.x
 
-8.0 is a major release with no deprecation period: the 7.x members below were
-removed. Replace them as the table shows (the CHANGELOG has the same table).
+8.0 is a major release with no deprecation period. The main changes:
 
-| 7.x | 8.0 |
-|---|---|
-| `addAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `DefaultAddListItem`) | `addAdditionalWidget` |
-| `defaultAditionalWidget` (`SearchDropDown`, `MultipleSearchDropDown`, `DefaultListTile`) | `defaultAdditionalWidget` |
-| `SimpleOverlaySettings.aditionalWidgetSpacing` | `additionalWidgetSpacing` |
-| `sortType: int` (`SearchDropDownController`, `MultipleSearchDropDown`) | `sort: SortType`: `0` → `SortType.none`, `1` → `alphabetical`, `2` → `reverseAlphabetical`, `3` → `selectedFirst`, any other value → `none` (as 7.x did; `SortType.values[n]` throws for those) |
-| `SearchDropDownController.sortList(int)` | `sortBy(SortType)` |
-| `SearchDropDownController(listItems: list)` and its `listItems` field (your list, read live and changed by the controller) | `items: list` (the controller keeps its own copy), the read-only `items` getter, and `updateListItems(list, shouldReset)` to replace them |
-| add/edit/delete callbacks that changed your list, one list shared by two dropdowns, the single `sort` reordering your list in place | your lists are never read again nor written: the controller sorts its copy and applies add/edit/delete to it once the callback completes without throwing; keep another dropdown in step from your callbacks with its `updateListItems`; a callback may also apply a server copy to its own controller with `updateListItems`, and the controller then keeps the app's list |
-| `MultipleSearchDropDown(listItems:, selectedItems:, updateSelectedItems:, addMode:, onAddItem:, newValueItem:, deleteMode:, onDeleteItem:, editMode:, onEditItem:, onClearItem:, onClearList:, sortType:, confirmDelete:, deleteDialogSettings:, verifyInputItem:, verifyDialogSettings:, enabled:)` | `MultipleSearchDropDown(controller: MultipleSearchDropDownController(items:, selectedItems:, ...))`: `controller:` is required and takes the same options (`onEditItem` gets `(old, edited)`; `editMode: true` also needs `newValueItem`, which builds the edited item) |
-| `MultipleSearchDropDown(selectedItems: list)` (your list, changed in place and passed to `updateSelectedItems`) | `selectedItems:` is copied; `controller.selectedItems` is a read-only view and `updateSelectedItems` gets a copy |
-| `SearchDropDownState.enableDisable()` (via `GlobalKey`) | `controller.toggleEnabled()` |
-| `SearchDropDownState.resetSelection()` | `controller.resetSelection()` |
-| `SearchDropDownState.updateList(list, shouldreset:)` | `controller.updateListItems(list, shouldReset)` |
-| `MultipleSearchDropDownState.aberto = open` | tap the box to open, `hideOverlay()` to close (`aberto` is a read-only getter) |
-| `MultipleSearchDropDownState.enabled` | `controller.enabled` |
-| `MultipleSearchDropDownState.onItemSelected(item)` | `controller.toggle(item)` |
-| `MultipleSearchDropDownState.resetSelection()` | `controller.resetSelection()` |
-| `MultipleSearchDropDownState.forceSelection(label)` | `controller.forceSelection(label)` |
-| `MultipleSearchDropDownState.forceMultipleSelection(values)` | `controller.forceMultipleSelection(values)` |
-| `MultipleSearchDropDownState.enableDisable()` | `controller.toggleEnabled()` |
-| `MultipleSearchDropDownState.handleAddItem(item, context)` | `controller.addValue(item, context)` |
-| `MultipleSearchDropDownState.handleDeleteItem(item, context)` | `controller.deleteItem(item, context)` |
-| `MultipleSearchDropDownState.onClear()` | `controller.clear()` |
-| `MultipleSearchDropDownState.overlayScreen` and the exported `OverlayScreen` class | removed: close the list with `hideOverlay()`; show your own overlays with `Overlay.of(context)` |
-| `MultipleListView` (exported; `listItens:`, `selectedItens:`, `onItemSelected:`, ...) | no longer exported: use `MultipleSearchDropDown` |
+- `MultipleSearchDropDown` takes a required `controller:`
+  (`MultipleSearchDropDownController`) that holds the items, selection, modes
+  and callbacks formerly passed to the widget.
+- `SearchDropDownController(listItems:)` became `items:`; controllers copy
+  your list and never change it. Replace items with
+  `updateListItems(list, shouldReset)`.
+- `sortType: int` became `sort: SortType` (`0` → `none`, `1` →
+  `alphabetical`, `2` → `reverseAlphabetical`, `3` → `selectedFirst`), and
+  `sortList(int)` became `sortBy(SortType)`.
+- `GlobalKey` state methods moved to the controllers (`toggleEnabled()`,
+  `resetSelection()`, `forceSelection(label)`, `toggle(item)`, ...).
+- Misspelled names were fixed: `addAdditionalWidget`,
+  `defaultAdditionalWidget`, `additionalWidgetSpacing`.
+- New exports (`SortType`, `SearchDropDownStrings`,
+  `SearchDropDownStringsScope`, `MultipleSearchDropDownController`) may clash
+  with your own names: use `hide` or a prefixed import.
 
-The package now also exports `SortType`, `SearchDropDownStrings`,
-`SearchDropDownStringsScope` and `MultipleSearchDropDownController`. If your
-file imports a type with one of these names from elsewhere, hide it
-(`import 'package:simple_search_dropdown/simple_search_dropdown.dart' hide SortType;`)
-or import the package with a prefix.
+The [CHANGELOG](CHANGELOG.md) has the full replacement table and every
+behaviour change.
 
-Behaviour changes worth knowing (see the CHANGELOG for all of them):
+## Example
 
-- Reopening the single dropdown lists every item, scrolled to the selection
-  (it used to show only the selected one); Enter keeps the selection.
-- Assigning `controller.selectedItem` updates the bar text and clear button
-  (still without calling `updateSelectedItem`).
-- Single keyboard: Tab moves on to the next field; Enter on the closed bar
-  selects nothing; a disabled dropdown cannot be focused.
-- A disabled multiple dropdown cannot be focused either (its box, chips and
-  clear button) and closes its open list.
-- A-Z / Z-A ignore case and accents (`abacaxi, Banana, Maçã`); digits still
-  compare as text (`Item 10` before `Item 2`).
-- An error thrown by `onAddItem`, `onEditItem` or `onDeleteItem` from a list
-  row is reported with `FlutterError.reportError` (crash reporters see it);
-  the item stays as it was.
-- The clear button shows after a selection by default: the controller's
-  `showClearIcon` now defaults to `true` (pass `false` to hide it), and
-  `SimpleSearchbarSettings.showClearIcon: false` hides it in the open list too.
-- Deleting an item in the multiple dropdown deselects only that item.
-- `ValueItem.hashCode` changed (equal items still hash alike).
+The [example app](example/lib/main.dart) shows a single and a multiple
+dropdown sharing one list, slow async callbacks, a custom value type with a
+custom row, and a dropdown inside a dialog. It follows the system light/dark
+setting.
+
+## Contributing and issues
+
+Bug reports and feature requests are welcome on the
+[issue tracker](https://github.com/Lorenzobettega/simplesearchdropdown/issues).
+Pull requests should keep `flutter analyze` clean and `flutter test` green,
+in the package and in `example/`.
+
+If this package saves you time, you can
+[buy the authors a coffee](https://buymeacoffee.com/gian.bettega).
 
 ## License
 
