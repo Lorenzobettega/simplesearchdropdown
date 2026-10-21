@@ -305,23 +305,40 @@ void main() {
   });
 
   group('closed state: boxMultiSelected* chip styling', () {
-    testWidgets('default chip styling', (tester) async {
+    testWidgets('default chip styling: a flat M3 input chip', (tester) async {
       final items = _items();
       await tester.pumpWidget(
         _app(_dropdown(items: items, selected: [items[0]], probe: _Probe())),
       );
+      final ColorScheme scheme = Theme.of(
+        tester.element(_inBox(find.byType(Card))),
+      ).colorScheme;
 
       final Card card = tester.widget<Card>(_inBox(find.byType(Card)));
-      expect(card.color, const Color.fromRGBO(224, 224, 224, 1));
-      expect(card.elevation, 2);
+      expect(card.color, scheme.secondaryContainer);
+      expect(card.elevation, 0);
+      expect(
+        (card.shape! as RoundedRectangleBorder).borderRadius,
+        const BorderRadius.all(Radius.circular(8)),
+      );
+      expect(tester.getSize(_inBox(find.byType(Card))).height, 32);
       final Icon close = tester.widget<Icon>(_inBox(find.byIcon(Icons.close)));
       expect(close.size, 20);
-      expect(close.color, isNull);
-      expect(tester.widget<Text>(_inBox(find.text('Cherry'))).style, isNull);
+      expect(close.color, scheme.onSecondaryContainer);
+      expect(
+        tester.widget<Text>(_inBox(find.text('Cherry'))).style?.color,
+        scheme.onSecondaryContainer,
+      );
+      // 8 px between the label and the remove icon.
+      expect(
+        tester.getTopLeft(_inBox(find.byIcon(Icons.close))).dx -
+            tester.getTopRight(_inBox(find.text('Cherry'))).dx,
+        8,
+      );
     });
 
-    testWidgets('custom background, text style, close icon size/color and '
-        'elevation', (tester) async {
+    testWidgets('custom background, text style, close icon size/color; the '
+        'chip stays flat whatever the bar elevation', (tester) async {
       final items = _items();
       const textStyle = TextStyle(color: Colors.red);
       await tester.pumpWidget(
@@ -343,7 +360,7 @@ void main() {
 
       final Card card = tester.widget<Card>(_inBox(find.byType(Card)));
       expect(card.color, Colors.amber);
-      expect(card.elevation, 6);
+      expect(card.elevation, 0);
       final Icon close = tester.widget<Icon>(_inBox(find.byIcon(Icons.close)));
       expect(close.size, 12);
       expect(close.color, Colors.blue);
@@ -1691,7 +1708,11 @@ void main() {
       await tester.pump();
 
       expect(find.byType(WarningDialog), findsOneWidget);
-      expect(find.text('Tem certeza?'), findsOneWidget);
+      expect(find.text('Apagar item?'), findsOneWidget);
+      expect(
+        find.text('“Cherry” será apagado.', findRichText: true),
+        findsOneWidget,
+      );
       expect(find.text('Essa ação não poderá ser desfeita.'), findsOneWidget);
       expect(find.text('Cancelar'), findsOneWidget);
       expect(find.text('Apagar'), findsOneWidget);
@@ -1767,6 +1788,7 @@ void main() {
       await tester.pump();
 
       expect(find.text('Sure?'), findsOneWidget);
+      expect(find.text('Apagar item?'), findsNothing);
       expect(find.text('Tem certeza?'), findsNothing);
     });
   });

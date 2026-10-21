@@ -28,14 +28,26 @@ abstract class DropDownControllerBase extends ChangeNotifier {
   /// Whether [dispose] was called.
   bool get isDisposed => _disposed;
 
+  /// Whether a notification is queued for after the current frame.
+  bool _notifyQueued = false;
+
   /// Notifies now, or after the frame when called during a build (listeners
-  /// often call `setState`); does nothing once disposed.
+  /// often call `setState`), once however many calls that build made; does
+  /// nothing once disposed.
   @override
   void notifyListeners() {
-    if (_disposed) {
+    if (_disposed || _notifyQueued) {
       return;
     }
-    runOutsideBuild(super.notifyListeners, () => _disposed);
+    if (!isBuilding()) {
+      super.notifyListeners();
+      return;
+    }
+    _notifyQueued = true;
+    runOutsideBuild(() {
+      _notifyQueued = false;
+      super.notifyListeners();
+    }, () => _disposed);
   }
 
   /// Releases resources. Safe to call more than once.

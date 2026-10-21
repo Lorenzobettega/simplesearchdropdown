@@ -35,40 +35,35 @@ class _DialogTestState extends State<DialogTest> {
 
   @override
   Widget build(BuildContext context) {
+    final TextTheme text = Theme.of(context).textTheme;
     return Dialog(
-      child: SizedBox(
-        height: 250,
-        width: 350,
-        child: Scaffold(
-          appBar: AppBar(title: const Text('Dialog Test')),
-          body: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Center(
-              child: Column(
-                children: [
-                  const Text('Name:'),
-                  const SizedBox(height: 20),
-                  SearchDropDown(
-                    controller: dialogSearchController,
-                    // This State disposes the controller.
-                    disposeController: false,
-                    overlayListSettings: SimpleOverlaySettings(
-                      itemWidgetBuilder: (item) => Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        color: Colors.blue,
-                        child: Text(item.label),
-                      ),
-                    ),
-                    searchBarSettings: const SimpleSearchbarSettings(
-                      showKeyboardOnTap: false,
-                    ),
-                  ),
-                ],
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: LayoutBuilder(
+          builder: (BuildContext context, BoxConstraints box) => Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text('Dialog Test', style: text.titleLarge),
+              const SizedBox(height: 16),
+              SearchDropDown(
+                controller: dialogSearchController,
+                // This State disposes the controller.
+                disposeController: false,
+                searchBarSettings: SimpleSearchbarSettings(
+                  dropdownWidth: box.maxWidth,
+                  showKeyboardOnTap: false,
+                ),
               ),
-            ),
+              const SizedBox(height: 24),
+              Align(
+                alignment: Alignment.centerRight,
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text('Close'),
+                ),
+              ),
+            ],
           ),
         ),
       ),

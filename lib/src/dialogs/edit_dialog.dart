@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/dialogs/dialog_layout.dart';
 
-/// Dialog that asks for a new label for an item (used by edit mode).
+/// Dialog that asks for a new label for an item (used by edit mode). The
+/// field starts with [label], fully selected and focused; Enter confirms.
 class EditDialog extends StatefulWidget {
   /// Creates an edit dialog for [label].
   const EditDialog({
@@ -30,13 +32,17 @@ class EditDialog extends StatefulWidget {
 }
 
 class _EditDialogState extends State<EditDialog> {
-  late TextEditingController controller;
+  late final TextEditingController controller;
   late final DialogSettings dialogSettings;
 
   @override
   void initState() {
     super.initState();
-    controller = TextEditingController(text: widget.label);
+    controller = TextEditingController(text: widget.label)
+      ..selection = TextSelection(
+        baseOffset: 0,
+        extentOffset: widget.label.length,
+      );
     dialogSettings = widget.settings ?? const DialogSettings();
   }
 
@@ -46,59 +52,44 @@ class _EditDialogState extends State<EditDialog> {
     super.dispose();
   }
 
+  void _confirm() {
+    if (controller.text.isNotEmpty) {
+      widget.returnFunction(true, controller.text);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final SearchDropDownStrings texts =
         widget.strings ?? SearchDropDownStrings.of(context);
-    return AlertDialog(
-      title:
-          dialogSettings.title ??
-          Text(
-            texts.editTitle,
-            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-            textAlign: TextAlign.center,
-          ),
-      content:
-          dialogSettings.content ??
-          Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                widget.label,
-                style: const TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 16,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 20),
-              InputField(
-                controle: controller,
-                hint: dialogSettings.customEditHint ?? texts.editHint,
-              ),
-            ],
-          ),
-      contentPadding: dialogSettings.contentPadding,
-      titlePadding: dialogSettings.titlePadding,
-      actionsPadding: dialogSettings.actionsPadding,
-      actionsAlignment: dialogSettings.actionsAlignment,
-      backgroundColor: dialogSettings.backgroundColor,
-      elevation: dialogSettings.elevation,
-      shape: dialogSettings.shape,
-      insetPadding: dialogSettings.insetPadding,
+    final ThemeData theme = Theme.of(context);
+    return PackageDialogLayout(
+      settings: dialogSettings,
+      title: DialogTitleText(texts.editTitle),
+      content: TextField(
+        controller: controller,
+        autofocus: true,
+        autocorrect: false,
+        textInputAction: TextInputAction.done,
+        onSubmitted: (_) => _confirm(),
+        style: theme.textTheme.bodyLarge,
+        decoration: InputDecoration(
+          labelText: dialogSettings.customEditHint ?? texts.editHint,
+          // The app's own input border wins; otherwise an outlined field
+          // with the buttons' corner radius.
+          border: theme.inputDecorationTheme.border == null
+              ? const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(12)),
+                )
+              : null,
+        ),
+      ),
       actions: [
-        DialogButton(
-          function: () => widget.returnFunction(false, ''),
-          buttonSettings: dialogSettings.cancelButton(texts),
+        (
+          settings: dialogSettings.cancelButton(texts),
+          onPressed: () => widget.returnFunction(false, ''),
         ),
-        DialogButton(
-          function: () {
-            if (controller.text.isNotEmpty) {
-              widget.returnFunction(true, controller.text);
-            }
-          },
-          buttonSettings: dialogSettings.editButton(texts),
-        ),
+        (settings: dialogSettings.editButton(texts), onPressed: _confirm),
       ],
     );
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/src/core/search_dropdown_strings.dart';
+import 'package:simple_search_dropdown/src/dialogs/dialog_layout.dart';
+import 'package:simple_search_dropdown/src/helpers/simple_overlay_settings.dart';
 
 ///Class to hold all the customizations of the confirmation dialog.
 class DialogSettings {
@@ -23,6 +25,7 @@ class DialogSettings {
       vertical: 24,
     ),
     String? editHint,
+    this.showItemLabel = true,
   }) : _cancel = customCancelButtonSettings,
        _delete = customDeleteButtonSettings,
        _ok = customOkButtonSettings,
@@ -77,6 +80,12 @@ class DialogSettings {
   /// Shape forwarded to the [AlertDialog].
   final ShapeBorder? shape;
 
+  /// Whether the delete confirmation names the item being deleted
+  /// ([SearchDropDownStrings.confirmDeleteItemTitle] and
+  /// [SearchDropDownStrings.confirmDeleteItemContent]); `false` shows the
+  /// generic [SearchDropDownStrings.confirmDeleteTitle] only.
+  final bool showItemLabel;
+
   /// The edit hint set explicitly, or `null` to use
   /// [SearchDropDownStrings.editHint].
   final String? customEditHint;
@@ -120,6 +129,7 @@ class DialogButtonSettings {
     this.customWidth,
     this.backgroundColor,
     this.icon,
+    this.useThemeColors = false,
   });
 
   /// Button label.
@@ -146,6 +156,11 @@ class DialogButtonSettings {
   /// Label font size and corner radius.
   final double fontSize, radius;
 
+  /// Paints the label in the theme's `onSurface` and the border in its
+  /// `outline` instead of [textColor], so the button follows light and dark
+  /// themes (the default cancel button).
+  final bool useThemeColors;
+
   /// A copy with the given fields replaced.
   DialogButtonSettings copyWith({String? text}) => DialogButtonSettings(
     text ?? this.text,
@@ -160,33 +175,51 @@ class DialogButtonSettings {
     customWidth: customWidth,
     backgroundColor: backgroundColor,
     icon: icon,
+    useThemeColors: useThemeColors,
   );
 }
 
-///Default settings for Delete button.
+///Default settings for Delete button: filled red.
 const defaultDeleteButtonSettings = DialogButtonSettings(
   'Apagar',
   backgroundColor: Color.fromARGB(255, 198, 0, 0),
-  customWidth: 160,
+  padding: _defaultButtonPadding,
+  radius: _defaultButtonRadius,
+  customHeight: _defaultButtonHeight,
 );
 
-///Default settings for Cancel button.
+///Default settings for Cancel button: outlined in the theme colours.
 const defaultCancelButtonSettings = DialogButtonSettings(
   'Cancelar',
-  backgroundColor: Colors.white,
   textColor: Color.fromARGB(255, 66, 70, 76),
-  customWidth: 160,
   activeBorder: true,
+  useThemeColors: true,
+  padding: _defaultButtonPadding,
+  radius: _defaultButtonRadius,
+  customHeight: _defaultButtonHeight,
 );
 
-///Default settings for OK button.
-const defaultOKButtonSettings = DialogButtonSettings('OK', customWidth: 160);
+///Default settings for OK button: filled [darkGreen].
+const defaultOKButtonSettings = DialogButtonSettings(
+  'OK',
+  backgroundColor: darkGreen,
+  padding: _defaultButtonPadding,
+  radius: _defaultButtonRadius,
+  customHeight: _defaultButtonHeight,
+);
 
-///Default settings for edit button.
+///Default settings for edit button: filled [darkGreen].
 const defaultEditButtonSettings = DialogButtonSettings(
   'Editar',
-  customWidth: 160,
+  backgroundColor: darkGreen,
+  padding: _defaultButtonPadding,
+  radius: _defaultButtonRadius,
+  customHeight: _defaultButtonHeight,
 );
+
+const EdgeInsets _defaultButtonPadding = EdgeInsets.symmetric(horizontal: 16);
+const double _defaultButtonRadius = 12;
+const double _defaultButtonHeight = 48;
 
 ///Default title for the dialog.
 class DefaultDialogTitle extends StatelessWidget {
@@ -195,7 +228,12 @@ class DefaultDialogTitle extends StatelessWidget {
     super.key,
     required this.confirmDialog,
     this.strings,
+    this.itemLabel,
   });
+
+  /// Label of the item a delete confirmation names; `null` shows the
+  /// generic confirmation. Ignored by the invalid-item warning.
+  final String? itemLabel;
 
   /// Confirmation (delete) title when `true`, invalid-item title otherwise.
   final bool confirmDialog;
@@ -208,11 +246,12 @@ class DefaultDialogTitle extends StatelessWidget {
   Widget build(BuildContext context) {
     final SearchDropDownStrings texts =
         strings ?? SearchDropDownStrings.of(context);
-    return Text(
-      confirmDialog ? texts.confirmDeleteTitle : texts.invalidItemTitle,
-      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
-      textAlign: TextAlign.center,
-    );
+    final String title = !confirmDialog
+        ? texts.invalidItemTitle
+        : itemLabel == null
+        ? texts.confirmDeleteTitle
+        : texts.confirmDeleteItemTitle;
+    return DialogTitleText(title);
   }
 }
 
@@ -223,7 +262,12 @@ class DefaultDialogContent extends StatelessWidget {
     super.key,
     required this.confirmDialog,
     this.strings,
+    this.itemLabel,
   });
+
+  /// Label of the item a delete confirmation names; `null` shows the
+  /// generic confirmation. Ignored by the invalid-item warning.
+  final String? itemLabel;
 
   /// Confirmation (delete) content when `true`, invalid-item content otherwise.
   final bool confirmDialog;
@@ -236,10 +280,22 @@ class DefaultDialogContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final SearchDropDownStrings texts =
         strings ?? SearchDropDownStrings.of(context);
-    return Text(
-      confirmDialog ? texts.confirmDeleteContent : texts.invalidItemContent,
-      style: const TextStyle(fontSize: 16),
-      textAlign: TextAlign.center,
+    if (!confirmDialog) {
+      return DialogSupportingText(texts.invalidItemContent);
+    }
+    final String? label = itemLabel;
+    final Widget generic = DialogSupportingText(texts.confirmDeleteContent);
+    if (label == null) {
+      return generic;
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        DialogSupportingText.withItem(texts.confirmDeleteItemContent, label),
+        const SizedBox(height: 4),
+        generic,
+      ],
     );
   }
 }

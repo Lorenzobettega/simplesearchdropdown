@@ -126,10 +126,14 @@ void main() {
         _scoped(_button((ctx) => c.deleteItem(c.items[1], ctx))),
       );
       await _run(tester);
-      expect(find.text('Are you sure?'), findsOneWidget);
+      expect(find.text('Delete item?'), findsOneWidget);
+      expect(
+        find.text('“Banana” will be deleted.', findRichText: true),
+        findsOneWidget,
+      );
       expect(find.text('This action cannot be undone.'), findsOneWidget);
       expect(find.text('Delete'), findsOneWidget);
-      expect(find.text('Tem certeza?'), findsNothing);
+      expect(find.text('Apagar item?'), findsNothing);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
     });
@@ -166,9 +170,9 @@ void main() {
         _scoped(_button((ctx) => c.editItem(c.items[1], ctx))),
       );
       await _run(tester);
-      expect(find.text('Edit item:'), findsOneWidget);
+      expect(find.text('Edit item'), findsOneWidget);
       expect(
-        tester.widget<InputField>(find.byType(InputField)).hint,
+        tester.widget<TextField>(find.byType(TextField)).decoration?.labelText,
         'New value',
       );
       expect(find.text('Edit'), findsOneWidget);
@@ -203,7 +207,7 @@ void main() {
       );
       c.deleteItem(c.items[1], ctx).ignore();
       await tester.pumpAndSettle();
-      expect(find.text('Are you sure?'), findsOneWidget);
+      expect(find.text('Delete item?'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
 
@@ -215,7 +219,7 @@ void main() {
 
       c.editItem(c.items[1], ctx).ignore();
       await tester.pumpAndSettle();
-      expect(find.text('Edit item:'), findsOneWidget);
+      expect(find.text('Edit item'), findsOneWidget);
       await tester.tap(find.text('Cancel'));
       await tester.pumpAndSettle();
     });
@@ -227,7 +231,7 @@ void main() {
       await tester.pumpWidget(
         _scoped(EditDialog(label: 'A', returnFunction: (_, _) {})),
       );
-      expect(find.text('Edit item:'), findsOneWidget);
+      expect(find.text('Edit item'), findsOneWidget);
       expect(find.text('Cancel'), findsOneWidget);
       await tester.pumpWidget(
         _scoped(
@@ -303,7 +307,7 @@ void main() {
         host(_button((ctx) => c.deleteItem(c.items[1], ctx))),
       );
       await _run(tester);
-      expect(find.text('Tem certeza?'), findsOneWidget);
+      expect(find.text('Apagar item?'), findsOneWidget);
       expect(find.text('Apagar'), findsOneWidget);
       await tester.tap(find.text('Cancelar'));
       await tester.pumpAndSettle();
@@ -326,7 +330,7 @@ void main() {
               c.items[1],
               ctx,
               strings: const SearchDropDownStrings(
-                confirmDeleteTitle: 'Certeza?',
+                confirmDeleteItemTitle: 'Certeza?',
               ),
             ),
           ),

@@ -5,10 +5,12 @@ import 'package:flutter/services.dart';
 import 'package:scrollable_positioned_list/scrollable_positioned_list.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/controller_base.dart';
+import 'package:simple_search_dropdown/src/core/theme_colors.dart';
 
 /// A single-selection dropdown with a search bar, built on [SearchAnchor].
 ///
-/// All state lives in [controller]; this widget rebuilds when it notifies.
+/// All state lives in [controller]. The bar rebuilds only when its
+/// `enabled` changes; the clear button and the rows follow the rest.
 class SearchDropDown<T> extends StatefulWidget {
   /// Creates a single-selection dropdown driven by [controller].
   const SearchDropDown({
@@ -68,10 +70,39 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   /// The controller whose view is open, which hears when it closes.
   SearchDropDownController<T>? _openedBy;
 
+  /// The `enabled` the bar was built with: of the controller's state, only
+  /// a change of it rebuilds the bar.
+  late bool _enabled;
+
+  @override
+  void initState() {
+    super.initState();
+    _listen(_controller);
+  }
+
+  void _listen(SearchDropDownController<T> controller) {
+    _enabled = controller.enabled;
+    controller.addListener(_onControllerChanged);
+  }
+
+  void _unlisten(SearchDropDownController<T> controller) {
+    if (!controller.isDisposed) {
+      controller.removeListener(_onControllerChanged);
+    }
+  }
+
+  void _onControllerChanged() {
+    if (_controller.enabled != _enabled) {
+      setState(() => _enabled = _controller.enabled);
+    }
+  }
+
   @override
   void didUpdateWidget(covariant SearchDropDown<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (!identical(oldWidget.controller, widget.controller)) {
+      _unlisten(oldWidget.controller);
+      _listen(widget.controller);
       // The SearchAnchor is keyed on the controller, so a swap removes the
       // open view at once (#49): SearchAnchor's view keeps editing the
       // SearchController it opened with, which its owner may dispose, and
@@ -99,6 +130,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   void dispose() {
     _unfocusWindow?.cancel();
     _viewRemoved();
+    _unlisten(_controller);
     if (widget.disposeController && _controller.ownsSearchController) {
       // As in 7.x: only the current controller, and only when it owns its
       // SearchController; with one passed in, the caller keeps the
@@ -141,17 +173,14 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   Widget build(BuildContext context) {
     final SearchDropDownStrings strings =
         widget.strings ?? SearchDropDownStrings.of(context);
-    return ListenableBuilder(
-      listenable: _controller,
-      builder: (BuildContext context, _) => ExcludeFocus(
-        // SearchAnchor only blocks the pointer when disabled; keep Tab and
-        // keys out too (focus leaves the bar when it gets disabled).
-        excluding: !_controller.enabled,
-        child: FocusScope(
-          node: _focusNode,
-          onFocusChange: _onFocusChange,
-          child: _buildAnchor(strings),
-        ),
+    return ExcludeFocus(
+      // SearchAnchor only blocks the pointer when disabled; keep Tab and
+      // keys out too (focus leaves the bar when it gets disabled).
+      excluding: !_enabled,
+      child: FocusScope(
+        node: _focusNode,
+        onFocusChange: _onFocusChange,
+        child: _buildAnchor(strings),
       ),
     );
   }
@@ -161,8 +190,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
     final SimpleOverlaySettings list = widget.overlayListSettings;
     final SearchController search = _controller.localSearchController;
     final String hint = bar.customHint ?? strings.searchHint;
+    final BarColors colors = BarColors.of(bar, Theme.of(context));
     final Color viewBackground =
-        list.dialogBackgroundColor ?? bar.backgroundColor;
+        list.dialogBackgroundColor ?? colors.background;
     return SizedBox(
       width: bar.dropdownWidth,
       height: bar.dropdownHeight,
@@ -171,7 +201,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
       child: KeyedSubtree(
         key: ObjectKey(_controller),
         child: SearchAnchor.bar(
-          enabled: _controller.enabled,
+          enabled: _enabled,
           searchController: search,
           viewConstraints: BoxConstraints(
             maxWidth: bar.dropdownWidth,
@@ -199,7 +229,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           barTrailing:
               bar.actions ??
               <Widget>[
-                if (bar.showArrow && _controller.enabled)
+                if (bar.showArrow && _enabled)
                   IconButton(
                     tooltip: strings.openTooltip,
                     onPressed:
@@ -211,27 +241,27 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                     ),
                   ),
                 if (_clearEnabled)
-                  ClearButton(
-                    visible: _controller.clearVisible,
-                    onPressed: _controller.resetSelection,
-                    iconColor: bar.clearIconColor,
-                    iconSize: bar.outsideIconSize,
-                    tooltip: strings.clearTooltip,
+                  // Follows the selection without rebuilding the bar.
+                  ListenableBuilder(
+                    listenable: _controller,
+                    builder: (BuildContext context, _) => ClearButton(
+                      visible: _controller.clearVisible,
+                      onPressed: _controller.resetSelection,
+                      iconColor: bar.clearIconColor,
+                      iconSize: bar.outsideIconSize,
+                      tooltip: strings.clearTooltip,
+                    ),
                   ),
               ],
           barElevation: WidgetStatePropertyAll<double>(bar.elevation),
           barShape: WidgetStatePropertyAll<OutlinedBorder>(bar.border),
-          viewShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
-          barBackgroundColor: WidgetStatePropertyAll<Color>(
-            bar.backgroundColor,
-          ),
+          viewShape: const RoundedRectangleBorder(borderRadius: dropdownRadius),
+          barBackgroundColor: WidgetStatePropertyAll<Color>(colors.background),
           viewBackgroundColor: viewBackground,
           isFullScreen: list.openFullScreen,
-          barHintStyle: WidgetStatePropertyAll<TextStyle?>(bar.hintStyle),
+          barHintStyle: WidgetStatePropertyAll<TextStyle?>(colors.hintStyle),
           barHintText: hint,
-          barOverlayColor: WidgetStatePropertyAll<Color>(bar.hoverColor),
+          barOverlayColor: WidgetStatePropertyAll<Color>(colors.hover),
           barTextStyle: WidgetStatePropertyAll<TextStyle?>(
             bar.searchBarTextStyle,
           ),
@@ -243,7 +273,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
           viewLeading: const SizedBox.shrink(),
           viewElevation: bar.elevation,
           viewHintText: hint,
-          viewHeaderHintStyle: bar.hintStyle,
+          viewHeaderHintStyle: colors.hintStyle,
           viewHeaderTextStyle: bar.searchBarTextStyle,
           keyboardType: bar.showKeyboardOnTap
               ? bar.keyboardType
@@ -308,10 +338,8 @@ class _ViewTrailing<T> extends StatelessWidget {
   final SearchDropDownStrings strings;
   final bool showClear;
 
-  void _close() {
-    final SearchController search = controller.localSearchController;
-    search.closeView(search.text);
-  }
+  /// Closes the view leaving the text as it is (no write of the same text).
+  void _close() => controller.localSearchController.closeView(null);
 
   @override
   Widget build(BuildContext context) {
@@ -393,6 +421,11 @@ class _ViewListState<T> extends State<_ViewList<T>> {
   /// The list depends on the results and, for the add row, on the text.
   late Listenable _listInputs;
 
+  /// The text and add row the list was last built with; kept while
+  /// [_closing].
+  String _text = '';
+  bool _addRow = false;
+
   /// The controller the listeners below are attached to.
   late SearchDropDownController<T> _bound;
 
@@ -419,8 +452,23 @@ class _ViewListState<T> extends State<_ViewList<T>> {
       controller.localSearchController,
     ]);
     controller.highlight.addListener(_revealHighlight);
-    controller.results.addListener(_onResults);
+    controller.results.addListener(_onResultsChanged);
     _onResults();
+  }
+
+  /// Whether this view is closing (its route popped, fading out): it keeps
+  /// showing what it showed, so a re-filter on close (e.g. `clearOnClose`)
+  /// does not rebuild its rows or make them jump. `filteredItems` is still
+  /// updated, and the next open builds a new list from it.
+  bool get _closing {
+    final SearchController search = _bound.localSearchController;
+    return !isUsable(search) || !search.isAttached || !search.isOpen;
+  }
+
+  void _onResultsChanged() {
+    if (!_closing) {
+      _onResults();
+    }
   }
 
   void _onResults() {
@@ -440,7 +488,7 @@ class _ViewListState<T> extends State<_ViewList<T>> {
   void _unbind() {
     if (!_bound.isDisposed) {
       _bound.highlight.removeListener(_revealHighlight);
-      _bound.results.removeListener(_onResults);
+      _bound.results.removeListener(_onResultsChanged);
     }
   }
 
@@ -571,8 +619,12 @@ class _ViewListState<T> extends State<_ViewList<T>> {
         listenable: _listInputs,
         builder: (BuildContext context, _) {
           final List<ValueItem<T>> items = _items;
-          final String text = _controller.localSearchController.text;
-          final bool addRow = items.isEmpty && widget.showAddRow(text);
+          if (!_closing) {
+            _text = _controller.localSearchController.text;
+            _addRow = items.isEmpty && widget.showAddRow(_text);
+          }
+          final String text = _text;
+          final bool addRow = _addRow;
           return ScrollablePositionedList.builder(
             key: ValueKey<bool>(_anchored),
             itemScrollController: _scroll,
@@ -608,11 +660,16 @@ class _ViewListState<T> extends State<_ViewList<T>> {
         _controller.addItem(input, context, strings: widget.strings),
   );
 
-  /// A cached row; the dialogs use the row's own (live) context.
+  /// A cached row, rebuilt only when its selected or highlighted state
+  /// flips; the dialogs use the row's own (live) context.
   Widget _buildRow(ValueItem<T> item, int index) {
-    return ListenableBuilder(
-      listenable: _rowInputs,
-      builder: (BuildContext rowContext, _) => DefaultListTile<T>(
+    return _Row(
+      inputs: _rowInputs,
+      marks: () => (
+        selected: _controller.isSelected(item),
+        highlighted: index == _controller.highlightedIndex,
+      ),
+      builder: (BuildContext rowContext, _RowMarks marks) => DefaultListTile<T>(
         // The row state (its spinner) belongs to the item, not the index.
         key: ValueKey<ValueItem<T>>(item),
         deleteMode: _controller.deleteMode,
@@ -626,9 +683,66 @@ class _ViewListState<T> extends State<_ViewList<T>> {
         onEdit: (ValueItem<T> value) =>
             _controller.editItem(value, rowContext, strings: widget.strings),
         onPressed: _controller.selectItem,
-        selected: _controller.isSelected(item),
-        highlighted: index == _controller.highlightedIndex,
+        selected: marks.selected,
+        highlighted: marks.highlighted,
       ),
     );
   }
+}
+
+/// What a row shows of the controller's state.
+typedef _RowMarks = ({bool selected, bool highlighted});
+
+/// A list row that listens to [inputs] and rebuilds only when its [marks]
+/// change, so a selection or an arrow key rebuilds at most two rows.
+class _Row extends StatefulWidget {
+  const _Row({
+    required this.inputs,
+    required this.marks,
+    required this.builder,
+  });
+
+  final Listenable inputs;
+  final _RowMarks Function() marks;
+  final Widget Function(BuildContext context, _RowMarks marks) builder;
+
+  @override
+  State<_Row> createState() => _RowState();
+}
+
+class _RowState extends State<_Row> {
+  late _RowMarks _marks;
+
+  @override
+  void initState() {
+    super.initState();
+    _marks = widget.marks();
+    widget.inputs.addListener(_onInputs);
+  }
+
+  @override
+  void didUpdateWidget(covariant _Row oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!identical(oldWidget.inputs, widget.inputs)) {
+      oldWidget.inputs.removeListener(_onInputs);
+      widget.inputs.addListener(_onInputs);
+    }
+    _marks = widget.marks();
+  }
+
+  @override
+  void dispose() {
+    widget.inputs.removeListener(_onInputs);
+    super.dispose();
+  }
+
+  void _onInputs() {
+    final _RowMarks next = widget.marks();
+    if (next != _marks) {
+      setState(() => _marks = next);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) => widget.builder(context, _marks);
 }

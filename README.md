@@ -15,7 +15,7 @@ keyboard navigation and Portuguese texts by default (any language via
 
 ```yaml
 dependencies:
-  simple_search_dropdown: ^8.0.0
+  simple_search_dropdown: ^8.0.1
 ```
 
 ```dart
@@ -182,6 +182,86 @@ Both are `ChangeNotifier`s: listen to them, and call `dispose()` when done
   `highlightedItemBorderColor`), custom `itemWidgetBuilder`, delete/edit
   icons, loading indicator, full screen.
 - `DialogSettings`: delete confirmation, invalid item and edit dialogs.
+
+### Dialogs
+
+The three dialogs share one layout: a semibold title, supporting text in the
+theme's `onSurfaceVariant`, and one row of equal-width buttons (48 high,
+radius 12, 12 apart) that does not wrap on a phone. Editar and OK are filled
+`darkGreen`, Apagar is filled red, Cancelar is outlined in the theme colors.
+The edit dialog has one outlined field that starts with the label selected;
+Enter confirms.
+
+The delete confirmation names the item: `Apagar item?` and
+`“label” será apagado.` (`SearchDropDownStrings.confirmDeleteItemTitle` and
+`confirmDeleteItemContent`, where `{item}` becomes the label in bold). Set
+`DialogSettings(showItemLabel: false)` for the generic `Tem certeza?` dialog;
+if you customise `confirmDeleteTitle`, set `confirmDeleteItemTitle` too. When
+you show the dialogs yourself, `WarningDialog`, `DefaultDialogTitle` and
+`DefaultDialogContent` take the label as `itemLabel`.
+
+### Theming
+
+A color left unset in `SimpleSearchbarSettings` or `SimpleOverlaySettings`
+comes from `Theme.of(context).colorScheme`, under a light theme and a dark one
+alike (since 8.0.1; 8.0.0 drew fixed light colors under a light theme):
+
+| Part | Default |
+|---|---|
+| bar, multiple box and list | `surfaceContainerLow` (light, the shadow shows the elevation) or `surfaceContainerHigh` (dark), 12 px corners |
+| hint (a `hintStyle` without a color) | `onSurfaceVariant` |
+| selected row | `secondaryContainer` with `onSecondaryContainer` text |
+| other rows | `onSurface` text, `onSurface` at 8% on hover and keyboard highlight |
+| keyboard highlight border | `outline` |
+| edit / delete icons | `onSurfaceVariant` / `error` |
+| row spinner | `primary` |
+| chips of the multiple box | flat, 32 px high, 8 px corners, `secondaryContainer` with `onSecondaryContainer` label and remove icon, 8 px between them |
+
+Every text pair keeps WCAG AA contrast (4.5:1) on Flutter's default light and
+dark schemes and on ones seeded from `darkGreen`. A color you set always wins;
+its `custom...` field (e.g. `SimpleSearchbarSettings.customBackgroundColor`)
+tells whether one was set, and the getter returns the 8.0.0 value when it was
+not. A text style equal to the stock one (`selectedItemTextStyle`,
+`unselectedItemTextStyle`) counts as unset.
+
+To keep the 8.0.0 light look, set its colors explicitly:
+
+```dart
+/// The 8.0.0 light look, for apps that want it back.
+const SimpleSearchbarSettings classicBar = SimpleSearchbarSettings(
+  backgroundColor: Colors.white,
+  hoverColor: Color.fromRGBO(245, 245, 245, 1),
+  boxMultiSelectedBackgroundColor: Color.fromRGBO(224, 224, 224, 1),
+  border: RoundedRectangleBorder(
+    borderRadius: BorderRadius.all(Radius.circular(10)),
+  ),
+);
+
+/// The 8.0.0 light rows. A text style equal to the stock one follows the
+/// theme, so these add the size the rows are drawn at (14).
+const SimpleOverlaySettings classicList = SimpleOverlaySettings(
+  selectedItemBackgroundColor: Colors.black38,
+  selectedItemHoverColor: Color.fromRGBO(224, 224, 224, 1),
+  unselectedItemHoverColor: Color.fromRGBO(245, 245, 245, 1),
+  highlightedItemBackgroundColor: Color.fromRGBO(245, 245, 245, 1),
+  highlightedItemBorderColor: Colors.black26,
+  selectedItemTextStyle: TextStyle(color: Colors.black, fontSize: 14),
+  unselectedItemTextStyle: TextStyle(color: Colors.black45, fontSize: 14),
+  dialogEditIcon: Icon(Icons.edit, color: Colors.black, size: 20),
+  dialogDeleteIcon: Icon(
+    Icons.delete,
+    color: Color.fromRGBO(183, 28, 28, 1),
+    size: 20,
+  ),
+  loadingColor: darkGreen,
+);
+```
+
+The 8.0.0 chips (grey cards with a shadow, label and icon in the theme's
+text color) are not a setting: draw your own with `boxMultiItemWidgetBuilder`.
+
+The row spinner is the size of the icons it replaces (`loadingSize: 24`,
+`loadingStrokeWidth: 2.5`), and the row does not move while it shows.
 
 Texts default to Portuguese. Use `SearchDropDownStrings.en()`, or your own
 texts, per widget (`strings:`) or for the whole app:

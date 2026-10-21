@@ -182,8 +182,9 @@ class SearchDropDownController<T> extends DropDownControllerBase {
   /// open, selection or clear, as in 7.x.
   bool _filterArmed = false;
 
-  /// Set while [selectItem] writes the label: the closing view keeps its
-  /// results.
+  /// Set while the controller writes the field itself without it being a
+  /// query ([selectItem]'s label, [updateListItems]' cleared text): the
+  /// text does not re-filter.
   bool _selecting = false;
 
   /// Ignore accents when filtering.
@@ -322,9 +323,12 @@ class SearchDropDownController<T> extends DropDownControllerBase {
   /// Re-filters by the field text: in the open view, or while closed once
   /// filtering is armed (7.x), except for the label [selectItem] writes.
   void _followText() {
+    if (_selecting) {
+      return;
+    }
     if (_viewOpen) {
       _applyFilter();
-    } else if (_filterArmed && !_selecting) {
+    } else if (_filterArmed) {
       _filterBy(_textQuery);
     }
   }
@@ -533,6 +537,11 @@ class SearchDropDownController<T> extends DropDownControllerBase {
   /// calls [updateSelectedItem].
   void selectItem(ValueItem<T> item) {
     final ValueItem<T>? previous = _selectedItem;
+    // Re-selecting the selected item changes nothing listeners show.
+    final bool unchanged =
+        previous == item &&
+        previous?.label == item.label &&
+        _clearVisible == showClearIcon;
     _selectedItem = item;
     // The view is closing: writing the label must not re-filter the list.
     _viewOpen = false;
@@ -552,7 +561,9 @@ class SearchDropDownController<T> extends DropDownControllerBase {
     _filterArmed = true;
     _selectionChanged(item);
     _clearVisible = showClearIcon;
-    notifyListeners();
+    if (!unchanged) {
+      notifyListeners();
+    }
   }
 
   /// Clears the selection and the text, then calls [updateSelectedItem].
@@ -646,7 +657,20 @@ class SearchDropDownController<T> extends DropDownControllerBase {
   /// selected.
   void updateListItems(List<ValueItem<T>> newList, bool shouldReset) {
     if (shouldReset || _selectedItem != null) {
-      resetSelection();
+      // As resetSelection, but the text write does not filter the old items
+      // and the one notification below covers the cleared selection.
+      _selectedItem = null;
+      _clearVisible = false;
+      final bool deferred = isBuilding();
+      _editText(() {
+        _selecting = true;
+        try {
+          localSearchController.text = '';
+        } finally {
+          _selecting = false;
+        }
+      }, then: deferred ? _applyFilter : null);
+      _selectionChanged(null);
     }
     final List<ValueItem<T>> copy = List<ValueItem<T>>.of(newList);
     _listGeneration++;
@@ -719,7 +743,12 @@ class SearchDropDownController<T> extends DropDownControllerBase {
       return;
     }
     if (confirmDelete &&
-        !await confirmDeletion(context, deleteDialogSettings, strings)) {
+        !await confirmDeletion(
+          context,
+          deleteDialogSettings,
+          strings,
+          itemLabel: item.label,
+        )) {
       return;
     }
     await onDeleteItem?.call(item);
@@ -828,8 +857,8 @@ class SearchDropDownController<T> extends DropDownControllerBase {
 
   // ------------------------------------------------------------ open/close
 
-  /// Prepares the list when the search view opens: refreshes it from
-  /// [items] and shows every item (the selected label is not a query).
+  /// Prepares the list when the search view opens: shows every item of
+  /// [items] (the selected label is not a query).
   void onSearchOpen() {
     _viewOpen = true;
     _filterArmed = true;
@@ -838,7 +867,8 @@ class SearchDropDownController<T> extends DropDownControllerBase {
     final String text = localSearchController.text;
     final bool showsSelection = selected != null && text == selected.label;
     _untouchedLabel = showsSelection ? text : null;
-    _refresh();
+    // Every change to [items] already rebuilt the base (see [_lastQuery]).
+    _applyFilter();
     if (showsSelection) {
       // Typing replaces the selected label instead of appending to it.
       _editText(

@@ -46,6 +46,10 @@ Material _rowMaterial(WidgetTester tester) => tester.widget<Material>(
   find.descendant(of: find.byType(TextButton), matching: find.byType(Material)),
 );
 
+/// The colour scheme the tile is drawn with.
+ColorScheme _scheme(WidgetTester tester) =>
+    Theme.of(tester.element(find.byType(DefaultListTile<int>))).colorScheme;
+
 TextStyle _labelStyle(WidgetTester tester) => tester
     .widget<RichText>(
       find.descendant(
@@ -155,6 +159,19 @@ void main() {
       expect(find.bySemanticsLabel('Carregando'), findsOneWidget);
       semantics.dispose();
     });
+
+    testWidgets('strokeWidth: the ring stroke; unset, the indicator default', (
+      tester,
+    ) async {
+      CircularProgressIndicator ring() =>
+          tester.widget(find.byType(CircularProgressIndicator));
+      await tester.pumpWidget(
+        host(const Loading(cor: Colors.teal, strokeWidth: 3)),
+      );
+      expect(ring().strokeWidth, 3);
+      await tester.pumpWidget(host(const Loading(cor: Colors.teal)));
+      expect(ring().strokeWidth, isNull);
+    });
   });
 
   group('darkGreen', () {
@@ -174,22 +191,20 @@ void main() {
         (_rowMaterial(tester).shape! as RoundedRectangleBorder).side,
         BorderSide.none,
       );
-      expect(_labelStyle(tester).color, Colors.black45);
+      expect(_labelStyle(tester).color, _scheme(tester).onSurface);
     });
 
     testWidgets('highlighted: hover fill, border and the selected text style', (
       tester,
     ) async {
       await tester.pumpWidget(_tile(highlighted: true));
-      expect(
-        _rowMaterial(tester).color,
-        const Color.fromRGBO(245, 245, 245, 1),
-      );
+      final ColorScheme scheme = _scheme(tester);
+      expect(_rowMaterial(tester).color, scheme.onSurface.withAlpha(20));
       expect(
         (_rowMaterial(tester).shape! as RoundedRectangleBorder).side,
-        const BorderSide(color: Colors.black26),
+        BorderSide(color: scheme.outline),
       );
-      expect(_labelStyle(tester).color, Colors.black);
+      expect(_labelStyle(tester).color, scheme.onSecondaryContainer);
     });
 
     testWidgets('highlightedItemBackgroundColor wins for a highlighted row', (
@@ -215,10 +230,11 @@ void main() {
       tester,
     ) async {
       await tester.pumpWidget(_tile(highlighted: true, selected: true));
-      expect(_rowMaterial(tester).color, Colors.black38);
+      final ColorScheme scheme = _scheme(tester);
+      expect(_rowMaterial(tester).color, scheme.secondaryContainer);
       expect(
         (_rowMaterial(tester).shape! as RoundedRectangleBorder).side,
-        const BorderSide(color: Colors.black26),
+        BorderSide(color: scheme.outline),
       );
     });
   });

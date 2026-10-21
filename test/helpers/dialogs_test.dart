@@ -144,9 +144,15 @@ void main() {
         expect(surface.bottom - last.bottom, 8);
       });
 
-      testWidgets('actionsAlignment center centres the buttons', (
+      testWidgets('actionsAlignment center centres fixed-width buttons', (
         tester,
       ) async {
+        // Buttons without customWidth fill the row (8.0.1), so alignment
+        // only moves buttons with a fixed width.
+        const DialogButtonSettings fixed = DialogButtonSettings(
+          'b',
+          customWidth: 80,
+        );
         await _show(
           tester,
           d.value(
@@ -154,6 +160,10 @@ void main() {
               content: SizedBox(width: 2000, height: 10),
               actionsPadding: EdgeInsets.zero,
               actionsAlignment: MainAxisAlignment.center,
+              customCancelButtonSettings: fixed,
+              customDeleteButtonSettings: fixed,
+              customOkButtonSettings: fixed,
+              customEditButtonSettings: fixed,
             ),
           ),
         );
@@ -201,14 +211,20 @@ void main() {
       expect(find.text('Essa ação não poderá ser desfeita.'), findsOneWidget);
       expect(find.text('Erro!'), findsNothing);
       final TextStyle title = _style(tester, 'Tem certeza?');
-      expect(title.fontWeight, FontWeight.bold);
-      expect(title.fontSize, 18);
+      expect(title.fontWeight, FontWeight.w600);
+      expect(title.fontSize, 20);
       expect(_align(tester, 'Tem certeza?'), TextAlign.center);
       final TextStyle body = _style(
         tester,
         'Essa ação não poderá ser desfeita.',
       );
-      expect(body.fontSize, 16);
+      expect(body.fontSize, 14);
+      expect(
+        body.color,
+        Theme.of(
+          tester.element(find.byType(DefaultDialogContent)),
+        ).colorScheme.onSurfaceVariant,
+      );
       expect(
         _align(tester, 'Essa ação não poderá ser desfeita.'),
         TextAlign.center,
@@ -231,9 +247,9 @@ void main() {
       expect(find.text('Erro!'), findsOneWidget);
       expect(find.text('O valor adicionado não é válido.'), findsOneWidget);
       expect(find.text('Tem certeza?'), findsNothing);
-      expect(_style(tester, 'Erro!').fontWeight, FontWeight.bold);
-      expect(_style(tester, 'Erro!').fontSize, 18);
-      expect(_style(tester, 'O valor adicionado não é válido.').fontSize, 16);
+      expect(_style(tester, 'Erro!').fontWeight, FontWeight.w600);
+      expect(_style(tester, 'Erro!').fontSize, 20);
+      expect(_style(tester, 'O valor adicionado não é válido.').fontSize, 14);
     });
 
     testWidgets('both variants use the given strings', (tester) async {
@@ -339,17 +355,17 @@ void main() {
         );
         await tester.tap(find.text('open'));
         await tester.pumpAndSettle();
-        expect(find.text('Tem certeza?'), findsOneWidget);
+        expect(find.text('Apagar item?'), findsOneWidget);
 
         await tester.tapAt(const Offset(5, 5));
         await tester.pumpAndSettle();
-        expect(find.text('Tem certeza?'), findsOneWidget);
+        expect(find.text('Apagar item?'), findsOneWidget);
         expect(deleted, isEmpty);
         expect(c.items.map((e) => e.label), fruitItems().map((e) => e.label));
 
         await tester.tap(find.text('Cancelar'));
         await tester.pumpAndSettle();
-        expect(find.text('Tem certeza?'), findsNothing);
+        expect(find.text('Apagar item?'), findsNothing);
         expect(deleted, isEmpty);
         expect(c.items, hasLength(5));
       },

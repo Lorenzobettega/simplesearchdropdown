@@ -43,13 +43,14 @@ Future<void> showRejectedItemWarning(
   );
 }
 
-/// Asks the user to confirm a delete; `true` when confirmed. Texts as in
-/// [showRejectedItemWarning].
+/// Asks the user to confirm deleting the item labelled [itemLabel]; `true`
+/// when confirmed. Texts as in [showRejectedItemWarning].
 Future<bool> confirmDeletion(
   BuildContext context,
   DialogSettings? settings,
-  SearchDropDownStrings? strings,
-) async {
+  SearchDropDownStrings? strings, {
+  String? itemLabel,
+}) async {
   bool confirmed = false;
   final SearchDropDownStrings texts =
       strings ?? SearchDropDownStrings.of(context);
@@ -62,6 +63,7 @@ Future<bool> confirmDeletion(
       },
       settings: settings,
       strings: texts,
+      itemLabel: itemLabel,
     ),
   );
   return confirmed;

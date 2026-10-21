@@ -201,7 +201,7 @@ void main() {
       final TextField field = tester.widget<TextField>(
         find.descendant(of: dialog, matching: find.byType(TextField)),
       );
-      expect(field.decoration!.hintText, 'New label');
+      expect(field.decoration!.labelText, 'New label');
     });
   });
 
@@ -277,8 +277,16 @@ void main() {
           reOpenedScrollDuration: Duration(seconds: 2),
         ),
       );
-      await tester.tap(
-        find.descendant(of: _dropdown, matching: find.byType(InkWell)).first,
+      // Left padding of the box: its centre holds the chip's remove icon.
+      await tester.tapAt(
+        tester
+                .getRect(
+                  find
+                      .descendant(of: _dropdown, matching: find.byType(InkWell))
+                      .first,
+                )
+                .centerLeft +
+            const Offset(5, 0),
       );
       await tester.pump();
       // Frames of 100 ms until the scroll animation stops: 2 s of them.
@@ -314,7 +322,11 @@ void main() {
     ) async {
       await _pump(tester, _mc());
       final BoxDecoration raised = _boxDecoration(tester);
-      expect(raised.color, Colors.white);
+      expect(
+        raised.color,
+        Theme.of(tester.element(_dropdown)).colorScheme.surfaceContainerLow,
+      );
+      expect(raised.borderRadius, const BorderRadius.all(Radius.circular(12)));
       final BoxShadow shadow = raised.boxShadow!.single;
       expect(shadow.color, Colors.grey.withAlpha(125));
       expect(shadow.blurRadius, 2);
@@ -743,6 +755,7 @@ void main() {
       );
       await _openDialog(tester);
       expect(find.text('Later del'), findsOneWidget);
+      expect(find.text('Apagar item?'), findsNothing);
       expect(find.text('Tem certeza?'), findsNothing);
     });
 

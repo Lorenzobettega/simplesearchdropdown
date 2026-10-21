@@ -994,7 +994,17 @@ void main() {
       'false (default): divider painted with the view background colour',
       (tester) async {
         await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
-        expect(_anchor(tester).dividerColor, Colors.white);
+        // The default view background: the theme's surfaceContainerLow.
+        expect(
+          _anchor(tester).dividerColor,
+          Theme.of(
+            tester.element(find.byWidgetPredicate((w) => w is SearchAnchor)),
+          ).colorScheme.surfaceContainerLow,
+        );
+        expect(
+          _anchor(tester).dividerColor,
+          _anchor(tester).viewBackgroundColor,
+        );
 
         await _pump(
           tester,

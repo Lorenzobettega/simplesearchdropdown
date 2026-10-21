@@ -46,6 +46,7 @@ Future<void> openMultiple(WidgetTester tester, {Finder? of}) async {
     of: of ?? find.byWidgetPredicate((w) => w is MultipleSearchDropDown),
     matching: find.byType(InkWell),
   );
-  await tester.tap(box.first);
+  // Taps inside the left padding: the centre may hold a chip's remove icon.
+  await tester.tapAt(tester.getRect(box.first).centerLeft + const Offset(5, 0));
   await tester.pumpAndSettle();
 }

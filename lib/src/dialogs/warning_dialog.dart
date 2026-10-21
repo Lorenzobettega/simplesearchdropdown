@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
+import 'package:simple_search_dropdown/src/dialogs/dialog_layout.dart';
 
 /// Delete confirmation (`confirmDialog: true`) or invalid-item warning.
 class WarningDialog extends StatelessWidget {
@@ -10,6 +11,7 @@ class WarningDialog extends StatelessWidget {
     required this.returnFunction,
     this.confirmDialog = true,
     this.strings,
+    this.itemLabel,
   });
 
   /// Visual customisation.
@@ -25,41 +27,45 @@ class WarningDialog extends StatelessWidget {
   /// (Portuguese without one).
   final SearchDropDownStrings? strings;
 
+  /// Label of the item being deleted, named by the delete confirmation
+  /// unless [DialogSettings.showItemLabel] is `false`.
+  final String? itemLabel;
+
   @override
   Widget build(BuildContext context) {
     final dialogSettings = settings ?? const DialogSettings();
     final SearchDropDownStrings texts =
         strings ?? SearchDropDownStrings.of(context);
-    return AlertDialog(
-      title:
-          dialogSettings.title ??
-          DefaultDialogTitle(confirmDialog: confirmDialog, strings: texts),
-      content:
-          dialogSettings.content ??
-          DefaultDialogContent(confirmDialog: confirmDialog, strings: texts),
-      contentPadding: dialogSettings.contentPadding,
-      titlePadding: dialogSettings.titlePadding,
-      actionsPadding: dialogSettings.actionsPadding,
-      actionsAlignment: dialogSettings.actionsAlignment,
-      backgroundColor: dialogSettings.backgroundColor,
-      elevation: dialogSettings.elevation,
-      shape: dialogSettings.shape,
-      insetPadding: dialogSettings.insetPadding,
+    final String? label = confirmDialog && dialogSettings.showItemLabel
+        ? itemLabel
+        : null;
+    return PackageDialogLayout(
+      settings: dialogSettings,
+      title: DefaultDialogTitle(
+        confirmDialog: confirmDialog,
+        strings: texts,
+        itemLabel: label,
+      ),
+      content: DefaultDialogContent(
+        confirmDialog: confirmDialog,
+        strings: texts,
+        itemLabel: label,
+      ),
       actions: confirmDialog
           ? [
-              DialogButton(
-                function: () => returnFunction(false),
-                buttonSettings: dialogSettings.cancelButton(texts),
+              (
+                settings: dialogSettings.cancelButton(texts),
+                onPressed: () => returnFunction(false),
               ),
-              DialogButton(
-                function: () => returnFunction(true),
-                buttonSettings: dialogSettings.deleteButton(texts),
+              (
+                settings: dialogSettings.deleteButton(texts),
+                onPressed: () => returnFunction(true),
               ),
             ]
           : [
-              DialogButton(
-                function: () => returnFunction(true),
-                buttonSettings: dialogSettings.okButton(texts),
+              (
+                settings: dialogSettings.okButton(texts),
+                onPressed: () => returnFunction(true),
               ),
             ],
     );

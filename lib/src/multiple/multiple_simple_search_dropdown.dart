@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 import 'package:simple_search_dropdown/src/core/item_list.dart';
+import 'package:simple_search_dropdown/src/core/theme_colors.dart';
 import 'package:simple_search_dropdown/src/multiple/multiple_listview.dart';
 
 /// A multiple-selection dropdown: selected items show as chips in the box and
@@ -184,6 +185,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
 
   Widget _buildBox() {
     final SimpleSearchbarSettings bar = widget.searchBarSettings;
+    final BarColors colors = BarColors.of(bar, Theme.of(context));
     final MultipleSearchDropDownController<T> controller = _controller;
     final List<ValueItem<T>> selected = controller.selectedItems;
     final bool hasSelection = selected.isNotEmpty;
@@ -212,14 +214,12 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                   children: <Widget>[
                     Container(
                       decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(10),
-                        ),
-                        color: bar.backgroundColor,
+                        borderRadius: dropdownRadius,
+                        color: colors.background,
                         border: Border.all(style: BorderStyle.none),
                         boxShadow: <BoxShadow>[
                           BoxShadow(
-                            color: Colors.grey.withAlpha(
+                            color: colors.shadow.withAlpha(
                               bar.elevation != 0 ? 125 : 0,
                             ),
                             spreadRadius: 0.5,
@@ -234,7 +234,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                           children: <Widget>[
                             Expanded(
                               child: hasSelection
-                                  ? _buildChips(selected)
+                                  ? _buildChips(selected, colors)
                                   : Column(
                                       mainAxisAlignment:
                                           MainAxisAlignment.center,
@@ -244,7 +244,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                                         Text(
                                           bar.customHint ?? _strings.searchHint,
                                           textAlign: TextAlign.start,
-                                          style: bar.hintStyle,
+                                          style: colors.hintStyle,
                                         ),
                                       ],
                                     ),
@@ -301,14 +301,14 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
     );
   }
 
-  Widget _buildChips(List<ValueItem<T>> selected) {
+  Widget _buildChips(List<ValueItem<T>> selected, BarColors colors) {
     final SimpleSearchbarSettings bar = widget.searchBarSettings;
     return ScrollConfiguration(
       behavior: CustomScrollBehavior(),
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         separatorBuilder: (BuildContext context, int index) =>
-            const SizedBox(width: 5),
+            const SizedBox(width: 8),
         itemCount: selected.length,
         itemBuilder: (BuildContext context, int index) {
           final ValueItem<T> item = selected[index];
@@ -317,30 +317,45 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
           if (custom != null) {
             return custom(item);
           }
+          // An M3 input chip: flat, 32 px tall, 8 px corners, 8 px between
+          // the label and the remove icon.
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Card(
-              color: bar.boxMultiSelectedBackgroundColor,
-              elevation: bar.elevation,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(item.label, style: bar.boxMultiSelectedTextStyle),
-                    Semantics(
-                      button: true,
-                      label: '${_strings.removeChipTooltip} ${item.label}',
-                      child: InkWell(
-                        onTap: () => _controller.toggle(item),
-                        child: Icon(
-                          Icons.close,
-                          size: bar.boxMultiSelectedClearIconSize,
-                          color: bar.boxMultiSelectedClearIconColor,
-                        ),
-                      ),
+            child: Center(
+              child: SizedBox(
+                height: 32,
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  color: colors.chipBackground,
+                  elevation: 0,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 12,
+                      end: 8,
                     ),
-                  ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(item.label, style: colors.chipTextStyle),
+                        const SizedBox(width: 8),
+                        Semantics(
+                          button: true,
+                          label: '${_strings.removeChipTooltip} ${item.label}',
+                          child: InkWell(
+                            onTap: () => _controller.toggle(item),
+                            child: Icon(
+                              Icons.close,
+                              size: bar.boxMultiSelectedClearIconSize,
+                              color: colors.chipIconColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),
