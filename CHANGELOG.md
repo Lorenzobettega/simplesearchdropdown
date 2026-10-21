@@ -6,6 +6,17 @@
 - Dialog titles are semibold 20 (`titleLarge`) and the supporting text `bodyMedium` in `onSurfaceVariant`, centred alike in the three dialogs, which share one layout.
 - A row's edit/delete buttons (and the add row's Criar) are hidden behind the spinner instead of removed while a callback runs, so the label and the row no longer move sideways.
 
+### Performance
+Single dropdown (no behaviour change; counts from `test/single/rebuild_counts_test.dart`):
+- A selection no longer rebuilds the bar (1 → 0 bar builds): the bar's clear button follows the controller on its own, and the bar rebuilds only when `enabled` changes.
+- A row rebuilds only when its selected or highlighted state flips: a selection or an arrow key rebuilds at most 2 rows instead of every visible row.
+- A closing view keeps the rows (and the add row) it showed: a re-filter on close (`clearOnClose`) no longer rebuilds them or jumps to the full list while it fades out (0 row builds instead of every visible row). `filteredItems` and `onFilterUpdated` are unchanged, and the next open still lists every item scrolled to the selection.
+- The view's close arrow no longer writes the same text back into the field (1 → 0 text notifications).
+- Selecting the item that is already selected no longer notifies the controller's listeners (1 → 0); `updateSelectedItem` is still called and the view still closes.
+- `updateListItems` with a selection (or `shouldReset`) notifies once instead of twice and filters once; `updateSelectedItem(null)` is still called once.
+- Both controllers send one notification per frame for any number of changes made during a build (was one per change).
+- Opening the view no longer rebuilds (and re-sorts) the item list when it has not changed.
+
 ### Added
 - The delete confirmation names the item: `Apagar item?` and `“label” será apagado.` above `Essa ação não poderá ser desfeita.` New `SearchDropDownStrings.confirmDeleteItemTitle` and `confirmDeleteItemContent` (`{item}` is replaced by the label, in bold), `DialogSettings.showItemLabel` (default `true`; `false` keeps the generic `Tem certeza?` dialog), and `itemLabel` on `WarningDialog`, `DefaultDialogTitle` and `DefaultDialogContent`; both controllers pass the label. If you customise `confirmDeleteTitle`, set `confirmDeleteItemTitle` too (or `showItemLabel: false`).
 - `DialogButtonSettings.useThemeColors`: label in the theme's `onSurface` and border in its `outline` instead of `textColor` (used by the default cancel button).

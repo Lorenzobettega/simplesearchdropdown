@@ -453,17 +453,18 @@ void main() {
       expect(_sum(perKey), 0);
     });
 
-    testWidgets(
-      'the probe counts a bar rebuild caused by a controller notify',
-      (tester) async {
-        final counters = _Counters();
-        final c = await _pumpPerf(tester, counters);
-        final int before = counters.bar;
-        c.selectedItem = c.items[3];
-        await tester.pumpAndSettle();
-        expect(counters.bar - before, greaterThanOrEqualTo(1));
-      },
-    );
+    testWidgets('the probe counts a bar rebuild caused by the controller', (
+      tester,
+    ) async {
+      final counters = _Counters();
+      final c = await _pumpPerf(tester, counters);
+      final int before = counters.bar;
+      // 8.0.1: only `enabled` rebuilds the bar (a selection no longer does,
+      // see test/single/rebuild_counts_test.dart).
+      c.enabled = false;
+      await tester.pumpAndSettle();
+      expect(counters.bar - before, greaterThanOrEqualTo(1));
+    });
 
     testWidgets('the guard fails when every keystroke rebuilds the bar', (
       tester,
@@ -471,9 +472,11 @@ void main() {
       final counters = _Counters();
       final c = await _pumpPerf(tester, counters);
       await openSingle(tester);
-      // Simulates the regression: a controller notify on every keystroke.
+      // Simulates the regression: a bar rebuild on every keystroke.
       c.localSearchController.addListener(
-        () => c.clearVisible = !c.clearVisible,
+        () => c
+          ..enabled = false
+          ..enabled = true,
       );
       final List<int> perKey = await _typeCounting(tester, () => counters.bar);
       expect(perKey.every((n) => n >= 1), isTrue, reason: '$perKey');
