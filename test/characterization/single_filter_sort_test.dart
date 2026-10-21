@@ -70,9 +70,6 @@ SearchDropDownController<int> _controller(
   updateSelectedItem: updateSelectedItem,
 );
 
-List<String> _labels(Iterable<ValueItem<int>> items) =>
-    items.map((e) => e.label).toList();
-
 List<ValueItem<int>> _newList() => <ValueItem<int>>[_kiwi, _figo];
 
 Future<void> _pump(
@@ -85,20 +82,6 @@ Future<void> _type(WidgetTester tester, String text) async {
   await tester.enterText(focusedField(), text);
   await tester.pumpAndSettle();
 }
-
-/// Labels of the item tiles currently built in the open search view.
-/// Rows of the open list in visual (top to bottom) order.
-List<DefaultListTile<int>> _visualRows(WidgetTester tester) {
-  final List<DefaultListTile<int>> rows = tester
-      .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
-      .toList();
-  double top(DefaultListTile<int> row) =>
-      tester.getTopLeft(find.byWidget(row)).dy;
-  return rows..sort((a, b) => top(a).compareTo(top(b)));
-}
-
-List<String> _tileLabels(WidgetTester tester) =>
-    _visualRows(tester).map((t) => t.item.label).toList();
 
 /// Text currently displayed by the closed search bar.
 String _barText(WidgetTester tester) => tester
@@ -138,15 +121,15 @@ void main() {
 
       // Only the tiles that fit in the view are built (lazy list), so the
       // full list is checked through filteredItems.
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
 
       await _type(tester, 'ca');
-      expect(_labels(c.filteredItems), <String>['Maçã', 'abacaxi']);
-      expect(_tileLabels(tester), <String>['Maçã', 'abacaxi']);
+      expect(labelsOf(c.filteredItems), <String>['Maçã', 'abacaxi']);
+      expect(visualRowLabels<int>(tester), <String>['Maçã', 'abacaxi']);
 
       await _type(tester, 'cax');
-      expect(_labels(c.filteredItems), <String>['abacaxi']);
-      expect(_tileLabels(tester), <String>['abacaxi']);
+      expect(labelsOf(c.filteredItems), <String>['abacaxi']);
+      expect(visualRowLabels<int>(tester), <String>['abacaxi']);
     });
 
     testWidgets('no match shows no tiles (addMode false)', (tester) async {
@@ -156,7 +139,7 @@ void main() {
 
       await _type(tester, 'xyz');
       expect(c.filteredItems, isEmpty);
-      expect(_tileLabels(tester), isEmpty);
+      expect(visualRowLabels<int>(tester), isEmpty);
     });
   });
 
@@ -169,14 +152,14 @@ void main() {
       await openSingle(tester);
 
       await _type(tester, 'maca');
-      expect(_labels(c.filteredItems), <String>['Maçã']);
-      expect(_tileLabels(tester), <String>['Maçã']);
+      expect(labelsOf(c.filteredItems), <String>['Maçã']);
+      expect(visualRowLabels<int>(tester), <String>['Maçã']);
 
       await _type(tester, 'PERA');
-      expect(_labels(c.filteredItems), <String>['Pêra']);
+      expect(labelsOf(c.filteredItems), <String>['Pêra']);
 
       await _type(tester, 'maçã');
-      expect(_labels(c.filteredItems), <String>['Maçã']);
+      expect(labelsOf(c.filteredItems), <String>['Maçã']);
     });
 
     testWidgets('latinize false: accents are significant', (tester) async {
@@ -188,17 +171,17 @@ void main() {
       expect(c.filteredItems, isEmpty);
 
       await _type(tester, 'maçã');
-      expect(_labels(c.filteredItems), <String>['Maçã']);
+      expect(labelsOf(c.filteredItems), <String>['Maçã']);
 
       // Case folding still applies to accented characters.
       await _type(tester, 'MAÇÃ');
-      expect(_labels(c.filteredItems), <String>['Maçã']);
+      expect(labelsOf(c.filteredItems), <String>['Maçã']);
 
       await _type(tester, 'pera');
       expect(c.filteredItems, isEmpty);
 
       await _type(tester, 'pêra');
-      expect(_labels(c.filteredItems), <String>['Pêra']);
+      expect(labelsOf(c.filteredItems), <String>['Pêra']);
     });
   });
 
@@ -209,10 +192,10 @@ void main() {
       await openSingle(tester);
 
       await _type(tester, 'BAN');
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
 
       await _type(tester, 'ABACAXI');
-      expect(_labels(c.filteredItems), <String>['abacaxi']);
+      expect(labelsOf(c.filteredItems), <String>['abacaxi']);
     });
 
     testWidgets('caseSensitive true: case must match, latinize still applies', (
@@ -226,10 +209,10 @@ void main() {
       expect(c.filteredItems, isEmpty);
 
       await _type(tester, 'Ban');
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
 
       await _type(tester, 'Maca');
-      expect(_labels(c.filteredItems), <String>['Maçã']);
+      expect(labelsOf(c.filteredItems), <String>['Maçã']);
 
       await _type(tester, 'maca');
       expect(c.filteredItems, isEmpty);
@@ -245,11 +228,11 @@ void main() {
       await openSingle(tester);
 
       await _type(tester, '  ban  ');
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
 
       // A whitespace-only query normalizes to '' and matches everything.
       await _type(tester, '   ');
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
     });
 
     testWidgets('trim false: surrounding whitespace is significant', (
@@ -263,7 +246,7 @@ void main() {
       expect(c.filteredItems, isEmpty);
 
       await _type(tester, 'ana');
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
 
       await _type(tester, '   ');
       expect(c.filteredItems, isEmpty);
@@ -277,7 +260,7 @@ void main() {
       await openSingle(tester);
 
       await _type(tester, 'm 1');
-      expect(_labels(c.filteredItems), <String>[
+      expect(labelsOf(c.filteredItems), <String>[
         'Item 1',
         'Item 10',
         'Item 11',
@@ -291,11 +274,11 @@ void main() {
       addTearDown(c.dispose);
 
       _typeViaController(c, 'ban');
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
 
       // Opening applies the current text once.
       c.onSearchOpen();
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
     });
 
     test(
@@ -305,9 +288,9 @@ void main() {
         addTearDown(c.dispose);
 
         c.onSearchOpen();
-        expect(_labels(c.filteredItems), _fruitOrder);
+        expect(labelsOf(c.filteredItems), _fruitOrder);
         _typeViaController(c, 'uva');
-        expect(_labels(c.filteredItems), <String>['Uva']);
+        expect(labelsOf(c.filteredItems), <String>['Uva']);
       },
     );
   });
@@ -318,11 +301,11 @@ void main() {
       addTearDown(c.dispose);
 
       c.filterList('ca');
-      expect(_labels(c.filteredItems), <String>['Maçã', 'abacaxi']);
+      expect(labelsOf(c.filteredItems), <String>['Maçã', 'abacaxi']);
       c.filterList('ban');
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
       c.filterList('');
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
     });
 
     test('ignores accents and case on both sides', () {
@@ -334,11 +317,11 @@ void main() {
       addTearDown(c.dispose);
 
       c.filterList('sao');
-      expect(_labels(c.filteredItems), <String>['São Paulo', 'Sao Tome']);
+      expect(labelsOf(c.filteredItems), <String>['São Paulo', 'Sao Tome']);
       c.filterList('SÃO');
-      expect(_labels(c.filteredItems), <String>['São Paulo', 'Sao Tome']);
+      expect(labelsOf(c.filteredItems), <String>['São Paulo', 'Sao Tome']);
       c.filterList('PORTO');
-      expect(_labels(c.filteredItems), <String>['Porto Alegre']);
+      expect(labelsOf(c.filteredItems), <String>['Porto Alegre']);
       c.filterList('');
       expect(c.filteredItems, hasLength(3));
     });
@@ -350,7 +333,7 @@ void main() {
       c.filterList('ban');
       expect(c.filteredItems, isEmpty);
       c.filterList('  Ban ');
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
     });
 
     test(
@@ -363,7 +346,7 @@ void main() {
         c.filterList('ban');
         expect(calls, 1);
         c.filterList('');
-        expect(_labels(c.filteredItems), _fruitOrder);
+        expect(labelsOf(c.filteredItems), _fruitOrder);
         expect(calls, 2);
       },
     );
@@ -376,22 +359,22 @@ void main() {
       await openSingle(tester);
 
       await _type(tester, 'a');
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
 
       await _type(tester, 'an');
-      expect(_labels(c.filteredItems), <String>['Banana']);
-      expect(_tileLabels(tester), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
+      expect(visualRowLabels<int>(tester), <String>['Banana']);
 
       await _type(tester, 'a');
-      expect(_labels(c.filteredItems), _fruitOrder);
-      expect(_tileLabels(tester).first, 'Maçã');
+      expect(labelsOf(c.filteredItems), _fruitOrder);
+      expect(visualRowLabels<int>(tester).first, 'Maçã');
 
       // Replacing (non-prefix change) re-filters from the full list.
       await _type(tester, 'b');
-      expect(_labels(c.filteredItems), <String>['Banana', 'abacaxi']);
+      expect(labelsOf(c.filteredItems), <String>['Banana', 'abacaxi']);
 
       await _type(tester, '');
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
     });
 
     testWidgets('numbered items: refine to one, widen back to three', (
@@ -402,15 +385,15 @@ void main() {
       await openSingle(tester);
 
       await _type(tester, '1');
-      expect(_labels(c.filteredItems), <String>[
+      expect(labelsOf(c.filteredItems), <String>[
         'Item 1',
         'Item 10',
         'Item 11',
       ]);
       await _type(tester, '11');
-      expect(_labels(c.filteredItems), <String>['Item 11']);
+      expect(labelsOf(c.filteredItems), <String>['Item 11']);
       await _type(tester, '1');
-      expect(_labels(c.filteredItems), <String>[
+      expect(labelsOf(c.filteredItems), <String>[
         'Item 1',
         'Item 10',
         'Item 11',
@@ -457,7 +440,7 @@ void main() {
       late final SearchDropDownController<int> c;
       c = _controller(
         fruitItems(),
-        onFilterUpdated: () => snapshots.add(_labels(c.filteredItems)),
+        onFilterUpdated: () => snapshots.add(labelsOf(c.filteredItems)),
       );
       await _pump(tester, c);
       await openSingle(tester);
@@ -480,10 +463,10 @@ void main() {
 
       c.onSearchOpen();
       _typeViaController(c, 'x');
-      expect(_labels(c.filteredItems), <String>['AX', 'BX']);
+      expect(labelsOf(c.filteredItems), <String>['AX', 'BX']);
       expect(calls, 1);
       _typeViaController(c, 'y');
-      expect(_labels(c.filteredItems), <String>['AY', 'BY']);
+      expect(labelsOf(c.filteredItems), <String>['AY', 'BY']);
       expect(calls, 2);
     });
 
@@ -493,7 +476,7 @@ void main() {
       addTearDown(c.dispose);
 
       c.updateListItems(_newList(), false);
-      expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi', 'Figo']);
       expect(calls, 1);
     });
 
@@ -511,12 +494,12 @@ void main() {
 
         c.onSearchOpen();
         _typeViaController(c, 'x');
-        expect(_labels(c.filteredItems), <String>['AXY', 'BX', 'CXY']);
+        expect(labelsOf(c.filteredItems), <String>['AXY', 'BX', 'CXY']);
         expect(calls, 1);
 
         // Same length, same first, same last; only the middle differs.
         _typeViaController(c, 'y');
-        expect(_labels(c.filteredItems), <String>['AXY', 'BY', 'CXY']);
+        expect(labelsOf(c.filteredItems), <String>['AXY', 'BY', 'CXY']);
         expect(calls, 2);
       }, // B13: fixed in 8.0
     );
@@ -528,15 +511,15 @@ void main() {
       final c = _controller(items);
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), _fruitOrder);
-      expect(_labels(items), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
+      expect(labelsOf(items), _fruitOrder);
     });
 
     test('works with an unmodifiable caller list', () {
       final c = _controller(List<ValueItem<int>>.unmodifiable(fruitItems()));
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
     });
   });
 
@@ -547,10 +530,10 @@ void main() {
       addTearDown(c.dispose);
 
       // 8.0 (D2): case and accents are ignored ('abacaxi' first).
-      expect(_labels(c.filteredItems), _fruitAZ);
+      expect(labelsOf(c.filteredItems), _fruitAZ);
       expect(identical(c.items, items), isFalse);
-      expect(_labels(c.items), _fruitAZ);
-      expect(_labels(items), _fruitOrder);
+      expect(labelsOf(c.items), _fruitAZ);
+      expect(labelsOf(items), _fruitOrder);
     });
 
     test('accented characters sort with their base letter (D2, 8.0)', () {
@@ -561,7 +544,7 @@ void main() {
       ], sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), <String>['Pera', 'Pêra', 'Pzz']);
+      expect(labelsOf(c.filteredItems), <String>['Pera', 'Pêra', 'Pzz']);
     });
 
     test('filter results keep the sorted order', () {
@@ -570,9 +553,9 @@ void main() {
 
       c.onSearchOpen();
       _typeViaController(c, 'a');
-      expect(_labels(c.filteredItems), _fruitAZ);
+      expect(labelsOf(c.filteredItems), _fruitAZ);
       _typeViaController(c, 'ca');
-      expect(_labels(c.filteredItems), <String>['abacaxi', 'Maçã']);
+      expect(labelsOf(c.filteredItems), <String>['abacaxi', 'Maçã']);
     });
 
     test('caseSensitive/latinize do not change the A-Z order (N24, D2)', () {
@@ -585,8 +568,8 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), _fruitAZ);
-      expect(_labels(c.items), _fruitAZ);
+      expect(labelsOf(c.filteredItems), _fruitAZ);
+      expect(labelsOf(c.items), _fruitAZ);
     });
 
     test('an unmodifiable caller list is sorted on the copy', () {
@@ -596,7 +579,7 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), _fruitAZ);
+      expect(labelsOf(c.filteredItems), _fruitAZ);
     });
 
     test('digits compare as text, like 7.x (D2: Item 10 before Item 2)', () {
@@ -608,8 +591,12 @@ void main() {
       final c = _controller(items, sort: SortType.alphabetical);
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), <String>['Item 1', 'Item 10', 'Item 2']);
-      expect(_labels(c.items), <String>['Item 1', 'Item 10', 'Item 2']);
+      expect(labelsOf(c.filteredItems), <String>[
+        'Item 1',
+        'Item 10',
+        'Item 2',
+      ]);
+      expect(labelsOf(c.items), <String>['Item 1', 'Item 10', 'Item 2']);
     });
   });
 
@@ -619,9 +606,9 @@ void main() {
       final c = _controller(items, sort: SortType.reverseAlphabetical);
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), _fruitZA);
-      expect(_labels(c.items), _fruitZA);
-      expect(_labels(items), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitZA);
+      expect(labelsOf(c.items), _fruitZA);
+      expect(labelsOf(items), _fruitOrder);
     });
 
     test('filter results keep the sorted order', () {
@@ -630,7 +617,7 @@ void main() {
 
       c.onSearchOpen();
       _typeViaController(c, 'ca');
-      expect(_labels(c.filteredItems), <String>['Maçã', 'abacaxi']);
+      expect(labelsOf(c.filteredItems), <String>['Maçã', 'abacaxi']);
     });
   });
 
@@ -645,9 +632,9 @@ void main() {
       addTearDown(c.dispose);
 
       const expected = <String>['Uva', 'Maçã', 'Banana', 'abacaxi', 'Pêra'];
-      expect(_labels(c.filteredItems), expected);
-      expect(_labels(c.items), expected);
-      expect(_labels(items), _fruitOrder);
+      expect(labelsOf(c.filteredItems), expected);
+      expect(labelsOf(c.items), expected);
+      expect(labelsOf(items), _fruitOrder);
     });
 
     test('matches by value equality and inserts the selected instance', () {
@@ -662,7 +649,7 @@ void main() {
       );
       addTearDown(c.dispose);
 
-      expect(_labels(c.items).first, 'Uva');
+      expect(labelsOf(c.items).first, 'Uva');
       expect(c.items, hasLength(5));
       expect(identical(c.items.first, uva), isTrue);
     });
@@ -672,8 +659,8 @@ void main() {
       final c = _controller(items, sort: SortType.selectedFirst);
       addTearDown(c.dispose);
 
-      expect(_labels(c.filteredItems), _fruitOrder);
-      expect(_labels(items), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
+      expect(labelsOf(items), _fruitOrder);
     });
 
     test(
@@ -687,7 +674,7 @@ void main() {
         );
         addTearDown(c.dispose);
 
-        expect(_labels(c.filteredItems), _fruitOrder);
+        expect(labelsOf(c.filteredItems), _fruitOrder);
         expect(c.selectedItem, _kiwi);
       },
     );
@@ -700,12 +687,12 @@ void main() {
       addTearDown(c.dispose);
 
       c.sortBy(SortType.reverseAlphabetical);
-      expect(_labels(c.items), _fruitZA);
-      expect(_labels(items), _fruitOrder);
+      expect(labelsOf(c.items), _fruitZA);
+      expect(labelsOf(items), _fruitOrder);
       // 8.0: filteredItems follows immediately.
-      expect(_labels(c.filteredItems), _fruitZA);
+      expect(labelsOf(c.filteredItems), _fruitZA);
       c.onSearchOpen();
-      expect(_labels(c.filteredItems), _fruitZA);
+      expect(labelsOf(c.filteredItems), _fruitZA);
     });
 
     test('sort is re-applied by updateListItems', () {
@@ -718,10 +705,10 @@ void main() {
         const ValueItem(label: 'Abacate', value: 12),
       ];
       c.updateListItems(newList, false);
-      expect(_labels(c.filteredItems), <String>['Abacate', 'Figo', 'Kiwi']);
-      expect(_labels(c.items), <String>['Abacate', 'Figo', 'Kiwi']);
+      expect(labelsOf(c.filteredItems), <String>['Abacate', 'Figo', 'Kiwi']);
+      expect(labelsOf(c.items), <String>['Abacate', 'Figo', 'Kiwi']);
       // The argument list itself is copied, not sorted.
-      expect(_labels(newList), <String>['Kiwi', 'Figo', 'Abacate']);
+      expect(labelsOf(newList), <String>['Kiwi', 'Figo', 'Abacate']);
     });
   });
 
@@ -741,7 +728,7 @@ void main() {
       // Construction does not notify updateSelectedItem.
       expect(selected, isEmpty);
       // filteredItems still holds every item until the view opens.
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
     });
 
     testWidgets('showClearIcon true -> clearVisible and bar clear button', (
@@ -793,8 +780,8 @@ void main() {
       await _pump(tester, c);
       await openSingle(tester);
 
-      expect(_labels(c.filteredItems), _fruitOrder);
-      expect(_tileLabels(tester), contains('Banana'));
+      expect(labelsOf(c.filteredItems), _fruitOrder);
+      expect(visualRowLabels<int>(tester), contains('Banana'));
       expect(calls, 0);
     });
 
@@ -930,13 +917,13 @@ void main() {
       c.updateListItems(newList, false);
 
       expect(identical(c.items, items), isFalse);
-      expect(_labels(items), _fruitOrder);
-      expect(_labels(c.items), <String>['Kiwi', 'Figo']);
-      expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(items), _fruitOrder);
+      expect(labelsOf(c.items), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi', 'Figo']);
 
       // The argument is copied: later changes to it are not reflected.
       newList.add(const ValueItem(label: 'Lima', value: 12));
-      expect(_labels(c.items), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.items), <String>['Kiwi', 'Figo']);
     });
 
     test('shouldReset false, no selection: text kept, no notification', () {
@@ -950,7 +937,7 @@ void main() {
       expect(c.localSearchController.text, 'Ban');
       expect(selected, isEmpty);
       // The kept text is not re-applied: every new item is listed.
-      expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
 
     test('shouldReset true with A-Z: the new list is sorted and the '
@@ -963,13 +950,13 @@ void main() {
         updateSelectedItem: selected.add,
       );
       addTearDown(c.dispose);
-      expect(_labels(c.filteredItems), _fruitAZ);
+      expect(labelsOf(c.filteredItems), _fruitAZ);
       expect(c.selectedItem, _banana);
 
       c.updateListItems(<ValueItem<int>>[_kiwi, _figo], true);
 
-      expect(_labels(c.items), <String>['Figo', 'Kiwi']);
-      expect(_labels(c.filteredItems), <String>['Figo', 'Kiwi']);
+      expect(labelsOf(c.items), <String>['Figo', 'Kiwi']);
+      expect(labelsOf(c.filteredItems), <String>['Figo', 'Kiwi']);
       expect(c.selectedItem, isNull);
       expect(c.localSearchController.text, '');
       expect(selected, <ValueItem<int>?>[null]);
@@ -1008,7 +995,7 @@ void main() {
       expect(c.clearVisible, isFalse);
       expect(_barText(tester), '');
       expect(selected, <ValueItem<int>?>[_banana, null]);
-      expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
 
     testWidgets('lookup caches rebuilt: new labels found, old ones gone', (
@@ -1032,11 +1019,11 @@ void main() {
 
       c.updateListItems(_newList(), false);
       await openSingle(tester);
-      expect(_tileLabels(tester), <String>['Kiwi', 'Figo']);
+      expect(visualRowLabels<int>(tester), <String>['Kiwi', 'Figo']);
 
       await _type(tester, 'fi');
-      expect(_labels(c.filteredItems), <String>['Figo']);
-      expect(_tileLabels(tester), <String>['Figo']);
+      expect(labelsOf(c.filteredItems), <String>['Figo']);
+      expect(visualRowLabels<int>(tester), <String>['Figo']);
     });
 
     test(
@@ -1050,8 +1037,8 @@ void main() {
         c.updateListItems(items, false);
 
         const expected = <String>[..._fruitOrder, 'Kiwi'];
-        expect(_labels(c.items), expected);
-        expect(_labels(c.filteredItems), expected);
+        expect(labelsOf(c.items), expected);
+        expect(labelsOf(c.filteredItems), expected);
       }, // B3: fixed in 8.0
     );
   });
@@ -1068,8 +1055,8 @@ void main() {
 
       expect(_barText(tester), '');
       expect(selected, <ValueItem<int>?>[null]);
-      expect(_labels(c.items), <String>['Kiwi', 'Figo']);
-      expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.items), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
 
     testWidgets('shouldreset false without selection keeps text', (
@@ -1085,7 +1072,7 @@ void main() {
 
       expect(_barText(tester), 'Ban');
       expect(selected, isEmpty);
-      expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
 
     testWidgets('shouldreset false with a selection still resets', (
@@ -1099,7 +1086,7 @@ void main() {
 
       expect(c.selectedItem, isNull);
       expect(_barText(tester), '');
-      expect(_labels(c.filteredItems), <String>['Kiwi', 'Figo']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi', 'Figo']);
     });
   });
 
@@ -1122,7 +1109,7 @@ void main() {
         _typeViaController(c, 'ban');
 
         expect(errors, isEmpty);
-        expect(_labels(c.filteredItems), <String>['Banana']);
+        expect(labelsOf(c.filteredItems), <String>['Banana']);
       }, // B9: fixed in 8.0
     );
   });
@@ -1138,7 +1125,7 @@ void main() {
       expect(view.clear, throwsUnsupportedError);
       expect(() => view[0] = _kiwi, throwsUnsupportedError);
       expect(view.sort, throwsUnsupportedError);
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
     });
 
     test('a view obtained earlier reflects later filtering', () {
@@ -1147,7 +1134,7 @@ void main() {
 
       final view = c.filteredItems;
       c.filterList('uva');
-      expect(_labels(view), <String>['Uva']);
+      expect(labelsOf(view), <String>['Uva']);
     });
   });
 }

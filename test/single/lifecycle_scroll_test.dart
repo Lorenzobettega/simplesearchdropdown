@@ -25,18 +25,11 @@ SearchDropDownController<int> _ctrl(
   initialSelectedItem: initial,
 );
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (Widget w) => w is DefaultListTile && w.item.label == label,
-);
-
-Finder _inRow(String label, Finder matching) =>
-    find.descendant(of: _row(label), matching: matching);
-
 double _listTop(WidgetTester tester) =>
     tester.getTopLeft(find.byType(ScrollablePositionedList)).dy;
 
 double _rowTop(WidgetTester tester, String label) =>
-    tester.getTopLeft(_row(label)).dy;
+    tester.getTopLeft(rowTile(label)).dy;
 
 ThemeData _shrinkWrapTheme() => ThemeData(
   useMaterial3: true,
@@ -68,7 +61,7 @@ void main() {
       await typeInSingle(tester, 'Item 1');
       await tester.pumpAndSettle();
       expect(find.byType(DefaultListTile<int>), findsOneWidget);
-      expect(_row('Item 1'), findsOneWidget);
+      expect(rowTile('Item 1'), findsOneWidget);
     });
 
     testWidgets('a controller that owns its SearchController is still '
@@ -151,12 +144,12 @@ void main() {
       final SearchDropDownController<int> c = _ctrl(items, initial: items[20]);
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
-      expect(_row('Item 20'), findsOneWidget);
+      expect(rowTile('Item 20'), findsOneWidget);
 
       await typeInSingle(tester, 'Item 1');
       await tester.pumpAndSettle();
       expect(c.filteredItems.first.label, 'Item 1');
-      expect(_row('Item 1'), findsOneWidget);
+      expect(rowTile('Item 1'), findsOneWidget);
       expect(
         _rowTop(tester, 'Item 1'),
         moreOrLessEquals(_listTop(tester), epsilon: 1),
@@ -174,7 +167,7 @@ void main() {
       await tester.pumpAndSettle();
       await typeInSingle(tester, 'Item 1');
       await tester.pumpAndSettle();
-      expect(_row('Item 1'), findsOneWidget);
+      expect(rowTile('Item 1'), findsOneWidget);
       expect(
         _rowTop(tester, 'Item 1'),
         moreOrLessEquals(_listTop(tester), epsilon: 1),
@@ -196,7 +189,7 @@ void main() {
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
 
-      await tester.tap(_inRow('Item 150', find.byIcon(Icons.edit)));
+      await tester.tap(inRow('Item 150', find.byIcon(Icons.edit)));
       // The row spinner runs while the dialog is open: no pumpAndSettle.
       await tester.pump(const Duration(milliseconds: 400));
       await tester.enterText(
@@ -216,8 +209,8 @@ void main() {
 
       expect(c.selectedItem?.label, 'Item 150 b');
       expect(c.localSearchController.isOpen, isTrue);
-      expect(_row('Item 150 b'), findsOneWidget);
-      expect(_row('Item 0'), findsNothing);
+      expect(rowTile('Item 150 b'), findsOneWidget);
+      expect(rowTile('Item 0'), findsNothing);
     });
   });
 
@@ -230,13 +223,13 @@ void main() {
       await openSingle(tester);
       await typeInSingle(tester, 'Item 1');
       await tester.pumpAndSettle();
-      expect(_row('Item 199'), findsNothing);
+      expect(rowTile('Item 199'), findsNothing);
 
       await tester.sendKeyEvent(LogicalKeyboardKey.pageDown);
       await tester.pumpAndSettle();
       expect(tester.takeException(), isNull);
       expect(c.highlightedIndex, c.filteredItems.length - 1);
-      expect(_row('Item 199'), findsOneWidget);
+      expect(rowTile('Item 199'), findsOneWidget);
     });
 
     testWidgets('clearing the selection from the open view, then deleting a '
@@ -260,14 +253,14 @@ void main() {
       await tester.pumpAndSettle();
       expect(c.selectedItem, isNull);
       expect(c.localSearchController.isOpen, isTrue);
-      expect(_row('Item 150'), findsOneWidget);
+      expect(rowTile('Item 150'), findsOneWidget);
 
       // A results change with the text empty (no typed query).
-      await tester.tap(_inRow('Item 151', find.byType(IconButton)));
+      await tester.tap(inRow('Item 151', find.byType(IconButton)));
       await tester.pumpAndSettle();
-      expect(_row('Item 151'), findsNothing);
-      expect(_row('Item 150'), findsOneWidget);
-      expect(_row('Item 0'), findsNothing);
+      expect(rowTile('Item 151'), findsNothing);
+      expect(rowTile('Item 150'), findsOneWidget);
+      expect(rowTile('Item 0'), findsNothing);
     });
 
     testWidgets('reopening with a leftover query lists its results from the '
@@ -284,7 +277,7 @@ void main() {
       await openSingle(tester);
       expect(c.filteredItems.first.label, 'Item 1');
       expect(c.selectedIndex, greaterThan(0));
-      expect(_row('Item 1'), findsOneWidget);
+      expect(rowTile('Item 1'), findsOneWidget);
       expect(
         _rowTop(tester, 'Item 1'),
         moreOrLessEquals(_listTop(tester), epsilon: 1),
@@ -311,10 +304,10 @@ void main() {
       );
       await openSingle(tester);
 
-      await tester.tap(_inRow('Banana', find.byType(IconButton)));
+      await tester.tap(inRow('Banana', find.byType(IconButton)));
       await tester.pump();
       expect(
-        _inRow('Banana', find.byType(CircularProgressIndicator)),
+        inRow('Banana', find.byType(CircularProgressIndicator)),
         findsOneWidget,
       );
 
@@ -322,14 +315,14 @@ void main() {
       await tester.pump();
       expect(find.byType(DefaultListTile<int>), findsNWidgets(2));
       expect(
-        _inRow('abacaxi', find.byType(CircularProgressIndicator)),
+        inRow('abacaxi', find.byType(CircularProgressIndicator)),
         findsNothing,
       );
-      expect(_inRow('abacaxi', find.byType(IconButton)), findsOneWidget);
+      expect(inRow('abacaxi', find.byType(IconButton)), findsOneWidget);
 
       pending.complete();
       await tester.pumpAndSettle();
-      expect(_row('Banana'), findsNothing);
+      expect(rowTile('Banana'), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
@@ -346,10 +339,10 @@ void main() {
       await tester.pumpWidget(host(MultipleSearchDropDown<int>(controller: c)));
       await openMultiple(tester);
 
-      await tester.tap(_inRow('Banana', find.byType(IconButton)));
+      await tester.tap(inRow('Banana', find.byType(IconButton)));
       await tester.pump();
       expect(
-        _inRow('Banana', find.byType(CircularProgressIndicator)),
+        inRow('Banana', find.byType(CircularProgressIndicator)),
         findsOneWidget,
       );
 
@@ -357,14 +350,14 @@ void main() {
       await tester.pump();
       expect(find.byType(DefaultListTile<int>), findsNWidgets(2));
       expect(
-        _inRow('abacaxi', find.byType(CircularProgressIndicator)),
+        inRow('abacaxi', find.byType(CircularProgressIndicator)),
         findsNothing,
       );
-      expect(_inRow('abacaxi', find.byType(IconButton)), findsOneWidget);
+      expect(inRow('abacaxi', find.byType(IconButton)), findsOneWidget);
 
       pending.complete();
       await tester.pumpAndSettle();
-      expect(_row('Banana'), findsNothing);
+      expect(rowTile('Banana'), findsNothing);
     });
   });
 
@@ -399,9 +392,9 @@ void main() {
         tester.getSize(find.byType(ScrollablePositionedList)).height,
         lessThanOrEqualTo(200),
       );
-      expect(_row('Item 150'), findsOneWidget);
+      expect(rowTile('Item 150'), findsOneWidget);
       expect(
-        tester.widget<DefaultListTile<int>>(_row('Item 150')).selected,
+        tester.widget<DefaultListTile<int>>(rowTile('Item 150')).selected,
         isTrue,
       );
     });

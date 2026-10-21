@@ -113,13 +113,6 @@ Future<void> _frames(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 400));
 }
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<int> && w.item.label == label,
-);
-
-Finder _inRow(String label, Finder matching) =>
-    find.descendant(of: _row(label), matching: matching);
-
 Future<void> _matchesGolden(String name) => expectLater(
   find.byType(MaterialApp),
   matchesGoldenFile('goldens/$name.png'),
@@ -280,7 +273,7 @@ void main() {
 
       expect(controller.highlightedIndex, 1);
       expect(
-        tester.widget<DefaultListTile<int>>(_row('Banana')).highlighted,
+        tester.widget<DefaultListTile<int>>(rowTile<int>('Banana')).highlighted,
         isTrue,
       );
       await _matchesGolden('single_open_highlight');
@@ -329,7 +322,7 @@ void main() {
         _ctrl(fruitItems(), deleteMode: true, confirmDelete: true),
       );
       await openSingle(tester);
-      await tester.tap(_inRow('Banana', find.byIcon(Icons.delete)));
+      await tester.tap(inRow<int>('Banana', find.byIcon(Icons.delete)));
       await _frames(tester);
 
       expect(find.byType(WarningDialog), findsOneWidget);
@@ -341,7 +334,7 @@ void main() {
     testWidgets('EditDialog over the open view', (tester) async {
       await _pumpSingle(tester, _ctrl(fruitItems(), editMode: true));
       await openSingle(tester);
-      await tester.tap(_inRow('Banana', find.byIcon(Icons.edit)));
+      await tester.tap(inRow<int>('Banana', find.byIcon(Icons.edit)));
       await _frames(tester);
 
       expect(find.byType(EditDialog), findsOneWidget);

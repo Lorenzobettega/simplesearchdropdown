@@ -74,28 +74,8 @@ Future<void> _frames(WidgetTester tester) async {
   await tester.pump(const Duration(milliseconds: 400));
 }
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<int> && w.item.label == label,
-);
-
-Finder _inRow(String label, Finder matching) =>
-    find.descendant(of: _row(label), matching: matching);
-
 Finder _spinnerIn(String label) =>
-    _inRow(label, find.byType(CircularProgressIndicator));
-
-/// Rows of the open list in visual (top to bottom) order.
-List<DefaultListTile<int>> _visualRows(WidgetTester tester) {
-  final List<DefaultListTile<int>> rows = tester
-      .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
-      .toList();
-  double top(DefaultListTile<int> row) =>
-      tester.getTopLeft(find.byWidget(row)).dy;
-  return rows..sort((a, b) => top(a).compareTo(top(b)));
-}
-
-List<String> _rowLabels(WidgetTester tester) =>
-    _visualRows(tester).map((r) => r.item.label).toList();
+    inRow<int>(label, find.byType(CircularProgressIndicator));
 
 Finder _inAddRow(Finder matching) =>
     find.descendant(of: find.byType(DefaultAddListItem), matching: matching);
@@ -124,12 +104,12 @@ Future<void> _tapCreate(WidgetTester tester) async {
 }
 
 Future<void> _tapDelete(WidgetTester tester, String label) async {
-  await tester.tap(_inRow(label, find.byIcon(Icons.delete)));
+  await tester.tap(inRow<int>(label, find.byIcon(Icons.delete)));
   await _frames(tester);
 }
 
 Future<void> _tapEdit(WidgetTester tester, String label) async {
-  await tester.tap(_inRow(label, find.byIcon(Icons.edit)));
+  await tester.tap(inRow<int>(label, find.byIcon(Icons.edit)));
   await _frames(tester);
 }
 
@@ -149,7 +129,7 @@ void main() {
       await openSingle(tester);
 
       expect(find.byType(DefaultAddListItem), findsNothing);
-      expect(_rowLabels(tester), hasLength(5));
+      expect(visualRowLabels<int>(tester), hasLength(5));
     });
 
     testWidgets('hidden when the query matches at least one item', (
@@ -160,7 +140,7 @@ void main() {
       await typeInSingle(tester, 'Ban');
 
       expect(find.byType(DefaultAddListItem), findsNothing);
-      expect(_rowLabels(tester), <String>['Banana']);
+      expect(visualRowLabels<int>(tester), <String>['Banana']);
     });
 
     testWidgets(
@@ -317,7 +297,7 @@ void main() {
 
         expect(items.last, _newItem('Kiwi'));
         // D1 (8.0): reopening lists every item, scrolled to the selection.
-        expect(_rowLabels(tester), contains('Kiwi'));
+        expect(visualRowLabels<int>(tester), contains('Kiwi'));
         expect(c.filteredItems.last, _newItem('Kiwi'));
       },
     );
@@ -409,7 +389,7 @@ void main() {
         expect(c.localSearchController.text, '');
         expect(c.localSearchController.isOpen, isTrue);
         expect(find.byType(DefaultAddListItem), findsNothing);
-        expect(_rowLabels(tester), hasLength(5));
+        expect(visualRowLabels<int>(tester), hasLength(5));
       },
     );
   });
@@ -431,7 +411,7 @@ void main() {
       await _pump(tester, _ctrl(fruitItems()));
       await openSingle(tester);
 
-      expect(_rowLabels(tester), hasLength(5));
+      expect(visualRowLabels<int>(tester), hasLength(5));
       expect(find.byIcon(Icons.delete), findsNothing);
     });
 
@@ -466,7 +446,7 @@ void main() {
       await openSingle(tester);
 
       expect(find.text('action'), findsNWidgets(5));
-      expect(_inRow('Banana', find.text('action')), findsOneWidget);
+      expect(inRow<int>('Banana', find.text('action')), findsOneWidget);
       expect(find.byIcon(Icons.delete), findsNothing);
       expect(
         find.descendant(
@@ -503,7 +483,12 @@ void main() {
 
         expect(deleted, <ValueItem<int>>[_banana]);
         expect(find.byType(AlertDialog), findsNothing);
-        expect(_rowLabels(tester), <String>['Maçã', 'Uva', 'abacaxi', 'Pêra']);
+        expect(visualRowLabels<int>(tester), <String>[
+          'Maçã',
+          'Uva',
+          'abacaxi',
+          'Pêra',
+        ]);
       },
     );
 
@@ -522,7 +507,7 @@ void main() {
         );
         await _pump(tester, c);
         await openSingle(tester);
-        expect(_rowLabels(tester), contains('Uva'));
+        expect(visualRowLabels<int>(tester), contains('Uva'));
 
         await _tapDelete(tester, 'Uva');
         await tester.pumpAndSettle();
@@ -531,7 +516,7 @@ void main() {
         expect(c.localSearchController.text, '');
         expect(selections, <ValueItem<int>?>[null]);
         expect(c.localSearchController.isOpen, isTrue);
-        expect(_rowLabels(tester), <String>[
+        expect(visualRowLabels<int>(tester), <String>[
           'Maçã',
           'Banana',
           'abacaxi',
@@ -557,13 +542,13 @@ void main() {
       );
       await openSingle(tester);
 
-      await tester.tap(_inRow('Banana', find.byIcon(Icons.delete)));
+      await tester.tap(inRow<int>('Banana', find.byIcon(Icons.delete)));
       await tester.pump();
 
       expect(_spinnerIn('Banana'), findsOneWidget);
       // Hidden behind the spinner, keeping its place (8.0.1).
       expect(
-        _inRow('Banana', find.byIcon(Icons.delete)).hitTestable(),
+        inRow<int>('Banana', find.byIcon(Icons.delete)).hitTestable(),
         findsNothing,
       );
       expect(find.byIcon(Icons.delete).hitTestable(), findsNWidgets(4));
@@ -571,7 +556,7 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       await tester.pumpAndSettle();
 
-      expect(_row('Banana'), findsNothing);
+      expect(rowTile<int>('Banana'), findsNothing);
       expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
@@ -595,7 +580,7 @@ void main() {
 
           expect(tester.takeException(), isNull);
           expect(deleted, <ValueItem<int>>[_banana]);
-          expect(_rowLabels(tester), isNot(contains('Banana')));
+          expect(visualRowLabels<int>(tester), isNot(contains('Banana')));
         },
       );
     }); // B1: fixed in 8.0
@@ -643,7 +628,7 @@ void main() {
           findsOneWidget,
         );
         expect(deleted, isEmpty);
-        expect(_row('Banana'), findsOneWidget);
+        expect(rowTile<int>('Banana'), findsOneWidget);
       },
     );
 
@@ -662,7 +647,7 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(deleted, <ValueItem<int>>[_banana]);
       expect(items, isNot(contains(_banana)));
-      expect(_row('Banana'), findsNothing);
+      expect(rowTile<int>('Banana'), findsNothing);
     });
 
     testWidgets('Cancelar closes the dialog and keeps the item', (
@@ -680,7 +665,7 @@ void main() {
       expect(find.byType(AlertDialog), findsNothing);
       expect(deleted, isEmpty);
       expect(items, contains(_banana));
-      expect(_row('Banana'), findsOneWidget);
+      expect(rowTile<int>('Banana'), findsOneWidget);
     });
 
     group('B5', () {
@@ -696,7 +681,10 @@ void main() {
           await _frames(tester);
 
           expect(_spinnerIn('Banana'), findsNothing);
-          expect(_inRow('Banana', find.byIcon(Icons.delete)), findsOneWidget);
+          expect(
+            inRow<int>('Banana', find.byIcon(Icons.delete)),
+            findsOneWidget,
+          );
         },
       );
     }); // B5: fixed in 8.0
@@ -722,9 +710,11 @@ void main() {
         expect(find.widgetWithIcon(IconButton, Icons.edit), findsNWidgets(5));
         expect(find.widgetWithIcon(IconButton, Icons.delete), findsNWidgets(5));
         expect(
-          tester.getCenter(_inRow('Banana', find.byIcon(Icons.edit))).dx,
+          tester.getCenter(inRow<int>('Banana', find.byIcon(Icons.edit))).dx,
           lessThan(
-            tester.getCenter(_inRow('Banana', find.byIcon(Icons.delete))).dx,
+            tester
+                .getCenter(inRow<int>('Banana', find.byIcon(Icons.delete)))
+                .dx,
           ),
         );
       },
@@ -872,7 +862,7 @@ void main() {
       expect(find.byType(EditDialog), findsNothing);
       expect(edits, isEmpty);
       expect(inputs, isEmpty);
-      expect(_rowLabels(tester), contains('Banana'));
+      expect(visualRowLabels<int>(tester), contains('Banana'));
     });
 
     testWidgets(
@@ -886,15 +876,15 @@ void main() {
         expect(_spinnerIn('Banana'), findsOneWidget);
         // Hidden behind the spinner, keeping its place (8.0.1); the dialog
         // barrier would hide it from hit tests anyway, so read the flag.
-        expect(_hidden(_inRow('Banana', find.byIcon(Icons.edit))), isTrue);
+        expect(_hidden(inRow<int>('Banana', find.byIcon(Icons.edit))), isTrue);
 
         await tester.tap(_inDialog(find.text('Cancelar')));
         await tester.pumpAndSettle();
 
         expect(_spinnerIn('Banana'), findsNothing);
-        expect(_hidden(_inRow('Banana', find.byIcon(Icons.edit))), isFalse);
+        expect(_hidden(inRow<int>('Banana', find.byIcon(Icons.edit))), isFalse);
         expect(
-          _inRow('Banana', find.byIcon(Icons.edit)).hitTestable(),
+          inRow<int>('Banana', find.byIcon(Icons.edit)).hitTestable(),
           findsOneWidget,
         );
       },
@@ -925,7 +915,7 @@ void main() {
 
           expect(tester.takeException(), isNull);
           expect(edits, hasLength(1));
-          expect(_rowLabels(tester), <String>['Banana2']);
+          expect(visualRowLabels<int>(tester), <String>['Banana2']);
         },
       );
 
@@ -943,7 +933,7 @@ void main() {
           await tester.pumpAndSettle();
 
           expect(tester.takeException(), isNull);
-          expect(_rowLabels(tester), <String>['Banana2']);
+          expect(visualRowLabels<int>(tester), <String>['Banana2']);
         },
       );
 
@@ -972,7 +962,7 @@ void main() {
         await _pump(tester, c);
         await openSingle(tester);
         // D1 (8.0): the view lists every item.
-        expect(_rowLabels(tester), <String>['Ana', 'Banana', 'Uva']);
+        expect(visualRowLabels<int>(tester), <String>['Ana', 'Banana', 'Uva']);
 
         await _tapEdit(tester, 'Banana');
         await _submitEdit(tester, 'Banana2');

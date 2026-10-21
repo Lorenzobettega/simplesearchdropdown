@@ -65,13 +65,6 @@ TextStyle _label(WidgetTester tester, String text) => tester
     .text
     .style!;
 
-TextStyle _glyph(WidgetTester tester, IconData icon) => tester
-    .widget<RichText>(
-      find.descendant(of: find.byIcon(icon), matching: find.byType(RichText)),
-    )
-    .text
-    .style!;
-
 void main() {
   group('DialogButton renders DialogButtonSettings', () {
     testWidgets('tapping calls function once', (tester) async {
@@ -109,7 +102,7 @@ void main() {
         tester.element(find.byType(DialogButton)),
       ).colorScheme;
       expect(_label(tester, 'Go').color, scheme.onSurface);
-      expect(_glyph(tester, Icons.star).color, scheme.onSurface);
+      expect(iconGlyph(tester, Icons.star).color, scheme.onSurface);
       expect(_box(tester).border, Border.all(color: scheme.outline));
     });
 
@@ -164,7 +157,7 @@ void main() {
       tester,
     ) async {
       await _pump(tester, _custom);
-      final TextStyle g = _glyph(tester, Icons.star);
+      final TextStyle g = iconGlyph(tester, Icons.star);
       expect(g.color, Colors.purple);
       expect(g.fontSize, 29);
       expect(

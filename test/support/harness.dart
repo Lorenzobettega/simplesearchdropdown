@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
@@ -50,3 +51,57 @@ Future<void> openMultiple(WidgetTester tester, {Finder? of}) async {
   await tester.tapAt(tester.getRect(box.first).centerLeft + const Offset(5, 0));
   await tester.pumpAndSettle();
 }
+
+/// The `DefaultListTile<T>` row labelled [label] (any `T` when omitted).
+Finder rowTile<T>(String label) => find.byWidgetPredicate(
+  (Widget w) => w is DefaultListTile<T> && w.item.label == label,
+);
+
+/// [matching] inside the `DefaultListTile<T>` row labelled [label].
+Finder inRow<T>(String label, Finder matching) =>
+    find.descendant(of: rowTile<T>(label), matching: matching);
+
+/// Row tiles of the open list in tree (build) order.
+List<DefaultListTile<T>> treeRows<T>(WidgetTester tester) => tester
+    .widgetList<DefaultListTile<T>>(find.byType(DefaultListTile<T>))
+    .toList();
+
+/// Labels of the open list's rows in tree (build) order.
+List<String> rowLabels<T>(WidgetTester tester) =>
+    treeRows<T>(tester).map((t) => t.item.label).toList();
+
+/// Rows of the open list in visual (top to bottom) order.
+List<DefaultListTile<T>> visualRows<T>(WidgetTester tester) {
+  final List<DefaultListTile<T>> rows = treeRows<T>(tester);
+  double top(DefaultListTile<T> row) =>
+      tester.getTopLeft(find.byWidget(row)).dy;
+  return rows..sort((a, b) => top(a).compareTo(top(b)));
+}
+
+/// Labels of the open list's rows in visual (top to bottom) order.
+List<String> visualRowLabels<T>(WidgetTester tester) =>
+    visualRows<T>(tester).map((r) => r.item.label).toList();
+
+/// Labels of [items], in iteration order.
+List<String> labelsOf<T>(Iterable<ValueItem<T>> items) =>
+    items.map((e) => e.label).toList();
+
+/// Sends [key] and settles.
+Future<void> pressKey(WidgetTester tester, LogicalKeyboardKey key) async {
+  await tester.sendKeyEvent(key);
+  await tester.pumpAndSettle();
+}
+
+/// Taps the text button of the single-dropdown row labelled [label].
+Future<void> tapSingleRow<T>(WidgetTester tester, String label) async {
+  await tester.tap(inRow<T>(label, find.byType(TextButton)));
+  await tester.pumpAndSettle();
+}
+
+/// The glyph [TextStyle] of the [Icon] showing [icon].
+TextStyle iconGlyph(WidgetTester tester, IconData icon) => tester
+    .widget<RichText>(
+      find.descendant(of: find.byIcon(icon), matching: find.byType(RichText)),
+    )
+    .text
+    .style!;

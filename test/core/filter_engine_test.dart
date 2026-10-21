@@ -4,9 +4,6 @@ import 'package:simple_search_dropdown/src/core/filter_engine.dart';
 
 import '../support/harness.dart';
 
-List<String> _labels(Iterable<ValueItem<int>> items) =>
-    items.map((e) => e.label).toList();
-
 /// Counts `==` calls, to measure hash-map lookups (N25).
 class _CountingItem extends ValueItem<String> {
   _CountingItem(String s) : super(label: s, value: s);
@@ -49,9 +46,9 @@ void main() {
     final FilterEngine<int> engine = FilterEngine<int>();
 
     test('substring match after normalization', () {
-      expect(_labels(engine.filter(fruitItems(), 'MAC')), ['Maçã']);
-      expect(_labels(engine.filter(fruitItems(), 'aba')), ['abacaxi']);
-      expect(_labels(engine.filter(fruitItems(), 'an')), ['Banana']);
+      expect(labelsOf(engine.filter(fruitItems(), 'MAC')), ['Maçã']);
+      expect(labelsOf(engine.filter(fruitItems(), 'aba')), ['abacaxi']);
+      expect(labelsOf(engine.filter(fruitItems(), 'an')), ['Banana']);
     });
 
     test('empty or blank query returns a copy of everything', () {
@@ -63,16 +60,16 @@ void main() {
 
     test('never mutates the source list', () {
       final List<ValueItem<int>> source = fruitItems();
-      final List<String> before = _labels(source);
+      final List<String> before = labelsOf(source);
       engine.filter(source, 'a');
-      expect(_labels(source), before);
+      expect(labelsOf(source), before);
     });
 
     test('items added to the source later are matched (lazy cache)', () {
       final List<ValueItem<int>> source = fruitItems();
       engine.filter(source, 'a');
       source.add(const ValueItem(label: 'Kiwi', value: 9));
-      expect(_labels(engine.filter(source, 'kiw')), ['Kiwi']);
+      expect(labelsOf(engine.filter(source, 'kiw')), ['Kiwi']);
     });
 
     test('labels are normalized once per item', () {
@@ -180,36 +177,36 @@ void main() {
         const ValueItem(label: 'Item 20', value: 20),
       ];
       final FilterEngine<int> engine = FilterEngine<int>();
-      expect(_labels(engine.sorted(items, SortType.alphabetical)), <String>[
+      expect(labelsOf(engine.sorted(items, SortType.alphabetical)), <String>[
         'Item 1',
         'Item 10',
         'Item 2',
         'Item 20',
       ]);
       expect(
-        _labels(engine.sorted(items, SortType.reverseAlphabetical)),
+        labelsOf(engine.sorted(items, SortType.reverseAlphabetical)),
         <String>['Item 20', 'Item 2', 'Item 10', 'Item 1'],
       );
     });
 
     test('sorted returns a copy in the requested order', () {
-      expect(_labels(FilterEngine<int>().sorted(source, SortType.none)), [
+      expect(labelsOf(FilterEngine<int>().sorted(source, SortType.none)), [
         'b',
         'c',
         'a',
       ]);
       expect(
-        _labels(FilterEngine<int>().sorted(source, SortType.alphabetical)),
+        labelsOf(FilterEngine<int>().sorted(source, SortType.alphabetical)),
         ['a', 'b', 'c'],
       );
       expect(
-        _labels(
+        labelsOf(
           FilterEngine<int>().sorted(source, SortType.reverseAlphabetical),
         ),
         ['c', 'b', 'a'],
       );
       expect(
-        _labels(
+        labelsOf(
           FilterEngine<int>().sorted(
             source,
             SortType.selectedFirst,
@@ -218,7 +215,7 @@ void main() {
         ),
         ['a', 'b', 'c'],
       );
-      expect(_labels(source), ['b', 'c', 'a']);
+      expect(labelsOf(source), ['b', 'c', 'a']);
     });
 
     test('alphabetical order ignores case and accents (D2)', () {
@@ -229,11 +226,11 @@ void main() {
         const ValueItem(label: 'abacaxi', value: 4),
       ];
       expect(
-        _labels(FilterEngine<int>().sorted(mixed, SortType.alphabetical)),
+        labelsOf(FilterEngine<int>().sorted(mixed, SortType.alphabetical)),
         ['abacaxi', 'Banana', 'Pêra', 'Pzz'],
       );
       expect(
-        _labels(
+        labelsOf(
           FilterEngine<int>().sorted(mixed, SortType.reverseAlphabetical),
         ),
         ['Pzz', 'Pêra', 'Banana', 'abacaxi'],
@@ -266,13 +263,13 @@ void main() {
       final FilterEngine<int> cs = FilterEngine<int>(
         normalization: const SearchNormalization(caseSensitive: true),
       );
-      expect(_labels(cs.sorted(cased, SortType.alphabetical)), <String>[
+      expect(labelsOf(cs.sorted(cased, SortType.alphabetical)), <String>[
         'Apple',
         'banana',
         'cherry',
         'Date',
       ]);
-      expect(_labels(cs.sorted(cased, SortType.reverseAlphabetical)), <String>[
+      expect(labelsOf(cs.sorted(cased, SortType.reverseAlphabetical)), <String>[
         'Date',
         'cherry',
         'banana',
@@ -287,7 +284,7 @@ void main() {
       final FilterEngine<int> nl = FilterEngine<int>(
         normalization: const SearchNormalization(latinize: false),
       );
-      expect(_labels(nl.sorted(accented, SortType.alphabetical)), <String>[
+      expect(labelsOf(nl.sorted(accented, SortType.alphabetical)), <String>[
         'Água',
         'Pêra',
         'Pzz',
@@ -297,7 +294,7 @@ void main() {
         normalization: const SearchNormalization(trim: false),
       );
       expect(
-        _labels(
+        labelsOf(
           untrimmed.sorted(<ValueItem<int>>[
             const ValueItem(label: 'b', value: 1),
             const ValueItem(label: ' c', value: 2),
@@ -307,8 +304,8 @@ void main() {
         <String>['a', 'b', ' c'],
       );
       // Filtering keeps honouring the caller's policy.
-      expect(_labels(cs.filter(cased, 'a')), <String>['banana', 'Date']);
-      expect(_labels(nl.filter(accented, 'agua')), isEmpty);
+      expect(labelsOf(cs.filter(cased, 'a')), <String>['banana', 'Date']);
+      expect(labelsOf(nl.filter(accented, 'agua')), isEmpty);
     });
 
     test('an already ordered list is not sorted again (N50)', () {
@@ -339,7 +336,7 @@ void main() {
 
     test('selectedFirst without a selection keeps the order', () {
       expect(
-        _labels(FilterEngine<int>().sorted(source, SortType.selectedFirst)),
+        labelsOf(FilterEngine<int>().sorted(source, SortType.selectedFirst)),
         ['b', 'c', 'a'],
       );
     });

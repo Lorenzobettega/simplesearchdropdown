@@ -85,10 +85,6 @@ Future<void> _pump(
   await tester.pumpAndSettle();
 }
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<int> && w.item.label == label,
-);
-
 /// A value whose `==` and `hashCode` count their calls.
 class _Counted {
   _Counted(this.id);
@@ -117,7 +113,7 @@ void main() {
       await _pump(tester, c, bar: _ProbeSettings(() => bar++));
       await openSingle(tester);
       final int before = bar;
-      await tester.tap(_row('Item 3'));
+      await tester.tap(rowTile<int>('Item 3'));
       await tester.pumpAndSettle();
       expect(c.selectedItem?.label, 'Item 3');
       expect(find.byType(DefaultListTile<int>), findsNothing);
@@ -145,7 +141,7 @@ void main() {
           find.byIcon(Icons.clear).hitTestable().evaluate().isNotEmpty;
       expect(clearShown(), isFalse);
       await openSingle(tester);
-      await tester.tap(_row('Item 2'));
+      await tester.tap(rowTile<int>('Item 2'));
       await tester.pumpAndSettle();
       expect(clearShown(), isTrue);
       c.resetSelection();
@@ -188,7 +184,7 @@ void main() {
       rows
         ..built = 0
         ..labels.clear();
-      await tester.tap(_row('Item 4'));
+      await tester.tap(rowTile<int>('Item 4'));
       await tester.pumpAndSettle();
       expect(c.selectedItem?.label, 'Item 4');
       expect(rows.labels.toSet(), <String>{'Item 1', 'Item 4'});
@@ -215,10 +211,10 @@ void main() {
         <String>['Item 1', 'Item 2'],
         <String>['Item 2', 'Item 3'],
       ]);
-      final DefaultListTile<int> tile = tester.widget(_row('Item 3'));
+      final DefaultListTile<int> tile = tester.widget(rowTile<int>('Item 3'));
       expect(tile.highlighted, isTrue);
       expect(
-        tester.widget<DefaultListTile<int>>(_row('Item 1')).selected,
+        tester.widget<DefaultListTile<int>>(rowTile<int>('Item 1')).selected,
         true,
       );
     });
@@ -296,8 +292,8 @@ void main() {
       await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       await tester.pump();
       // The fading view keeps the rows it showed.
-      expect(_row('Item 9'), findsOneWidget);
-      expect(_row('Item 0'), findsNothing);
+      expect(rowTile<int>('Item 9'), findsOneWidget);
+      expect(rowTile<int>('Item 0'), findsNothing);
       await tester.pumpAndSettle();
       expect(find.byType(DefaultListTile<int>), findsNothing);
       expect(rows.built, 0);
@@ -307,8 +303,8 @@ void main() {
 
       // D1: the next open lists every item, scrolled to the selection.
       await openSingle(tester);
-      expect(_row('Item 50'), findsOneWidget);
-      expect(_row('Item 0'), findsNothing);
+      expect(rowTile<int>('Item 50'), findsOneWidget);
+      expect(rowTile<int>('Item 0'), findsNothing);
       expect(c.filteredItems.length, 100);
     });
 
@@ -343,7 +339,7 @@ void main() {
       await openSingle(tester);
       int notifies = 0;
       c.addListener(() => notifies++);
-      await tester.tap(_row('Item 3'));
+      await tester.tap(rowTile<int>('Item 3'));
       await tester.pumpAndSettle();
       expect(find.byType(DefaultListTile<int>), findsNothing, reason: 'closed');
       expect(selected, <ValueItem<int>?>[items[3]]);
@@ -359,7 +355,7 @@ void main() {
       await openSingle(tester);
       int notifies = 0;
       c.addListener(() => notifies++);
-      await tester.tap(_row('Item 5'));
+      await tester.tap(rowTile<int>('Item 5'));
       await tester.pumpAndSettle();
       expect(notifies, 1);
     });
@@ -401,7 +397,7 @@ void main() {
       );
       await _pump(tester, c);
       await openSingle(tester);
-      await tester.tap(_row('Item 3'));
+      await tester.tap(rowTile<int>('Item 3'));
       await tester.pumpAndSettle();
       selected.clear();
       filterUpdates = 0;

@@ -535,15 +535,21 @@ class MultipleSearchDropDownController<T> extends DropDownControllerBase {
     if (generation != _listGeneration) {
       _keepRefreshedEdit(item, newValue, selectedAt);
     } else {
-      final ValueItem<T> edited = replaceItem(_items, item, newValue);
-      if (_selectedItems.contains(item)) {
-        replaceItem(_selectedItems, item, edited);
-        updateSelectedItems?.call(_selectionCopy());
-      }
+      _replaceEverywhere(item, newValue);
     }
     _engine.forget(item);
     _refilter();
     notifyListeners();
+  }
+
+  /// Replaces [from] with [to] in the items and, when selected, in the
+  /// selection (reporting it).
+  void _replaceEverywhere(ValueItem<T> from, ValueItem<T> to) {
+    final ValueItem<T> edited = replaceItem(_items, from, to);
+    if (_selectedItems.contains(from)) {
+      replaceItem(_selectedItems, from, edited);
+      updateSelectedItems?.call(_selectionCopy());
+    }
   }
 
   /// Finishes an edit whose callback applied its own list: an edited item
@@ -557,11 +563,7 @@ class MultipleSearchDropDownController<T> extends DropDownControllerBase {
       if (!_items.contains(from)) {
         return;
       }
-      final ValueItem<T> edited = replaceItem(_items, from, to);
-      if (_selectedItems.contains(from)) {
-        replaceItem(_selectedItems, from, edited);
-        updateSelectedItems?.call(_selectionCopy());
-      }
+      _replaceEverywhere(from, to);
       return;
     }
     if (selectedAt == -1 || _selectedItems.contains(kept)) {

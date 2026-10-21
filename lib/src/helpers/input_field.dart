@@ -6,7 +6,8 @@ FilteringTextInputFormatter allValues = FilteringTextInputFormatter.allow(
   RegExp('.*'),
 );
 
-/// The text field used by the edit dialog.
+/// An outlined text field with the package look; exported for apps (the
+/// package dialogs use their own field).
 class InputField extends StatelessWidget {
   /// Creates an input field bound to [controle].
   const InputField({
@@ -108,15 +109,16 @@ class InputField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(raio);
-    final OutlineInputBorder baseBorder = OutlineInputBorder(
-      borderRadius: borderRadius,
-      borderSide: BorderSide(color: Colors.grey[400]!),
+    OutlineInputBorder outline(BorderSide side) =>
+        OutlineInputBorder(borderRadius: borderRadius, borderSide: side);
+    final OutlineInputBorder baseBorder = outline(
+      BorderSide(color: Colors.grey[400]!),
     );
 
     return SizedBox(
       width: width,
       child: Material(
-        borderRadius: BorderRadius.circular(raio),
+        borderRadius: borderRadius,
         elevation: elevacao,
         child: TextFormField(
           textCapitalization: capitalization ?? TextCapitalization.none,
@@ -125,7 +127,7 @@ class InputField extends StatelessWidget {
           style: estilo,
           maxLines: lines,
           obscureText: oculto,
-          cursorColor: const Color.fromARGB(255, 0, 67, 0),
+          cursorColor: _focusedBorderSide.color,
           controller: controle,
           inputFormatters: [mascara ?? allValues],
           autocorrect: false,
@@ -143,19 +145,12 @@ class InputField extends StatelessWidget {
             hintStyle: _hintLabelStyle,
             fillColor: Colors.grey[50],
             filled: true,
-            focusedBorder: OutlineInputBorder(
-              borderRadius: borderRadius,
-              borderSide: _focusedBorderSide,
-            ),
+            focusedBorder: outline(_focusedBorderSide),
             enabledBorder: baseBorder,
-            errorBorder: OutlineInputBorder(
-              borderRadius: borderRadius,
-              borderSide: _errorBorderSide,
-            ),
+            errorBorder: outline(_errorBorderSide),
             border: baseBorder,
-            disabledBorder: OutlineInputBorder(
-              borderRadius: borderRadius,
-              borderSide: BorderSide(color: disabledColor ?? Colors.grey[100]!),
+            disabledBorder: outline(
+              BorderSide(color: disabledColor ?? Colors.grey[100]!),
             ),
             errorMaxLines: 3,
             suffixIcon: clear

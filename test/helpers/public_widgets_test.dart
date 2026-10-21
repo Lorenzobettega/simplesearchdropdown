@@ -11,13 +11,6 @@ import 'package:simple_search_dropdown/src/core/controller_base.dart';
 
 import '../support/harness.dart';
 
-TextStyle _glyph(WidgetTester tester, IconData icon) => tester
-    .widget<RichText>(
-      find.descendant(of: find.byIcon(icon), matching: find.byType(RichText)),
-    )
-    .text
-    .style!;
-
 const ValueItem<int> _uva = ValueItem(label: 'Uva', value: 3);
 
 Widget _tile({
@@ -94,7 +87,7 @@ void main() {
           ),
         ),
       );
-      final TextStyle g = _glyph(tester, Icons.clear);
+      final TextStyle g = iconGlyph(tester, Icons.clear);
       expect(g.color, Colors.pink);
       expect(g.fontSize, 33);
       expect(find.byTooltip('Limpar'), findsOneWidget);

@@ -4,9 +4,6 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 import '../support/harness.dart';
 
-List<String> _labels(Iterable<ValueItem<dynamic>> items) =>
-    items.map((e) => e.label).toList();
-
 int _labelReads = 0;
 
 /// Counts label reads, so a full re-normalization shows up.
@@ -119,7 +116,7 @@ void main() {
 
       c.forceMultipleSelection(<ValueItem<int>>[items[3]]);
       expect(c.filteredItems.first, same(items[3]));
-      expect(_labels(items), _labels(numberedItems(5)));
+      expect(labelsOf(items), labelsOf(numberedItems(5)));
     });
 
     test('updateListItems with new items refreshes the results', () {
@@ -131,7 +128,7 @@ void main() {
         fruitItems()..add(const ValueItem(label: 'Amora', value: 9)),
         false,
       );
-      expect(_labels(c.filteredItems), <String>[
+      expect(labelsOf(c.filteredItems), <String>[
         'abacaxi',
         'Amora',
         'Banana',
@@ -163,7 +160,7 @@ void main() {
       addTearDown(c.dispose);
 
       c.toggle(mine[2]);
-      expect(_labels(c.filteredItems), <String>[
+      expect(labelsOf(c.filteredItems), <String>[
         'Uva',
         'Maçã',
         'Banana',
@@ -172,19 +169,19 @@ void main() {
       ]);
       final int before = updates;
       c.resetSelection();
-      expect(_labels(c.filteredItems), original);
+      expect(labelsOf(c.filteredItems), original);
       expect(updates, greaterThan(before));
 
       c
         ..toggle(mine[2])
         ..clear();
-      expect(_labels(c.filteredItems), original);
+      expect(labelsOf(c.filteredItems), original);
 
       c.forceMultipleSelection(<ValueItem<int>>[mine[4]]);
-      expect(_labels(c.filteredItems).first, 'Pêra');
+      expect(labelsOf(c.filteredItems).first, 'Pêra');
       c.search('a');
-      expect(_labels(c.filteredItems).first, 'Pêra');
-      expect(_labels(mine), original);
+      expect(labelsOf(c.filteredItems).first, 'Pêra');
+      expect(labelsOf(mine), original);
     });
   });
 
@@ -290,7 +287,7 @@ void main() {
       await tester.pump();
 
       expect(tester.takeException(), isNull);
-      expect(_labels(c.selectedItems), <String>['Banana']);
+      expect(labelsOf(c.selectedItems), <String>['Banana']);
     });
 
     test("the initial selection is copied: neither side sees the other's "

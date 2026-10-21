@@ -100,14 +100,12 @@ TextStyle _hintStyle(WidgetTester tester, Finder scope, String hint) {
   return text.text.style!;
 }
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<int> && w.item.label == label,
-);
-
 /// The overlay colour the row's ink paints with in [states].
 Color? _rowOverlay(WidgetTester tester, String label, Set<WidgetState> states) {
   final InkWell ink = tester.widget<InkWell>(
-    find.descendant(of: _row(label), matching: find.byType(InkWell)).first,
+    find
+        .descendant(of: rowTile<int>(label), matching: find.byType(InkWell))
+        .first,
   );
   return ink.overlayColor!.resolve(states);
 }
@@ -303,15 +301,17 @@ void main() {
       );
       await openSingle(tester);
       final Finder button = find.descendant(
-        of: _row('Uva'),
+        of: rowTile<int>('Uva'),
         matching: find.byType(TextButton),
       );
       expect(
-        tester.getTopLeft(button).dx - tester.getTopLeft(_row('Uva')).dx,
+        tester.getTopLeft(button).dx -
+            tester.getTopLeft(rowTile<int>('Uva')).dx,
         13,
       );
       expect(
-        tester.getTopRight(_row('Uva')).dx - tester.getTopRight(button).dx,
+        tester.getTopRight(rowTile<int>('Uva')).dx -
+            tester.getTopRight(button).dx,
         9,
       );
     });
@@ -373,11 +373,11 @@ void main() {
       );
       await openSingle(tester);
       final Finder extraInRow = find.descendant(
-        of: _row('Uva'),
+        of: rowTile<int>('Uva'),
         matching: find.byKey(extra),
       );
       final Finder delete = find.descendant(
-        of: _row('Uva'),
+        of: rowTile<int>('Uva'),
         matching: find.byType(IconButton),
       );
       expect(
@@ -404,12 +404,15 @@ void main() {
       );
       await openSingle(tester);
       await tester.tap(
-        find.descendant(of: _row('Uva'), matching: find.byType(IconButton)),
+        find.descendant(
+          of: rowTile<int>('Uva'),
+          matching: find.byType(IconButton),
+        ),
       );
       await tester.pump();
 
       final Finder spinner = find.descendant(
-        of: _row('Uva'),
+        of: rowTile<int>('Uva'),
         matching: find.byType(CircularProgressIndicator),
       );
       expect(

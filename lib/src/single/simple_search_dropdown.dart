@@ -244,13 +244,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   // Follows the selection without rebuilding the bar.
                   ListenableBuilder(
                     listenable: _controller,
-                    builder: (BuildContext context, _) => ClearButton(
-                      visible: _controller.clearVisible,
-                      onPressed: _controller.resetSelection,
-                      iconColor: bar.clearIconColor,
-                      iconSize: bar.outsideIconSize,
-                      tooltip: strings.clearTooltip,
-                    ),
+                    builder: (BuildContext context, _) =>
+                        _clearButton(_controller, bar, strings),
                   ),
               ],
           barElevation: WidgetStatePropertyAll<double>(bar.elevation),
@@ -358,14 +353,7 @@ class _ViewTrailing<T> extends StatelessWidget {
                 size: settings.outsideIconSize,
               ),
             ),
-          if (showClear)
-            ClearButton(
-              visible: controller.clearVisible,
-              onPressed: controller.resetSelection,
-              iconColor: settings.clearIconColor,
-              iconSize: settings.outsideIconSize,
-              tooltip: strings.clearTooltip,
-            ),
+          if (showClear) _clearButton(controller, settings, strings),
         ],
       ),
     );
@@ -728,3 +716,16 @@ class _RowState extends State<_Row> {
   @override
   Widget build(BuildContext context) => widget.builder(context, _marks);
 }
+
+/// The clear button of the bar and of the open view.
+Widget _clearButton(
+  SearchDropDownController<Object?> controller,
+  SimpleSearchbarSettings settings,
+  SearchDropDownStrings strings,
+) => ClearButton(
+  visible: controller.clearVisible,
+  onPressed: controller.resetSelection,
+  iconColor: settings.clearIconColor,
+  iconSize: settings.outsideIconSize,
+  tooltip: strings.clearTooltip,
+);

@@ -66,40 +66,16 @@ List<ValueItem<int>> _anItems() => <ValueItem<int>>[
   const ValueItem(label: 'Can', value: 4),
 ];
 
-/// Rows of the open list in visual (top to bottom) order.
-List<DefaultListTile<int>> _visualRows(WidgetTester tester) {
-  final List<DefaultListTile<int>> rows = tester
-      .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
-      .toList();
-  double top(DefaultListTile<int> row) =>
-      tester.getTopLeft(find.byWidget(row)).dy;
-  return rows..sort((a, b) => top(a).compareTo(top(b)));
-}
-
 Iterable<DefaultListTile<int>> _rows(WidgetTester tester) =>
-    _visualRows(tester);
-
-List<String> _rowLabels(WidgetTester tester) =>
-    _rows(tester).map((r) => r.item.label).toList();
+    visualRows<int>(tester);
 
 List<String> _selectedRows(WidgetTester tester) => _rows(
   tester,
 ).where((r) => r.selected || r.highlighted).map((r) => r.item.label).toList();
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<int> && w.item.label == label,
-);
-
-Future<void> _tapRow(WidgetTester tester, String label) async {
-  await tester.tap(
-    find.descendant(of: _row(label), matching: find.byType(TextButton)),
-  );
-  await tester.pumpAndSettle();
-}
-
 Color? _rowBackground(WidgetTester tester, String label) {
   final TextButton button = tester.widget<TextButton>(
-    find.descendant(of: _row(label), matching: find.byType(TextButton)),
+    find.descendant(of: rowTile<int>(label), matching: find.byType(TextButton)),
   );
   return button.style!.backgroundColor!.resolve(<WidgetState>{});
 }
@@ -113,11 +89,6 @@ SearchAnchor _anchor(WidgetTester tester) => tester.widget<SearchAnchor>(
 
 EditableText _barField(WidgetTester tester) =>
     tester.widget<EditableText>(_inBar(find.byType(EditableText)));
-
-Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyEvent(key);
-  await tester.pumpAndSettle();
-}
 
 Future<void> _closeWithArrow(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.arrow_drop_up));
@@ -173,7 +144,7 @@ void main() {
 
       await openSingle(tester);
 
-      expect(_rowLabels(tester), <String>[
+      expect(visualRowLabels<int>(tester), <String>[
         'Item 0',
         'Item 1',
         'Item 2',
@@ -188,11 +159,11 @@ void main() {
       final c = _ctrl(numberedItems(4));
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
-      await _tapRow(tester, 'Item 2');
+      await tapSingleRow<int>(tester, 'Item 2');
 
       await openSingle(tester);
 
-      expect(_rowLabels(tester), contains('Item 2'));
+      expect(visualRowLabels<int>(tester), contains('Item 2'));
       expect(c.filteredItems.map((e) => e.label), <String>[
         'Item 0',
         'Item 1',
@@ -209,7 +180,7 @@ void main() {
 
       await typeInSingle(tester, 'm 3');
 
-      expect(_rowLabels(tester), <String>['Item 3']);
+      expect(visualRowLabels<int>(tester), <String>['Item 3']);
     });
   });
 
@@ -223,7 +194,7 @@ void main() {
         await _pump(tester, _dropdown(c));
         await openSingle(tester);
 
-        await _tapRow(tester, 'Item 1');
+        await tapSingleRow<int>(tester, 'Item 1');
 
         expect(c.selectedItem, const ValueItem(label: 'Item 1', value: 1));
         expect(calls, <ValueItem<int>?>[
@@ -267,7 +238,7 @@ void main() {
       expect(find.byIcon(Icons.arrow_drop_down), findsNothing);
       await openSingle(tester);
       expect(find.byIcon(Icons.arrow_drop_up), findsNothing);
-      expect(_rowLabels(tester), hasLength(2));
+      expect(visualRowLabels<int>(tester), hasLength(2));
     });
 
     testWidgets(
@@ -280,7 +251,11 @@ void main() {
         await tester.tap(_inBar(find.byIcon(Icons.arrow_drop_down)));
         await tester.pumpAndSettle();
         expect(c.localSearchController.isOpen, isTrue);
-        expect(_rowLabels(tester), <String>['Item 0', 'Item 1', 'Item 2']);
+        expect(visualRowLabels<int>(tester), <String>[
+          'Item 0',
+          'Item 1',
+          'Item 2',
+        ]);
         expect(find.byIcon(Icons.arrow_drop_up), findsOneWidget);
 
         await typeInSingle(tester, 'abc');
@@ -358,7 +333,7 @@ void main() {
 
       expect(taps, 1);
       expect(c.localSearchController.isOpen, isTrue);
-      expect(_rowLabels(tester), hasLength(2));
+      expect(visualRowLabels<int>(tester), hasLength(2));
     });
 
     testWidgets(
@@ -396,7 +371,7 @@ void main() {
         await typeInSingle(tester, 'Item 1');
 
         expect(c.filteredItems.map((e) => e.label), <String>['Item 1']);
-        expect(_rowLabels(tester), <String>['Item 1']);
+        expect(visualRowLabels<int>(tester), <String>['Item 1']);
       },
     ); // B7: fixed in 8.0
   });
@@ -445,7 +420,7 @@ void main() {
       expect(_inBar(find.byIcon(Icons.clear)), findsNothing);
 
       await openSingle(tester);
-      await _tapRow(tester, 'Item 2');
+      await tapSingleRow<int>(tester, 'Item 2');
       expect(c.clearVisible, isTrue);
       expect(_inBar(find.byIcon(Icons.clear)), findsOneWidget);
 
@@ -504,7 +479,7 @@ void main() {
         ),
       );
       await openSingle(tester);
-      await _tapRow(tester, 'Item 1');
+      await tapSingleRow<int>(tester, 'Item 1');
       rebuild(() {});
       await tester.pump();
 
@@ -528,7 +503,7 @@ void main() {
           ),
         );
         await openSingle(tester);
-        await _tapRow(tester, 'Item 1');
+        await tapSingleRow<int>(tester, 'Item 1');
         rebuild(() {});
         await tester.pump();
 
@@ -549,7 +524,7 @@ void main() {
       final c = _ctrl(numberedItems(3), calls: calls);
       await _pump(tester, _dropdown(c, settings: clearOnClose));
       await openSingle(tester);
-      await _tapRow(tester, 'Item 1');
+      await tapSingleRow<int>(tester, 'Item 1');
 
       await openSingle(tester);
       await typeInSingle(tester, 'zzz');
@@ -579,7 +554,7 @@ void main() {
       final c = _ctrl(numberedItems(3));
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
-      await _tapRow(tester, 'Item 1');
+      await tapSingleRow<int>(tester, 'Item 1');
 
       await openSingle(tester);
       await typeInSingle(tester, 'zzz');
@@ -621,7 +596,7 @@ void main() {
       expect(_anchor(tester).enabled, isTrue);
       expect(find.byIcon(Icons.arrow_drop_down), findsOneWidget);
       await openSingle(tester);
-      expect(_rowLabels(tester), hasLength(3));
+      expect(visualRowLabels<int>(tester), hasLength(3));
     });
 
     testWidgets('controller.resetSelection() clears selection and text and '
@@ -630,7 +605,7 @@ void main() {
       final c = _ctrl(numberedItems(3), calls: calls);
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
-      await _tapRow(tester, 'Item 2');
+      await tapSingleRow<int>(tester, 'Item 2');
 
       c.resetSelection();
       await tester.pump();
@@ -657,7 +632,7 @@ void main() {
       final seen = <int>[];
       final painted = <List<String>>[];
       for (int i = 0; i < 5; i++) {
-        await _key(tester, LogicalKeyboardKey.arrowDown);
+        await pressKey(tester, LogicalKeyboardKey.arrowDown);
         seen.add(c.highlightedIndex);
         painted.add(_selectedRows(tester));
       }
@@ -677,7 +652,7 @@ void main() {
 
       final seen = <int>[];
       for (int i = 0; i < 5; i++) {
-        await _key(tester, LogicalKeyboardKey.arrowUp);
+        await pressKey(tester, LogicalKeyboardKey.arrowUp);
         seen.add(c.highlightedIndex);
       }
 
@@ -691,13 +666,13 @@ void main() {
       final c = _ctrl(_anItems());
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
-      await _tapRow(tester, 'An');
+      await tapSingleRow<int>(tester, 'An');
       await openSingle(tester);
-      expect(_rowLabels(tester), <String>['Pan', 'An', 'Ant', 'Can']);
+      expect(visualRowLabels<int>(tester), <String>['Pan', 'An', 'Ant', 'Can']);
 
-      await _key(tester, LogicalKeyboardKey.arrowDown);
+      await pressKey(tester, LogicalKeyboardKey.arrowDown);
       expect(c.highlightedIndex, 1);
-      await _key(tester, LogicalKeyboardKey.arrowDown);
+      await pressKey(tester, LogicalKeyboardKey.arrowDown);
       expect(c.highlightedIndex, 2);
     });
 
@@ -707,12 +682,12 @@ void main() {
       final c = _ctrl(_anItems());
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
-      await _tapRow(tester, 'An');
+      await tapSingleRow<int>(tester, 'An');
       await openSingle(tester);
 
-      await _key(tester, LogicalKeyboardKey.arrowUp);
+      await pressKey(tester, LogicalKeyboardKey.arrowUp);
       expect(c.highlightedIndex, 1);
-      await _key(tester, LogicalKeyboardKey.arrowUp);
+      await pressKey(tester, LogicalKeyboardKey.arrowUp);
       expect(c.highlightedIndex, 0);
     });
 
@@ -723,8 +698,8 @@ void main() {
       final c = _ctrl(numberedItems(3), calls: calls);
       await _pump(tester, _dropdown(c));
 
-      await _key(tester, LogicalKeyboardKey.arrowDown);
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.arrowDown);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(c.highlightedIndex, -1);
       expect(c.selectedItem, isNull);
@@ -737,8 +712,8 @@ void main() {
         final c = _ctrl(numberedItems(12));
         await _pump(tester, _dropdown(c));
         await openSingle(tester);
-        await _key(tester, LogicalKeyboardKey.arrowDown);
-        await _key(tester, LogicalKeyboardKey.arrowDown);
+        await pressKey(tester, LogicalKeyboardKey.arrowDown);
+        await pressKey(tester, LogicalKeyboardKey.arrowDown);
         expect(c.highlightedIndex, 1);
 
         await typeInSingle(tester, '1');
@@ -759,8 +734,8 @@ void main() {
         final c = _ctrl(numberedItems(12));
         await _pump(tester, _dropdown(c));
         await openSingle(tester);
-        await _key(tester, LogicalKeyboardKey.arrowDown);
-        await _key(tester, LogicalKeyboardKey.arrowDown);
+        await pressKey(tester, LogicalKeyboardKey.arrowDown);
+        await pressKey(tester, LogicalKeyboardKey.arrowDown);
 
         await typeInSingle(tester, '1');
         await tester.pumpAndSettle();
@@ -779,10 +754,10 @@ void main() {
       final c = _ctrl(numberedItems(4), calls: calls);
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
-      await _key(tester, LogicalKeyboardKey.arrowDown);
-      await _key(tester, LogicalKeyboardKey.arrowDown);
+      await pressKey(tester, LogicalKeyboardKey.arrowDown);
+      await pressKey(tester, LogicalKeyboardKey.arrowDown);
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(c.selectedItem?.label, 'Item 1');
       expect(c.localSearchController.text, 'Item 1');
@@ -799,7 +774,7 @@ void main() {
       await openSingle(tester);
       await typeInSingle(tester, 'm 2');
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(c.selectedItem?.label, 'Item 2');
       expect(c.localSearchController.isOpen, isFalse);
@@ -811,7 +786,7 @@ void main() {
       await _pump(tester, _dropdown(c));
       await openSingle(tester);
 
-      await _key(tester, LogicalKeyboardKey.numpadEnter);
+      await pressKey(tester, LogicalKeyboardKey.numpadEnter);
 
       expect(c.selectedItem?.label, 'Item 0');
     });
@@ -876,7 +851,7 @@ void main() {
       );
       expect(_anchor(tester).isFullScreen, isTrue);
       await openSingle(tester);
-      expect(_rowLabels(tester), hasLength(3));
+      expect(visualRowLabels<int>(tester), hasLength(3));
       expect(tester.getSize(find.byType(ScrollablePositionedList)).width, 800);
     });
   });
@@ -1071,7 +1046,10 @@ void main() {
 
       expect(find.byIcon(Icons.star), findsNWidgets(3));
       expect(
-        find.descendant(of: _row('Item 1'), matching: find.byIcon(Icons.star)),
+        find.descendant(
+          of: rowTile<int>('Item 1'),
+          matching: find.byIcon(Icons.star),
+        ),
         findsOneWidget,
       );
     });
@@ -1121,7 +1099,7 @@ void main() {
 
       await _pump(tester, _dropdown(c, disposeController: false));
       await openSingle(tester);
-      expect(_rowLabels(tester), <String>['Item 0', 'Item 1']);
+      expect(visualRowLabels<int>(tester), <String>['Item 0', 'Item 1']);
     });
   });
 
@@ -1248,7 +1226,10 @@ void main() {
       await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
       await openSingle(tester);
       await tester.tap(
-        find.descendant(of: _row('Item 1'), matching: find.byType(TextButton)),
+        find.descendant(
+          of: rowTile<int>('Item 1'),
+          matching: find.byType(TextButton),
+        ),
       );
 
       // No frame has run since the view closed.
@@ -1265,7 +1246,10 @@ void main() {
       );
       await openSingle(tester);
       await tester.tap(
-        find.descendant(of: _row('Item 1'), matching: find.byType(TextButton)),
+        find.descendant(
+          of: rowTile<int>('Item 1'),
+          matching: find.byType(TextButton),
+        ),
       );
 
       expect(_focusInsideDropdown(), isTrue);
@@ -1277,7 +1261,7 @@ void main() {
     ) async {
       await _pump(tester, _dropdown(_ctrl(numberedItems(2))));
       await openSingle(tester);
-      await _tapRow(tester, 'Item 1');
+      await tapSingleRow<int>(tester, 'Item 1');
 
       expect(_focusInsideDropdown(), isFalse);
     });
@@ -1292,7 +1276,7 @@ void main() {
       final c = _ctrl(numberedItems(2));
       await _pump(tester, _dropdown(c, removeFocus: false));
       await openSingle(tester);
-      await _tapRow(tester, 'Item 1');
+      await tapSingleRow<int>(tester, 'Item 1');
       // Past the 600 ms window in which `true` drops the focus.
       await tester.pump(const Duration(milliseconds: 700));
 
@@ -1316,7 +1300,7 @@ void main() {
         final c = _ctrl(_anItems());
         await _pump(tester, _dropdown(c, overlay: styled));
         await openSingle(tester);
-        await _tapRow(tester, 'An');
+        await tapSingleRow<int>(tester, 'An');
         await openSingle(tester);
 
         expect(_selectedRows(tester), <String>['An']);

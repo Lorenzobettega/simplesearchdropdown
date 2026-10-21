@@ -8,9 +8,6 @@ import '../support/harness.dart';
 const ValueItem<int> _banana = ValueItem<int>(label: 'Banana', value: 2);
 const ValueItem<int> _kiwi = ValueItem<int>(label: 'Kiwi', value: 10);
 
-List<String> _labels(Iterable<ValueItem<dynamic>> items) =>
-    items.map((e) => e.label).toList();
-
 SearchDropDownController<T> _controller<T>(
   List<ValueItem<T>> items, {
   SortType sort = SortType.none,
@@ -76,7 +73,7 @@ void main() {
         ..add(_kiwi);
       c.updateListItems(items, false);
       c.filterList('');
-      expect(_labels(c.filteredItems), <String>[
+      expect(labelsOf(c.filteredItems), <String>[
         'Maçã',
         'Uva',
         'abacaxi',
@@ -87,7 +84,7 @@ void main() {
       c.filterList('ban');
       expect(c.filteredItems, isEmpty);
       c.filterList('kiw');
-      expect(_labels(c.filteredItems), <String>['Kiwi']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi']);
     });
 
     test('a longer query does not narrow results of the old list', () {
@@ -96,7 +93,7 @@ void main() {
       addTearDown(c.dispose);
 
       c.filterList('a');
-      expect(_labels(c.filteredItems), contains('abacaxi'));
+      expect(labelsOf(c.filteredItems), contains('abacaxi'));
       items.removeWhere((e) => e.label == 'abacaxi');
       c.updateListItems(items, false);
       c.filterList('ab');
@@ -111,7 +108,7 @@ void main() {
       final List<ValueItem<int>> next = fruitItems()..add(aaa);
       c.updateListItems(next, false);
       c.filterList('');
-      expect(_labels(c.filteredItems).first, 'Aaa');
+      expect(labelsOf(c.filteredItems).first, 'Aaa');
       expect(next.last, aaa);
     });
 
@@ -122,7 +119,7 @@ void main() {
       c.onSearchOpen();
       c.updateListItems(fruitItems()..add(_kiwi), false);
       c.localSearchController.text = 'kiw';
-      expect(_labels(c.filteredItems), <String>['Kiwi']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi']);
     });
   });
 
@@ -231,7 +228,7 @@ void main() {
       expect(c.filteredItems, isEmpty);
       c.updateListItems(items..add(_kiwi), false);
       c.filterList('k');
-      expect(_labels(c.filteredItems), <String>['Kiwi']);
+      expect(labelsOf(c.filteredItems), <String>['Kiwi']);
     });
   });
 
@@ -249,9 +246,9 @@ void main() {
       addTearDown(c.dispose);
 
       c.sortBy(SortType.alphabetical);
-      expect(_labels(c.filteredItems), <String>['a', 'b']);
+      expect(labelsOf(c.filteredItems), <String>['a', 'b']);
       c.sortBy(SortType.reverseAlphabetical);
-      expect(_labels(c.filteredItems), <String>['b', 'a']);
+      expect(labelsOf(c.filteredItems), <String>['b', 'a']);
     });
   });
 }
