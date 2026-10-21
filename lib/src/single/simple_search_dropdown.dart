@@ -530,7 +530,8 @@ class _ViewListState<T> extends State<_ViewList<T>> {
       _controller.submit();
       return true;
     }
-    final bool keepLabelSelected = fieldFocused == true && _labelSelected();
+    final SearchController search = _controller.localSearchController;
+    final TextEditingValue before = search.value;
     if (key == LogicalKeyboardKey.arrowDown) {
       _controller.highlightNext();
     } else if (key == LogicalKeyboardKey.arrowUp) {
@@ -542,11 +543,17 @@ class _ViewListState<T> extends State<_ViewList<T>> {
     } else {
       return false;
     }
-    if (keepLabelSelected) {
-      // The focused field gets this key too, after this handler, and
-      // collapses the selection; select the label again so typing still
-      // replaces it.
-      scheduleMicrotask(_selectLabel);
+    if (fieldFocused == true) {
+      // The focused field gets this key too, after this handler, and moves
+      // the caret; put it back so typing still replaces an untouched label.
+      scheduleMicrotask(() {
+        if (mounted &&
+            !_controller.isDisposed &&
+            isUsable(search) &&
+            search.text == before.text) {
+          search.selection = before.selection;
+        }
+      });
     }
     return true;
   }
@@ -563,31 +570,6 @@ class _ViewListState<T> extends State<_ViewList<T>> {
     final EditableText? field = focus.context
         ?.findAncestorWidgetOfExactType<EditableText>();
     return identical(field?.controller, _controller.localSearchController);
-  }
-
-  /// Whether the whole selected label is selected (as when the view opens).
-  bool _labelSelected() {
-    final TextEditingValue value = _controller.localSearchController.value;
-    final String? label = _controller.selectedItem?.label;
-    return label != null &&
-        label.isNotEmpty &&
-        value.text == label &&
-        value.selection.start == 0 &&
-        value.selection.end == label.length;
-  }
-
-  void _selectLabel() {
-    final SearchController search = _controller.localSearchController;
-    if (!mounted || _controller.isDisposed || !isUsable(search)) {
-      return;
-    }
-    if (search.text != _controller.selectedItem?.label) {
-      return;
-    }
-    search.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: search.text.length,
-    );
   }
 
   void _revealHighlight() {

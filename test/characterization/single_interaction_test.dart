@@ -1160,8 +1160,8 @@ void main() {
       expect(c.filteredItems, hasLength(3));
     });
 
-    test('onSearchOpen over the selected label lists every item and selects '
-        'the label text (D1)', () {
+    test('onSearchOpen over the selected label lists every item and puts '
+        'the caret after the label, with no text selected (D1)', () {
       final List<ValueItem<int>> items = numberedItems(3);
       final c = _ctrl(items, initial: items[2]);
       addTearDown(c.dispose);
@@ -1171,7 +1171,7 @@ void main() {
       expect(c.filteredItems, items);
       expect(
         c.localSearchController.selection,
-        const TextSelection(baseOffset: 0, extentOffset: 6),
+        const TextSelection.collapsed(offset: 6),
       );
     });
 

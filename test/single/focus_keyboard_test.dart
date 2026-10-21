@@ -359,63 +359,75 @@ void main() {
     });
   });
 
-  group('N70: browsing with keys keeps the label selected', () {
-    Future<SearchDropDownController<int>> openWithBanana(
-      WidgetTester tester,
-    ) async {
-      final List<ValueItem<int>> items = fruitItems();
-      final c = _ctrl(items, initial: items[1]);
-      await tester.pumpWidget(host(_dropdown(c)));
-      await openSingle(tester);
-      expect(
-        c.localSearchController.selection,
-        const TextSelection(baseOffset: 0, extentOffset: 6),
-      );
-      return c;
-    }
-
-    testWidgets('arrow and page keys keep it; typing then replaces it', (
-      tester,
-    ) async {
-      final c = await openWithBanana(tester);
-      for (final LogicalKeyboardKey key in <LogicalKeyboardKey>[
-        LogicalKeyboardKey.arrowDown,
-        LogicalKeyboardKey.arrowDown,
-        LogicalKeyboardKey.arrowUp,
-        LogicalKeyboardKey.pageDown,
-        LogicalKeyboardKey.pageUp,
-      ]) {
-        await tester.sendKeyEvent(key);
-        await tester.pump();
-        expect(c.highlightedIndex, isNot(-1), reason: '$key');
+  group(
+    'N70: browsing with keys keeps the caret where typing replaces the label',
+    () {
+      Future<SearchDropDownController<int>> openWithBanana(
+        WidgetTester tester,
+      ) async {
+        final List<ValueItem<int>> items = fruitItems();
+        final c = _ctrl(items, initial: items[1]);
+        await tester.pumpWidget(host(_dropdown(c)));
+        await openSingle(tester);
         expect(
           c.localSearchController.selection,
-          const TextSelection(baseOffset: 0, extentOffset: 6),
-          reason: '$key',
+          const TextSelection.collapsed(offset: 6),
         );
+        return c;
       }
 
-      // Type at the selection the way the engine does.
-      final TextEditingValue v = c.localSearchController.value;
-      tester.testTextInput.updateEditingValue(v.replaced(v.selection, 'Uv'));
-      await tester.pump();
+      testWidgets(
+        'arrow and page keys keep it; typing then replaces the label',
+        (tester) async {
+          final c = await openWithBanana(tester);
+          for (final LogicalKeyboardKey key in <LogicalKeyboardKey>[
+            LogicalKeyboardKey.arrowDown,
+            LogicalKeyboardKey.arrowDown,
+            LogicalKeyboardKey.arrowUp,
+            LogicalKeyboardKey.pageDown,
+            LogicalKeyboardKey.pageUp,
+          ]) {
+            await tester.sendKeyEvent(key);
+            await tester.pump();
+            expect(c.highlightedIndex, isNot(-1), reason: '$key');
+            expect(
+              c.localSearchController.selection,
+              const TextSelection.collapsed(offset: 6),
+              reason: '$key',
+            );
+          }
 
-      expect(c.localSearchController.text, 'Uv');
-      expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
-    });
+          // Type at the selection the way the engine does.
+          final TextEditingValue v = c.localSearchController.value;
+          tester.testTextInput.updateEditingValue(
+            v.replaced(v.selection, 'Uv'),
+          );
+          await tester.pump();
 
-    testWidgets('a caret the user placed is left alone', (tester) async {
-      final c = await openWithBanana(tester);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.pump();
-      expect(c.localSearchController.selection.isCollapsed, isTrue);
-      final TextSelection caret = c.localSearchController.selection;
+          expect(c.localSearchController.text, 'Uv');
+          expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
+        },
+      );
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pump();
+      testWidgets('a caret the user placed is left alone, and typing there '
+          'edits the label', (tester) async {
+        final c = await openWithBanana(tester);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        await tester.pump();
+        const TextSelection caret = TextSelection.collapsed(offset: 5);
+        expect(c.localSearchController.selection, caret);
 
-      expect(c.highlightedIndex, 1);
-      expect(c.localSearchController.selection, caret);
-    });
-  });
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pump();
+
+        expect(c.highlightedIndex, 1);
+        expect(c.localSearchController.selection, caret);
+
+        final TextEditingValue v = c.localSearchController.value;
+        tester.testTextInput.updateEditingValue(v.replaced(v.selection, 'X'));
+        await tester.pump();
+        expect(c.localSearchController.text, 'BananXa');
+      });
+    },
+  );
 }

@@ -6,6 +6,7 @@
 - Dialog titles are semibold 20 (`titleLarge`) and the supporting text `bodyMedium` in `onSurfaceVariant`, centred alike in the three dialogs, which share one layout.
 - A row's edit/delete buttons (and the add row's Criar) are hidden behind the spinner instead of removed while a callback runs, so the label and the row no longer move sideways.
 - Dark theme: the bar, the multiple box, the list and its rows kept light surfaces (white, grey, black icons, a light-grey hint on white) under a dark theme. A color left unset in `SimpleSearchbarSettings` / `SimpleOverlaySettings` now comes from the `ColorScheme` (see Changed), with every text pair at WCAG AA (4.5:1) or better. A color you set still wins.
+- Single dropdown: the label no longer blinks when the view opens, closes or picks an item. Opening selected the whole label (so typing replaced it), and that selection highlight flashed on the bar, stayed in the view and vanished on close. Now nothing is selected: the caret sits after the label, and a key typed there still replaces the label (`Lorenzo` + `U` → `U`). A deletion, or typing after moving the caret, edits the label like any text. The dark golden of the open view was updated.
 - The row spinner was a 28 px ring with a 4 px stroke, bigger than the 20 px icons it replaces: it is now 24 px with a 2.5 stroke (`loadingSize`, new `loadingStrokeWidth`).
 
 ### Changed
