@@ -1,7 +1,9 @@
-// Theme-aware defaults (8.0.1): an unset colour keeps its fixed 8.0.0 value
-// under a light theme and follows the ColorScheme under a dark one; a colour
-// set in the settings always wins. Also the AA contrast of the dark pairs,
-// the row spinner's default size, and dark goldens (tag: golden).
+// Theme-derived defaults (8.0.1): an unset colour follows the ColorScheme
+// under a light theme and a dark one alike, while the settings getters keep
+// the 8.0.0 values (to set them back explicitly); a colour set in the
+// settings always wins. Also the AA contrast of the default pairs on four
+// schemes, the row spinner's default size, and dark goldens (tag: golden);
+// the light goldens live in test/characterization.
 
 import 'dart:async';
 import 'dart:math' as math;
@@ -20,18 +22,23 @@ final ThemeData _dark = ThemeData(
   brightness: Brightness.dark,
 );
 
-/// The dark themes the contrast table is checked on: Flutter's default dark
-/// scheme and one seeded from the package's own green.
-final Map<String, ThemeData> _darkThemes = <String, ThemeData>{
+/// The themes the contrast table is checked on: Flutter's default schemes
+/// and ones seeded from the package's own green, light and dark.
+final Map<String, ThemeData> _themes = <String, ThemeData>{
+  'default light': _light,
   'default dark': _dark,
-  'darkGreen seed': ThemeData(
-    useMaterial3: true,
-    colorScheme: ColorScheme.fromSeed(
-      seedColor: darkGreen,
-      brightness: Brightness.dark,
+  for (final Brightness b in Brightness.values)
+    'darkGreen seed ${b.name}': ThemeData(
+      useMaterial3: true,
+      colorScheme: ColorScheme.fromSeed(seedColor: darkGreen, brightness: b),
     ),
-  ),
 };
+
+/// The fill the bar, the box and the list default to: the low container in
+/// light (the shadow shows the elevation), the high one in dark.
+Color _raised(ColorScheme scheme) => scheme.brightness == Brightness.light
+    ? scheme.surfaceContainerLow
+    : scheme.surfaceContainerHigh;
 
 /// WCAG 2.x contrast ratio of [a] on [b] (both opaque).
 double _contrast(Color a, Color b) {
@@ -152,7 +159,7 @@ Future<MultipleSearchDropDownController<int>> _pumpMultiple(
 
 void main() {
   group('settings: unset colours', () {
-    test('read as the 8.0.0 light values', () {
+    test('the getters keep the 8.0.0 values (to set them back)', () {
       const SimpleSearchbarSettings bar = SimpleSearchbarSettings();
       expect(bar.customBackgroundColor, isNull);
       expect(bar.customHoverColor, isNull);
@@ -223,157 +230,10 @@ void main() {
       expect(list.dialogDeleteIcon, same(delete));
       expect(list.loadingColor, Colors.pink);
     });
-
-    test('a light theme resolves to exactly those values', () {
-      const SimpleSearchbarSettings bar = SimpleSearchbarSettings();
-      final BarColors b = BarColors.of(bar, _light);
-      expect(b.background, bar.backgroundColor);
-      expect(b.hover, bar.hoverColor);
-      expect(b.chipBackground, bar.boxMultiSelectedBackgroundColor);
-      expect(b.chipTextStyle, isNull);
-      expect(b.chipIconColor, isNull);
-      expect(b.hintStyle, bar.hintStyle);
-      expect(b.shadow, Colors.grey);
-
-      const SimpleOverlaySettings list = SimpleOverlaySettings();
-      final ListColors l = ListColors.of(list, _light);
-      expect(l.selectedBackground, list.selectedItemBackgroundColor);
-      expect(l.selectedHover, list.selectedItemHoverColor);
-      expect(l.unselectedHover, list.unselectedItemHoverColor);
-      expect(l.highlightedBackground, list.unselectedItemHoverColor);
-      expect(l.highlightedBorder, list.highlightedItemBorderColor);
-      expect(l.selectedTextStyle, list.selectedItemTextStyle);
-      expect(l.unselectedTextStyle, list.unselectedItemTextStyle);
-      expect(l.editIcon.color, Colors.black);
-      expect(l.deleteIcon.color, const Color.fromRGBO(183, 28, 28, 1));
-      expect(l.loading, darkGreen);
-    });
   });
 
-  group('dark theme: unset colours follow the ColorScheme', () {
-    final ColorScheme scheme = _dark.colorScheme;
-
-    testWidgets('single bar: surfaceContainerHigh, onSurfaceVariant hint', (
-      tester,
-    ) async {
-      await _pumpSingle(tester, _single());
-      final SearchBar bar = _bar(tester);
-      expect(
-        bar.backgroundColor!.resolve(<WidgetState>{}),
-        scheme.surfaceContainerHigh,
-      );
-      expect(
-        bar.overlayColor!.resolve(<WidgetState>{}),
-        scheme.onSurface.withAlpha(20),
-      );
-      final TextStyle hint = bar.hintStyle!.resolve(<WidgetState>{})!;
-      expect(hint.color, scheme.onSurfaceVariant);
-      // The stock 14 px size is kept.
-      expect(hint.fontSize, 14);
-    });
-
-    testWidgets('single rows: selected, highlighted, unselected and icons', (
-      tester,
-    ) async {
-      final List<ValueItem<int>> items = fruitItems();
-      final SearchDropDownController<int> c = _single(initial: items[0]);
-      await _pumpSingle(tester, c);
-      await openSingle(tester);
-      // Arrow keys move the highlight to Banana (the selection stays Maçã).
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pumpAndSettle();
-      expect(c.highlightedIndex, 1);
-
-      expect(_rowBackground(tester, 'Maçã'), scheme.secondaryContainer);
-      expect(_rowTextColor(tester, 'Maçã'), scheme.onSecondaryContainer);
-
-      expect(_rowBackground(tester, 'Banana'), scheme.onSurface.withAlpha(20));
-      expect(_rowTextColor(tester, 'Banana'), scheme.onSecondaryContainer);
-      final RoundedRectangleBorder shape =
-          _rowStyle(tester, 'Banana').shape!.resolve(<WidgetState>{})!
-              as RoundedRectangleBorder;
-      expect(shape.side.color, scheme.outline);
-
-      expect(_rowBackground(tester, 'Uva'), Colors.transparent);
-      expect(_rowTextColor(tester, 'Uva'), scheme.onSurfaceVariant);
-      expect(
-        _rowStyle(tester, 'Uva').overlayColor!.resolve(<WidgetState>{}),
-        scheme.onSurface.withAlpha(20),
-      );
-      expect(
-        _rowStyle(tester, 'Maçã').overlayColor!.resolve(<WidgetState>{}),
-        scheme.onSecondaryContainer.withAlpha(31),
-      );
-      expect(_rowIconColor(tester, 'Uva', Icons.edit), scheme.onSurfaceVariant);
-      expect(_rowIconColor(tester, 'Uva', Icons.delete), scheme.error);
-    });
-
-    testWidgets('multiple box, chips and list', (tester) async {
-      await _pumpMultiple(tester);
-      final BoxDecoration box = _boxDecoration(tester);
-      expect(box.color, scheme.surfaceContainerHigh);
-      expect(box.boxShadow!.single.color, Colors.black.withAlpha(125));
-
-      final Card chip = tester.widget<Card>(
-        find.ancestor(of: find.text('Maçã'), matching: find.byType(Card)),
-      );
-      expect(chip.color, scheme.secondaryContainer);
-      expect(
-        tester.widget<Text>(find.text('Maçã')).style?.color,
-        scheme.onSecondaryContainer,
-      );
-      expect(
-        tester.widget<Icon>(find.byIcon(Icons.close).first).color,
-        scheme.onSecondaryContainer,
-      );
-
-      await openMultiple(tester);
-      final SearchBar field = _bar(tester);
-      expect(
-        field.backgroundColor!.resolve(<WidgetState>{}),
-        scheme.surfaceContainerHigh,
-      );
-      expect(
-        field.hintStyle!.resolve(<WidgetState>{})!.color,
-        scheme.onSurfaceVariant,
-      );
-      expect(
-        field.overlayColor!.resolve(<WidgetState>{}),
-        scheme.onSurface.withAlpha(20),
-      );
-      expect(_rowBackground(tester, 'Maçã'), scheme.secondaryContainer);
-      expect(_rowTextColor(tester, 'Banana'), scheme.onSurfaceVariant);
-    });
-
-    testWidgets('the multiple hint, without a selection', (tester) async {
-      await _pumpMultiple(tester, selected: const <int>[]);
-      expect(
-        tester.widget<Text>(find.text('Pesquisar')).style?.color,
-        scheme.onSurfaceVariant,
-      );
-    });
-
-    testWidgets('the row spinner is colorScheme.primary', (tester) async {
-      final Completer<void> pending = Completer<void>();
-      await _pumpSingle(tester, _single(onDeleteItem: (_) => pending.future));
-      await openSingle(tester);
-      await tester.tap(
-        find.descendant(of: _row('Uva'), matching: find.byIcon(Icons.delete)),
-      );
-      await tester.pump();
-      expect(
-        tester
-            .widget<CircularProgressIndicator>(
-              find.byType(CircularProgressIndicator),
-            )
-            .color,
-        scheme.primary,
-      );
-      pending.complete();
-      await tester.pumpAndSettle();
-    });
-  });
+  _followsScheme(_light);
+  _followsScheme(_dark);
 
   group('dark theme: colours set in the settings win', () {
     testWidgets('bar, rows, icons and spinner', (tester) async {
@@ -466,8 +326,8 @@ void main() {
     });
   });
 
-  group('dark theme: AA contrast of the default pairs', () {
-    for (final MapEntry<String, ThemeData> entry in _darkThemes.entries) {
+  group('AA contrast of the default pairs', () {
+    for (final MapEntry<String, ThemeData> entry in _themes.entries) {
       test(entry.key, () {
         final ThemeData theme = entry.value;
         final ColorScheme scheme = theme.colorScheme;
@@ -526,7 +386,7 @@ void main() {
       expect(list.loadingStrokeWidth, 2.5);
     });
 
-    testWidgets('the busy row shows a 24 px, 2.5 stroke, darkGreen ring', (
+    testWidgets('the busy row shows a 24 px, 2.5 stroke ring in primary', (
       tester,
     ) async {
       final Completer<void> pending = Completer<void>();
@@ -545,7 +405,7 @@ void main() {
         matching: find.byType(CircularProgressIndicator),
       );
       final CircularProgressIndicator ring = tester.widget(spinner);
-      expect(ring.color, darkGreen);
+      expect(ring.color, _light.colorScheme.primary);
       expect(ring.strokeWidth, 2.5);
       expect(tester.getSize(spinner), const Size(24, 24));
       pending.complete();
@@ -626,5 +486,135 @@ void main() {
       expect(find.byType(WarningDialog), findsOneWidget);
       await matches('dark_delete_confirm_dialog');
     }, tags: <String>['golden']);
+  });
+}
+
+/// Unset colours under [theme] come from its colour scheme.
+void _followsScheme(ThemeData theme) {
+  final ColorScheme scheme = theme.colorScheme;
+  group('${theme.brightness.name} theme: unset colours follow the scheme', () {
+    testWidgets('single bar: raised surface, onSurfaceVariant hint', (
+      tester,
+    ) async {
+      await _pumpSingle(tester, _single(), theme: theme);
+      final SearchBar bar = _bar(tester);
+      expect(bar.backgroundColor!.resolve(<WidgetState>{}), _raised(scheme));
+      expect(
+        bar.overlayColor!.resolve(<WidgetState>{}),
+        scheme.onSurface.withAlpha(20),
+      );
+      final TextStyle hint = bar.hintStyle!.resolve(<WidgetState>{})!;
+      expect(hint.color, scheme.onSurfaceVariant);
+      // The stock 14 px size is kept.
+      expect(hint.fontSize, 14);
+    });
+
+    testWidgets('single rows: selected, highlighted, unselected and icons', (
+      tester,
+    ) async {
+      final List<ValueItem<int>> items = fruitItems();
+      final SearchDropDownController<int> c = _single(initial: items[0]);
+      await _pumpSingle(tester, c, theme: theme);
+      await openSingle(tester);
+      // Arrow keys move the highlight to Banana (the selection stays Maçã).
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+      await tester.pumpAndSettle();
+      expect(c.highlightedIndex, 1);
+
+      expect(_rowBackground(tester, 'Maçã'), scheme.secondaryContainer);
+      expect(_rowTextColor(tester, 'Maçã'), scheme.onSecondaryContainer);
+
+      expect(_rowBackground(tester, 'Banana'), scheme.onSurface.withAlpha(20));
+      expect(_rowTextColor(tester, 'Banana'), scheme.onSecondaryContainer);
+      final RoundedRectangleBorder shape =
+          _rowStyle(tester, 'Banana').shape!.resolve(<WidgetState>{})!
+              as RoundedRectangleBorder;
+      expect(shape.side.color, scheme.outline);
+
+      expect(_rowBackground(tester, 'Uva'), Colors.transparent);
+      expect(_rowTextColor(tester, 'Uva'), scheme.onSurface);
+      expect(
+        _rowStyle(tester, 'Uva').overlayColor!.resolve(<WidgetState>{}),
+        scheme.onSurface.withAlpha(20),
+      );
+      expect(
+        _rowStyle(tester, 'Maçã').overlayColor!.resolve(<WidgetState>{}),
+        scheme.onSecondaryContainer.withAlpha(31),
+      );
+      expect(_rowIconColor(tester, 'Uva', Icons.edit), scheme.onSurfaceVariant);
+      expect(_rowIconColor(tester, 'Uva', Icons.delete), scheme.error);
+    });
+
+    testWidgets('multiple box, chips and list', (tester) async {
+      await _pumpMultiple(tester, theme: theme);
+      final BoxDecoration box = _boxDecoration(tester);
+      expect(box.color, _raised(scheme));
+      expect(
+        box.boxShadow!.single.color,
+        (scheme.brightness == Brightness.light ? Colors.grey : Colors.black)
+            .withAlpha(125),
+      );
+      expect(box.borderRadius, const BorderRadius.all(Radius.circular(12)));
+
+      final Card chip = tester.widget<Card>(
+        find.ancestor(of: find.text('Maçã'), matching: find.byType(Card)),
+      );
+      expect(chip.color, scheme.secondaryContainer);
+      expect(
+        tester.widget<Text>(find.text('Maçã')).style?.color,
+        scheme.onSecondaryContainer,
+      );
+      expect(
+        tester.widget<Icon>(find.byIcon(Icons.close).first).color,
+        scheme.onSecondaryContainer,
+      );
+
+      await openMultiple(tester);
+      final SearchBar field = _bar(tester);
+      expect(field.backgroundColor!.resolve(<WidgetState>{}), _raised(scheme));
+      expect(
+        field.hintStyle!.resolve(<WidgetState>{})!.color,
+        scheme.onSurfaceVariant,
+      );
+      expect(
+        field.overlayColor!.resolve(<WidgetState>{}),
+        scheme.onSurface.withAlpha(20),
+      );
+      expect(_rowBackground(tester, 'Maçã'), scheme.secondaryContainer);
+      expect(_rowTextColor(tester, 'Banana'), scheme.onSurface);
+    });
+
+    testWidgets('the multiple hint, without a selection', (tester) async {
+      await _pumpMultiple(tester, theme: theme, selected: const <int>[]);
+      expect(
+        tester.widget<Text>(find.text('Pesquisar')).style?.color,
+        scheme.onSurfaceVariant,
+      );
+    });
+
+    testWidgets('the row spinner is colorScheme.primary', (tester) async {
+      final Completer<void> pending = Completer<void>();
+      await _pumpSingle(
+        tester,
+        _single(onDeleteItem: (_) => pending.future),
+        theme: theme,
+      );
+      await openSingle(tester);
+      await tester.tap(
+        find.descendant(of: _row('Uva'), matching: find.byIcon(Icons.delete)),
+      );
+      await tester.pump();
+      expect(
+        tester
+            .widget<CircularProgressIndicator>(
+              find.byType(CircularProgressIndicator),
+            )
+            .color,
+        scheme.primary,
+      );
+      pending.complete();
+      await tester.pumpAndSettle();
+    });
   });
 }

@@ -214,9 +214,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
                   children: <Widget>[
                     Container(
                       decoration: BoxDecoration(
-                        borderRadius: const BorderRadius.all(
-                          Radius.circular(10),
-                        ),
+                        borderRadius: dropdownRadius,
                         color: colors.background,
                         border: Border.all(style: BorderStyle.none),
                         boxShadow: <BoxShadow>[
@@ -310,7 +308,7 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         separatorBuilder: (BuildContext context, int index) =>
-            const SizedBox(width: 5),
+            const SizedBox(width: 8),
         itemCount: selected.length,
         itemBuilder: (BuildContext context, int index) {
           final ValueItem<T> item = selected[index];
@@ -319,30 +317,45 @@ class MultipleSearchDropDownState<T> extends State<MultipleSearchDropDown<T>> {
           if (custom != null) {
             return custom(item);
           }
+          // An M3 input chip: flat, 32 px tall, 8 px corners, 8 px between
+          // the label and the remove icon.
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 5),
-            child: Card(
-              color: colors.chipBackground,
-              elevation: bar.elevation,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: <Widget>[
-                    Text(item.label, style: colors.chipTextStyle),
-                    Semantics(
-                      button: true,
-                      label: '${_strings.removeChipTooltip} ${item.label}',
-                      child: InkWell(
-                        onTap: () => _controller.toggle(item),
-                        child: Icon(
-                          Icons.close,
-                          size: bar.boxMultiSelectedClearIconSize,
-                          color: colors.chipIconColor,
-                        ),
-                      ),
+            child: Center(
+              child: SizedBox(
+                height: 32,
+                child: Card(
+                  margin: EdgeInsets.zero,
+                  color: colors.chipBackground,
+                  elevation: 0,
+                  shape: const RoundedRectangleBorder(
+                    borderRadius: BorderRadius.all(Radius.circular(8)),
+                  ),
+                  child: Padding(
+                    padding: const EdgeInsetsDirectional.only(
+                      start: 12,
+                      end: 8,
                     ),
-                  ],
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: <Widget>[
+                        Text(item.label, style: colors.chipTextStyle),
+                        const SizedBox(width: 8),
+                        Semantics(
+                          button: true,
+                          label: '${_strings.removeChipTooltip} ${item.label}',
+                          child: InkWell(
+                            onTap: () => _controller.toggle(item),
+                            child: Icon(
+                              Icons.close,
+                              size: bar.boxMultiSelectedClearIconSize,
+                              color: colors.chipIconColor,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
               ),
             ),

@@ -5,6 +5,10 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 import '../support/harness.dart';
 
+/// The colour scheme the dropdown is drawn with.
+ColorScheme _scheme(WidgetTester tester) =>
+    Theme.of(tester.element(find.byType(SearchDropDown<int>))).colorScheme;
+
 void main() {
   group('a11y: single dropdown', () {
     testWidgets('arrow, clear, edit and delete have tooltips', (tester) async {
@@ -145,14 +149,8 @@ void main() {
         find.widgetWithText(DefaultListTile<int>, 'Banana'),
       );
       expect(row.selected && row.highlighted, isTrue);
-      expect(
-        _side(tester, 'Banana').color,
-        const SimpleOverlaySettings().highlightedItemBorderColor,
-      );
-      expect(
-        _background(tester, 'Banana'),
-        const SimpleOverlaySettings().selectedItemBackgroundColor,
-      );
+      expect(_side(tester, 'Banana').color, _scheme(tester).outline);
+      expect(_background(tester, 'Banana'), _scheme(tester).secondaryContainer);
 
       // Wrapping back onto the selected row keeps the cue.
       for (int i = 0; i < c.filteredItems.length; i++) {
@@ -209,16 +207,15 @@ void main() {
         expect(_side(tester, 'Uva'), BorderSide.none);
       });
 
-      testWidgets('defaults: hover colour and a black26 border', (
+      testWidgets('defaults: onSurface at 8% and an outline border', (
         tester,
       ) async {
-        const SimpleOverlaySettings settings = SimpleOverlaySettings();
-        await highlightBanana(tester, settings);
+        await highlightBanana(tester, const SimpleOverlaySettings());
         expect(
           _background(tester, 'Banana'),
-          settings.unselectedItemHoverColor,
+          _scheme(tester).onSurface.withAlpha(20),
         );
-        expect(_side(tester, 'Banana').color, Colors.black26);
+        expect(_side(tester, 'Banana').color, _scheme(tester).outline);
         expect(_background(tester, 'Uva'), Colors.transparent);
       });
 
@@ -240,7 +237,7 @@ void main() {
           tester.widget<Text>(_rowText('Banana')).style?.color,
           Colors.white,
         );
-        expect(_side(tester, 'Banana').color, dark.highlightedItemBorderColor);
+        expect(_side(tester, 'Banana').color, _scheme(tester).outline);
         expect(_background(tester, 'Uva'), Colors.transparent);
       });
 

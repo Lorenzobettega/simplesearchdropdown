@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
-///default loading color
+///The package green: the filled dialog buttons, and the 8.0.0 row spinner
+///(the getter default of [SimpleOverlaySettings.loadingColor]).
 const Color darkGreen = Color.fromARGB(255, 0, 67, 0);
 
 ///Class to hold all the customizations of the simple search overlay list.
@@ -58,8 +59,9 @@ class SimpleOverlaySettings {
   ///theme.
   final Color? customSelectedItemHoverColor;
 
-  ///The hover color of the selected item of the list (default: light grey;
-  ///under a dark theme `colorScheme.onSecondaryContainer` at 12%).
+  ///The hover color of the selected item of the list. Unset, the rows use
+  ///`colorScheme.onSecondaryContainer` at 12%; this getter then returns the
+  ///8.0.0 value, `Color.fromRGBO(224, 224, 224, 1)`.
   Color get selectedItemHoverColor =>
       customSelectedItemHoverColor ?? const Color.fromRGBO(224, 224, 224, 1);
 
@@ -67,26 +69,27 @@ class SimpleOverlaySettings {
   ///the theme.
   final Color? customSelectedItemBackgroundColor;
 
-  ///Selected item background color (default: `Colors.black38`; under a dark
-  ///theme `colorScheme.secondaryContainer`).
+  ///Selected item background color. Unset, the rows use
+  ///`colorScheme.secondaryContainer`; this getter then returns the 8.0.0
+  ///value, `Colors.black38`.
   Color get selectedItemBackgroundColor =>
       customSelectedItemBackgroundColor ?? Colors.black38;
 
-  ///Selected item TextStyle (default: black text; under a dark theme a style
-  ///equal to the default draws in `colorScheme.onSecondaryContainer`).
+  ///Selected item TextStyle (default: black text; a style equal to the
+  ///default draws in `colorScheme.onSecondaryContainer`).
   final TextStyle? selectedItemTextStyle;
 
-  ///Unselected droplist items TextStyle (default: `Colors.black45` text;
-  ///under a dark theme a style equal to the default draws in
-  ///`colorScheme.onSurfaceVariant`).
+  ///Unselected droplist items TextStyle (default: `Colors.black45` text; a
+  ///style equal to the default draws in `colorScheme.onSurface`).
   final TextStyle? unselectedItemTextStyle;
 
   ///The unselected item hover color set explicitly, or `null` to follow the
   ///theme.
   final Color? customUnselectedItemHoverColor;
 
-  ///The hover color of the unselected items of the list (default: light
-  ///grey; under a dark theme `colorScheme.onSurface` at 8%).
+  ///The hover color of the unselected items of the list. Unset, the rows use
+  ///`colorScheme.onSurface` at 8%; this getter then returns the 8.0.0 value,
+  ///`Color.fromRGBO(245, 245, 245, 1)`.
   Color get unselectedItemHoverColor =>
       customUnselectedItemHoverColor ?? const Color.fromRGBO(245, 245, 245, 1);
 
@@ -101,16 +104,17 @@ class SimpleOverlaySettings {
   final Color? customHighlightedItemBorderColor;
 
   ///Border of the row highlighted with the keyboard arrows, the selected row
-  ///included (default: `Colors.black26`; under a dark theme
-  ///`colorScheme.outline`).
+  ///included. Unset, the rows use `colorScheme.outline`; this getter then
+  ///returns the 8.0.0 value, `Colors.black26`.
   Color get highlightedItemBorderColor =>
       customHighlightedItemBorderColor ?? Colors.black26;
 
   ///The delete icon set explicitly, or `null` to follow the theme.
   final Icon? customDialogDeleteIcon;
 
-  ///The delete Icon in dropdown listview (default: red trash, 20; under a
-  ///dark theme in `colorScheme.error`).
+  ///The delete Icon in dropdown listview. Unset, the rows draw a 20 px trash
+  ///in `colorScheme.error`; this getter then returns the 8.0.0 icon, in
+  ///`Color.fromRGBO(183, 28, 28, 1)`.
   Icon get dialogDeleteIcon =>
       customDialogDeleteIcon ??
       const Icon(Icons.delete, color: Color.fromRGBO(183, 28, 28, 1), size: 20);
@@ -118,8 +122,9 @@ class SimpleOverlaySettings {
   ///The edit icon set explicitly, or `null` to follow the theme.
   final Icon? customDialogEditIcon;
 
-  ///The edit Icon in dropdown listview (default: black pencil, 20; under a
-  ///dark theme in `colorScheme.onSurfaceVariant`).
+  ///The edit Icon in dropdown listview. Unset, the rows draw a 20 px pencil
+  ///in `colorScheme.onSurfaceVariant`; this getter then returns the 8.0.0
+  ///icon, in `Colors.black`.
   Icon get dialogEditIcon =>
       customDialogEditIcon ??
       const Icon(Icons.edit, color: Colors.black, size: 20);
@@ -165,8 +170,9 @@ class SimpleOverlaySettings {
   ///The spinner color set explicitly, or `null` to follow the theme.
   final Color? customLoadingColor;
 
-  ///Color of the spinner a row shows while its callback runs (default:
-  ///[darkGreen]; under a dark theme `colorScheme.primary`).
+  ///Color of the spinner a row shows while its callback runs. Unset, the
+  ///rows use `colorScheme.primary`; this getter then returns the 8.0.0 value,
+  ///[darkGreen].
   Color get loadingColor => customLoadingColor ?? darkGreen;
 
   ///Size of that spinner, the size of the icons it replaces (default:`24`).

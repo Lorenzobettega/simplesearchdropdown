@@ -1,41 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
+/// The corner radius shared by the search bar, the multiple box and the open
+/// list (the dialogs use the same 12).
+const BorderRadius dropdownRadius = BorderRadius.all(Radius.circular(12));
+
 /// The stock settings, to tell a customised style from the default.
 const SimpleOverlaySettings _stockList = SimpleOverlaySettings();
 const SimpleSearchbarSettings _stockBar = SimpleSearchbarSettings();
-
-/// Whether unset colours come from the colour scheme: under a light theme
-/// they keep their fixed 8.0.0 values, so light apps look exactly as before.
-bool _followsScheme(ThemeData theme) => theme.brightness == Brightness.dark;
 
 /// `color` at [opacity], as Material state layers do.
 Color _layer(Color color, double opacity) =>
     color.withAlpha((opacity * 255).round());
 
+/// The fill of a raised container: in light, elevation is drawn by the
+/// shadow, so the container is the low tone (as an M3 elevated card); in
+/// dark, shadows barely show, so elevation is a lighter tone.
+Color _raisedSurface(ColorScheme scheme) =>
+    scheme.brightness == Brightness.light
+    ? scheme.surfaceContainerLow
+    : scheme.surfaceContainerHigh;
+
 /// The colours a search bar (or multiple box) is drawn with: each one set in
-/// [SimpleSearchbarSettings] wins; an unset one is the settings default under
-/// a light theme and a [ColorScheme] role under a dark one.
+/// [SimpleSearchbarSettings] wins; an unset one is a [ColorScheme] role, under
+/// a light theme and a dark one alike.
 @immutable
 class BarColors {
   /// Resolves [bar]'s colours for [theme].
   factory BarColors.of(SimpleSearchbarSettings bar, ThemeData theme) {
-    if (!_followsScheme(theme)) {
-      return BarColors._(
-        background: bar.backgroundColor,
-        hover: bar.hoverColor,
-        chipBackground: bar.boxMultiSelectedBackgroundColor,
-        chipTextStyle: bar.boxMultiSelectedTextStyle,
-        chipIconColor: bar.boxMultiSelectedClearIconColor,
-        hintStyle: bar.hintStyle,
-        shadow: Colors.grey,
-      );
-    }
     final ColorScheme scheme = theme.colorScheme;
     final TextStyle? chipText = bar.boxMultiSelectedTextStyle;
     final TextStyle? hint = bar.hintStyle;
     return BarColors._(
-      background: bar.customBackgroundColor ?? scheme.surfaceContainerHigh,
+      background: bar.customBackgroundColor ?? _raisedSurface(scheme),
       hover: bar.customHoverColor ?? _layer(scheme.onSurface, 0.08),
       chipBackground:
           bar.customBoxMultiSelectedBackgroundColor ??
@@ -52,7 +49,10 @@ class BarColors {
           : (hint ?? _stockBar.hintStyle ?? const TextStyle()).copyWith(
               color: scheme.onSurfaceVariant,
             ),
-      shadow: Colors.black,
+      // The 8.0.0 shadows, which already matched the M3 bar's elevation.
+      shadow: scheme.brightness == Brightness.light
+          ? Colors.grey
+          : Colors.black,
     );
   }
 
@@ -99,24 +99,6 @@ class ListColors {
     final bool stockPair =
         list.selectedItemTextStyle == _stockList.selectedItemTextStyle &&
         list.unselectedItemHoverColor == _stockList.unselectedItemHoverColor;
-    if (!_followsScheme(theme)) {
-      return ListColors._(
-        selectedBackground: list.selectedItemBackgroundColor,
-        selectedHover: list.selectedItemHoverColor,
-        unselectedHover: list.unselectedItemHoverColor,
-        highlightedBackground:
-            list.highlightedItemBackgroundColor ??
-            (stockPair
-                ? list.unselectedItemHoverColor
-                : list.selectedItemBackgroundColor),
-        highlightedBorder: list.highlightedItemBorderColor,
-        selectedTextStyle: list.selectedItemTextStyle,
-        unselectedTextStyle: list.unselectedItemTextStyle,
-        editIcon: list.dialogEditIcon,
-        deleteIcon: list.dialogDeleteIcon,
-        loading: list.loadingColor,
-      );
-    }
     final ColorScheme scheme = theme.colorScheme;
     final Color selectedBackground =
         list.customSelectedItemBackgroundColor ?? scheme.secondaryContainer;
@@ -139,7 +121,7 @@ class ListColors {
           : list.selectedItemTextStyle,
       unselectedTextStyle:
           list.unselectedItemTextStyle == _stockList.unselectedItemTextStyle
-          ? TextStyle(color: scheme.onSurfaceVariant)
+          ? TextStyle(color: scheme.onSurface)
           : list.unselectedItemTextStyle,
       editIcon:
           list.customDialogEditIcon ??

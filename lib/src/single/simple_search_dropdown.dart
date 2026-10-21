@@ -255,9 +255,7 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
               ],
           barElevation: WidgetStatePropertyAll<double>(bar.elevation),
           barShape: WidgetStatePropertyAll<OutlinedBorder>(bar.border),
-          viewShape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.all(Radius.circular(10)),
-          ),
+          viewShape: const RoundedRectangleBorder(borderRadius: dropdownRadius),
           barBackgroundColor: WidgetStatePropertyAll<Color>(colors.background),
           viewBackgroundColor: viewBackground,
           isFullScreen: list.openFullScreen,
