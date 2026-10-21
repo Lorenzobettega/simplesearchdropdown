@@ -13,7 +13,7 @@
 - `DialogButtonSettings.useThemeColors`: label in the theme's `onSurface` and border in its `outline` instead of `textColor` (used by the default cancel button).
 - `custom...` fields that tell whether a color was set (`null` follows the theme): `SimpleSearchbarSettings.customBackgroundColor`, `customHoverColor`, `customBoxMultiSelectedBackgroundColor`; `SimpleOverlaySettings.customSelectedItemBackgroundColor`, `customSelectedItemHoverColor`, `customUnselectedItemHoverColor`, `customHighlightedItemBorderColor`, `customDialogDeleteIcon`, `customDialogEditIcon`, `customLoadingColor`. The constructor parameters of those colors are now nullable; the getters keep their types and light values, so existing code compiles unchanged.
 - `SimpleOverlaySettings.loadingStrokeWidth` (default `2.5`) and `Loading.strokeWidth` (default: the indicator's own).
-- The example app follows the system dark mode.
+- The example app follows the system dark mode with a Material 3 theme seeded from `darkGreen`, in titled sections with 16/24 px spacing; its custom row (`PersonRow`: initial, name, id, theme colors at AA contrast) replaces the blue box, and the clear/delete callbacks show a SnackBar instead of printing.
 
 ### Performance
 Single dropdown (no behaviour change; counts from `test/single/rebuild_counts_test.dart`):

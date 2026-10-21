@@ -1,3 +1,5 @@
+// The "Print ..." buttons write to the console on purpose: they show what
+// the app reads back from the controllers.
 // ignore_for_file: avoid_print
 
 import 'package:flutter/material.dart';
@@ -10,26 +12,27 @@ void main() {
   runApp(const MyApp());
 }
 
+/// The app's Material 3 theme, seeded from the package's [darkGreen].
+ThemeData exampleTheme(Brightness brightness) => ThemeData(
+      colorScheme: ColorScheme.fromSeed(
+        seedColor: darkGreen,
+        brightness: brightness,
+      ),
+      useMaterial3: true,
+    );
+
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
-        useMaterial3: true,
-      ),
+      title: 'Simple Search Dropdown',
+      debugShowCheckedModeBanner: false,
+      theme: exampleTheme(Brightness.light),
       // Follows the system setting: the dropdowns and dialogs take their
       // surfaces from the theme.
-      darkTheme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.deepPurple,
-          brightness: Brightness.dark,
-        ),
-        useMaterial3: true,
-      ),
+      darkTheme: exampleTheme(Brightness.dark),
       home: const MyHomePage(),
     );
   }
@@ -109,8 +112,8 @@ class _MyHomePageState extends State<MyHomePage> {
         replaceItem(item, edited);
         syncSingle(edited: item, by: edited);
       },
-      onClearList: () => print('clear'),
-      onClearItem: (item) => print('item clear'),
+      onClearList: () => showMessage('Selection cleared'),
+      onClearItem: (item) => showMessage('Removed ${item.label}'),
     );
 
     customController = SearchDropDownController<Custom>(
@@ -118,7 +121,7 @@ class _MyHomePageState extends State<MyHomePage> {
       initialSelectedItem: selectedCustomItem,
       addMode: false,
       // Nothing else shows these items, so the controller's copy is enough.
-      onDeleteItem: (item) => print('deleted ${item.label}'),
+      onDeleteItem: (item) => showMessage('Deleted ${item.label}'),
       confirmDelete: true,
       updateSelectedItem: (item) => selectedCustomItem = item,
       sort: SortType.selectedFirst,
@@ -131,6 +134,22 @@ class _MyHomePageState extends State<MyHomePage> {
     multipleController.dispose();
     customController.dispose();
     super.dispose();
+  }
+
+  /// Confirms a callback with a short floating SnackBar.
+  void showMessage(String message) {
+    if (!mounted) {
+      return;
+    }
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(message),
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+        ),
+      );
   }
 
   void replaceItem(ValueItem item, ValueItem edited) {
@@ -174,124 +193,267 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+    final ColorScheme scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      body: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const SizedBox(height: 70),
-            TextButton(
-              onPressed: () => showDialog<void>(
-                context: context,
-                builder: (BuildContext context) => DialogTest(items: items),
-              ),
-              child: const Text('Open Dialog'),
-            ),
-            const SizedBox(height: 20),
-            SearchDropDown(
-              controller: singleController,
-              // This State creates and disposes the controllers.
-              disposeController: false,
-              searchBarSettings: const SimpleSearchbarSettings(
-                showKeyboardOnTap: false,
-                actions: [Icon(Icons.abc)],
-                showDivider: true,
-                clearOnClose: true,
-              ),
-              // A custom row: the edit and delete buttons stay beside it.
-              overlayListSettings: SimpleOverlaySettings(
-                itemWidgetBuilder: (item) => Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 5,
-                  ),
-                  color: Colors.blue,
-                  child: Text(item.label),
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-            MultipleSearchDropDown(controller: multipleController),
-            const SizedBox(height: 20),
-            SearchDropDown<Custom>(
-              controller: customController,
-              disposeController: false,
-              searchBarSettings: const SimpleSearchbarSettings(
-                showArrow: false,
-              ),
-            ),
-            const SizedBox(height: 20),
-            _buttons([
-              (
-                'Print Single Result',
-                () {
-                  print(selectedSingleItem);
-                  print(singleController.localSearchController.text);
-                  print(singleController.selectedItem);
+      appBar: AppBar(title: const Text('Simple Search Dropdown')),
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 560),
+              child: LayoutBuilder(
+                builder: (BuildContext context, BoxConstraints box) {
+                  final double width = box.maxWidth;
+                  return Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _Section(
+                        title: 'Single selection',
+                        description: 'Add, edit and delete with slow (2 s) '
+                            'callbacks. Starts disabled.',
+                        dropdown: SearchDropDown(
+                          controller: singleController,
+                          // This State creates and disposes the controllers.
+                          disposeController: false,
+                          searchBarSettings: SimpleSearchbarSettings(
+                            dropdownWidth: width,
+                            showKeyboardOnTap: false,
+                            // `actions` replaces the arrow and clear icons.
+                            actions: const [
+                              Padding(
+                                padding: EdgeInsets.only(right: 8),
+                                child: Icon(Icons.search),
+                              ),
+                            ],
+                            showDivider: true,
+                            clearOnClose: true,
+                          ),
+                        ),
+                        actions: [
+                          (
+                            'Enable/Disable Single Selection',
+                            singleController.toggleEnabled,
+                          ),
+                          (
+                            'Force Single Selection',
+                            () => singleController.forceSelection('one more'),
+                          ),
+                          (
+                            'Clear Single Selection',
+                            singleController.resetSelection,
+                          ),
+                          (
+                            'Print Single Result',
+                            () {
+                              print(selectedSingleItem);
+                              print(
+                                singleController.localSearchController.text,
+                              );
+                              print(singleController.selectedItem);
+                            },
+                          ),
+                          (
+                            'Print new Single Selection',
+                            () => print(singleController.selectedItem?.label),
+                          ),
+                        ],
+                      ),
+                      _Section(
+                        title: 'Multiple selection',
+                        description:
+                            'Shares its list with the single dropdown.',
+                        dropdown: MultipleSearchDropDown(
+                          controller: multipleController,
+                          searchBarSettings:
+                              SimpleSearchbarSettings(dropdownWidth: width),
+                        ),
+                        actions: [
+                          (
+                            'Force Multiple Selection',
+                            () => multipleController.forceSelection('one more'),
+                          ),
+                          (
+                            'Clear Multiple Selection',
+                            multipleController.resetSelection,
+                          ),
+                          (
+                            'Print Multiple Result',
+                            () => print(selectedMultipleItems),
+                          ),
+                        ],
+                      ),
+                      _Section(
+                        title: 'Custom type and row',
+                        description: 'SearchDropDown<Custom> with a custom '
+                            'itemWidgetBuilder.',
+                        dropdown: SearchDropDown<Custom>(
+                          controller: customController,
+                          disposeController: false,
+                          searchBarSettings: SimpleSearchbarSettings(
+                            dropdownWidth: width,
+                            showArrow: false,
+                          ),
+                          overlayListSettings: SimpleOverlaySettings(
+                            dialogHeight: 280,
+                            // The row's own text colours need a selected
+                            // fill they contrast with, light and dark.
+                            selectedItemBackgroundColor:
+                                scheme.secondaryContainer,
+                            itemWidgetBuilder: (item) => PersonRow(
+                              item: item,
+                            ),
+                          ),
+                        ),
+                        actions: [
+                          (
+                            'Print Custom Result',
+                            () {
+                              final ValueItem<Custom>? custom =
+                                  selectedCustomItem;
+                              print(custom);
+                              if (custom != null) {
+                                print('name: ${custom.value!.name}');
+                                print(custom.runtimeType);
+                              }
+                            },
+                          ),
+                          (
+                            'Clear Custom Selection',
+                            customController.resetSelection,
+                          ),
+                          ('Reset custom list', resetCustom),
+                        ],
+                      ),
+                      _Section(
+                        title: 'Inside a dialog',
+                        description: 'A read-only dropdown over the shared '
+                            'list.',
+                        actions: [
+                          (
+                            'Open Dialog',
+                            () => showDialog<void>(
+                                  context: context,
+                                  builder: (BuildContext context) =>
+                                      DialogTest(items: items),
+                                ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  );
                 },
               ),
-              (
-                'Print Multiple Result',
-                () => print(selectedMultipleItems),
-              ),
-            ]),
-            _buttons([
-              ('Clear Single Selection', singleController.resetSelection),
-              ('Clear Multiple Selection', multipleController.resetSelection),
-            ]),
-            _buttons([
-              (
-                'Print Custom Result',
-                () {
-                  final ValueItem<Custom>? custom = selectedCustomItem;
-                  print(custom);
-                  if (custom != null) {
-                    print('name: ${custom.value!.name}');
-                    print(custom.runtimeType);
-                  }
-                },
-              ),
-              ('Clear Custom Selection', customController.resetSelection),
-            ]),
-            _buttons([
-              (
-                'Force Single Selection',
-                () => singleController.forceSelection('one more'),
-              ),
-              (
-                'Force Multiple Selection',
-                () => multipleController.forceSelection('one more'),
-              ),
-            ]),
-            _buttons([
-              (
-                'Enable/Disable Single Selection',
-                singleController.toggleEnabled,
-              ),
-            ]),
-            _buttons([
-              (
-                'Print new Single Selection',
-                () => print(singleController.selectedItem?.label),
-              ),
-            ]),
-            _buttons([('Reset custom list', resetCustom)]),
-          ],
+            ),
+          ),
         ),
       ),
     );
   }
+}
 
-  /// A centred row of text buttons, followed by a gap.
-  Widget _buttons(List<(String, VoidCallback)> buttons) {
+/// A custom list row: an initial in a circle, the name and the id below it.
+/// Its text colours come from the theme, so it reads in light and dark.
+class PersonRow extends StatelessWidget {
+  const PersonRow({required this.item, super.key});
+
+  final ValueItem item;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    final ColorScheme scheme = theme.colorScheme;
+    final Object? value = item.value;
+    final String label = item.label;
     return Padding(
-      padding: const EdgeInsets.only(bottom: 20),
-      child: Wrap(
-        alignment: WrapAlignment.center,
-        spacing: 10,
+      padding: const EdgeInsets.symmetric(vertical: 6),
+      child: Row(
         children: [
-          for (final (String label, VoidCallback onPressed) in buttons)
-            TextButton(onPressed: onPressed, child: Text(label)),
+          CircleAvatar(
+            radius: 16,
+            backgroundColor: scheme.primaryContainer,
+            foregroundColor: scheme.onPrimaryContainer,
+            child: Text(
+              label.isEmpty ? '?' : label.characters.first.toUpperCase(),
+              style: theme.textTheme.labelLarge?.copyWith(
+                color: scheme.onPrimaryContainer,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.textTheme.bodyLarge?.copyWith(
+                    color: scheme.onSurface,
+                  ),
+                ),
+                if (value is Custom)
+                  Text(
+                    'ID ${value.id}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: scheme.onSurfaceVariant,
+                    ),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// A titled block of the demo page: a description, the dropdown and its
+/// demo buttons, with the page's standard spacing.
+class _Section extends StatelessWidget {
+  const _Section({
+    required this.title,
+    required this.description,
+    required this.actions,
+    this.dropdown,
+  });
+
+  final String title;
+  final String description;
+  final Widget? dropdown;
+  final List<(String, VoidCallback)> actions;
+
+  @override
+  Widget build(BuildContext context) {
+    final ThemeData theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(top: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(title, style: theme.textTheme.titleMedium),
+          const SizedBox(height: 4),
+          Text(
+            description,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurfaceVariant,
+            ),
+          ),
+          if (dropdown != null) ...[
+            const SizedBox(height: 16),
+            dropdown!,
+          ],
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final (String label, VoidCallback onPressed) in actions)
+                OutlinedButton(onPressed: onPressed, child: Text(label)),
+            ],
+          ),
         ],
       ),
     );

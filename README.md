@@ -183,6 +183,49 @@ Both are `ChangeNotifier`s: listen to them, and call `dispose()` when done
   icons, loading indicator, full screen.
 - `DialogSettings`: delete confirmation, invalid item and edit dialogs.
 
+### Dialogs
+
+The three dialogs share one layout: a semibold title, supporting text in the
+theme's `onSurfaceVariant`, and one row of equal-width buttons (48 high,
+radius 12, 12 apart) that does not wrap on a phone. Editar and OK are filled
+`darkGreen`, Apagar is filled red, Cancelar is outlined in the theme colors.
+The edit dialog has one outlined field that starts with the label selected;
+Enter confirms.
+
+The delete confirmation names the item: `Apagar item?` and
+`“label” será apagado.` (`SearchDropDownStrings.confirmDeleteItemTitle` and
+`confirmDeleteItemContent`, where `{item}` becomes the label in bold). Set
+`DialogSettings(showItemLabel: false)` for the generic `Tem certeza?` dialog;
+if you customise `confirmDeleteTitle`, set `confirmDeleteItemTitle` too. When
+you show the dialogs yourself, `WarningDialog`, `DefaultDialogTitle` and
+`DefaultDialogContent` take the label as `itemLabel`.
+
+### Dark theme
+
+A color left unset in `SimpleSearchbarSettings` or `SimpleOverlaySettings`
+follows the app theme: under a light theme it keeps its fixed default (white
+bar, grey rows, black icons, `darkGreen` spinner), so light apps look as
+before; under a dark theme it comes from `Theme.of(context).colorScheme`:
+
+| Part | Dark default |
+|---|---|
+| bar, multiple box and list | `surfaceContainerHigh` |
+| hint (a `hintStyle` without a color) | `onSurfaceVariant` |
+| selected row and chips | `secondaryContainer` with `onSecondaryContainer` text |
+| other rows | `onSurfaceVariant` text, `onSurface` at 8% on hover and keyboard highlight |
+| keyboard highlight border | `outline` |
+| edit / delete icons | `onSurfaceVariant` / `error` |
+| row spinner | `primary` |
+
+Every text pair keeps WCAG AA contrast (4.5:1) on Flutter's default dark
+scheme and on one seeded from `darkGreen`. A color you set always wins; its
+`custom...` field (e.g. `SimpleSearchbarSettings.customBackgroundColor`) tells
+whether one was set. A text style equal to the light default
+(`selectedItemTextStyle`, `unselectedItemTextStyle`) counts as unset.
+
+The row spinner is the size of the icons it replaces (`loadingSize: 24`,
+`loadingStrokeWidth: 2.5`), and the row does not move while it shows.
+
 Texts default to Portuguese. Use `SearchDropDownStrings.en()`, or your own
 texts, per widget (`strings:`) or for the whole app:
 

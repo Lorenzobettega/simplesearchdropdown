@@ -5,6 +5,7 @@
 // The app copies its initial data, so every test starts from the same state.
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -96,8 +97,10 @@ Finder _rowIcon(String label, IconData icon) => find.descendant(
 Finder _chip(String label) =>
     find.descendant(of: _multiple, matching: find.text(label));
 
+/// Taps the demo button labelled [text].
 Future<void> _tapButton(WidgetTester tester, String text) async {
-  await tester.tap(find.widgetWithText(TextButton, text));
+  await tester.ensureVisible(find.widgetWithText(OutlinedButton, text));
+  await tester.tap(find.widgetWithText(OutlinedButton, text));
   await tester.pumpAndSettle();
 }
 
@@ -135,6 +138,17 @@ Future<List<String>> _capturePrints(Future<void> Function() body) async {
   );
   return lines;
 }
+
+/// WCAG contrast ratio of [a] on [b].
+double _contrast(Color a, Color b) {
+  final double la = a.computeLuminance();
+  final double lb = b.computeLuminance();
+  return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
+}
+
+/// The SnackBar showing [message].
+Finder _snackBar(String message) =>
+    find.descendant(of: find.byType(SnackBar), matching: find.text(message));
 
 /// The vertical list of suggestions of the open single search view.
 Finder get _viewList => find
@@ -223,13 +237,13 @@ void main() {
       );
     });
 
-    testWidgets('first single uses actions (Icons.abc) as bar trailing', (
+    testWidgets('first single uses actions (Icons.search) as bar trailing', (
       tester,
     ) async {
       await _pumpApp(tester);
 
       expect(
-        find.descendant(of: _single, matching: find.byIcon(Icons.abc)),
+        find.descendant(of: _single, matching: find.byIcon(Icons.search)),
         findsOneWidget,
       );
       expect(
@@ -241,22 +255,77 @@ void main() {
     });
 
     testWidgets(
-        'the custom row builder draws blue rows with edit and delete '
-        'buttons beside them', (tester) async {
+        'the custom dropdown draws PersonRow rows (initial, name, id) with '
+        'the delete button beside them', (tester) async {
       await _pumpApp(tester);
-      await _enableAndOpenSingle(tester);
+      await _openSingleView(tester, _custom);
 
+      final Finder peter = find.byWidgetPredicate(
+        (w) => w is PersonRow && w.item.label == 'Peter',
+      );
+      expect(peter, findsOneWidget);
       expect(
-        find.ancestor(
-          of: find.text('Lorenzo'),
-          matching: find.byWidgetPredicate(
-            (w) => w is Container && w.color == Colors.blue,
-          ),
-        ),
+        find.descendant(of: peter, matching: find.byType(CircleAvatar)),
         findsOneWidget,
       );
-      expect(_rowIcon('Lorenzo', Icons.edit), findsOneWidget);
-      expect(_rowIcon('Lorenzo', Icons.delete), findsOneWidget);
+      expect(
+          find.descendant(of: peter, matching: find.text('P')), findsOneWidget);
+      expect(find.descendant(of: peter, matching: find.text('ID 1')),
+          findsOneWidget);
+      expect(_rowIcon('Peter', Icons.delete), findsOneWidget);
+      expect(_rowIcon('Peter', Icons.edit), findsNothing,
+          reason: 'editMode is off');
+    });
+
+    for (final Brightness brightness in Brightness.values) {
+      testWidgets('PersonRow text keeps AA contrast ($brightness)',
+          (tester) async {
+        tester.platformDispatcher.platformBrightnessTestValue = brightness;
+        addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+        await _pumpApp(tester);
+        await _openSingleView(tester, _custom);
+
+        final ColorScheme scheme = exampleTheme(brightness).colorScheme;
+        final Color? name = tester
+            .widget<Text>(
+              find.descendant(
+                of: find.byType(PersonRow),
+                matching: find.text('Peter'),
+              ),
+            )
+            .style
+            ?.color;
+        final Color? id = tester.widget<Text>(find.text('ID 1')).style?.color;
+        expect(name, scheme.onSurface);
+        expect(id, scheme.onSurfaceVariant);
+        // Lorenzo is selected: its row is filled with secondaryContainer.
+        final Color list = brightness == Brightness.dark
+            ? scheme.surfaceContainerHigh
+            : Colors.white;
+        for (final Color background in <Color>[
+          list,
+          scheme.secondaryContainer,
+        ]) {
+          expect(_contrast(name!, background), greaterThanOrEqualTo(4.5));
+          expect(_contrast(id!, background), greaterThanOrEqualTo(4.5));
+        }
+      });
+    }
+
+    testWidgets('a dark system theme gives dark dropdown surfaces',
+        (tester) async {
+      tester.platformDispatcher.platformBrightnessTestValue = Brightness.dark;
+      addTearDown(tester.platformDispatcher.clearPlatformBrightnessTestValue);
+      await _pumpApp(tester);
+
+      final ColorScheme scheme = exampleTheme(Brightness.dark).colorScheme;
+      expect(
+        tester
+            .widget<SearchBar>(_barOf(_custom))
+            .backgroundColor!
+            .resolve(<WidgetState>{}),
+        scheme.surfaceContainerHigh,
+      );
     });
 
     testWidgets(
@@ -583,7 +652,8 @@ void main() {
       });
 
       expect(tester.takeException(), isNull);
-      expect(printed, <String>['deleted Reset 1']);
+      expect(printed, isEmpty, reason: 'no console output');
+      expect(_snackBar('Deleted Reset 1'), findsOneWidget);
       expect(find.byType(AlertDialog), findsNothing);
       expect(_labels(_customController(tester).items), <String>['Reset 2']);
       expect(_viewItem('Reset 1'), findsNothing);
@@ -668,7 +738,8 @@ void main() {
         );
         await tester.pumpAndSettle();
       });
-      expect(itemCleared, <String>['item clear']);
+      expect(itemCleared, isEmpty, reason: 'no console output');
+      expect(_snackBar('Removed one more'), findsOneWidget);
       expect(_chip('one more'), findsNothing);
 
       await _tapButton(tester, 'Force Multiple Selection');
@@ -678,7 +749,9 @@ void main() {
         );
         await tester.pumpAndSettle();
       });
-      expect(listCleared, <String>['clear']);
+      expect(listCleared, isEmpty, reason: 'no console output');
+      expect(_snackBar('Selection cleared'), findsOneWidget);
+      expect(_snackBar('Removed one more'), findsNothing);
       expect(_chip('one more'), findsNothing);
     });
   });
