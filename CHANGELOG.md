@@ -6,7 +6,6 @@
 - New Features: Added app-wide localizable strings (SearchDropDownStrings), case- and accent-insensitive sorting, expanded multiple-dropdown editing capabilities, and automatic scrolling to the selected item upon opening.
 - Bug Fixes & Stability: Resolved edge cases involving filtering after CRUD operations, async callback handling, multiple selection synchronization, nested navigator dialog pop behavior, and SearchController disposal lifecycles.
 - New option: `SimpleSearchbarSettings.selectAllOnOpen` (single dropdown, default `false`) opens the view with the selected label fully selected.
-- Migration: requires Flutter 3.32+; the 7.x → 8.0 replacement table is in the README, "Migrating from 7.x".
 
 ## [7.8.0] - 2026-04-03.
 - Added `caseSensitive` parameter to the controller. It defines if the search should be case sensitive (default: `false`).
