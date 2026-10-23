@@ -262,7 +262,6 @@ void main() {
           _inAddRow(find.byType(CircularProgressIndicator)),
           findsOneWidget,
         );
-        // Hidden behind the spinner, keeping its place (8.0.1).
         expect(find.text('Criar').hitTestable(), findsNothing);
         expect(c.selectedItem, isNull);
         expect(c.localSearchController.isOpen, isTrue);
@@ -546,7 +545,6 @@ void main() {
       await tester.pump();
 
       expect(_spinnerIn('Banana'), findsOneWidget);
-      // Hidden behind the spinner, keeping its place (8.0.1).
       expect(
         inRow<int>('Banana', find.byIcon(Icons.delete)).hitTestable(),
         findsNothing,
@@ -782,7 +780,6 @@ void main() {
         expect(find.byType(EditDialog), findsOneWidget);
         expect(_inEditDialog(find.text('Editar item')), findsOneWidget);
         // Only the field, prefilled (B2), shows the label: no line above it
-        // (8.0.1), and the field label is not repeated as a hint.
         expect(_inEditDialog(find.text('Banana')), findsOneWidget);
         expect(_editField(tester).controller?.text, 'Banana');
         expect(_editField(tester).decoration?.hintText, isNull);
@@ -874,8 +871,6 @@ void main() {
         await _tapEdit(tester, 'Banana');
 
         expect(_spinnerIn('Banana'), findsOneWidget);
-        // Hidden behind the spinner, keeping its place (8.0.1); the dialog
-        // barrier would hide it from hit tests anyway, so read the flag.
         expect(_hidden(inRow<int>('Banana', find.byIcon(Icons.edit))), isTrue);
 
         await tester.tap(_inDialog(find.text('Cancelar')));
@@ -1185,7 +1180,6 @@ void main() {
 
         expect(_inEditDialog(find.text('Rename')), findsOneWidget);
         expect(find.text('Editar item'), findsNothing);
-        // The field prefilled with the label (B2), shown once (8.0.1).
         expect(_inEditDialog(find.text('Banana')), findsOneWidget);
         expect(_editField(tester).controller?.text, 'Banana');
         expect(_editField(tester).decoration?.labelText, 'New name');

@@ -887,7 +887,7 @@ class SearchDropDownController<T> extends DropDownControllerBase {
 
   /// Prepares the list when the search view opens: shows every item of
   /// [items] (the selected label is not a query).
-  void onSearchOpen() {
+  void onSearchOpen({bool selectAllOnOpen = false}) {
     _viewOpen = true;
     _filterArmed = true;
     _highlight.value = -1;
@@ -901,9 +901,14 @@ class SearchDropDownController<T> extends DropDownControllerBase {
       // The caret at the end, where typing replaces the label (see
       // [_onTextChanged]); no selection, which would flash its highlight.
       _editText(
-        () => localSearchController.selection = TextSelection.collapsed(
-          offset: text.length,
-        ),
+        () => selectAllOnOpen
+            ? localSearchController.selection = TextSelection(
+                baseOffset: 0,
+                extentOffset: text.length,
+              )
+            : localSearchController.selection = TextSelection.collapsed(
+                offset: text.length,
+              ),
       );
     }
   }

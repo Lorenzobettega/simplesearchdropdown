@@ -1,4 +1,4 @@
-// Theme-derived defaults (8.0.1): an unset colour follows the ColorScheme
+// Theme-derived defaults: an unset colour follows the ColorScheme
 // under a light theme and a dark one alike, while the settings getters keep
 // the 8.0.0 values (to set them back explicitly); a colour set in the
 // settings always wins. Also the AA contrast of the default pairs on four

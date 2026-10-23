@@ -145,7 +145,9 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
   void _onOpen() {
     _unfocusWindow?.cancel();
     _openedBy = _controller;
-    _controller.onSearchOpen();
+    _controller.onSearchOpen(
+      selectAllOnOpen: widget.searchBarSettings.selectAllOnOpen,
+    );
   }
 
   void _onClose() {

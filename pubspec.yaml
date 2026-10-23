@@ -24,7 +24,7 @@ screenshots:
   - description: Multiple selection dropdown in a dark theme.
     path: doc/screenshots/multiple_dark.webp
 
-version: 8.0.1
+version: 8.0.0
 
 environment:
   sdk: '>=3.8.0 <4.0.0'

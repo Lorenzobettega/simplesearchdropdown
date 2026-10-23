@@ -452,8 +452,6 @@ void main() {
       final counters = _Counters();
       final c = await _pumpPerf(tester, counters);
       final int before = counters.bar;
-      // 8.0.1: only `enabled` rebuilds the bar (a selection no longer does,
-      // see test/single/rebuild_counts_test.dart).
       c.enabled = false;
       await tester.pumpAndSettle();
       expect(counters.bar - before, greaterThanOrEqualTo(1));

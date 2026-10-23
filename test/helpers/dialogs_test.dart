@@ -147,8 +147,6 @@ void main() {
       testWidgets('actionsAlignment center centres fixed-width buttons', (
         tester,
       ) async {
-        // Buttons without customWidth fill the row (8.0.1), so alignment
-        // only moves buttons with a fixed width.
         const DialogButtonSettings fixed = DialogButtonSettings(
           'b',
           customWidth: 80,

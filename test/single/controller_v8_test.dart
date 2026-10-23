@@ -123,8 +123,6 @@ void main() {
 
       final int beforeList = count;
       c.updateListItems(numberedItems(3), true);
-      // A reset (shouldReset or a selection) and the new list: one
-      // notification (8.0.1; 8.0.0 sent two).
       expect(count - beforeList, 1);
       expect(c.selectedItem, isNull);
 

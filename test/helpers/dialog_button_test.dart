@@ -1,6 +1,6 @@
 // DialogButton renders every DialogButtonSettings field, copyWith keeps the
 // fields it does not replace, and the default*ButtonSettings constants keep
-// their values (8.0.1: filled Editar/OK, outlined theme-coloured Cancelar,
+// their values (8.0.0: filled Editar/OK, outlined theme-coloured Cancelar,
 // 48 high, radius 12, no fixed width). The rendered tests read the box, the TextButton's
 // Material, its padding and the painted label and icon.
 

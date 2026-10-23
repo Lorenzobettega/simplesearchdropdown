@@ -61,7 +61,7 @@ dark theme. All taken from the [example app](example/lib/main.dart)
 
 ```yaml
 dependencies:
-  simple_search_dropdown: ^8.0.1
+  simple_search_dropdown: ^8.0.0
 ```
 
 ```dart
@@ -263,7 +263,7 @@ you show the dialogs yourself, `WarningDialog`, `DefaultDialogTitle` and
 
 A color left unset in `SimpleSearchbarSettings` or `SimpleOverlaySettings`
 comes from `Theme.of(context).colorScheme`, under a light theme and a dark one
-alike (since 8.0.1; 8.0.0 drew fixed light colors under a light theme):
+alike:
 
 | Part | Default |
 |---|---|

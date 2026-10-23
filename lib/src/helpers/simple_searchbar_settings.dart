@@ -36,6 +36,7 @@ class SimpleSearchbarSettings {
     this.keyboardType,
     this.textInputAction,
     this.showDivider = false,
+    this.selectAllOnOpen = false,
   }) : customHint = hint,
        customBackgroundColor = backgroundColor,
        customHoverColor = hoverColor,
@@ -155,6 +156,9 @@ class SimpleSearchbarSettings {
 
   ///If true, a divider between the searchbar and the list of items will appear (default:false).
   final bool showDivider;
+
+  ///Opens with the full string selected (default: `false`).
+  final bool selectAllOnOpen;
 }
 
 ///The default settings for the SimpleSearchbar.
