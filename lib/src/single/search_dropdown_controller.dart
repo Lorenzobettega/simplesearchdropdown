@@ -312,13 +312,41 @@ class SearchDropDownController<T> extends DropDownControllerBase {
 
   // ------------------------------------------------------------- filtering
 
+  /// The field's selection before its latest change: typing with the caret
+  /// still at the end of the untouched label replaces the label.
+  TextSelection _caret = const TextSelection.collapsed(offset: -1);
+
   void _onTextChanged() {
+    final TextEditingValue value = localSearchController.value;
     final String? untouched = _untouchedLabel;
-    if (untouched != null && localSearchController.text != untouched) {
+    if (untouched != null && value.text != untouched) {
       _untouchedLabel = null;
+      final String? typed =
+          _viewOpen &&
+              _caret == TextSelection.collapsed(offset: untouched.length)
+          ? _typedAtEnd(untouched, value.text)
+          : null;
+      if (typed != null) {
+        // A key typed at the caret replaces the label, as if it were
+        // selected, without a selection highlight flashing on open and
+        // close. The write re-enters this listener, which filters.
+        localSearchController.value = TextEditingValue(
+          text: typed,
+          selection: TextSelection.collapsed(offset: typed.length),
+        );
+        return;
+      }
     }
+    _caret = value.selection;
     _followText();
   }
+
+  /// What was typed at the end of [label] to give [text], or `null` for any
+  /// other change (a deletion, a replaced value, an edit inside the label).
+  static String? _typedAtEnd(String label, String text) =>
+      text.length > label.length && text.startsWith(label)
+      ? text.substring(label.length)
+      : null;
 
   /// Re-filters by the field text: in the open view, or while closed once
   /// filtering is armed (7.x), except for the label [selectItem] writes.
@@ -870,11 +898,11 @@ class SearchDropDownController<T> extends DropDownControllerBase {
     // Every change to [items] already rebuilt the base (see [_lastQuery]).
     _applyFilter();
     if (showsSelection) {
-      // Typing replaces the selected label instead of appending to it.
+      // The caret at the end, where typing replaces the label (see
+      // [_onTextChanged]); no selection, which would flash its highlight.
       _editText(
-        () => localSearchController.selection = TextSelection(
-          baseOffset: 0,
-          extentOffset: text.length,
+        () => localSearchController.selection = TextSelection.collapsed(
+          offset: text.length,
         ),
       );
     }

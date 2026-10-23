@@ -43,29 +43,8 @@ Future<void> _pump<T>(
   ),
 );
 
-Finder _row<T>(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<T> && w.item.label == label,
-);
-
 DefaultListTile<T> _tile<T>(WidgetTester tester, String label) =>
-    tester.widget<DefaultListTile<T>>(_row<T>(label));
-
-List<String> _rowLabels<T>(WidgetTester tester) => tester
-    .widgetList<DefaultListTile<T>>(find.byType(DefaultListTile<T>))
-    .map((t) => t.item.label)
-    .toList();
-
-Future<void> _tapRow<T>(WidgetTester tester, String label) async {
-  await tester.tap(
-    find.descendant(of: _row<T>(label), matching: find.byType(TextButton)),
-  );
-  await tester.pumpAndSettle();
-}
-
-Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyEvent(key);
-  await tester.pumpAndSettle();
-}
+    tester.widget<DefaultListTile<T>>(rowTile<T>(label));
 
 Future<void> _closeWithArrow(WidgetTester tester) async {
   await tester.tap(find.byIcon(Icons.arrow_drop_up));
@@ -74,7 +53,7 @@ Future<void> _closeWithArrow(WidgetTester tester) async {
 
 Future<void> _edit<T>(WidgetTester tester, String label, String text) async {
   await tester.tap(
-    find.descendant(of: _row<T>(label), matching: find.byIcon(Icons.edit)),
+    find.descendant(of: rowTile<T>(label), matching: find.byIcon(Icons.edit)),
   );
   await tester.pump();
   await tester.pump(const Duration(milliseconds: 400));
@@ -93,9 +72,6 @@ Future<void> _edit<T>(WidgetTester tester, String label, String text) async {
   );
   await tester.pumpAndSettle();
 }
-
-List<String> _labels<T>(Iterable<ValueItem<T>> items) =>
-    items.map((e) => e.label).toList();
 
 /// A value without `==` (identity only), like the example's `Custom`.
 class _Opaque {
@@ -127,17 +103,17 @@ void main() {
       final c = _ctrl(numberedItems(4), calls: calls);
       await _pump(tester, c);
       await openSingle(tester);
-      await _tapRow<int>(tester, 'Item 2');
+      await tapSingleRow<int>(tester, 'Item 2');
       await openSingle(tester);
       // D1: every item is listed.
-      expect(_labels(c.filteredItems), hasLength(4));
+      expect(labelsOf(c.filteredItems), hasLength(4));
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(c.selectedItem?.label, 'Item 2');
       expect(c.localSearchController.text, 'Item 2');
       expect(c.localSearchController.isOpen, isFalse);
-      expect(_labels(calls.whereType<ValueItem<int>>()), <String>[
+      expect(labelsOf(calls.whereType<ValueItem<int>>()), <String>[
         'Item 2',
         'Item 2',
       ]);
@@ -149,7 +125,7 @@ void main() {
       final c = _ctrl(numberedItems(4));
       await _pump(tester, c);
       await openSingle(tester);
-      await _tapRow<int>(tester, 'Item 2');
+      await tapSingleRow<int>(tester, 'Item 2');
       await openSingle(tester);
 
       await tester.testTextInput.receiveAction(TextInputAction.done);
@@ -164,14 +140,14 @@ void main() {
       final c = _ctrl(numberedItems(4));
       await _pump(tester, c);
       await openSingle(tester);
-      await _tapRow<int>(tester, 'Item 2');
+      await tapSingleRow<int>(tester, 'Item 2');
       await openSingle(tester);
 
       await typeInSingle(tester, 'Item');
       await typeInSingle(tester, 'Item 2');
-      expect(_labels(c.filteredItems), <String>['Item 2']);
+      expect(labelsOf(c.filteredItems), <String>['Item 2']);
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
       expect(c.selectedItem?.label, 'Item 2');
     });
 
@@ -180,12 +156,12 @@ void main() {
       final c = _ctrl(items, initial: items[1]);
       addTearDown(c.dispose);
       c.onSearchOpen();
-      expect(_labels(c.filteredItems), hasLength(5), reason: 'D1');
+      expect(labelsOf(c.filteredItems), hasLength(5), reason: 'D1');
 
       c.localSearchController.text = 'Ban';
       c.localSearchController.text = 'Banana';
 
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
     });
 
     testWidgets('Enter on reopen with a selection outside the list does '
@@ -198,9 +174,9 @@ void main() {
       );
       await _pump(tester, c);
       await openSingle(tester);
-      expect(_labels(c.filteredItems), hasLength(3), reason: 'D1');
+      expect(labelsOf(c.filteredItems), hasLength(3), reason: 'D1');
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(c.selectedItem?.label, 'Kiwi');
       expect(calls, isEmpty);
@@ -220,10 +196,10 @@ void main() {
       await _pump(tester, c);
       await openSingle(tester);
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(c.selectedItem?.label, 'Item 7');
-      expect(_labels(calls.whereType<ValueItem<int>>()), <String>['Item 7']);
+      expect(labelsOf(calls.whereType<ValueItem<int>>()), <String>['Item 7']);
     });
   });
 
@@ -343,7 +319,7 @@ void main() {
 
       expect(c.selectedItem?.label, 'Banana2');
       expect(sel.single?.label, 'Banana2');
-      expect(_labels(c.items), <String>['Apple', 'Banana2']);
+      expect(labelsOf(c.items), <String>['Apple', 'Banana2']);
       expect(c.selectedIndex, isNot(-1));
     });
 
@@ -371,15 +347,17 @@ void main() {
 
       expect(c.selectedItem?.label, 'Ana2');
       expect(c.clearVisible, isTrue, reason: 'as selectItem');
-      expect(_labels(selections.whereType<ValueItem<int>>()), <String>['Ana2']);
+      expect(labelsOf(selections.whereType<ValueItem<int>>()), <String>[
+        'Ana2',
+      ]);
       expect(c.localSearchController.isOpen, isTrue);
       expect(c.localSearchController.text, 'Ana2');
-      expect(_labels(c.filteredItems), <String>['Ana2', 'Banana', 'Uva']);
-      expect(_rowLabels<int>(tester), <String>['Ana2', 'Banana', 'Uva']);
+      expect(labelsOf(c.filteredItems), <String>['Ana2', 'Banana', 'Uva']);
+      expect(rowLabels<int>(tester), <String>['Ana2', 'Banana', 'Uva']);
       expect(_tile<int>(tester, 'Ana2').selected, isTrue);
 
       // The new label is not a query: Enter keeps it (F4).
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
       expect(c.selectedItem?.label, 'Ana2');
       expect(c.localSearchController.text, 'Ana2');
     });
@@ -405,7 +383,7 @@ void main() {
       expect(c.selectedItem?.label, 'Ana2');
       expect(c.localSearchController.isOpen, isTrue);
       expect(c.localSearchController.text, 'An');
-      expect(_labels(c.filteredItems), <String>['Ana2', 'Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Ana2', 'Banana']);
     });
 
     testWidgets('editing a same-label row that is not == to the selection '
@@ -442,7 +420,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(_labels(c.items), <String>['Y', 'X']);
+      expect(labelsOf(c.items), <String>['Y', 'X']);
       expect(c.selectedItem, items[1]);
       expect(selections, isEmpty);
     });
@@ -502,7 +480,7 @@ void main() {
       await _pump(tester, c);
       await openSingle(tester);
       await typeInSingle(tester, 'Uva');
-      expect(_labels(c.filteredItems), <String>['Uva']);
+      expect(labelsOf(c.filteredItems), <String>['Uva']);
 
       c.selectedItem = c.items.firstWhere((e) => e.label == 'Uva');
       await tester.pump();
@@ -524,7 +502,7 @@ void main() {
 
       expect(c.localSearchController.text, 'Uv');
       expect(c.clearVisible, isFalse);
-      expect(_labels(c.filteredItems), <String>['Uva']);
+      expect(labelsOf(c.filteredItems), <String>['Uva']);
     });
   });
 
@@ -538,7 +516,7 @@ void main() {
     // Written from code: the value (text and selection) is then unchanged
     // by the setter's own write, so no listener runs.
     c.localSearchController.text = 'Uva';
-    expect(_labels(c.filteredItems), <String>['Uva']);
+    expect(labelsOf(c.filteredItems), <String>['Uva']);
 
     c.selectedItem = c.items.firstWhere((e) => e.label == 'Uva');
 
@@ -565,7 +543,7 @@ void main() {
       await _closeWithArrow(tester);
 
       expect(c.localSearchController.text, '');
-      expect(_labels(c.filteredItems), <String>['Item 0', 'Item 1', 'Item 2']);
+      expect(labelsOf(c.filteredItems), <String>['Item 0', 'Item 1', 'Item 2']);
       expect(updates, before + 1);
     });
 
@@ -575,7 +553,7 @@ void main() {
       final c = _ctrl(numberedItems(3));
       await _pump(tester, c, settings: clearOnClose);
       await openSingle(tester);
-      await _tapRow<int>(tester, 'Item 1');
+      await tapSingleRow<int>(tester, 'Item 1');
       await openSingle(tester);
       await typeInSingle(tester, 'zzz');
 
@@ -612,7 +590,7 @@ void main() {
         ..onSearchClose(false);
 
       c.localSearchController.text = 'ban';
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
       expect(calls, 1);
 
       c.localSearchController.text = '';
@@ -625,20 +603,20 @@ void main() {
       addTearDown(c.dispose);
       c.clearSelection();
       c.localSearchController.text = 'ban';
-      expect(_labels(c.filteredItems), <String>['Banana']);
+      expect(labelsOf(c.filteredItems), <String>['Banana']);
 
       final n = _ctrl(fruitItems());
       addTearDown(n.dispose);
       n.clearSelectionAndNotify();
       n.localSearchController.text = 'ban';
-      expect(_labels(n.filteredItems), <String>['Banana']);
+      expect(labelsOf(n.filteredItems), <String>['Banana']);
 
       final d = _ctrl(fruitItems());
       addTearDown(d.dispose);
       d.forceSelection('Banana');
       expect(d.filteredItems, hasLength(5), reason: 'the label is no query');
       d.localSearchController.text = 'uva';
-      expect(_labels(d.filteredItems), <String>['Uva']);
+      expect(labelsOf(d.filteredItems), <String>['Uva']);
     });
   });
 }

@@ -12,10 +12,6 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 import '../support/harness.dart';
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (Widget w) => w is DefaultListTile && w.item.label == label,
-);
-
 Finder get _viewList => find.byType(ScrollablePositionedList);
 
 /// Pumps a host and returns a context under its navigator, for the
@@ -246,7 +242,7 @@ void main() {
       expect(b.filteredItems.map((ValueItem<int> e) => e.label), <String>[
         'Item 1',
       ]);
-      expect(_row('Item 1'), findsOneWidget);
+      expect(rowTile('Item 1'), findsOneWidget);
     });
 
     testWidgets('with SearchControllers passed in, the old one can be '
@@ -479,7 +475,7 @@ void main() {
         expect(c.filteredItems.map((ValueItem<int> e) => e.label), <String>[
           'Item 2',
         ]);
-        expect(_row('Item 2'), findsOneWidget);
+        expect(rowTile('Item 2'), findsOneWidget);
       });
     }
   });
@@ -656,14 +652,14 @@ void main() {
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
 
       await openSingle(tester);
-      expect(_row('Item 195'), findsOneWidget);
-      expect(_row('Item 0'), findsNothing);
+      expect(rowTile('Item 195'), findsOneWidget);
+      expect(rowTile('Item 0'), findsNothing);
 
       await tester.tap(find.byIcon(Icons.arrow_drop_up));
       await tester.pumpAndSettle();
       await openSingle(tester);
-      expect(_row('Item 195'), findsOneWidget);
-      expect(_row('Item 0'), findsNothing);
+      expect(rowTile('Item 195'), findsOneWidget);
+      expect(rowTile('Item 0'), findsNothing);
     });
 
     testWidgets('every reopen scrolls to the selection again, also after the '
@@ -675,30 +671,30 @@ void main() {
       );
       await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
       await openSingle(tester);
-      expect(_row('Item 150'), findsOneWidget);
+      expect(rowTile('Item 150'), findsOneWidget);
 
       // Scroll away to the top, then close without selecting.
       await tester.sendKeyEvent(LogicalKeyboardKey.pageUp);
       await tester.pumpAndSettle();
-      expect(_row('Item 0'), findsOneWidget);
-      expect(_row('Item 150'), findsNothing);
+      expect(rowTile('Item 0'), findsOneWidget);
+      expect(rowTile('Item 150'), findsNothing);
       await tester.tap(find.byIcon(Icons.arrow_drop_up));
       await tester.pumpAndSettle();
 
       await openSingle(tester);
-      expect(_row('Item 150'), findsOneWidget);
-      expect(_row('Item 0'), findsNothing);
+      expect(rowTile('Item 150'), findsOneWidget);
+      expect(rowTile('Item 0'), findsNothing);
 
       // Select another item far down, then reopen.
       await typeInSingle(tester, 'Item 120');
       await tester.pumpAndSettle();
-      await tester.tap(_row('Item 120'));
+      await tester.tap(rowTile('Item 120'));
       await tester.pumpAndSettle();
       expect(c.selectedItem, items[120]);
 
       await openSingle(tester);
-      expect(_row('Item 120'), findsOneWidget);
-      expect(_row('Item 0'), findsNothing);
+      expect(rowTile('Item 120'), findsOneWidget);
+      expect(rowTile('Item 0'), findsNothing);
     });
   });
 }

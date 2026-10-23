@@ -93,10 +93,6 @@ Finder get _list => find.byType(MultipleListView<int>);
 Finder _inList(Finder f) => find.descendant(of: _list, matching: f);
 Finder get _listBar => _inList(find.byType(SearchBar));
 Finder get _listField => _inList(find.byType(EditableText));
-Finder _row(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<int> && w.item.label == label,
-);
-
 Future<void> _type(WidgetTester tester, String text) async {
   await tester.enterText(_listField, text);
   await tester.pump();
@@ -149,7 +145,9 @@ TextStyle _textStyle(WidgetTester tester, Finder scope, String text) {
 /// The overlay colour the row's ink paints with in [states].
 Color? _rowOverlay(WidgetTester tester, String label, Set<WidgetState> states) {
   final InkWell ink = tester.widget<InkWell>(
-    find.descendant(of: _row(label), matching: find.byType(InkWell)).first,
+    find
+        .descendant(of: rowTile<int>(label), matching: find.byType(InkWell))
+        .first,
   );
   return ink.overlayColor!.resolve(states);
 }
@@ -188,7 +186,10 @@ void main() {
       await _pump(tester, c);
       await openMultiple(tester);
       await tester.tap(
-        find.descendant(of: _row('apple'), matching: find.byIcon(Icons.edit)),
+        find.descendant(
+          of: rowTile<int>('apple'),
+          matching: find.byIcon(Icons.edit),
+        ),
       );
       await _openDialog(tester);
 
@@ -224,7 +225,7 @@ void main() {
 
         await tester.tap(
           find.descendant(
-            of: _row('Banana'),
+            of: rowTile<int>('Banana'),
             matching: find.byIcon(Icons.delete),
           ),
         );
@@ -233,7 +234,7 @@ void main() {
 
         await tester.tap(
           find.descendant(
-            of: _row('Cherry'),
+            of: rowTile<int>('Cherry'),
             matching: find.byIcon(Icons.delete),
           ),
         );
@@ -526,8 +527,8 @@ void main() {
       );
       await openMultiple(tester);
       expect(
-        tester.getTopLeft(_row('apple')).dy -
-            tester.getBottomLeft(_row('Cherry')).dy,
+        tester.getTopLeft(rowTile<int>('apple')).dy -
+            tester.getBottomLeft(rowTile<int>('Cherry')).dy,
         7,
       );
     });
@@ -543,15 +544,17 @@ void main() {
       );
       await openMultiple(tester);
       final Finder button = find.descendant(
-        of: _row('apple'),
+        of: rowTile<int>('apple'),
         matching: find.byType(TextButton),
       );
       expect(
-        tester.getTopLeft(button).dx - tester.getTopLeft(_row('apple')).dx,
+        tester.getTopLeft(button).dx -
+            tester.getTopLeft(rowTile<int>('apple')).dx,
         13,
       );
       expect(
-        tester.getTopRight(_row('apple')).dx - tester.getTopRight(button).dx,
+        tester.getTopRight(rowTile<int>('apple')).dx -
+            tester.getTopRight(button).dx,
         9,
       );
     });
@@ -571,11 +574,11 @@ void main() {
       );
       await openMultiple(tester);
       final Finder extraInRow = find.descendant(
-        of: _row('apple'),
+        of: rowTile<int>('apple'),
         matching: find.byKey(extra),
       );
       final Finder delete = find.descendant(
-        of: _row('apple'),
+        of: rowTile<int>('apple'),
         matching: find.byType(IconButton),
       );
       expect(
@@ -604,10 +607,18 @@ void main() {
       expect(_rowOverlay(tester, 'Cherry', hovered), Colors.orange);
       expect(_rowOverlay(tester, 'apple', hovered), Colors.green);
 
-      final TextStyle selected = _textStyle(tester, _row('Cherry'), 'Cherry');
+      final TextStyle selected = _textStyle(
+        tester,
+        rowTile<int>('Cherry'),
+        'Cherry',
+      );
       expect(selected.fontSize, 15);
       expect(selected.color, Colors.blue);
-      final TextStyle unselected = _textStyle(tester, _row('apple'), 'apple');
+      final TextStyle unselected = _textStyle(
+        tester,
+        rowTile<int>('apple'),
+        'apple',
+      );
       expect(unselected.fontSize, 13);
       expect(unselected.color, Colors.pink);
     });
@@ -645,12 +656,15 @@ void main() {
       );
       await openMultiple(tester);
       await tester.tap(
-        find.descendant(of: _row('apple'), matching: find.byIcon(Icons.delete)),
+        find.descendant(
+          of: rowTile<int>('apple'),
+          matching: find.byIcon(Icons.delete),
+        ),
       );
       await tester.pump();
 
       final Finder spinner = find.descendant(
-        of: _row('apple'),
+        of: rowTile<int>('apple'),
         matching: find.byType(CircularProgressIndicator),
       );
       expect(
@@ -737,7 +751,10 @@ void main() {
       await _pump(tester, c);
       await openMultiple(tester);
       await tester.tap(
-        find.descendant(of: _row('apple'), matching: find.byIcon(Icons.edit)),
+        find.descendant(
+          of: rowTile<int>('apple'),
+          matching: find.byIcon(Icons.edit),
+        ),
       );
       await _openDialog(tester);
       expect(find.text('Later edit'), findsOneWidget);
@@ -751,7 +768,10 @@ void main() {
       await _pump(tester, c);
       await openMultiple(tester);
       await tester.tap(
-        find.descendant(of: _row('apple'), matching: find.byIcon(Icons.delete)),
+        find.descendant(
+          of: rowTile<int>('apple'),
+          matching: find.byIcon(Icons.delete),
+        ),
       );
       await _openDialog(tester);
       expect(find.text('Later del'), findsOneWidget);

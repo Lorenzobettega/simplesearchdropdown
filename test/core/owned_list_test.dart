@@ -9,9 +9,6 @@ import 'package:simple_search_dropdown/simple_search_dropdown.dart';
 
 import '../support/harness.dart';
 
-List<String> _labels(Iterable<ValueItem<dynamic>> items) =>
-    items.map((e) => e.label).toList();
-
 const List<String> _fruitOrder = <String>[
   'Maçã',
   'Banana',
@@ -121,7 +118,7 @@ void main() {
       await c.deleteItem(c.items[0], ctx);
       c.sortBy(SortType.alphabetical);
 
-      expect(_labels(c.items), <String>[
+      expect(labelsOf(c.items), <String>[
         'abacaxi',
         'Banana2',
         'Kiwi',
@@ -140,7 +137,7 @@ void main() {
         sort: SortType.reverseAlphabetical,
       );
       addTearDown(c.dispose);
-      expect(_labels(c.items).first, 'Uva');
+      expect(labelsOf(c.items).first, 'Uva');
       caller.expectUntouched();
     });
 
@@ -155,7 +152,7 @@ void main() {
       final BuildContext ctx = await _context(tester);
       final c = _single(fruitItems(), onAddItem: _offline);
       await expectLater(c.addItem('Kiwi', ctx), throwsStateError);
-      expect(_labels(c.items), _fruitOrder);
+      expect(labelsOf(c.items), _fruitOrder);
       expect(c.selectedItem, isNull);
     });
 
@@ -168,7 +165,7 @@ void main() {
         throwsStateError,
       );
       await _confirmEdit(tester, edit, 'Banana2');
-      expect(_labels(c.items), _fruitOrder);
+      expect(labelsOf(c.items), _fruitOrder);
       expect(c.selectedItem, same(items[1]));
     });
 
@@ -177,7 +174,7 @@ void main() {
       final List<ValueItem<int>> items = fruitItems();
       final c = _single(items, onDeleteItem: _offline, initial: items[1]);
       await expectLater(c.deleteItem(items[1], ctx), throwsStateError);
-      expect(_labels(c.items), _fruitOrder);
+      expect(labelsOf(c.items), _fruitOrder);
       expect(c.selectedItem, same(items[1]));
     });
   });
@@ -191,8 +188,8 @@ void main() {
       c.updateListItems(next, false);
       next.add(const ValueItem(label: 'Late', value: 9));
 
-      expect(_labels(c.items), <String>['Item 0', 'Item 1', 'Item 2']);
-      expect(_labels(c.filteredItems), <String>['Item 0', 'Item 1', 'Item 2']);
+      expect(labelsOf(c.items), <String>['Item 0', 'Item 1', 'Item 2']);
+      expect(labelsOf(c.filteredItems), <String>['Item 0', 'Item 1', 'Item 2']);
       first.expectUntouched();
     });
   });
@@ -214,14 +211,14 @@ void main() {
           ..toggle(c.items[1])
           ..forceMultipleSelection(<ValueItem<int>>[c.items[2]]);
 
-        expect(_labels(c.items), <String>[
+        expect(labelsOf(c.items), <String>[
           'Banana2',
           'Uva',
           'abacaxi',
           'Pêra',
           'Kiwi',
         ]);
-        expect(_labels(c.selectedItems), <String>['abacaxi']);
+        expect(labelsOf(c.selectedItems), <String>['abacaxi']);
         caller.expectUntouched();
         expect(selected, <ValueItem<int>>[caller.list[1]]);
       },
@@ -242,7 +239,7 @@ void main() {
       final BuildContext ctx = await _context(tester);
       final c = _multiple(fruitItems(), onAddItem: _offline);
       await expectLater(c.addItem('Kiwi', ctx), throwsStateError);
-      expect(_labels(c.items), _fruitOrder);
+      expect(labelsOf(c.items), _fruitOrder);
       expect(c.selectedItems, isEmpty);
     });
 
@@ -259,7 +256,7 @@ void main() {
         throwsStateError,
       );
       await _confirmEdit(tester, edit, 'Banana2');
-      expect(_labels(c.items), _fruitOrder);
+      expect(labelsOf(c.items), _fruitOrder);
       expect(c.selectedItems, <ValueItem<int>>[items[1]]);
     });
 
@@ -272,7 +269,7 @@ void main() {
         onDeleteItem: _offline,
       );
       await expectLater(c.deleteItem(items[1], ctx), throwsStateError);
-      expect(_labels(c.items), _fruitOrder);
+      expect(labelsOf(c.items), _fruitOrder);
       expect(c.selectedItems, <ValueItem<int>>[items[1]]);
     });
   });
@@ -298,11 +295,11 @@ void main() {
       c.updateListItems(next, false);
       next.add(const ValueItem(label: 'Late', value: 10));
 
-      expect(_labels(c.items), <String>['Banana', 'Kiwi']);
-      expect(_labels(c.filteredItems), <String>['Banana', 'Kiwi']);
-      expect(_labels(c.selectedItems), <String>['Banana']);
+      expect(labelsOf(c.items), <String>['Banana', 'Kiwi']);
+      expect(labelsOf(c.filteredItems), <String>['Banana', 'Kiwi']);
+      expect(labelsOf(c.selectedItems), <String>['Banana']);
       expect(updates, hasLength(1));
-      expect(_labels(updates.single), <String>['Banana']);
+      expect(labelsOf(updates.single), <String>['Banana']);
       first.expectUntouched();
 
       c.updateListItems(next, false);
@@ -347,16 +344,16 @@ void main() {
     test('single keeps the items', () {
       final c = _single(fruitItems());
       c.updateListItems(c.items, false);
-      expect(_labels(c.items), _fruitOrder);
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.items), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
     });
 
     test('multiple keeps the items and the selection', () {
       final List<ValueItem<int>> items = fruitItems();
       final c = _multiple(items, selected: <ValueItem<int>>[items[1]]);
       c.updateListItems(c.items, false);
-      expect(_labels(c.items), _fruitOrder);
-      expect(_labels(c.filteredItems), _fruitOrder);
+      expect(labelsOf(c.items), _fruitOrder);
+      expect(labelsOf(c.filteredItems), _fruitOrder);
       expect(c.selectedItems, <ValueItem<int>>[items[1]]);
     });
   });
@@ -431,7 +428,7 @@ void main() {
 
       await c.addItem('b', ctx);
 
-      expect(_labels(c.items), <String>['Item 0', 'Item 1']);
+      expect(labelsOf(c.items), <String>['Item 0', 'Item 1']);
       expect(c.selectedItem, isNull);
     });
 

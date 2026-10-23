@@ -244,13 +244,8 @@ class SearchDropDownState<T> extends State<SearchDropDown<T>> {
                   // Follows the selection without rebuilding the bar.
                   ListenableBuilder(
                     listenable: _controller,
-                    builder: (BuildContext context, _) => ClearButton(
-                      visible: _controller.clearVisible,
-                      onPressed: _controller.resetSelection,
-                      iconColor: bar.clearIconColor,
-                      iconSize: bar.outsideIconSize,
-                      tooltip: strings.clearTooltip,
-                    ),
+                    builder: (BuildContext context, _) =>
+                        _clearButton(_controller, bar, strings),
                   ),
               ],
           barElevation: WidgetStatePropertyAll<double>(bar.elevation),
@@ -358,14 +353,7 @@ class _ViewTrailing<T> extends StatelessWidget {
                 size: settings.outsideIconSize,
               ),
             ),
-          if (showClear)
-            ClearButton(
-              visible: controller.clearVisible,
-              onPressed: controller.resetSelection,
-              iconColor: settings.clearIconColor,
-              iconSize: settings.outsideIconSize,
-              tooltip: strings.clearTooltip,
-            ),
+          if (showClear) _clearButton(controller, settings, strings),
         ],
       ),
     );
@@ -530,7 +518,8 @@ class _ViewListState<T> extends State<_ViewList<T>> {
       _controller.submit();
       return true;
     }
-    final bool keepLabelSelected = fieldFocused == true && _labelSelected();
+    final SearchController search = _controller.localSearchController;
+    final TextEditingValue before = search.value;
     if (key == LogicalKeyboardKey.arrowDown) {
       _controller.highlightNext();
     } else if (key == LogicalKeyboardKey.arrowUp) {
@@ -542,11 +531,17 @@ class _ViewListState<T> extends State<_ViewList<T>> {
     } else {
       return false;
     }
-    if (keepLabelSelected) {
-      // The focused field gets this key too, after this handler, and
-      // collapses the selection; select the label again so typing still
-      // replaces it.
-      scheduleMicrotask(_selectLabel);
+    if (fieldFocused == true) {
+      // The focused field gets this key too, after this handler, and moves
+      // the caret; put it back so typing still replaces an untouched label.
+      scheduleMicrotask(() {
+        if (mounted &&
+            !_controller.isDisposed &&
+            isUsable(search) &&
+            search.text == before.text) {
+          search.selection = before.selection;
+        }
+      });
     }
     return true;
   }
@@ -563,31 +558,6 @@ class _ViewListState<T> extends State<_ViewList<T>> {
     final EditableText? field = focus.context
         ?.findAncestorWidgetOfExactType<EditableText>();
     return identical(field?.controller, _controller.localSearchController);
-  }
-
-  /// Whether the whole selected label is selected (as when the view opens).
-  bool _labelSelected() {
-    final TextEditingValue value = _controller.localSearchController.value;
-    final String? label = _controller.selectedItem?.label;
-    return label != null &&
-        label.isNotEmpty &&
-        value.text == label &&
-        value.selection.start == 0 &&
-        value.selection.end == label.length;
-  }
-
-  void _selectLabel() {
-    final SearchController search = _controller.localSearchController;
-    if (!mounted || _controller.isDisposed || !isUsable(search)) {
-      return;
-    }
-    if (search.text != _controller.selectedItem?.label) {
-      return;
-    }
-    search.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: search.text.length,
-    );
   }
 
   void _revealHighlight() {
@@ -746,3 +716,16 @@ class _RowState extends State<_Row> {
   @override
   Widget build(BuildContext context) => widget.builder(context, _marks);
 }
+
+/// The clear button of the bar and of the open view.
+Widget _clearButton(
+  SearchDropDownController<Object?> controller,
+  SimpleSearchbarSettings settings,
+  SearchDropDownStrings strings,
+) => ClearButton(
+  visible: controller.clearVisible,
+  onPressed: controller.resetSelection,
+  iconColor: settings.clearIconColor,
+  iconSize: settings.outsideIconSize,
+  tooltip: strings.clearTooltip,
+);

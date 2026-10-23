@@ -781,7 +781,8 @@ void main() {
     });
 
     testWidgets(
-      'opening with a selection selects the text so typing replaces',
+      'opening with a selection highlights no text; typing replaces the '
+      'label',
       (tester) async {
         final List<ValueItem<int>> items = fruitItems();
         final c = SearchDropDownController<int>(
@@ -792,9 +793,17 @@ void main() {
         );
         await tester.pumpWidget(host(SearchDropDown<int>(controller: c)));
         await openSingle(tester);
-        final TextSelection sel = c.localSearchController.selection;
-        expect(sel.start, 0);
-        expect(sel.end, 'Banana'.length);
+        // A selected label would flash its highlight on open and close.
+        expect(
+          c.localSearchController.selection,
+          const TextSelection.collapsed(offset: 6),
+        );
+
+        final TextEditingValue v = c.localSearchController.value;
+        tester.testTextInput.updateEditingValue(v.replaced(v.selection, 'U'));
+        await tester.pump();
+        expect(c.localSearchController.text, 'U');
+        expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
       },
     );
   });

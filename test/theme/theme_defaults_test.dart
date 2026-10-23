@@ -47,13 +47,12 @@ double _contrast(Color a, Color b) {
   return (math.max(la, lb) + 0.05) / (math.min(la, lb) + 0.05);
 }
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<int> && w.item.label == label,
-);
-
 ButtonStyle _rowStyle(WidgetTester tester, String label) => tester
     .widget<TextButton>(
-      find.descendant(of: _row(label), matching: find.byType(TextButton)),
+      find.descendant(
+        of: rowTile<int>(label),
+        matching: find.byType(TextButton),
+      ),
     )
     .style!;
 
@@ -61,12 +60,16 @@ Color _rowBackground(WidgetTester tester, String label) =>
     _rowStyle(tester, label).backgroundColor!.resolve(<WidgetState>{})!;
 
 Color? _rowTextColor(WidgetTester tester, String label) => tester
-    .widget<Text>(find.descendant(of: _row(label), matching: find.text(label)))
+    .widget<Text>(
+      find.descendant(of: rowTile<int>(label), matching: find.text(label)),
+    )
     .style
     ?.color;
 
 Color? _rowIconColor(WidgetTester tester, String label, IconData icon) => tester
-    .widget<Icon>(find.descendant(of: _row(label), matching: find.byIcon(icon)))
+    .widget<Icon>(
+      find.descendant(of: rowTile<int>(label), matching: find.byIcon(icon)),
+    )
     .color;
 
 SearchBar _bar(WidgetTester tester) =>
@@ -270,7 +273,10 @@ void main() {
       expect(_rowIconColor(tester, 'Uva', Icons.delete), Colors.brown);
 
       await tester.tap(
-        find.descendant(of: _row('Uva'), matching: find.byIcon(Icons.delete)),
+        find.descendant(
+          of: rowTile<int>('Uva'),
+          matching: find.byIcon(Icons.delete),
+        ),
       );
       await tester.pump();
       expect(
@@ -397,11 +403,14 @@ void main() {
       );
       await openSingle(tester);
       await tester.tap(
-        find.descendant(of: _row('Uva'), matching: find.byIcon(Icons.delete)),
+        find.descendant(
+          of: rowTile<int>('Uva'),
+          matching: find.byIcon(Icons.delete),
+        ),
       );
       await tester.pump();
       final Finder spinner = find.descendant(
-        of: _row('Uva'),
+        of: rowTile<int>('Uva'),
         matching: find.byType(CircularProgressIndicator),
       );
       final CircularProgressIndicator ring = tester.widget(spinner);
@@ -424,7 +433,10 @@ void main() {
       );
       await openSingle(tester);
       await tester.tap(
-        find.descendant(of: _row('Uva'), matching: find.byIcon(Icons.delete)),
+        find.descendant(
+          of: rowTile<int>('Uva'),
+          matching: find.byIcon(Icons.delete),
+        ),
       );
       await tester.pump();
       expect(
@@ -477,7 +489,7 @@ void main() {
       await openSingle(tester);
       await tester.tap(
         find.descendant(
-          of: _row('Banana'),
+          of: rowTile<int>('Banana'),
           matching: find.byIcon(Icons.delete),
         ),
       );
@@ -602,7 +614,10 @@ void _followsScheme(ThemeData theme) {
       );
       await openSingle(tester);
       await tester.tap(
-        find.descendant(of: _row('Uva'), matching: find.byIcon(Icons.delete)),
+        find.descendant(
+          of: rowTile<int>('Uva'),
+          matching: find.byIcon(Icons.delete),
+        ),
       );
       await tester.pump();
       expect(

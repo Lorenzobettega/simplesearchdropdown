@@ -40,9 +40,6 @@ List<ValueItem<int>> _items() => <ValueItem<int>>[
   const ValueItem(label: 'Banana', value: 2),
 ];
 
-List<String> _labels(List<ValueItem<int>> list) =>
-    list.map((e) => e.label).toList();
-
 // Puts the dropdown at a known place (20, 20) at the top-left of the screen,
 // so the overlay below it fits on the 800x600 test surface.
 Widget _app(Widget child) => MaterialApp(
@@ -162,12 +159,6 @@ Finder get _searchField =>
 Finder _inBox(Finder f) => find.descendant(of: _box, matching: f);
 Finder _inList(Finder f) => find.descendant(of: _list, matching: f);
 Finder _row(String label) => find.widgetWithText(DefaultListTile<int>, label);
-
-// Labels of the overlay rows, in list order.
-List<String> _rowLabels(WidgetTester tester) => tester
-    .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
-    .map((t) => t.item.label)
-    .toList();
 
 bool _rowSelected(WidgetTester tester, String label) =>
     tester.widget<DefaultListTile<int>>(_row(label)).selected;
@@ -510,7 +501,7 @@ void main() {
       expect(_list, findsOneWidget);
       expect(_searchField, findsOneWidget);
       expect(_inList(find.text('Pesquisar')), findsOneWidget);
-      expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
+      expect(rowLabels<int>(tester), ['Cherry', 'apple', 'Banana']);
       expect(_inBox(find.byIcon(Icons.arrow_drop_up)), findsOneWidget);
       expect(_inBox(find.byIcon(Icons.arrow_drop_down)), findsNothing);
     });
@@ -614,7 +605,7 @@ void main() {
         selectedIdx: [40],
         sort: SortType.selectedFirst,
       );
-      expect(_rowLabels(tester).take(2), ['Item 40', 'Item 0']);
+      expect(rowLabels<int>(tester).take(2), ['Item 40', 'Item 0']);
     });
   });
 
@@ -702,17 +693,29 @@ void main() {
       await openMultiple(tester);
 
       await _type(tester, 'MACA');
-      expect(_rowLabels(tester), ['Maçã']);
+      expect(rowLabels<int>(tester), ['Maçã']);
       await _type(tester, 'pera');
-      expect(_rowLabels(tester), ['Pêra']);
+      expect(rowLabels<int>(tester), ['Pêra']);
       await _type(tester, 'AB');
-      expect(_rowLabels(tester), ['abacaxi']);
+      expect(rowLabels<int>(tester), ['abacaxi']);
       await _type(tester, 'ã');
-      expect(_rowLabels(tester), ['Maçã', 'Banana', 'Uva', 'abacaxi', 'Pêra']);
+      expect(rowLabels<int>(tester), [
+        'Maçã',
+        'Banana',
+        'Uva',
+        'abacaxi',
+        'Pêra',
+      ]);
       await _type(tester, 'zzz');
-      expect(_rowLabels(tester), isEmpty);
+      expect(rowLabels<int>(tester), isEmpty);
       await _type(tester, '');
-      expect(_rowLabels(tester), ['Maçã', 'Banana', 'Uva', 'abacaxi', 'Pêra']);
+      expect(rowLabels<int>(tester), [
+        'Maçã',
+        'Banana',
+        'Uva',
+        'abacaxi',
+        'Pêra',
+      ]);
     });
 
     testWidgets('filtered rows keep the sort ordering', (tester) async {
@@ -730,7 +733,13 @@ void main() {
 
       await _type(tester, 'a');
       // D2 (8.0): case and accents are ignored when sorting.
-      expect(_rowLabels(tester), ['abacaxi', 'Banana', 'Maçã', 'Pêra', 'Uva']);
+      expect(rowLabels<int>(tester), [
+        'abacaxi',
+        'Banana',
+        'Maçã',
+        'Pêra',
+        'Uva',
+      ]);
     });
 
     testWidgets('selected rows stay highlighted while filtering', (
@@ -743,7 +752,7 @@ void main() {
       await openMultiple(tester);
 
       await _type(tester, 'ban');
-      expect(_rowLabels(tester), ['Banana']);
+      expect(rowLabels<int>(tester), ['Banana']);
       expect(_rowSelected(tester, 'Banana'), isTrue);
     });
   });
@@ -768,11 +777,11 @@ void main() {
       await openMultiple(tester);
 
       await _type(tester, ' ana');
-      expect(_rowLabels(tester), ['Maria Ana']);
+      expect(rowLabels<int>(tester), ['Maria Ana']);
       await _type(tester, 'Ana ');
-      expect(_rowLabels(tester), ['Ana Paula']);
+      expect(rowLabels<int>(tester), ['Ana Paula']);
       await _type(tester, ' ');
-      expect(_rowLabels(tester), ['Maria Ana', 'Ana Paula']);
+      expect(rowLabels<int>(tester), ['Maria Ana', 'Ana Paula']);
     });
 
     testWidgets('a lone space with no spaced label offers the add row', (
@@ -792,7 +801,7 @@ void main() {
       await openMultiple(tester);
 
       await _type(tester, ' ');
-      expect(_rowLabels(tester), isEmpty);
+      expect(rowLabels<int>(tester), isEmpty);
       expect(
         tester.widget<DefaultAddListItem>(find.byType(DefaultAddListItem)).text,
         ' ',
@@ -824,32 +833,32 @@ void main() {
 
     testWidgets('0: original order, caller list untouched', (tester) async {
       final items = await openWith(tester, SortType.none);
-      expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
-      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
+      expect(rowLabels<int>(tester), ['Cherry', 'apple', 'Banana']);
+      expect(labelsOf(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('1: A-Z ignoring case and accents (D2, 8.0)', (tester) async {
       await openWith(tester, SortType.alphabetical);
-      expect(_rowLabels(tester), ['apple', 'Banana', 'Cherry']);
+      expect(rowLabels<int>(tester), ['apple', 'Banana', 'Cherry']);
     });
 
     testWidgets('1: the caller listItems is not reordered (M7, 8.0)', (
       tester,
     ) async {
       final items = await openWith(tester, SortType.alphabetical);
-      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
+      expect(labelsOf(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('2: Z-A ignoring case and accents (D2, 8.0)', (tester) async {
       final items = await openWith(tester, SortType.reverseAlphabetical);
-      expect(_rowLabels(tester), ['Cherry', 'Banana', 'apple']);
+      expect(rowLabels<int>(tester), ['Cherry', 'Banana', 'apple']);
       // M7 (8.0): the caller list keeps its order.
-      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
+      expect(labelsOf(items), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets('3 without selection: original order', (tester) async {
       await openWith(tester, SortType.selectedFirst);
-      expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
+      expect(rowLabels<int>(tester), ['Cherry', 'apple', 'Banana']);
     });
 
     testWidgets(
@@ -860,16 +869,16 @@ void main() {
           SortType.selectedFirst,
           selectedIdx: [2, 1],
         );
-        expect(_rowLabels(tester), ['Banana', 'Cherry', 'apple']);
+        expect(rowLabels<int>(tester), ['Banana', 'Cherry', 'apple']);
         // M7 (8.0): the caller list keeps its order.
-        expect(_labels(items), ['Cherry', 'apple', 'Banana']);
+        expect(labelsOf(items), ['Cherry', 'apple', 'Banana']);
       },
     );
 
     testWidgets('3: tapping a row re-sorts immediately', (tester) async {
       await openWith(tester, SortType.selectedFirst);
       await _tapRow(tester, 'Banana');
-      expect(_rowLabels(tester), ['Banana', 'Cherry', 'apple']);
+      expect(rowLabels<int>(tester), ['Banana', 'Cherry', 'apple']);
     });
   });
 
@@ -910,7 +919,7 @@ void main() {
       await _tapRow(tester, 'Banana');
       await _tapRow(tester, 'Cherry');
 
-      expect(_labels(probe.selection), ['Banana', 'Cherry']);
+      expect(labelsOf(probe.selection), ['Banana', 'Cherry']);
       expect(probe.updates, hasLength(2));
       expect(probe.updates.last, probe.selection);
     });
@@ -1069,7 +1078,7 @@ void main() {
         // Like the single dropdown: exact first, then case/accent-insensitive.
         controller.forceSelection('Apple');
         await tester.pump();
-        expect(_labels(probe.selection), ['apple']);
+        expect(labelsOf(probe.selection), ['apple']);
       },
     );
   });
@@ -1097,7 +1106,7 @@ void main() {
         ]);
         await tester.pump();
 
-        expect(_labels(probe.selection), ['Banana', 'apple']);
+        expect(labelsOf(probe.selection), ['Banana', 'apple']);
         expect(probe.updates, isEmpty);
         expect(probe.clearList, 0);
         // M3 (8.0): the chips follow right away.
@@ -1253,12 +1262,12 @@ void main() {
       );
       await _type(tester, 'kiwi');
 
-      expect(_rowLabels(tester), ['Kiwi']);
+      expect(rowLabels<int>(tester), ['Kiwi']);
       expect(find.byType(DefaultAddListItem), findsNothing);
       expect(_inList(find.text('Criar')), findsNothing);
       await _type(tester, '');
-      expect(_rowLabels(tester), ['Cherry', 'apple', 'Kiwi']);
-      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
+      expect(rowLabels<int>(tester), ['Cherry', 'apple', 'Kiwi']);
+      expect(labelsOf(items), ['Cherry', 'apple', 'Banana']);
     });
   });
 
@@ -1339,7 +1348,7 @@ void main() {
 
       await _type(tester, 'Kiwi');
 
-      expect(_rowLabels(tester), isEmpty);
+      expect(rowLabels<int>(tester), isEmpty);
       expect(find.byType(DefaultAddListItem), findsOneWidget);
       expect(
         tester.widget<DefaultAddListItem>(find.byType(DefaultAddListItem)).text,
@@ -1363,7 +1372,7 @@ void main() {
 
       await _type(tester, 'APP');
 
-      expect(_rowLabels(tester), ['apple']);
+      expect(rowLabels<int>(tester), ['apple']);
       expect(find.byType(DefaultAddListItem), findsNothing);
     });
 
@@ -1391,7 +1400,7 @@ void main() {
 
       await _type(tester, 'Kiwi');
 
-      expect(_rowLabels(tester), isEmpty);
+      expect(rowLabels<int>(tester), isEmpty);
       expect(find.byType(DefaultAddListItem), findsNothing);
     });
 
@@ -1424,7 +1433,7 @@ void main() {
         expect(probe.updates.single, probe.selection);
         expect(_searchText(tester), '');
         expect(_list, findsOneWidget);
-        expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
+        expect(rowLabels<int>(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
         expect(_rowSelected(tester, 'Kiwi'), isTrue);
         expect(_inBox(find.text('Kiwi')), findsOneWidget);
       },
@@ -1452,8 +1461,8 @@ void main() {
         await tester.tap(_inList(find.text('Criar')));
         await tester.pumpAndSettle();
 
-        expect(_labels(probe.selection), ['Kiwi']);
-        expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
+        expect(labelsOf(probe.selection), ['Kiwi']);
+        expect(rowLabels<int>(tester), ['Cherry', 'apple', 'Banana', 'Kiwi']);
       },
     );
   });
@@ -1522,8 +1531,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(WarningDialog), findsNothing);
-      expect(_labels(probe.added), ['Good']);
-      expect(_labels(probe.selection), ['Good']);
+      expect(labelsOf(probe.added), ['Good']);
+      expect(labelsOf(probe.selection), ['Good']);
     });
 
     testWidgets(
@@ -1547,7 +1556,7 @@ void main() {
         await tester.tap(_inList(find.text('Criar')));
         await tester.pump();
 
-        expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
+        expect(rowLabels<int>(tester), ['Cherry', 'apple', 'Banana']);
         expect(_inList(find.text('Bad')), findsNothing);
         expect(_searchText(tester), '');
       },
@@ -1610,10 +1619,10 @@ void main() {
           const ValueItem<int>(label: 'Banana', value: 2),
         ]);
         // Banana was not selected: the selection is untouched.
-        expect(_labels(probe.selection), ['Cherry', 'apple']);
+        expect(labelsOf(probe.selection), ['Cherry', 'apple']);
         expect(probe.updates, isEmpty);
         expect(probe.clearedItems, isEmpty);
-        expect(_rowLabels(tester), ['Cherry', 'apple']);
+        expect(rowLabels<int>(tester), ['Cherry', 'apple']);
         expect(_list, findsOneWidget);
         expect(_inBox(find.byType(Card)), findsNWidgets(2));
       },
@@ -1644,7 +1653,7 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
 
-      expect(_rowLabels(tester), ['apple', 'Banana']);
+      expect(rowLabels<int>(tester), ['apple', 'Banana']);
       expect(_inList(find.byType(CircularProgressIndicator)), findsNothing);
       expect(_inList(find.byIcon(Icons.delete)), findsNWidgets(2));
     });
@@ -1675,7 +1684,7 @@ void main() {
       );
       await tester.pump();
 
-      expect(_labels(probe.selection), ['apple']);
+      expect(labelsOf(probe.selection), ['apple']);
     }); // M1: fixed in 8.0
   });
 
@@ -1725,7 +1734,7 @@ void main() {
       expect(probe.deleted, isEmpty);
       expect(probe.selection, [items[1]]);
       expect(_list, findsOneWidget);
-      expect(_rowLabels(tester), ['Cherry', 'apple', 'Banana']);
+      expect(rowLabels<int>(tester), ['Cherry', 'apple', 'Banana']);
       // 8.0 (B5 class): the cancelled tile gets its delete icon back.
       expect(_inList(find.byType(CircularProgressIndicator)), findsNothing);
     });
@@ -1763,7 +1772,7 @@ void main() {
         expect(probe.deleted, [
           const ValueItem<int>(label: 'Cherry', value: 3),
         ]);
-        expect(_labels(probe.selection), ['apple']);
+        expect(labelsOf(probe.selection), ['apple']);
         expect(probe.updates, isEmpty);
         expect(_list, findsOneWidget);
         expect(_inBox(find.text('apple')), findsOneWidget);
@@ -1825,8 +1834,8 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       expect(find.byType(EditDialog), findsNothing);
-      expect(_labels(probe.edited), ['Cherry2']);
-      expect(_rowLabels(tester), contains('Cherry2'));
+      expect(labelsOf(probe.edited), ['Cherry2']);
+      expect(rowLabels<int>(tester), contains('Cherry2'));
     });
 
     testWidgets('editing a selected item replaces it in the controller items '
@@ -1863,9 +1872,9 @@ void main() {
       await tester.pump(const Duration(milliseconds: 400));
 
       // Replaced in place: same position; the caller list is untouched.
-      expect(_labels(probe.items), ['Cherry', 'apple2', 'Banana']);
-      expect(_labels(items), ['Cherry', 'apple', 'Banana']);
-      expect(_labels(probe.selection), ['apple2']);
+      expect(labelsOf(probe.items), ['Cherry', 'apple2', 'Banana']);
+      expect(labelsOf(items), ['Cherry', 'apple', 'Banana']);
+      expect(labelsOf(probe.selection), ['apple2']);
       expect(
         probe.selection.single,
         const ValueItem(label: 'apple2', value: 99),
@@ -1873,7 +1882,7 @@ void main() {
       expect(probe.selection.every(probe.items.contains), isTrue);
       expect(probe.updates, hasLength(1));
       expect(probe.updates.single, probe.selection);
-      expect(_labels(probe.edited), ['apple2']);
+      expect(labelsOf(probe.edited), ['apple2']);
       expect(_rowSelected(tester, 'apple2'), isTrue);
       // The chip is relabelled.
       expect(_inBox(find.text('apple2')), findsOneWidget);

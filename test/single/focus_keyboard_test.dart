@@ -91,20 +91,6 @@ Future<void> _tabOut(WidgetTester tester, {bool shift = false}) async {
   }
 }
 
-Finder _row(String label) => find.byWidgetPredicate(
-  (w) => w is DefaultListTile<int> && w.item.label == label,
-);
-
-List<String> _rowLabels(WidgetTester tester) => tester
-    .widgetList<DefaultListTile<int>>(find.byType(DefaultListTile<int>))
-    .map((r) => r.item.label)
-    .toList();
-
-Future<void> _key(WidgetTester tester, LogicalKeyboardKey key) async {
-  await tester.sendKeyEvent(key);
-  await tester.pumpAndSettle();
-}
-
 void main() {
   group('N55: a key burst into the focused closed bar', () {
     testWidgets('two characters in one frame open a single view', (
@@ -123,11 +109,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SearchBar), findsNWidgets(2));
-      expect(_rowLabels(tester), <String>['Item 1']);
+      expect(rowLabels<int>(tester), <String>['Item 1']);
       expect(c.localSearchController.isOpen, isTrue);
 
       await tester.tap(
-        find.descendant(of: _row('Item 1'), matching: find.byType(TextButton)),
+        find.descendant(
+          of: rowTile<int>('Item 1'),
+          matching: find.byType(TextButton),
+        ),
       );
       await tester.pumpAndSettle();
 
@@ -296,12 +285,15 @@ void main() {
       await openSingle(tester);
       Focus.of(
         tester.element(
-          find.descendant(of: _row('Item 2'), matching: find.text('Item 2')),
+          find.descendant(
+            of: rowTile<int>('Item 2'),
+            matching: find.text('Item 2'),
+          ),
         ),
       ).requestFocus();
       await tester.pump();
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(calls.map((e) => e?.label), <String?>['Item 2']);
       expect(c.selectedItem?.label, 'Item 2');
@@ -318,7 +310,7 @@ void main() {
       Focus.of(tester.element(find.byIcon(Icons.arrow_drop_up))).requestFocus();
       await tester.pump();
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(c.localSearchController.isOpen, isFalse);
       expect(c.selectedItem, isNull);
@@ -342,7 +334,7 @@ void main() {
         'focus', (tester) async {
       final c = await openUnfocused(tester);
 
-      await _key(tester, LogicalKeyboardKey.arrowDown);
+      await pressKey(tester, LogicalKeyboardKey.arrowDown);
 
       expect(c.highlightedIndex, 0);
     });
@@ -352,70 +344,82 @@ void main() {
     ) async {
       final c = await openUnfocused(tester);
 
-      await _key(tester, LogicalKeyboardKey.enter);
+      await pressKey(tester, LogicalKeyboardKey.enter);
 
       expect(c.selectedItem?.label, 'Item 0');
       expect(c.localSearchController.isOpen, isFalse);
     });
   });
 
-  group('N70: browsing with keys keeps the label selected', () {
-    Future<SearchDropDownController<int>> openWithBanana(
-      WidgetTester tester,
-    ) async {
-      final List<ValueItem<int>> items = fruitItems();
-      final c = _ctrl(items, initial: items[1]);
-      await tester.pumpWidget(host(_dropdown(c)));
-      await openSingle(tester);
-      expect(
-        c.localSearchController.selection,
-        const TextSelection(baseOffset: 0, extentOffset: 6),
-      );
-      return c;
-    }
-
-    testWidgets('arrow and page keys keep it; typing then replaces it', (
-      tester,
-    ) async {
-      final c = await openWithBanana(tester);
-      for (final LogicalKeyboardKey key in <LogicalKeyboardKey>[
-        LogicalKeyboardKey.arrowDown,
-        LogicalKeyboardKey.arrowDown,
-        LogicalKeyboardKey.arrowUp,
-        LogicalKeyboardKey.pageDown,
-        LogicalKeyboardKey.pageUp,
-      ]) {
-        await tester.sendKeyEvent(key);
-        await tester.pump();
-        expect(c.highlightedIndex, isNot(-1), reason: '$key');
+  group(
+    'N70: browsing with keys keeps the caret where typing replaces the label',
+    () {
+      Future<SearchDropDownController<int>> openWithBanana(
+        WidgetTester tester,
+      ) async {
+        final List<ValueItem<int>> items = fruitItems();
+        final c = _ctrl(items, initial: items[1]);
+        await tester.pumpWidget(host(_dropdown(c)));
+        await openSingle(tester);
         expect(
           c.localSearchController.selection,
-          const TextSelection(baseOffset: 0, extentOffset: 6),
-          reason: '$key',
+          const TextSelection.collapsed(offset: 6),
         );
+        return c;
       }
 
-      // Type at the selection the way the engine does.
-      final TextEditingValue v = c.localSearchController.value;
-      tester.testTextInput.updateEditingValue(v.replaced(v.selection, 'Uv'));
-      await tester.pump();
+      testWidgets(
+        'arrow and page keys keep it; typing then replaces the label',
+        (tester) async {
+          final c = await openWithBanana(tester);
+          for (final LogicalKeyboardKey key in <LogicalKeyboardKey>[
+            LogicalKeyboardKey.arrowDown,
+            LogicalKeyboardKey.arrowDown,
+            LogicalKeyboardKey.arrowUp,
+            LogicalKeyboardKey.pageDown,
+            LogicalKeyboardKey.pageUp,
+          ]) {
+            await tester.sendKeyEvent(key);
+            await tester.pump();
+            expect(c.highlightedIndex, isNot(-1), reason: '$key');
+            expect(
+              c.localSearchController.selection,
+              const TextSelection.collapsed(offset: 6),
+              reason: '$key',
+            );
+          }
 
-      expect(c.localSearchController.text, 'Uv');
-      expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
-    });
+          // Type at the selection the way the engine does.
+          final TextEditingValue v = c.localSearchController.value;
+          tester.testTextInput.updateEditingValue(
+            v.replaced(v.selection, 'Uv'),
+          );
+          await tester.pump();
 
-    testWidgets('a caret the user placed is left alone', (tester) async {
-      final c = await openWithBanana(tester);
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowRight);
-      await tester.pump();
-      expect(c.localSearchController.selection.isCollapsed, isTrue);
-      final TextSelection caret = c.localSearchController.selection;
+          expect(c.localSearchController.text, 'Uv');
+          expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
+        },
+      );
 
-      await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
-      await tester.pump();
+      testWidgets('a caret the user placed is left alone, and typing there '
+          'edits the label', (tester) async {
+        final c = await openWithBanana(tester);
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowLeft);
+        await tester.pump();
+        const TextSelection caret = TextSelection.collapsed(offset: 5);
+        expect(c.localSearchController.selection, caret);
 
-      expect(c.highlightedIndex, 1);
-      expect(c.localSearchController.selection, caret);
-    });
-  });
+        await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+        await tester.pump();
+
+        expect(c.highlightedIndex, 1);
+        expect(c.localSearchController.selection, caret);
+
+        final TextEditingValue v = c.localSearchController.value;
+        tester.testTextInput.updateEditingValue(v.replaced(v.selection, 'X'));
+        await tester.pump();
+        expect(c.localSearchController.text, 'BananXa');
+      });
+    },
+  );
 }
