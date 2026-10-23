@@ -157,7 +157,8 @@ class SimpleSearchbarSettings {
   ///If true, a divider between the searchbar and the list of items will appear (default:false).
   final bool showDivider;
 
-  ///Opens with the full string selected (default: `false`).
+  ///[SearchDropDown] only: opens with the selected label fully selected, so
+  ///typing replaces it (default: `false`, the caret after the label).
   final bool selectAllOnOpen;
 }
 
