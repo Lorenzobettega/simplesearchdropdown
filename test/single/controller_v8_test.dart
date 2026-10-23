@@ -804,6 +804,67 @@ void main() {
         expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
       },
     );
+
+    testWidgets(
+      'selectAllOnOpen opens with the label selected; typing replaces it',
+      (tester) async {
+        final List<ValueItem<int>> items = fruitItems();
+        final c = SearchDropDownController<int>(
+          items: items,
+          addMode: false,
+          deleteMode: false,
+          initialSelectedItem: items[1],
+        );
+        await tester.pumpWidget(
+          host(
+            SearchDropDown<int>(
+              controller: c,
+              searchBarSettings: const SimpleSearchbarSettings(
+                selectAllOnOpen: true,
+              ),
+            ),
+          ),
+        );
+        await openSingle(tester);
+        expect(
+          c.localSearchController.selection,
+          const TextSelection(baseOffset: 0, extentOffset: 6),
+        );
+        expect(c.filteredItems, hasLength(items.length));
+
+        final TextEditingValue v = c.localSearchController.value;
+        tester.testTextInput.updateEditingValue(v.replaced(v.selection, 'U'));
+        await tester.pump();
+        expect(c.localSearchController.text, 'U');
+        expect(c.filteredItems.map((e) => e.label), <String>['Uva']);
+      },
+    );
+
+    testWidgets('selectAllOnOpen without a selection leaves an empty field', (
+      tester,
+    ) async {
+      final c = SearchDropDownController<int>(
+        items: fruitItems(),
+        addMode: false,
+        deleteMode: false,
+      );
+      await tester.pumpWidget(
+        host(
+          SearchDropDown<int>(
+            controller: c,
+            searchBarSettings: const SimpleSearchbarSettings(
+              selectAllOnOpen: true,
+            ),
+          ),
+        ),
+      );
+      await openSingle(tester);
+      expect(c.localSearchController.text, isEmpty);
+      expect(
+        c.localSearchController.selection,
+        const TextSelection.collapsed(offset: 0),
+      );
+    });
   });
 
   group('view: opens scrolled to the selection (#46)', () {
